@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/recroom/:action",
+      "destination": "/api/recroom?action=:action"
+    },
+    {
+      "source": "/api/blitz/:action",
+      "destination": "/api/blitz?action=:action"
+    },
+    {
+      "source": "/api/command/:action",
+      "destination": "/api/command?action=:action"
+    }
+  ]
+}
