@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<!--
+  REC ROOM — single-source, multi-view.
+  CONTRACT:
+    (no param)            full standalone page: banner + game + scoreboard, bg video, polling ON
+    ?section=banner       logo banner only. Static. No polling, no game, no bg video.
+    ?section=game         Program Interface + game iframe + sign-in. No polling, no bg video.
+    ?section=scoreboard   scoreboard grid. Polling ON (the ONLY sectioned view that touches Neon).
+  INVARIANTS:
+    - Exactly one view boots Neon polling per document: full or ?section=scoreboard.
+    - Recent-scores renders a fixed RECENT_ROWS rows -> scoreboard height is deterministic.
+    - Adding a section = CSS visibility rules + boot gating below. Never fork this file.
+  Mindtickle embeds each section URL as its own fixed-height Custom HTML widget.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>REC ROOM</title>
+  <meta name="build" content="2026-07-15-1930">
+  <script>
+    (function(){var s=new URLSearchParams(location.search).get('section');
+      if(s)document.documentElement.setAttribute('data-section',s);})();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cyan:    #10CFC9;
+      --bg-dark: #10172A;
+      --bg-outer:#123456;
+      --nam:     #9B59FF;
+      --latam:   #FF2D9B;
+      --emea:    #FF6B35;
+      --apac:    #10CFC9;
+      --dim:     #35435D;
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      background: var(--bg-dark);
+      font-family: 'VT323', monospace;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* Game gating + section stacking handled by media query below */
+
+    .widget {
+      position: relative;
+      width: 100%;
+      min-width: 1024px;
+      min-height: 100vh;
+    }
+
+    /* ---- widget sections: ?section=banner|game|scoreboard (no param = full page) ---- */
+    html[data-section] .widget{min-width:0;min-height:0}
+    html[data-section] .content{padding:10px 24px 18px}
+    html[data-section="banner"] .content > .section-label,
+    html[data-section="banner"] .game-frame,
+    html[data-section="banner"] .scoreboard{display:none}
+    html[data-section="game"] .header,
+    html[data-section="game"] .scoreboard{display:none}
+    html[data-section="scoreboard"] .header,
+    html[data-section="scoreboard"] .content > .section-label,
+    html[data-section="scoreboard"] .game-frame{display:none}
+
+    .bg-video {
+      position: fixed; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: blur(4px) brightness(0.6);
+      z-index: 0;
+    }
+    .bg-overlay { position: fixed; inset: 0; background: rgba(16,23,42,0.58); z-index: 1; }
+    .scanlines {
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+      pointer-events: none; z-index: 2;
+    }
+
+    .content { position: relative; z-index: 3; max-width: 1600px; margin: 0 auto; padding: 20px 40px 56px; }
+
+    .header { display: flex; align-items: center; justify-content: center; padding: 40px 0 26px; }
+    .header .logo-video { height: 200px; filter: drop-shadow(0 0 28px rgba(16,207,201,0.55)); }
+
+    .section-label {
+      font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; letter-spacing: 0.35em;
+      color: var(--cyan); text-transform: uppercase; margin-bottom: 6px;
+    }
+
+    .game-frame {
+      position: relative; width: 100%; aspect-ratio: 16 / 9;
+      background: var(--bg-dark); border: 1px solid var(--cyan);
+      box-shadow: 0 0 30px rgba(16,207,201,0.18), inset 0 0 60px rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; overflow: hidden;
+    }
+    .game-frame .corner { position: absolute; width: 28px; height: 28px; border-color: var(--cyan); border-style: solid; }
+    .corner.tl { top:-1px; left:-1px;   border-width: 3px 0 0 3px; }
+    .corner.tr { top:-1px; right:-1px;  border-width: 3px 3px 0 0; }
+    .corner.bl { bottom:-1px; left:-1px;  border-width: 0 0 3px 3px; }
+    .corner.br { bottom:-1px; right:-1px; border-width: 0 3px 3px 0; }
+    .game-frame svg.diag { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.12; pointer-events: none; }
+    .game-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; z-index: 6; background: #06101f; }
+    .game-frame.playing .ph-online, .game-frame.playing .ph-offline { display: none; }
+    .placeholder-text {
+      font-family: 'Share Tech Mono', monospace; font-size: 1.3rem; letter-spacing: 0.32em;
+      color: rgba(255,255,255,0.92); background: rgba(8,18,34,0.55);
+      padding: 14px 40px; border: 1px solid rgba(16,207,201,0.45); text-transform: uppercase; z-index: 2;
+      box-shadow: 0 0 26px rgba(16,207,201,0.22);
+    }
+    .ph-offline { display: none; }
+
+    .scoreboard {
+      border: 1px solid rgba(16,207,201,0.4); background: rgba(16,23,42,0.5);
+      box-shadow: 0 0 24px rgba(16,207,201,0.12); padding: 10px 12px 12px;
+    }
+    .sb-grid { display: grid; grid-template-columns: 250px 1fr 250px; gap: 12px; align-items: stretch; }
+
+    .panel { background: var(--bg-dark); border: 1px solid rgba(16,207,201,0.25); padding: 10px 12px; }
+    .panel-title {
+      font-family: 'Share Tech Mono', monospace; font-size: 0.62rem; letter-spacing: 0.25em;
+      color: var(--cyan); text-transform: uppercase; border-bottom: 1px solid rgba(16,207,201,0.18);
+      padding-bottom: 6px; margin-bottom: 8px;
+    }
+
+    .left-col { display: flex; flex-direction: column; gap: 12px; }
+    .left-col .panel:first-child { flex: 1; }
+
+    .t-row { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+    .t-row img { width: 22px; height: 22px; object-fit: contain; }
+    .t-name { font-size: 1.5rem; min-width: 72px; letter-spacing: 0.05em; }
+    .t-score { font-size: 1.5rem; margin-left: auto; color: #fff; }
+    .t-acc { font-family:'Share Tech Mono',monospace; font-size:0.55rem; color:var(--cyan); opacity:0.75; margin-left:8px; }
+    .t-head { display:flex; align-items:center; font-family:'Share Tech Mono',monospace; font-size:0.46rem;
+      letter-spacing:0.12em; color:var(--cyan); opacity:0.65; text-transform:uppercase;
+      padding-bottom:4px; margin-bottom:4px; border-bottom:1px solid rgba(16,207,201,0.12); }
+    .t-head .t-head-sp { width:114px; flex-shrink:0; }
+    .t-head .t-head-pts { margin-left:auto; }
+    .t-dim  { color: var(--dim); }
+    .nam    { color: var(--nam); }
+    .latam  { color: var(--latam); }
+    .emea   { color: var(--emea); }
+    .apac   { color: var(--apac); }
+
+    .perf-chart { flex: 1; position: relative; min-height: 0; }
+    .perf-chart svg { width: 100%; height: 100%; display: block; }
+    .perf-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      font-family: 'Share Tech Mono', monospace; font-size: 0.55rem; color: var(--dim); letter-spacing: 0.12em; text-transform: uppercase; }
+
+    .fx-canvas { position: absolute; left: 0; right: 0; top: 32px; bottom: 0; z-index: 5; pointer-events: none; image-rendering: pixelated; }
+    .map-grid {
+      position: absolute; left: 0; right: 0; top: 32px; bottom: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(16,207,201,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16,207,201,0.07) 1px, transparent 1px);
+      background-size: 24px 24px;
+      -webkit-mask-image: radial-gradient(ellipse 72% 72% at center, #000 50%, transparent 100%);
+              mask-image: radial-gradient(ellipse 72% 72% at center, #000 50%, transparent 100%);
+      animation: gridBreathe 4.5s ease-in-out infinite;
+    }
+    @keyframes gridBreathe { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+    .radar-sweep {
+      position: absolute; left: 50%; top: calc(50% + 16px); width: 135%; aspect-ratio: 1 / 1;
+      translate: -50% -50%; border-radius: 50%; pointer-events: none; z-index: 1;
+      background: conic-gradient(rgba(16,207,201,0.09), rgba(16,207,201,0) 16%, transparent 100%);
+      animation: radarSpin 7s linear infinite; mix-blend-mode: screen;
+    }
+    @keyframes radarSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* MAP */
+    .map-panel { position: relative; background: var(--bg-dark); border: 1px solid rgba(16,207,201,0.25); overflow: hidden; min-height: 340px; }
+    .map-panel .panel-title {
+      position: absolute; top: 10px; left: 12px; right: 12px; z-index: 5;
+      border-bottom: 1px solid rgba(16,207,201,0.18); padding-bottom: 6px; margin-bottom: 0;
+    }
+    .map-stack { position: absolute; inset: 0; top: 32px; z-index: 2; }
+    .map-layer {
+      position: absolute; inset: 0;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      -webkit-mask-position: center;  mask-position: center;
+      -webkit-mask-size: contain;     mask-size: contain;
+      transition: background 0.6s ease, opacity 0.6s ease;
+    }
+    .map-layer.latam { -webkit-mask-image: url('assets/images/map_elements/LATAM_map.png'); mask-image: url('assets/images/map_elements/LATAM_map.png'); background: var(--latam); opacity: 0.9; }
+    .map-layer.emea  { -webkit-mask-image: url('assets/images/map_elements/EMEA_map.png');  mask-image: url('assets/images/map_elements/EMEA_map.png');  background: var(--emea); opacity: 0.9; }
+    .map-layer.apac  { -webkit-mask-image: url('assets/images/map_elements/APAC_map.png');  mask-image: url('assets/images/map_elements/APAC_map.png');  background: var(--apac); opacity: 0.85; }
+    .map-layer.nam   { -webkit-mask-image: url('assets/images/map_elements/NAM_map.png');   mask-image: url('assets/images/map_elements/NAM_map.png');   background: var(--nam); opacity: 0.9; }
+    /* unlit state — set on any territory not in the scored top-3 (paintMap()).
+       Comes after the per-territory rules so it wins on equal specificity. */
+    .map-layer.dim   { background: var(--dim); opacity: 0.28; }
+
+    .score-bubble {
+      position: absolute; background: rgba(13,20,36,0.82); padding: 5px 12px; z-index: 6;
+      pointer-events: none; opacity: 0; transform: translate(-50%, -50%);
+      border: 1px solid var(--glow, #10CFC9);
+      box-shadow: 0 0 6px rgba(16,207,201,0.18); image-rendering: pixelated;
+    }
+    .score-bubble.visible   { opacity: 1; animation: bubbleIn 0.22s steps(4, end) both; }
+    .score-bubble.dissolving { opacity: 0; animation: bubbleOut 0.2s steps(4, end) both; }
+    @keyframes bubbleIn  { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes bubbleOut { from { opacity: 1; } to { opacity: 0; } }
+    .bubble-label { font-family: 'Share Tech Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em; text-transform: uppercase; }
+    .bubble-score { font-size: 2.2rem; color: #fff; line-height: 1.1; }
+
+    .map-legend { position: absolute; bottom: 8px; left: 12px; display: flex; gap: 14px; z-index: 6; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-family: 'Share Tech Mono', monospace; font-size: 0.55rem; }
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    /* pulsing online status */
+    .status-online {
+      font-family: 'Share Tech Mono', monospace; font-size: 0.55rem; color: var(--cyan); letter-spacing: 0.1em;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .status-online::before {
+      content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--cyan);
+      animation: statusPulse 1.6s ease-in-out infinite;
+    }
+    @keyframes statusPulse {
+      0%, 100% { opacity: 0.35; box-shadow: 0 0 2px rgba(16,207,201,0.4); }
+      50%      { opacity: 1;    box-shadow: 0 0 10px 2px rgba(16,207,201,0.95); }
+    }
+    .map-status { position: absolute; bottom: 8px; right: 12px; z-index: 6; }
+    .status-tag { margin-top: auto; text-align: right; padding-top: 6px; }
+    .status-tag .status-online { justify-content: flex-end; }
+
+    /* RIGHT */
+    .right-col { display: flex; flex-direction: column; gap: 12px; }
+    .right-col .panel { flex: 1; display: flex; flex-direction: column; }
+    .rank-row {
+      display: grid; grid-template-columns: 28px 1fr auto 28px; align-items: center; gap: 8px;
+      padding: 6px 8px; margin-bottom: 6px;
+      background: rgba(16,207,201,0.05); border: 1px solid rgba(16,207,201,0.18);
+      clip-path: inset(0 100% 0 0);
+      animation: wipeIn 0.45s ease forwards; animation-delay: calc(var(--i, 0) * 0.5s);
+    }
+    .rank-row .medal { width: 24px; height: 24px; object-fit: contain; }
+    .rank-row .flag  { width: 24px; height: 16px; object-fit: cover; border: 1px solid rgba(255,255,255,0.15); }
+    .rank-tri   { font-size: 1.5rem; }
+    .rank-score { font-size: 1.5rem; text-align: right; color: #fff; }
+    .rank-row .cell { opacity: 0; animation: glitchIn 0.4s steps(3, end) forwards; animation-delay: calc(var(--i, 0) * 0.5s + 0.42s); }
+    .rank-row.claim .claim-text {
+      grid-column: 2 / 5; text-align: center;
+      font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; letter-spacing: 0.14em;
+      color: var(--dim); text-transform: uppercase;
+    }
+    @keyframes wipeIn {
+      from { clip-path: inset(0 100% 0 0); transform: translateY(6px); }
+      to   { clip-path: inset(0 0 0 0);   transform: translateY(0); }
+    }
+    @keyframes glitchIn {
+      0%   { opacity: 0;   transform: translateX(-4px) skewX(8deg); }
+      30%  { opacity: 1;   transform: translateX(3px) skewX(-6deg); }
+      60%  { opacity: 0.6; transform: translateX(-2px) skewX(3deg); }
+      100% { opacity: 1;   transform: translateX(0) skewX(0); }
+    }
+
+    .recent-row { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+    .recent-row .flag { width: 22px; height: 15px; object-fit: cover; border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; }
+    .recent-tri   { font-size: 1.5rem; min-width: 58px; }
+    .recent-score { font-size: 1.5rem; margin-left: auto; }
+
+    @keyframes slideIn { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+    .recent-row.new { animation: slideIn 0.4s ease forwards; }
+
+    .rotating-fade { animation: rotFade 0.45s ease; }
+    @keyframes rotFade { from { opacity: 0; } to { opacity: 1; } }
+
+    /* ============ LOGIN GATE ============ */
+    .login-gate {
+      position: fixed; inset: 0; z-index: 10000;
+      background: rgba(6,10,20,0.88);
+      display: none; align-items: center; justify-content: center; padding: 24px;
+    }
+    .login-gate.open { display: flex; }
+    .login-gate .scan { position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.10) 2px, rgba(0,0,0,0.10) 4px); }
+    .login-panel {
+      position: relative; width: 100%; max-width: 440px;
+      background: rgba(16,23,42,0.92); border: 1px solid var(--cyan);
+      box-shadow: 0 0 40px rgba(16,207,201,0.25); padding: 30px 28px 28px; text-align: center;
+    }
+    .login-panel img.logo { height: 84px; margin-bottom: 6px; filter: drop-shadow(0 0 16px rgba(16,207,201,0.5)); }
+    .login-sub { font-family:'Share Tech Mono',monospace; font-size:0.6rem; letter-spacing:0.3em; color:var(--cyan); text-transform:uppercase; margin-bottom: 22px; }
+    .field { text-align: left; margin-bottom: 16px; position: relative; }
+    .field label { font-family:'Share Tech Mono',monospace; font-size:0.58rem; letter-spacing:0.2em; color:var(--cyan); text-transform:uppercase; display:block; margin-bottom:5px; }
+    .field input, .field select {
+      width: 100%; background: #0c1322; border: 1px solid rgba(16,207,201,0.4); color: #fff;
+      font-family: 'VT323', monospace; font-size: 1.3rem; padding: 8px 10px; outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--cyan); box-shadow: 0 0 10px rgba(16,207,201,0.35); }
+    .field input::placeholder { color: #44597a; }
+    #trigramInput { text-transform: uppercase; letter-spacing: 0.2em; }
+
+    .ta-list {
+      position: absolute; left: 0; right: 0; top: 100%; z-index: 5;
+      background: #0c1322; border: 1px solid rgba(16,207,201,0.4); border-top: none;
+      max-height: 200px; overflow-y: auto; display: none;
+    }
+    .ta-list.open { display: block; }
+    .ta-item { padding: 6px 10px; font-size: 1.15rem; cursor: pointer; display: flex; align-items: center; gap: 9px; }
+    .ta-item:hover, .ta-item.active { background: rgba(16,207,201,0.18); }
+    .ta-item img { width: 20px; height: 14px; object-fit: cover; border: 1px solid rgba(255,255,255,0.15); }
+    .ta-empty { padding: 8px 10px; font-family:'Share Tech Mono',monospace; font-size:0.6rem; color:var(--dim); }
+
+    .login-btn {
+      width: 100%; margin-top: 8px; background: var(--cyan); color: #06222b; border: none;
+      font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; letter-spacing: 0.2em; text-transform: uppercase;
+      padding: 13px; cursor: pointer; font-weight: bold; transition: filter 0.15s ease;
+    }
+    .login-btn:hover { filter: brightness(1.15); }
+    .login-err { color: #FF6B6B; font-family:'Share Tech Mono',monospace; font-size:0.62rem; min-height: 14px; margin-top: 10px; letter-spacing: 0.05em; }
+    .login-cancel { background:none; border:none; color:#5b6f8c; font-family:'Share Tech Mono',monospace; font-size:0.62rem; letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; margin-top:12px; }
+    .login-cancel:hover { color:#9fb4d0; }
+
+    .ph-online {
+      position:absolute; inset:0; z-index:7;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px;
+      background:rgba(6,16,30,0.42);
+      backdrop-filter:blur(8px) saturate(120%); -webkit-backdrop-filter:blur(8px) saturate(120%);
+    }
+    .play-btn {
+      background: var(--cyan); color:#06222b; border:none; font-family:'Share Tech Mono',monospace;
+      font-size:0.8rem; letter-spacing:0.18em; text-transform:uppercase; font-weight:bold;
+      padding:12px 26px; cursor:pointer; transition:filter 0.15s ease;
+    }
+    .play-btn:hover { filter:brightness(1.15); }
+    .play-btn:disabled { background:#243247; color:#7f93ad; cursor:default; filter:none; }
+
+    /* mismatch modal */
+    .modal-back { position: fixed; inset: 0; z-index: 10001; background: rgba(4,8,16,0.8); display: none; align-items: center; justify-content: center; padding: 24px; }
+    .modal-back.open { display: flex; }
+    .modal {
+      width: 100%; max-width: 460px; background: rgba(16,23,42,0.97); border: 1px solid var(--emea);
+      box-shadow: 0 0 40px rgba(255,107,53,0.3); padding: 26px; text-align: center;
+    }
+    .modal h3 { font-family:'Share Tech Mono',monospace; color: var(--emea); font-size: 0.95rem; letter-spacing: 0.15em; margin-bottom: 14px; text-transform: uppercase; }
+    .modal p { font-size: 1.25rem; line-height: 1.5; margin-bottom: 20px; color: #d8e2f0; }
+    .modal .hl { color: var(--cyan); }
+    .modal-btns { display: flex; gap: 12px; }
+    .modal-btns button { flex: 1; font-family:'Share Tech Mono',monospace; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 12px; cursor: pointer; border: none; }
+    .btn-back { background: #233247; color: #cdd9ea; }
+    .btn-continue { background: var(--emea); color: #2a1003; font-weight: bold; }
+
+    /* ============ MOBILE / PORTRAIT ============ */
+    @media (max-width: 1023px) {
+      .widget { min-width: 0; }
+      .content { padding: 16px 16px 22px; }
+      .header .logo-video { height: 120px; }
+      .sb-grid { grid-template-columns: 1fr; height: auto; }
+      .map-panel { height: 300px; min-height: 0; }
+      .ph-online { display: none; }
+      .ph-offline { display: block; text-align: center; line-height: 1.5; font-size: 1rem; letter-spacing: 0.15em; padding: 12px 18px; }
+    }
+  
+    /* fetch overlay — shows while the pool is being re-fetched between rotations */
+    .fetch-overlay {
+      position: absolute; left: 0; right: 0; top: 32px; bottom: 0;
+      z-index: 12; display: none; align-items: center; justify-content: center;
+      background: rgba(6, 13, 24, 0.78);
+      backdrop-filter: blur(2px);
+      pointer-events: none;
+    }
+    .fetch-overlay.show { display: flex; }
+    .fetch-overlay .fetch-label {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px; letter-spacing: 2px; color: #fff; text-align: center; line-height: 1.7;
+      animation: fetchGlitch 0.18s steps(2) infinite;
+      padding: 18px 28px;
+      border: 1px solid rgba(124,92,255,0.5);
+      background: rgba(10,20,38,0.65);
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(16,207,201,0.25);
+    }
+    @keyframes fetchGlitch {
+      0%   { text-shadow: 2px 0 #FF2D9B, -2px 0 #10CFC9, 0 0 14px rgba(124,92,255,.6); }
+      50%  { text-shadow: -3px 1px #FF2D9B, 3px -1px #10CFC9, 0 0 20px rgba(255,45,155,.7); }
+      100% { text-shadow: 2px 0 #FF2D9B, -2px 0 #10CFC9, 0 0 14px rgba(124,92,255,.6); }
+    }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN GATE ============ -->
+<div class="login-gate" id="loginGate">
+  <div class="scan"></div>
+  <div class="login-panel">
+    <img class="logo" src="assets/images/misc/RecRoom_Logo1.png" alt="REC ROOM">
+    <div class="login-sub">Sign In To Play</div>
+
+    <div class="field">
+      <label>Trigram</label>
+      <input id="trigramInput" type="text" maxlength="4" autocomplete="off" placeholder="e.g. TWS">
+    </div>
+
+    <div class="field" id="countryField">
+      <label>Home Country</label>
+      <input id="countryInput" type="text" autocomplete="off" placeholder="Type to search...">
+      <div class="ta-list" id="countryList"></div>
+    </div>
+
+    <div class="field">
+      <label>Sales Territory</label>
+      <select id="territorySelect">
+        <option value="">Select territory...</option>
+        <option value="NAM">NAM</option>
+        <option value="LATAM">LATAM</option>
+        <option value="EMEA">EMEA</option>
+        <option value="APAC">APAC</option>
+      </select>
+    </div>
+
+    <button class="login-btn" id="enterBtn">Sign In</button>
+    <div class="login-err" id="loginErr"></div>
+    <button class="login-cancel" id="cancelBtn">Cancel</button>
+  </div>
+</div>
+
+<!-- ============ MISMATCH MODAL ============ -->
+<div class="modal-back" id="mismatchModal">
+  <div class="modal">
+    <h3>Credentials Differ</h3>
+    <p id="mismatchText"></p>
+    <div class="modal-btns">
+      <button class="btn-back" id="mmBack">Back</button>
+      <button class="btn-continue" id="mmContinue">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ THE ROOM ============ -->
+<div class="widget" id="widget">
+  <video class="bg-video" autoplay muted loop playsinline>
+    <source src="assets/video/RecRoom_bg_loop1.webm" type="video/webm">
+  </video>
+  <div class="bg-overlay"></div>
+  <div class="scanlines"></div>
+
+  <div class="content">
+
+    <div class="header">
+      <video class="logo-video" autoplay muted loop playsinline>
+        <source src="assets/images/misc/REC_Room_logo_360.webm" type="video/webm">
+      </video>
+    </div>
+
+    <div class="section-label">Program Interface</div>
+    <div class="game-frame">
+      <div class="corner tl"></div><div class="corner tr"></div>
+      <div class="corner bl"></div><div class="corner br"></div>
+      <svg class="diag" viewBox="0 0 1872 530" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="0" x2="1872" y2="530" stroke="#10CFC9" stroke-width="1.5" stroke-dasharray="10,7"/>
+        <line x1="1872" y1="0" x2="0" y2="530" stroke="#10CFC9" stroke-width="1.5" stroke-dasharray="10,7"/>
+      </svg>
+      <svg style="position:absolute;top:14px;left:14px;width:18px;height:18px" viewBox="0 0 18 18"><polygon points="0,0 18,0 0,18" fill="#10CFC9" opacity="0.55"/></svg>
+      <svg style="position:absolute;top:14px;right:14px;width:18px;height:18px" viewBox="0 0 18 18"><polygon points="18,0 0,0 18,18" fill="#10CFC9" opacity="0.55"/></svg>
+      <svg style="position:absolute;bottom:14px;left:14px;width:18px;height:18px" viewBox="0 0 18 18"><polygon points="0,18 0,0 18,18" fill="#10CFC9" opacity="0.55"/></svg>
+      <svg style="position:absolute;bottom:14px;right:14px;width:18px;height:18px" viewBox="0 0 18 18"><polygon points="18,18 0,18 18,0" fill="#10CFC9" opacity="0.55"/></svg>
+      <iframe id="gameFrame" title="SIDE-QLIK BLITZ" allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>
+      <div class="ph-online">
+        <div class="placeholder-text" id="gameMsg">SIDE-QLIK BLITZ</div>
+        <button class="play-btn" id="playBtn">Sign In to Play</button>
+      </div>
+      <div class="placeholder-text ph-offline">&#9888; Game Requires Desktop<br>or Tablet (Landscape)</div>
+    </div>
+
+    <div class="scoreboard">
+      <div class="section-label">REC Room Scoreboard</div>
+      <div class="sb-grid">
+
+        <!-- LEFT -->
+        <div class="left-col">
+          <div class="panel">
+            <div class="panel-title">Territory Ranking</div>
+            <div class="t-head"><span class="t-head-sp"></span><span class="t-head-acc">Answer Acc.</span><span class="t-head-pts">Points</span></div>
+            <div id="territoryRanking"></div>
+          </div>
+          <div class="panel" style="height:120px;flex-shrink:0;display:flex;flex-direction:column">
+            <div class="panel-title">Territory Performance <span style="float:right;font-size:0.5rem;opacity:0.55;letter-spacing:0.15em">48H</span></div>
+            <div class="perf-chart" id="perfChart"><div class="perf-empty">Collecting data&#8230;</div></div>
+          </div>
+        </div>
+
+        <!-- CENTER MAP -->
+        <div class="map-panel">
+          <div class="panel-title">Recent Activity</div>
+          <div class="fetch-overlay" id="fetchOverlay"><div class="fetch-label">// SIGNAL LOST<br>FETCHING SCORES &mdash; RESUMING MOMENTARILY</div></div>
+          <div class="map-grid"></div>
+          <div class="map-stack">
+            <div class="map-layer latam dim"></div>
+            <div class="map-layer emea dim"></div>
+            <div class="map-layer apac dim"></div>
+            <div class="map-layer nam dim"></div>
+          </div>
+          <div class="radar-sweep"></div>
+          <canvas class="fx-canvas" id="fxCanvas"></canvas>
+          <div class="score-bubble" id="scoreBubble">
+            <div class="bubble-label" id="bubbleLabel">TWS</div>
+            <div class="bubble-score" id="bubbleScore">+2456</div>
+          </div>
+          <div class="map-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--nam)"></div><span style="color:var(--nam)">NAM</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--latam)"></div><span style="color:var(--latam)">LATAM</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--emea)"></div><span style="color:var(--emea)">EMEA</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--apac)"></div><span style="color:var(--apac)">APAC</span></div>
+          </div>
+          <div class="map-status"><span class="status-online" id="lastRefresh">Updated &mdash;</span></div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="right-col">
+          <div class="panel">
+            <div class="panel-title" id="rankTitle">User Ranking</div>
+            <div id="userRanking"></div>
+            <div class="status-tag"><span class="status-online">ONLINE [REAL TIME]</span></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Recent Scores</div>
+            <div id="recentScores"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+console.log('[REC Room build] 2026-07-15-1930');
+/* ============================================================
+   TEMP CONFIG  —  replace the value below with your real
+   MT_SESSION_REF before go-live, then delete this comment block.
+   (Until it matches Vercel, the territory-relocate write won't
+   persist; everything else works without it.)
+   ============================================================ */
+const SESSION_KEY = "eOkos0aXU6rs3gfwmXcUZkcD";
+// Deployed SIDE-QLIK BLITZ game (its own Vercel project). Verify this matches your deploy.
+const GAME_URL = "https://sideqlik-blitz.vercel.app/";
+const SECTION = document.documentElement.getAttribute('data-section') || '';
+if (SECTION){
+  // sections run as separate MT widget documents — don't let each one loop a webm
+  var _bv = document.querySelector('.bg-video'); if (_bv) _bv.remove();
+  if (SECTION !== 'banner'){ var _lv = document.querySelector('.logo-video'); if (_lv) _lv.remove(); }
+}
+const SHOW_GAME  = !SECTION || SECTION === 'game';
+const SHOW_BOARD = !SECTION || SECTION === 'scoreboard';
+const gameFrame = document.getElementById('gameFrame');
+let gameReady = false;
+
+/* ---------- country data (ISO alpha-2) ---------- */
+const COUNTRIES = [{"n": "Afghanistan", "c": "af"}, {"n": "Albania", "c": "al"}, {"n": "Algeria", "c": "dz"}, {"n": "American Samoa", "c": "as"}, {"n": "Andorra", "c": "ad"}, {"n": "Angola", "c": "ao"}, {"n": "Anguilla", "c": "ai"}, {"n": "Antarctica", "c": "aq"}, {"n": "Antigua and Barbuda", "c": "ag"}, {"n": "Argentina", "c": "ar"}, {"n": "Armenia", "c": "am"}, {"n": "Aruba", "c": "aw"}, {"n": "Australia", "c": "au"}, {"n": "Austria", "c": "at"}, {"n": "Azerbaijan", "c": "az"}, {"n": "Bahamas", "c": "bs"}, {"n": "Bahrain", "c": "bh"}, {"n": "Bangladesh", "c": "bd"}, {"n": "Barbados", "c": "bb"}, {"n": "Belarus", "c": "by"}, {"n": "Belgium", "c": "be"}, {"n": "Belize", "c": "bz"}, {"n": "Benin", "c": "bj"}, {"n": "Bermuda", "c": "bm"}, {"n": "Bhutan", "c": "bt"}, {"n": "Bolivia", "c": "bo"}, {"n": "Bonaire, Sint Eustatius and Saba", "c": "bq"}, {"n": "Bosnia and Herzegovina", "c": "ba"}, {"n": "Botswana", "c": "bw"}, {"n": "Bouvet Island", "c": "bv"}, {"n": "Brazil", "c": "br"}, {"n": "British Indian Ocean Territory", "c": "io"}, {"n": "Brunei Darussalam", "c": "bn"}, {"n": "Bulgaria", "c": "bg"}, {"n": "Burkina Faso", "c": "bf"}, {"n": "Burundi", "c": "bi"}, {"n": "Cabo Verde", "c": "cv"}, {"n": "Cambodia", "c": "kh"}, {"n": "Cameroon", "c": "cm"}, {"n": "Canada", "c": "ca"}, {"n": "Cayman Islands", "c": "ky"}, {"n": "Central African Republic", "c": "cf"}, {"n": "Chad", "c": "td"}, {"n": "Chile", "c": "cl"}, {"n": "China", "c": "cn"}, {"n": "Christmas Island", "c": "cx"}, {"n": "Cocos (Keeling) Islands", "c": "cc"}, {"n": "Colombia", "c": "co"}, {"n": "Comoros", "c": "km"}, {"n": "Congo", "c": "cg"}, {"n": "Congo, The Democratic Republic of the", "c": "cd"}, {"n": "Cook Islands", "c": "ck"}, {"n": "Costa Rica", "c": "cr"}, {"n": "Croatia", "c": "hr"}, {"n": "Cuba", "c": "cu"}, {"n": "Curaçao", "c": "cw"}, {"n": "Cyprus", "c": "cy"}, {"n": "Czechia", "c": "cz"}, {"n": "Côte d'Ivoire", "c": "ci"}, {"n": "Denmark", "c": "dk"}, {"n": "Djibouti", "c": "dj"}, {"n": "Dominica", "c": "dm"}, {"n": "Dominican Republic", "c": "do"}, {"n": "Ecuador", "c": "ec"}, {"n": "Egypt", "c": "eg"}, {"n": "El Salvador", "c": "sv"}, {"n": "Equatorial Guinea", "c": "gq"}, {"n": "Eritrea", "c": "er"}, {"n": "Estonia", "c": "ee"}, {"n": "Eswatini", "c": "sz"}, {"n": "Ethiopia", "c": "et"}, {"n": "Falkland Islands (Malvinas)", "c": "fk"}, {"n": "Faroe Islands", "c": "fo"}, {"n": "Fiji", "c": "fj"}, {"n": "Finland", "c": "fi"}, {"n": "France", "c": "fr"}, {"n": "French Guiana", "c": "gf"}, {"n": "French Polynesia", "c": "pf"}, {"n": "French Southern Territories", "c": "tf"}, {"n": "Gabon", "c": "ga"}, {"n": "Gambia", "c": "gm"}, {"n": "Georgia", "c": "ge"}, {"n": "Germany", "c": "de"}, {"n": "Ghana", "c": "gh"}, {"n": "Gibraltar", "c": "gi"}, {"n": "Greece", "c": "gr"}, {"n": "Greenland", "c": "gl"}, {"n": "Grenada", "c": "gd"}, {"n": "Guadeloupe", "c": "gp"}, {"n": "Guam", "c": "gu"}, {"n": "Guatemala", "c": "gt"}, {"n": "Guernsey", "c": "gg"}, {"n": "Guinea", "c": "gn"}, {"n": "Guinea-Bissau", "c": "gw"}, {"n": "Guyana", "c": "gy"}, {"n": "Haiti", "c": "ht"}, {"n": "Heard Island and McDonald Islands", "c": "hm"}, {"n": "Holy See (Vatican City State)", "c": "va"}, {"n": "Honduras", "c": "hn"}, {"n": "Hong Kong", "c": "hk"}, {"n": "Hungary", "c": "hu"}, {"n": "Iceland", "c": "is"}, {"n": "India", "c": "in"}, {"n": "Indonesia", "c": "id"}, {"n": "Iran", "c": "ir"}, {"n": "Iraq", "c": "iq"}, {"n": "Ireland", "c": "ie"}, {"n": "Isle of Man", "c": "im"}, {"n": "Israel", "c": "il"}, {"n": "Italy", "c": "it"}, {"n": "Jamaica", "c": "jm"}, {"n": "Japan", "c": "jp"}, {"n": "Jersey", "c": "je"}, {"n": "Jordan", "c": "jo"}, {"n": "Kazakhstan", "c": "kz"}, {"n": "Kenya", "c": "ke"}, {"n": "Kiribati", "c": "ki"}, {"n": "Kuwait", "c": "kw"}, {"n": "Kyrgyzstan", "c": "kg"}, {"n": "Laos", "c": "la"}, {"n": "Latvia", "c": "lv"}, {"n": "Lebanon", "c": "lb"}, {"n": "Lesotho", "c": "ls"}, {"n": "Liberia", "c": "lr"}, {"n": "Libya", "c": "ly"}, {"n": "Liechtenstein", "c": "li"}, {"n": "Lithuania", "c": "lt"}, {"n": "Luxembourg", "c": "lu"}, {"n": "Macao", "c": "mo"}, {"n": "Madagascar", "c": "mg"}, {"n": "Malawi", "c": "mw"}, {"n": "Malaysia", "c": "my"}, {"n": "Maldives", "c": "mv"}, {"n": "Mali", "c": "ml"}, {"n": "Malta", "c": "mt"}, {"n": "Marshall Islands", "c": "mh"}, {"n": "Martinique", "c": "mq"}, {"n": "Mauritania", "c": "mr"}, {"n": "Mauritius", "c": "mu"}, {"n": "Mayotte", "c": "yt"}, {"n": "Mexico", "c": "mx"}, {"n": "Micronesia, Federated States of", "c": "fm"}, {"n": "Moldova", "c": "md"}, {"n": "Monaco", "c": "mc"}, {"n": "Mongolia", "c": "mn"}, {"n": "Montenegro", "c": "me"}, {"n": "Montserrat", "c": "ms"}, {"n": "Morocco", "c": "ma"}, {"n": "Mozambique", "c": "mz"}, {"n": "Myanmar", "c": "mm"}, {"n": "Namibia", "c": "na"}, {"n": "Nauru", "c": "nr"}, {"n": "Nepal", "c": "np"}, {"n": "Netherlands", "c": "nl"}, {"n": "New Caledonia", "c": "nc"}, {"n": "New Zealand", "c": "nz"}, {"n": "Nicaragua", "c": "ni"}, {"n": "Niger", "c": "ne"}, {"n": "Nigeria", "c": "ng"}, {"n": "Niue", "c": "nu"}, {"n": "Norfolk Island", "c": "nf"}, {"n": "North Korea", "c": "kp"}, {"n": "North Macedonia", "c": "mk"}, {"n": "Northern Mariana Islands", "c": "mp"}, {"n": "Norway", "c": "no"}, {"n": "Oman", "c": "om"}, {"n": "Pakistan", "c": "pk"}, {"n": "Palau", "c": "pw"}, {"n": "Palestine, State of", "c": "ps"}, {"n": "Panama", "c": "pa"}, {"n": "Papua New Guinea", "c": "pg"}, {"n": "Paraguay", "c": "py"}, {"n": "Peru", "c": "pe"}, {"n": "Philippines", "c": "ph"}, {"n": "Pitcairn", "c": "pn"}, {"n": "Poland", "c": "pl"}, {"n": "Portugal", "c": "pt"}, {"n": "Puerto Rico", "c": "pr"}, {"n": "Qatar", "c": "qa"}, {"n": "Romania", "c": "ro"}, {"n": "Russian Federation", "c": "ru"}, {"n": "Rwanda", "c": "rw"}, {"n": "Réunion", "c": "re"}, {"n": "Saint Barthélemy", "c": "bl"}, {"n": "Saint Helena, Ascension and Tristan da Cunha", "c": "sh"}, {"n": "Saint Kitts and Nevis", "c": "kn"}, {"n": "Saint Lucia", "c": "lc"}, {"n": "Saint Martin (French part)", "c": "mf"}, {"n": "Saint Pierre and Miquelon", "c": "pm"}, {"n": "Saint Vincent and the Grenadines", "c": "vc"}, {"n": "Samoa", "c": "ws"}, {"n": "San Marino", "c": "sm"}, {"n": "Sao Tome and Principe", "c": "st"}, {"n": "Saudi Arabia", "c": "sa"}, {"n": "Senegal", "c": "sn"}, {"n": "Serbia", "c": "rs"}, {"n": "Seychelles", "c": "sc"}, {"n": "Sierra Leone", "c": "sl"}, {"n": "Singapore", "c": "sg"}, {"n": "Sint Maarten (Dutch part)", "c": "sx"}, {"n": "Slovakia", "c": "sk"}, {"n": "Slovenia", "c": "si"}, {"n": "Solomon Islands", "c": "sb"}, {"n": "Somalia", "c": "so"}, {"n": "South Africa", "c": "za"}, {"n": "South Georgia and the South Sandwich Islands", "c": "gs"}, {"n": "South Korea", "c": "kr"}, {"n": "South Sudan", "c": "ss"}, {"n": "Spain", "c": "es"}, {"n": "Sri Lanka", "c": "lk"}, {"n": "Sudan", "c": "sd"}, {"n": "Suriname", "c": "sr"}, {"n": "Svalbard and Jan Mayen", "c": "sj"}, {"n": "Sweden", "c": "se"}, {"n": "Switzerland", "c": "ch"}, {"n": "Syria", "c": "sy"}, {"n": "Taiwan", "c": "tw"}, {"n": "Tajikistan", "c": "tj"}, {"n": "Tanzania", "c": "tz"}, {"n": "Thailand", "c": "th"}, {"n": "Timor-Leste", "c": "tl"}, {"n": "Togo", "c": "tg"}, {"n": "Tokelau", "c": "tk"}, {"n": "Tonga", "c": "to"}, {"n": "Trinidad and Tobago", "c": "tt"}, {"n": "Tunisia", "c": "tn"}, {"n": "Turkmenistan", "c": "tm"}, {"n": "Turks and Caicos Islands", "c": "tc"}, {"n": "Tuvalu", "c": "tv"}, {"n": "Türkiye", "c": "tr"}, {"n": "Uganda", "c": "ug"}, {"n": "Ukraine", "c": "ua"}, {"n": "United Arab Emirates", "c": "ae"}, {"n": "United Kingdom", "c": "gb"}, {"n": "United States", "c": "us"}, {"n": "United States Minor Outlying Islands", "c": "um"}, {"n": "Uruguay", "c": "uy"}, {"n": "Uzbekistan", "c": "uz"}, {"n": "Vanuatu", "c": "vu"}, {"n": "Venezuela", "c": "ve"}, {"n": "Vietnam", "c": "vn"}, {"n": "Virgin Islands, British", "c": "vg"}, {"n": "Virgin Islands, U.S.", "c": "vi"}, {"n": "Wallis and Futuna", "c": "wf"}, {"n": "Western Sahara", "c": "eh"}, {"n": "Yemen", "c": "ye"}, {"n": "Zambia", "c": "zm"}, {"n": "Zimbabwe", "c": "zw"}, {"n": "Åland Islands", "c": "ax"}];
+const ALIASES = { uk:'gb', usa:'us', us:'us', england:'gb', britain:'gb', holland:'nl', burma:'mm', uae:'ae', 'south korea':'kr', 'north korea':'kp' };
+
+/* ---------- state ---------- */
+let currentPlayer = null;
+let board = null;
+let selectedCountry = null;
+
+/* ---------- elements ---------- */
+const loginGate    = document.getElementById('loginGate');
+const widget       = document.getElementById('widget');
+const trigramInput = document.getElementById('trigramInput');
+const countryInput = document.getElementById('countryInput');
+const countryList  = document.getElementById('countryList');
+const territorySelect = document.getElementById('territorySelect');
+const enterBtn     = document.getElementById('enterBtn');
+const loginErr     = document.getElementById('loginErr');
+const mismatchModal= document.getElementById('mismatchModal');
+const mismatchText = document.getElementById('mismatchText');
+
+const flagUrl = c => `https://flagcdn.com/h24/${c}.png`;
+
+/* ================= COUNTRY TYPEAHEAD ================= */
+function searchCountries(q) {
+  q = q.trim().toLowerCase();
+  if (!q) return COUNTRIES.slice(0, 80);
+  if (ALIASES[q]) {
+    const a = COUNTRIES.find(c => c.c === ALIASES[q]);
+    if (a) return [a];
+  }
+  let hits = COUNTRIES.filter(c => c.n.toLowerCase().includes(q) || c.c === q);
+  if (hits.length === 0) hits = COUNTRIES.filter(c => c.n.toLowerCase().startsWith(q[0]));
+  if (hits.length === 0) hits = COUNTRIES.slice();
+  return hits.slice(0, 80);
+}
+
+function renderCountryList(q) {
+  const hits = searchCountries(q);
+  if (hits.length === 0) { countryList.innerHTML = '<div class="ta-empty">No matches — keep typing</div>'; }
+  else {
+    countryList.innerHTML = hits.map(c =>
+      `<div class="ta-item" data-code="${c.c}" data-name="${c.n.replace(/"/g,'&quot;')}">
+         <img src="${flagUrl(c.c)}" onerror="this.style.visibility='hidden'"><span>${c.n}</span>
+       </div>`).join('');
+  }
+  countryList.classList.add('open');
+}
+
+countryInput.addEventListener('focus', () => renderCountryList(countryInput.value));
+countryInput.addEventListener('input', () => { selectedCountry = null; renderCountryList(countryInput.value); });
+countryList.addEventListener('mousedown', (e) => {
+  const item = e.target.closest('.ta-item');
+  if (!item) return;
+  e.preventDefault();
+  selectedCountry = { c: item.dataset.code, n: item.dataset.name };
+  countryInput.value = selectedCountry.n;
+  countryList.classList.remove('open');
+});
+document.addEventListener('click', (e) => { if (!e.target.closest('#countryField')) countryList.classList.remove('open'); });
+
+/* ===== Autopopulate country + territory from the roster as the trigram is typed ===== */
+/* Track which fields were filled BY prefill so a trigram change can clear them
+   without stomping a user's manual choice. */
+let trigramLookupTimer = null;
+let lastPrefillTri = '';
+let countryPrefilled = false;
+let territoryPrefilled = false;
+
+// When the user manually picks/types, those fields become "owned" by them —
+// future trigram changes will NOT clear them.
+countryInput.addEventListener('input', () => { countryPrefilled = false; });
+countryList.addEventListener('mousedown', () => { countryPrefilled = false; });
+territorySelect.addEventListener('change', () => { territoryPrefilled = false; });
+
+trigramInput.addEventListener('input', () => {
+  clearTimeout(trigramLookupTimer);
+  const tri = trigramInput.value.trim().toUpperCase();
+
+  // Trigram changed: clear ONLY prefilled values, leave manual choices alone.
+  if (tri !== lastPrefillTri) {
+    if (countryPrefilled) {
+      selectedCountry = null; countryInput.value = ''; countryPrefilled = false;
+    }
+    if (territoryPrefilled) {
+      territorySelect.value = ''; territoryPrefilled = false;
+    }
+    lastPrefillTri = '';
+  }
+
+  if (!/^[A-Z]{2,4}$/.test(tri)) return;
+  trigramLookupTimer = setTimeout(() => prefillFromTrigram(tri), 400);
+});
+
+async function prefillFromTrigram(tri) {
+  try {
+    const res = await fetch(`/api/lookupTrigram?trigram=${encodeURIComponent(tri)}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (trigramInput.value.trim().toUpperCase() !== tri) return;   // they kept typing; ignore stale
+    const cc = data.country_code, terr = data.territory;
+    if (cc && !selectedCountry) {
+      const match = COUNTRIES.find(c => c.c === cc);
+      if (match) {
+        selectedCountry = match; countryInput.value = match.n;
+        countryPrefilled = true;
+      }
+    }
+    if (terr && !territorySelect.value) {
+      territorySelect.value = terr; territoryPrefilled = true;
+    }
+    lastPrefillTri = tri;
+  } catch (e) { /* ignore — they can still fill manually */ }
+}
+
+/* ================= LOGIN ================= */
+function showErr(msg) { loginErr.textContent = msg; }
+
+async function attemptEnter() {
+  showErr('');
+  const tri  = trigramInput.value.trim().toUpperCase();
+  const terr = territorySelect.value;
+
+  if (!/^[A-Z]{2,4}$/.test(tri)) return showErr('Trigram must be 2-4 letters.');
+  if (!selectedCountry)          return showErr('Pick your country from the list.');
+  if (!terr)                     return showErr('Select your sales territory.');
+
+  enterBtn.disabled = true; enterBtn.textContent = 'Checking...';
+  try {
+    const res  = await fetch(`/api/lookupTrigram?trigram=${encodeURIComponent(tri)}`);
+    const data = await res.json();
+
+    if (!data.exists) { return enterRoom({ trigram: tri, country_code: selectedCountry.c, territory: terr }); }
+
+    if (data.territory === terr) {
+      if (data.country_code !== selectedCountry.c) silentCountrySync(tri, terr, selectedCountry.c);
+      return enterRoom({ trigram: tri, country_code: selectedCountry.c, territory: terr });
+    }
+
+    // territory mismatch
+    showMismatch(tri, data.territory, terr);
+  } catch (err) {
+    showErr('Connection problem — try again.');
+  } finally {
+    enterBtn.disabled = false; enterBtn.textContent = 'Sign In';
+  }
+}
+
+let pendingRelocate = null;
+function showMismatch(tri, storedTerr, chosenTerr) {
+  pendingRelocate = { tri, chosenTerr };
+  mismatchText.innerHTML =
+    `<span class="hl">${tri}</span> is registered to <span class="hl">${storedTerr}</span>, ` +
+    `but you selected <span class="hl">${chosenTerr}</span>.<br><br>` +
+    `Continue moves ${tri} <em>and all its points</em> to ${chosenTerr}. ` +
+    `If that's a mistake, go Back and re-pick.`;
+  mismatchModal.classList.add('open');
+}
+
+async function confirmRelocate() {
+  const { tri, chosenTerr } = pendingRelocate;
+  mismatchModal.classList.remove('open');
+  try {
+    const res = await fetch('/api/updateIdentity', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: SESSION_KEY, trigram: tri, territory: chosenTerr, country_code: selectedCountry.c })
+    });
+    const d = await res.json();
+    if (!d.ok) console.warn('Relocate not saved (session key likely not set yet):', d);
+  } catch (err) { console.warn('Relocate call failed:', err); }
+  enterRoom({ trigram: tri, country_code: selectedCountry.c, territory: chosenTerr });
+}
+
+function silentCountrySync(tri, terr, code) {
+  fetch('/api/updateIdentity', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: SESSION_KEY, trigram: tri, territory: terr, country_code: code })
+  }).catch(() => {});
+}
+
+enterBtn.addEventListener('click', attemptEnter);
+trigramInput.addEventListener('keydown', e => { if (e.key === 'Enter') attemptEnter(); });
+territorySelect.addEventListener('keydown', e => { if (e.key === 'Enter') attemptEnter(); });
+document.getElementById('mmBack').addEventListener('click', () => mismatchModal.classList.remove('open'));
+document.getElementById('mmContinue').addEventListener('click', confirmRelocate);
+
+function enterRoom(player) {
+  currentPlayer = player;
+  loginGate.classList.remove('open');
+  launchGame();
+}
+
+function launchGame() {
+  if (!currentPlayer) { loginGate.classList.add('open'); return; }
+  document.querySelector('.game-frame').classList.add('playing');   // lift the frosted sign-in
+  if (gameReady) sendInit();   // if not ready yet, INIT fires when BLITZ_READY arrives
+}
+
+/* ================= GAME <-> REC ROOM BRIDGE ================= */
+function playerLifetime() {
+  if (currentPlayer && currentPlayer.lifetime != null) return currentPlayer.lifetime;
+  if (board) {
+    const all = [...(board.gameMasters || []), ...Object.values(board.byTerritory || {}).flat()];
+    const me = all.find(p => p.trigram === currentPlayer.trigram);
+    if (me) return me.total_score || 0;
+  }
+  return 0;
+}
+async function sendInit() {
+  if (!currentPlayer || !gameFrame.contentWindow) return;
+  // Clock the territory high score at game start so the unlock bar is reactive
+  // to the current top run in the player's region (drives the color unlocks).
+  let territoryHigh = 0;
+  try {
+    const res = await fetch('/api/getTerritoryHigh');
+    if (res.ok) {
+      const d = await res.json();
+      territoryHigh = (d.highs && d.highs[currentPlayer.territory]) || 0;
+    }
+  } catch (e) { /* non-fatal: game falls back to the 2,500 floor */ }
+  gameFrame.contentWindow.postMessage({
+    type: 'BLITZ_INIT',
+    trigram: currentPlayer.trigram,
+    territory: currentPlayer.territory,
+    country_code: currentPlayer.country_code,
+    lifetime: playerLifetime(),
+    territoryHigh
+  }, '*');
+}
+async function submitScore(r) {
+  if (!currentPlayer) return;
+  // Identity comes from the authenticated REC Room session, never from the game payload.
+  const score     = Math.max(0, Math.round(Number(r.score)     || 0));
+  const attempted = Math.max(0, Math.round(Number(r.attempted) || 0));
+  const correct   = Math.min(attempted, Math.max(0, Math.round(Number(r.correct) || 0)));
+  // Per-category counters from the game's three learning streams. Re-clamped here at
+  // the trust boundary (correct <= attempted, both >= 0) — the iframe's numbers are
+  // never trusted as-is, same rule as the blended pair above.
+  const s = r.stats || {};
+  const pair = o => {
+    const a = Math.max(0, Math.round(Number(o && o.attempted) || 0));
+    const c = Math.min(a, Math.max(0, Math.round(Number(o && o.correct) || 0)));
+    return [a, c];
+  };
+  const [q_attempted, q_correct] = pair(s.questions);
+  const [c_attempted, c_correct] = pair(s.coins);
+  const [t_attempted, t_correct] = pair(s.terms);
+  const durationSec = Math.max(0, Math.round(Number(r.durationSec) || 0));
+  const payload = {
+    key: SESSION_KEY,
+    trigram: currentPlayer.trigram,
+    territory: currentPlayer.territory,
+    country_code: currentPlayer.country_code,
+    score, attempted, correct,
+    q_attempted, q_correct, c_attempted, c_correct, t_attempted, t_correct,
+    durationSec
+  };
+  try {
+    const res = await fetch('/api/logScore', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (res.ok && data && data.ok) {
+      if (data.player) currentPlayer.lifetime = data.player.total_score;
+      loadBoard();   // refresh rankings + map
+      // No direct announce() here: this score's burst comes from the hourly
+      // getRecentScores refresh (as a new/changed entry), not from this write.
+    } else {
+      console.warn('logScore rejected:', data);
+    }
+  } catch (e) { console.warn('logScore failed:', e); }
+}
+window.addEventListener('message', e => {
+  if (!gameFrame || e.source !== gameFrame.contentWindow) return;   // only trust our own game iframe
+  const d = e.data || {};
+  if (d.type === 'BLITZ_READY') { gameReady = true; if (currentPlayer) sendInit(); }
+  if (d.type === 'BLITZ_RESULT') submitScore(d);
+});
+// Preload the game behind the frosted sign-in so its start screen ghosts through (desktop/tablet only).
+if (SHOW_GAME && window.matchMedia('(min-width: 1024px)').matches) gameFrame.src = GAME_URL;
+
+/* --- embed auto-height: report our content height to the hub (hero2) --- */
+(function(){
+  if (window.parent === window) return;
+  var last = 0;
+  function report(){
+    // measure CONTENT, not scrollHeight: scrollHeight tracks our viewport
+    // (min-height:100vh), which tracks the parent stage -> feedback loop
+    var c = document.querySelector('.content');
+    var h = Math.ceil(c ? (c.getBoundingClientRect().bottom + window.scrollY) : document.documentElement.scrollHeight);
+    if (Math.abs(h - last) > 4){ last = h; console.log('[REC Room height report]', h);
+      window.parent.postMessage({ type:'REC_ROOM_HEIGHT', height:h }, '*'); }
+  }
+  try{ new ResizeObserver(function(){ report(); }).observe(document.documentElement); }
+  catch(e){ setInterval(report, 1500); }
+  window.addEventListener('load', report);
+  report(); setTimeout(report, 600); setTimeout(report, 2000);
+})();
+
+// open/close the sign-in modal from the game frame
+document.getElementById('playBtn').addEventListener('click', () => {
+  if (currentPlayer) { launchGame(); return; }
+  loginErr.textContent = ''; loginGate.classList.add('open'); trigramInput.focus();
+});
+document.getElementById('cancelBtn').addEventListener('click', () => loginGate.classList.remove('open'));
+loginGate.addEventListener('click', e => { if (e.target === loginGate) loginGate.classList.remove('open'); });
+
+/* ================= LEADERBOARD ================= */
+const TERR_KEYS = ['nam','latam','emea','apac'];
+/* Centroid of each painted landmass as a fraction of the shared world-map image
+   (measured from the actual map PNGs). Mapped through the same contain/center math
+   the CSS masks use, so a burst lands on the territory at any panel size. */
+const MAP_IMG_ASPECT = 4798 / 2471;
+const TERR_FRAC = {
+  nam:   { x: 0.2376, y: 0.2369 },
+  latam: { x: 0.2958, y: 0.6909 },
+  emea:  { x: 0.5245, y: 0.4865 },
+  apac:  { x: 0.7417, y: 0.3697 },
+};
+function territoryPoint(key) {
+  const f = TERR_FRAC[key] || TERR_FRAC.nam;
+  if (!fxCanvas.width) sizeCanvas();
+  const W = fxCanvas.width, H = fxCanvas.height;
+  let drawnW, drawnH, offX, offY;
+  if (W / H > MAP_IMG_ASPECT) { drawnH = H; drawnW = H * MAP_IMG_ASPECT; offX = (W - drawnW) / 2; offY = 0; }
+  else { drawnW = W; drawnH = W / MAP_IMG_ASPECT; offX = 0; offY = (H - drawnH) / 2; }
+  return { x: offX + f.x * drawnW, y: offY + f.y * drawnH };
+}
+const trophyImg = ['trophy_first','trophy_second','trophy_third','trophy_last'];
+const medalImg  = ['medal_first','medal_second','medal_third'];
+
+async function loadBoard() {
+  try {
+    const res = await fetch('/api/getLeaderboard');
+    board = await res.json();
+    renderTerritoryRanking();
+    paintMap();
+    buildSegments();
+    buildBubblePool();
+    loadTrend();
+  } catch (err) { console.warn('Board load failed:', err); }
+}
+
+/* Light only the scored top-3 territories; everything else stays dim.
+   territories arrives DESC by score from getLeaderboard, so slice(0,3) is the top 3;
+   the score>0 filter means an empty region never lights (one player → one region lit). */
+function paintMap() {
+  const lit = new Set(
+    (board.territories || [])
+      .filter(t => Number(t.total_score) > 0)
+      .slice(0, 3)
+      .map(t => (t.territory || '').toLowerCase())
+  );
+  TERR_KEYS.forEach(k => {
+    const el = document.querySelector('.map-layer.' + k);
+    if (el) el.classList.toggle('dim', !lit.has(k));
+  });
+}
+
+function fmt(n) { return Number(n || 0).toLocaleString(); }
+
+function renderTerritoryRanking() {
+  const el = document.getElementById('territoryRanking');
+  const rows = (board.territories || []).slice(0, 4);
+  el.innerHTML = rows.map((t, i) => {
+    const key = t.territory.toLowerCase();
+    const dim = i === 3 ? ' t-dim' : '';
+    const op  = i === 3 ? 'style="opacity:0.3"' : '';
+    return `<div class="t-row">
+      <img src="assets/images/icons/awards/${trophyImg[i]}.png" alt="${i+1}" ${op}>
+      <span class="t-name ${dim || key}">${t.territory}</span>
+      <span class="t-acc">${t.accuracy}%</span>
+      <span class="t-score${dim}">${fmt(t.total_score)}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ---- rotating user ranking ---- */
+let segments = [], segIdx = 0, segTimer = null;
+function buildSegments() {
+  const bt = board.byTerritory || {};
+  segments = [
+    { title: 'NAM \u2014 TOP 3',   players: bt.NAM   || [] },
+    { title: 'LATAM \u2014 TOP 3', players: bt.LATAM || [] },
+    { title: 'EMEA \u2014 TOP 3',  players: bt.EMEA  || [] },
+    { title: 'APAC \u2014 TOP 3',  players: bt.APAC  || [] },
+    { title: 'GAME MASTERS [WORLDWIDE]', players: board.gameMasters || [] },
+  ];
+  if (segIdx >= segments.length) segIdx = 0;
+  renderSegment();
+  if (!segTimer) segTimer = setInterval(() => { segIdx = (segIdx + 1) % segments.length; renderSegment(); }, 6000);
+}
+
+function renderSegment() {
+  const seg = segments[segIdx];
+  document.getElementById('rankTitle').textContent = seg.title;
+  const el = document.getElementById('userRanking');
+  let html = '';
+  for (let i = 0; i < 3; i++) {
+    const p = seg.players[i];
+    if (p) {
+      const key = (p.territory || '').toLowerCase();
+      html += `<div class="rank-row" style="--i:${i}">`
+        + `<img class="medal" src="assets/images/icons/awards/${medalImg[i]}.png" alt="${i + 1}">`
+        + `<span class="cell rank-tri ${key}">${p.trigram}</span>`
+        + `<span class="cell rank-score">${fmt(p.total_score)}</span>`
+        + `<img class="cell flag" src="${flagUrl(p.country_code)}" onerror="this.style.visibility='hidden'">`
+        + `</div>`;
+    } else {
+      html += `<div class="rank-row claim" style="--i:${i}">`
+        + `<img class="medal" src="assets/images/icons/awards/${medalImg[i]}.png" alt="${i + 1}" style="opacity:0.4">`
+        + `<span class="cell claim-text">Claim This Spot</span>`
+        + `</div>`;
+    }
+  }
+  el.innerHTML = html;
+}
+
+/* ---- ambient map bubble + recent (real players, not live events) ---- */
+let bubblePool = [];
+function buildBubblePool() {
+  const seen = new Set(); bubblePool = [];
+  const add = arr => (arr || []).forEach(p => { if (!seen.has(p.trigram)) { seen.add(p.trigram); bubblePool.push(p); } });
+  add(board.gameMasters);
+  TERR_KEYS.forEach(k => add((board.byTerritory || {})[k.toUpperCase()]));
+}
+
+const bubble = document.getElementById('scoreBubble');
+const bubbleLabel = document.getElementById('bubbleLabel');
+const bubbleScore = document.getElementById('bubbleScore');
+const territoryColors = { nam:'#9B59FF', latam:'#FF2D9B', emea:'#FF6B35', apac:'#10CFC9' };
+
+function announce(o) {
+  const key = (o.territory || 'nam').toLowerCase();
+  const color = territoryColors[key] || '#10CFC9';
+  const pt = territoryPoint(key);
+  bubble.style.left = pt.x + 'px';
+  bubble.style.top  = (32 + pt.y) + 'px';   /* +32: canvas/map sit below the panel title */
+  bubble.style.setProperty('--glow', color);
+  bubbleLabel.textContent = `${o.trigram} SCORED`; bubbleLabel.style.color = color;
+  bubbleScore.textContent = `+${fmt(o.score)}`;
+  bubble.classList.remove('dissolving');
+  bubble.classList.add('visible');
+  fireBurst(key);
+  clearTimeout(bubble._t);
+  bubble._t = setTimeout(() => {
+    dissolveBubble(key);
+    bubble.classList.remove('visible');
+    bubble.classList.add('dissolving');
+  }, 2500);
+}
+
+const recentEl = document.getElementById('recentScores');
+let recentShown = new Map();   // trigram -> last_score, to detect new/changed between refreshes
+let firstRecentLoad = true;
+function renderRecent(scores) {
+  const RECENT_ROWS = 12;                      // fixed render count -> deterministic panel height
+  recentEl.innerHTML = (scores || []).slice(0, RECENT_ROWS).map(s => {
+    const key = (s.territory || 'nam').toLowerCase();
+    return `<div class="recent-row"><img class="flag" src="${flagUrl(s.country_code)}" onerror="this.style.visibility='hidden'"><span class="recent-tri ${key}">${s.trigram}</span><span class="recent-score ${key}">${fmt(s.last_score)}</span></div>`;
+  }).join('');
+}
+
+/* ---- particle burst engine (canvas) ---- */
+const fxCanvas = document.getElementById('fxCanvas');
+const fxCtx = fxCanvas.getContext('2d');
+let particles = [];
+function sizeCanvas() { const r = fxCanvas.getBoundingClientRect(); fxCanvas.width = r.width; fxCanvas.height = r.height; }
+window.addEventListener('resize', sizeCanvas);
+function shade(hex, amt = 64) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const j = () => Math.round((Math.random() - 0.5) * amt);
+  r = Math.max(0, Math.min(255, r + j())); g = Math.max(0, Math.min(255, g + j())); b = Math.max(0, Math.min(255, b + j()));
+  return `rgb(${r},${g},${b})`;
+}
+function fireBurst(key) {
+  const { x: cx, y: cy } = territoryPoint(key);
+  const base = territoryColors[key] || '#10CFC9';
+  for (let i = 0; i < 16; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = 0.25 + Math.random() * 0.85;        // low speed: colour stays over its territory
+    particles.push({
+      x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+      grav: 0.012, decay: 0.035 + Math.random() * 0.02,
+      life: 1, color: shade(base, 26), size: 2 + (Math.random() * 2 | 0)
+    });
+  }
+}
+
+/* break the popup box apart into drifting pixels (digital dissolve) */
+function dissolveBubble(key) {
+  const base = territoryColors[key] || '#10CFC9';
+  const br = bubble.getBoundingClientRect();
+  const cr = fxCanvas.getBoundingClientRect();
+  if (!br.width) return;
+  const x0 = br.left - cr.left, y0 = br.top - cr.top, step = 6;
+  for (let yy = 0; yy < br.height; yy += step) {
+    for (let xx = 0; xx < br.width; xx += step) {
+      if (Math.random() < 0.35) continue;          // sparse: reads as pixels, not a slab
+      particles.push({
+        x: x0 + xx, y: y0 + yy,
+        vx: (Math.random() - 0.5) * 0.5, vy: -0.15 - Math.random() * 0.5,
+        grav: 0.006, decay: 0.022 + Math.random() * 0.02,
+        life: 1, color: (Math.random() < 0.25 ? '#dffdfb' : base), size: 3
+      });
+    }
+  }
+}
+function fxLoop() {
+  fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx; p.y += p.vy; p.vy += (p.grav != null ? p.grav : 0.05); p.vx *= 0.97;
+    p.life -= (p.decay != null ? p.decay : 0.028);
+    if (p.life <= 0) { particles.splice(i, 1); continue; }
+    fxCtx.globalAlpha = Math.max(0, p.life);
+    fxCtx.fillStyle = p.color;
+    const s = (p.size | 0) || 2;
+    fxCtx.fillRect(p.x | 0, p.y | 0, s, s);
+  }
+  fxCtx.globalAlpha = 1;
+  requestAnimationFrame(fxLoop);
+}
+
+/* ---- 48h territory performance chart ---- */
+async function loadTrend() {
+  try { const res = await fetch('/api/trend'); const d = await res.json(); drawTrend(d.series || {}); }
+  catch (err) { console.warn('Trend load failed:', err); }
+}
+function drawTrend(series) {
+  const el = document.getElementById('perfChart');
+  const order = ['NAM', 'LATAM', 'EMEA', 'APAC'];
+  let all = [];
+  order.forEach(k => (series[k] || []).forEach(pt => all.push(pt)));
+  const drawable = order.filter(k => (series[k] || []).length >= 2);
+  if (all.length < 2 || drawable.length === 0) { el.innerHTML = '<div class="perf-empty">Collecting data\u2026</div>'; return; }
+  const times = all.map(p => new Date(p.t).getTime());
+  const scores = all.map(p => p.score);
+  const tMin = Math.min(...times), tMax = Math.max(...times);
+  let sMin = Math.min(...scores), sMax = Math.max(...scores);
+  if (tMax === tMin) { el.innerHTML = '<div class="perf-empty">Collecting data\u2026</div>'; return; }
+  if (sMax === sMin) sMax = sMin + 1;
+  const W = 100, H = 100, pad = 7;
+  const x = t => pad + ((t - tMin) / (tMax - tMin)) * (W - 2 * pad);
+  const y = s => H - pad - ((s - sMin) / (sMax - sMin)) * (H - 2 * pad);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+  drawable.forEach(k => {
+    const pts = series[k].map(p => `${x(new Date(p.t).getTime()).toFixed(1)},${y(p.score).toFixed(1)}`).join(' ');
+    svg += `<polyline points="${pts}" fill="none" stroke="${territoryColors[k.toLowerCase()]}" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
+  });
+  svg += `</svg>`;
+  el.innerHTML = svg;
+}
+
+/* ---- live event polling: fire a burst per real score submission ---- */
+/* ---- Pool + rotation loop ----
+   The map is decorative: it cycles every trigram in the pool exactly once (shuffled)
+   before reshuffling, with 8-15s random gaps between bursts. The pool re-fetches
+   every ~10 min in the BACKGROUND; the active shuffle finishes first, then the
+   new pool is swapped in. If the swap takes >300ms an overlay covers the map. */
+let activePool = [];        // current shuffled rotation; we burst from index 0..N-1
+let activeIdx  = 0;
+let pendingPool = null;     // newly-fetched pool waiting for the current rotation to finish
+let burstLoopTimer = null;
+let firstPoolLoaded = false;
+
+async function fetchPool() {
+  const t0 = performance.now();
+  let showedOverlay = false;
+  const overlay = document.getElementById('fetchOverlay');
+  // Only show the overlay if the fetch is slow enough that the user would notice.
+  const overlayTimer = setTimeout(() => {
+    if (overlay) { overlay.classList.add('show'); showedOverlay = true; }
+  }, 300);
+  try {
+    const res = await fetch('/api/getRecentScores');
+    const data = await res.json();
+    const scores = data.scores || [];
+    if (Number(data.refreshSeconds)) refreshSeconds = Number(data.refreshSeconds);
+
+    renderRecent(scores);   // list stays sorted by last_seen DESC (informational)
+
+    // Timestamp
+    const tsEl = document.getElementById('lastRefresh');
+    if (tsEl) {
+      const ts = data.generatedAt ? new Date(data.generatedAt) : new Date();
+      tsEl.textContent = 'Updated ' + ts.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    }
+
+    if (!firstPoolLoaded) {
+      activePool = shuffle(scores.slice());
+      activeIdx = 0;
+      firstPoolLoaded = true;
+      startBurstLoop();
+    } else {
+      // Don't interrupt the current rotation — queue the new pool.
+      pendingPool = scores.slice();
+    }
+  } catch (err) { /* ignore — next refresh will retry */ }
+  finally {
+    clearTimeout(overlayTimer);
+    if (overlay) overlay.classList.remove('show');
+  }
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function startBurstLoop() {
+  clearTimeout(burstLoopTimer);
+  const tick = () => {
+    if (document.visibilityState !== 'visible' || activePool.length === 0) {
+      burstLoopTimer = setTimeout(tick, 2000);
+      return;
+    }
+    const s = activePool[activeIdx++];
+    if (s) announce({
+      trigram: s.trigram, territory: s.territory,
+      score: s.last_score, country_code: s.country_code
+    });
+    if (activeIdx >= activePool.length) {
+      // Rotation finished — swap in the pending pool (if any) and reshuffle.
+      if (pendingPool) { activePool = pendingPool; pendingPool = null; }
+      activePool = shuffle(activePool.slice());
+      activeIdx = 0;
+    }
+    const next = 8000 + Math.random() * 7000;   // 8-15s organic gap
+    burstLoopTimer = setTimeout(tick, next);
+  };
+  tick();
+}
+
+// Keep the same name so the existing refreshAll() scheduler still works.
+async function refreshRecent() { return fetchPool(); }
+
+/* ---- DEMO: random bursts so we can see the effect now.
+   Flip DEMO to false once the game submits real scores — real events drive the bursts. ---- */
+const DEMO = false;
+function demoTick() {
+  if (DEMO && bubblePool.length) {
+    const p = bubblePool[Math.floor(Math.random() * bubblePool.length)];
+    announce({ trigram: p.trigram, territory: p.territory, score: p.total_score, country_code: p.country_code });
+  }
+}
+function scheduleDemo() { setTimeout(() => { demoTick(); scheduleDemo(); }, 4000 + Math.random() * 5000); }
+
+/* Hourly synchronized refresh. Declarations MUST come before the boot block —
+   `let` bindings are not hoisted, so calling scheduleRefresh()/refreshAll()
+   before this point throws a ReferenceError and halts the whole script. */
+let refreshSeconds = 360;   // 6 min default; server overrides via response
+let refreshTimer = null;
+async function refreshAll() {
+  await refreshRecent();
+  loadBoard();
+}
+function scheduleRefresh() {
+  clearTimeout(refreshTimer);
+  const ms = refreshSeconds * 1000;
+  const delay = ms - (Date.now() % ms);
+  refreshTimer = setTimeout(async () => {
+    if (document.visibilityState === 'visible') await refreshAll();
+    scheduleRefresh();
+  }, delay);
+}
+document.addEventListener('visibilitychange', () => {
+  if (SHOW_BOARD && document.visibilityState === 'visible') { refreshAll(); scheduleRefresh(); }
+});
+
+/* ---- boot: board + chart only where the scoreboard renders.
+   Each MT widget is its own document — ungated, every section would run
+   its own Neon polling loop. Gate hard. ---- */
+if (SHOW_BOARD){
+  sizeCanvas();
+  fxLoop();
+  refreshAll();
+  scheduleRefresh();
+}
+
+</script>
+</body>
+</html>

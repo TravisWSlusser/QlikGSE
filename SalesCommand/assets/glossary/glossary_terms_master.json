@@ -1,0 +1,870 @@
+[
+  {
+    "term": "Agentic AI",
+    "letter": "A",
+    "definition": "Systems that autonomously plan and carry out multi-step tasks toward a goal with little human prompting.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "AI Agent",
+    "letter": "A",
+    "definition": "A software entity that acts on a user's behalf to complete a task, often calling tools or data to do it.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "AI Analytics",
+    "letter": "A",
+    "definition": "Applying machine learning to automate analysis, surface insights, and generate predictions or recommendations from data.",
+    "url": "https://www.qlik.com/us/augmented-analytics/ai-analytics",
+    "active": true
+  },
+  {
+    "term": "AI Governance",
+    "letter": "A",
+    "definition": "The policies and controls that keep artificial intelligence use safe, compliant, and accountable across an organization.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "AI Hallucination",
+    "letter": "A",
+    "definition": "When a generative model produces confident output that is factually wrong or unsupported by its sources.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "AI Orchestration",
+    "letter": "A",
+    "definition": "Coordinating multiple AI models, tools, and data sources so they work together in one workflow.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "AI-Ready Data",
+    "letter": "A",
+    "definition": "Data that has been cleaned, governed, and structured so AI and machine learning models can trust and use it.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Analytics as a Service",
+    "letter": "A",
+    "definition": "A subscription model where BI and analysis run on a vendor-managed cloud platform instead of on-premise hardware.",
+    "url": "https://www.qlik.com/us/cloud-analytics/analytics-as-a-service",
+    "active": true
+  },
+  {
+    "term": "Analytics Dashboard",
+    "letter": "A",
+    "definition": "An interactive interface for exploring, tracking, and drilling into KPIs and the metrics behind them.",
+    "url": "https://www.qlik.com/us/dashboard-examples/analytics-dashboard",
+    "active": true
+  },
+  {
+    "term": "Apache Kafka",
+    "letter": "A",
+    "definition": "An open-source distributed event-streaming platform built to ingest and transform real-time data feeds at scale.",
+    "url": "https://www.qlik.com/us/streaming-data/apache-kafka",
+    "active": true
+  },
+  {
+    "term": "Augmented Analytics",
+    "letter": "A",
+    "definition": "Using AI and machine learning inside a BI platform to enhance human intuition across the full analysis lifecycle.",
+    "url": "https://www.qlik.com/us/augmented-analytics",
+    "active": true
+  },
+  {
+    "term": "AutoML",
+    "letter": "A",
+    "definition": "Tools that automate building, training, and deploying machine learning models so non-experts can produce them.",
+    "url": "https://www.qlik.com/us/augmented-analytics/automl",
+    "active": true
+  },
+  {
+    "term": "BI Dashboard",
+    "letter": "B",
+    "definition": "A business-intelligence surface that tracks and reports KPIs and metrics drawn from enterprise reporting sources.",
+    "url": "https://www.qlik.com/us/dashboard-examples/bi-dashboard",
+    "active": true
+  },
+  {
+    "term": "Big Data Analytics",
+    "letter": "B",
+    "definition": "Collecting, preparing, and analyzing very large and varied datasets to surface insights ordinary tools can't handle.",
+    "url": "https://www.qlik.com/us/data-analytics/big-data-analytics",
+    "active": true
+  },
+  {
+    "term": "Business Dashboard",
+    "letter": "B",
+    "definition": "An interactive visualization tool for monitoring and examining an organization's operational KPIs and metrics.",
+    "url": "https://www.qlik.com/us/dashboard-examples/business-dashboard",
+    "active": true
+  },
+  {
+    "term": "Business Intelligence",
+    "letter": "B",
+    "definition": "The applications, processes, and infrastructure that turn raw information into analysis for better decisions and performance.",
+    "url": "https://www.qlik.com/us/business-intelligence",
+    "active": true
+  },
+  {
+    "term": "Business Intelligence Reporting",
+    "letter": "B",
+    "definition": "Using a BI tool to prepare and analyze data, then package and share actionable findings with stakeholders.",
+    "url": "https://www.qlik.com/us/business-intelligence/business-intelligence-reporting",
+    "active": true
+  },
+  {
+    "term": "Business Intelligence Tools",
+    "letter": "B",
+    "definition": "Software applications used to collect, combine, and analyze business-relevant information for decision-making.",
+    "url": "https://www.qlik.com/us/business-intelligence/business-intelligence-tools",
+    "active": true
+  },
+  {
+    "term": "CDC SQL Server",
+    "letter": "C",
+    "definition": "Recording changes in a Microsoft SQL Server database and delivering those changes to a downstream system.",
+    "url": "https://www.qlik.com/us/change-data-capture/cdc-sql-server",
+    "active": true
+  },
+  {
+    "term": "Change Data Capture",
+    "letter": "C",
+    "definition": "Identifying changes made to data in a database and streaming them in real time to downstream systems.",
+    "url": "https://www.qlik.com/us/change-data-capture/cdc-change-data-capture",
+    "active": true
+  },
+  {
+    "term": "Citizen Data Scientist",
+    "letter": "C",
+    "definition": "A business user who builds models and advanced analyses with low-code tools, without formal analytics training.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Cloud Analytics",
+    "letter": "C",
+    "definition": "Running data analysis and BI on a public or private cloud rather than on a company's own on-premise servers.",
+    "url": "https://www.qlik.com/us/cloud-analytics",
+    "active": true
+  },
+  {
+    "term": "Cloud Data Warehouse",
+    "letter": "C",
+    "definition": "A managed, scalable warehouse delivered as a service in a public cloud and tuned for BI and analytics.",
+    "url": "https://www.qlik.com/us/cloud-data-migration/cloud-data-warehouse",
+    "active": true
+  },
+  {
+    "term": "Conversational Analytics",
+    "letter": "C",
+    "definition": "Querying data and getting insights through a chat-style, plain-language interface instead of dashboards.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Dashboard",
+    "letter": "D",
+    "definition": "A consolidated screen of critical data, visualizations, and KPIs tailored to a user segment for fast review.",
+    "url": "https://www.qlik.com/us/dashboard-examples",
+    "active": true
+  },
+  {
+    "term": "Dashboard Reporting",
+    "letter": "D",
+    "definition": "Letting users visualize KPIs and interact with the underlying data directly on the display to analyze trends.",
+    "url": "https://www.qlik.com/us/dashboard-examples/dashboard-reporting",
+    "active": true
+  },
+  {
+    "term": "Dashboard Software",
+    "letter": "D",
+    "definition": "Applications that build visual representations of data and KPIs so users can spot patterns and decide faster.",
+    "url": "https://www.qlik.com/us/dashboard-examples/dashboard-software",
+    "active": true
+  },
+  {
+    "term": "Data Aggregation",
+    "letter": "D",
+    "definition": "Combining datasets from multiple sources into one format and summarizing them to support analysis.",
+    "url": "https://www.qlik.com/us/data-management/data-aggregation",
+    "active": true
+  },
+  {
+    "term": "Data Analytics",
+    "letter": "D",
+    "definition": "Using processes and technology to combine and examine datasets, find patterns, and extract valuable insights.",
+    "url": "https://www.qlik.com/us/data-analytics",
+    "active": true
+  },
+  {
+    "term": "Data Analytics Tools",
+    "letter": "D",
+    "definition": "Software that helps users uncover patterns, trends, and relationships hidden in their data.",
+    "url": "https://www.qlik.com/us/data-analytics/data-analytics-tools",
+    "active": true
+  },
+  {
+    "term": "Data Catalog",
+    "letter": "D",
+    "definition": "An organized inventory of an organization's data assets, indexed by metadata for on-demand, business-ready access.",
+    "url": "https://www.qlik.com/us/data-management/data-catalog",
+    "active": true
+  },
+  {
+    "term": "Data Dashboard",
+    "letter": "D",
+    "definition": "An interactive tool for tracking, analyzing, and displaying KPIs and metrics from across the business.",
+    "url": "https://www.qlik.com/us/dashboard-examples/data-dashboard",
+    "active": true
+  },
+  {
+    "term": "Data Democratization",
+    "letter": "D",
+    "definition": "Making data accessible to non-technical people across an organization so anyone can use it to decide.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Data Discovery",
+    "letter": "D",
+    "definition": "Exploring and analyzing data to uncover patterns and relationships that improve decisions and performance.",
+    "url": "https://www.qlik.com/us/data-analytics/data-discovery",
+    "active": true
+  },
+  {
+    "term": "Data Exploration",
+    "letter": "D",
+    "definition": "Reviewing a raw dataset to learn its characteristics and spot initial patterns before deeper analysis.",
+    "url": "https://www.qlik.com/us/data-analytics/data-exploration",
+    "active": true
+  },
+  {
+    "term": "Data Fabric",
+    "letter": "D",
+    "definition": "A machine-driven integration architecture that uses metadata to unify and govern scattered data environments.",
+    "url": "https://www.qlik.com/us/data-management/data-fabric",
+    "active": true
+  },
+  {
+    "term": "Data Governance",
+    "letter": "D",
+    "definition": "The roles, policies, and tools that keep data quality high and usage proper across the whole data lifecycle.",
+    "url": "https://www.qlik.com/us/data-governance",
+    "active": true
+  },
+  {
+    "term": "Data Ingestion",
+    "letter": "D",
+    "definition": "Collecting data from various sources and moving it to a target site, in batches or in real time.",
+    "url": "https://www.qlik.com/us/data-ingestion",
+    "active": true
+  },
+  {
+    "term": "Data Integration",
+    "letter": "D",
+    "definition": "Synchronizing data across applications and platforms to give users one accurate, up-to-date view for analytics.",
+    "url": "https://www.qlik.com/us/data-integration",
+    "active": true
+  },
+  {
+    "term": "Data Integrity",
+    "letter": "D",
+    "definition": "The accuracy, consistency, and completeness of data maintained throughout its entire lifecycle.",
+    "url": "https://www.qlik.com/us/data-management/data-integrity",
+    "active": true
+  },
+  {
+    "term": "Data Lake",
+    "letter": "D",
+    "definition": "A central repository that stores raw structured and unstructured data at any scale with no need to structure it first.",
+    "url": "https://www.qlik.com/us/data-lake",
+    "active": true
+  },
+  {
+    "term": "Data Lake Architecture",
+    "letter": "D",
+    "definition": "A design that keeps compute and storage inside one platform so raw data can be accessed and analyzed rapidly.",
+    "url": "https://www.qlik.com/us/data-lake/data-lake-architecture",
+    "active": true
+  },
+  {
+    "term": "Data Lakehouse",
+    "letter": "D",
+    "definition": "An architecture that blends a warehouse's structured querying and governance with a lake's cheap raw storage.",
+    "url": "https://www.qlik.com/us/data-lake/data-lakehouse",
+    "active": true
+  },
+  {
+    "term": "Data Lineage",
+    "letter": "D",
+    "definition": "Tracing and visualizing how data flows from source to destination and what transforms it along the way.",
+    "url": "https://www.qlik.com/us/data-management/data-lineage",
+    "active": true
+  },
+  {
+    "term": "Data Literacy",
+    "letter": "D",
+    "definition": "The ability to read, analyze, and communicate with data and ask the right questions to drive decisions.",
+    "url": "https://www.qlik.com/us/data-literacy",
+    "active": true
+  },
+  {
+    "term": "Data Management",
+    "letter": "D",
+    "definition": "Collecting, storing, organizing, and maintaining data so it can support analysis and decision-making.",
+    "url": "https://www.qlik.com/us/data-management",
+    "active": true
+  },
+  {
+    "term": "Data Mart",
+    "letter": "D",
+    "definition": "A purpose-built repository serving the analytical needs of a single department, business line, or region.",
+    "url": "https://www.qlik.com/us/data-warehouse/data-mart",
+    "active": true
+  },
+  {
+    "term": "Data Mesh",
+    "letter": "D",
+    "definition": "An architecture that decentralizes ownership, letting the teams who use data manage it on a self-serve platform.",
+    "url": "https://www.qlik.com/us/data-management/data-mesh",
+    "active": true
+  },
+  {
+    "term": "Data Migration",
+    "letter": "D",
+    "definition": "Moving data between storage systems, applications, or formats, usually as a one-time prep-and-transfer effort.",
+    "url": "https://www.qlik.com/us/data-migration",
+    "active": true
+  },
+  {
+    "term": "Data Mining",
+    "letter": "D",
+    "definition": "Using statistics and machine learning to discover hidden patterns, correlations, and anomalies in large datasets.",
+    "url": "https://www.qlik.com/us/data-analytics/data-mining",
+    "active": true
+  },
+  {
+    "term": "Data Modeling",
+    "letter": "D",
+    "definition": "Creating a diagram that defines the structure, attributes, and relationships of a system's data entities.",
+    "url": "https://www.qlik.com/us/data-modeling",
+    "active": true
+  },
+  {
+    "term": "Data Observability",
+    "letter": "D",
+    "definition": "Continuously monitoring the health, freshness, and reliability of data across pipelines to catch issues early.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Data Pipeline",
+    "letter": "D",
+    "definition": "An automated set of tools and processes that move and transform data from a source system to a target.",
+    "url": "https://www.qlik.com/us/data-integration/data-pipeline",
+    "active": true
+  },
+  {
+    "term": "Data Products",
+    "letter": "D",
+    "definition": "Trusted, reusable, consumable data assets designed deliberately for specific domain business outcomes.",
+    "url": "https://www.qlik.com/us/data-management/data-products",
+    "active": true
+  },
+  {
+    "term": "Data Quality",
+    "letter": "D",
+    "definition": "How well a dataset meets standards for accuracy, consistency, reliability, completeness, and timeliness.",
+    "url": "https://www.qlik.com/us/data-governance/data-quality",
+    "active": true
+  },
+  {
+    "term": "Data Replication",
+    "letter": "D",
+    "definition": "Creating and maintaining identical copies of data across multiple locations, in real time or on a schedule.",
+    "url": "https://www.qlik.com/us/data-replication",
+    "active": true
+  },
+  {
+    "term": "Data Science",
+    "letter": "D",
+    "definition": "An interdisciplinary field combining statistics, programming, and domain expertise to extract insight from data.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Data Stewardship",
+    "letter": "D",
+    "definition": "The hands-on role of managing and safeguarding specific data assets to keep them accurate and properly used.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Data Strategy",
+    "letter": "D",
+    "definition": "A structured plan for how an organization will manage, use, and extract value from its data assets.",
+    "url": "https://www.qlik.com/us/data-management/data-strategy",
+    "active": true
+  },
+  {
+    "term": "Data Transformation",
+    "letter": "D",
+    "definition": "Cleaning, validating, and reshaping data so it matches the structure a target system requires.",
+    "url": "https://www.qlik.com/us/data-management/data-transformation",
+    "active": true
+  },
+  {
+    "term": "Data Trends",
+    "letter": "D",
+    "definition": "The emerging directions and shifts shaping how organizations use BI and data, and how to exploit them.",
+    "url": "https://www.qlik.com/us/bi/data-trends",
+    "active": true
+  },
+  {
+    "term": "Data Vault",
+    "letter": "D",
+    "definition": "A flexible, scalable modeling approach for warehousing that handles complex structures and enterprise analytics.",
+    "url": "https://www.qlik.com/us/data-warehouse/data-vault",
+    "active": true
+  },
+  {
+    "term": "Data Visualization",
+    "letter": "D",
+    "definition": "Presenting information as graphs, charts, and maps so people can quickly uncover actionable insights.",
+    "url": "https://www.qlik.com/us/data-visualization",
+    "active": true
+  },
+  {
+    "term": "Data Visualization Tools",
+    "letter": "D",
+    "definition": "Software that turns large volumes of data into graphics and imagery to support more informed decisions.",
+    "url": "https://www.qlik.com/us/data-visualization/data-visualization-tools",
+    "active": true
+  },
+  {
+    "term": "Data Warehouse",
+    "letter": "D",
+    "definition": "A management system that aggregates large volumes from many sources into one structured, historical repository.",
+    "url": "https://www.qlik.com/us/data-warehouse",
+    "active": true
+  },
+  {
+    "term": "Data Warehouse Automation",
+    "letter": "D",
+    "definition": "Automating the full warehouse lifecycle, from modeling and ingestion to marts and governance, to speed analytics.",
+    "url": "https://www.qlik.com/us/products/data-warehouse-automation",
+    "active": true
+  },
+  {
+    "term": "Data Wrangling",
+    "letter": "D",
+    "definition": "Cleaning, structuring, and transforming raw data into a usable format ready for analysis.",
+    "url": "https://www.qlik.com/us/data-management/data-wrangling",
+    "active": true
+  },
+  {
+    "term": "Database Replication",
+    "letter": "D",
+    "definition": "Copying data from a primary database to one or more replicas to boost availability, fault tolerance, and reliability.",
+    "url": "https://www.qlik.com/us/data-replication/database-replication",
+    "active": true
+  },
+  {
+    "term": "DataOps",
+    "letter": "D",
+    "definition": "A methodology that improves the communication, integration, and automation of data flows between producers and consumers.",
+    "url": "https://www.qlik.com/us/dataops",
+    "active": true
+  },
+  {
+    "term": "Decision Support System",
+    "letter": "D",
+    "definition": "Analytics software that gathers and analyzes data to guide business decision-making.",
+    "url": "https://www.qlik.com/us/business-intelligence/decision-support-system",
+    "active": true
+  },
+  {
+    "term": "Deep Learning",
+    "letter": "D",
+    "definition": "A subset of machine learning that uses multi-layered neural networks to model complex patterns.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Delta Lake",
+    "letter": "D",
+    "definition": "An open-source storage layer that adds database-style ACID reliability and performance to a data lake.",
+    "url": "https://www.qlik.com/us/data-lake/delta-lake",
+    "active": true
+  },
+  {
+    "term": "Descriptive Analytics",
+    "letter": "D",
+    "definition": "Summarizing and interpreting historical data to understand past events, patterns, and trends.",
+    "url": "https://www.qlik.com/us/reporting-analytics/descriptive-analytics",
+    "active": true
+  },
+  {
+    "term": "Digital Dashboard",
+    "letter": "D",
+    "definition": "An electronic interface for tracking, analyzing, and reporting on KPIs and metrics.",
+    "url": "https://www.qlik.com/us/dashboard-examples/digital-dashboard",
+    "active": true
+  },
+  {
+    "term": "ELT",
+    "letter": "E",
+    "definition": "An integration sequence that extracts data, loads it raw into the target, then transforms it there using the target's compute.",
+    "url": "https://www.qlik.com/us/elt",
+    "active": true
+  },
+  {
+    "term": "Embedded Analytics",
+    "letter": "E",
+    "definition": "Building data analysis and reporting capabilities directly into another software application's interface.",
+    "url": "https://www.qlik.com/us/data-analytics/embedded-analytics",
+    "active": true
+  },
+  {
+    "term": "Embeddings",
+    "letter": "E",
+    "definition": "Numeric representations of text or images that capture meaning so machines can compare them by similarity.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "ETL",
+    "letter": "E",
+    "definition": "An integration sequence that extracts data, transforms it, then loads it into a target repository.",
+    "url": "https://www.qlik.com/us/etl",
+    "active": true
+  },
+  {
+    "term": "ETL Pipeline",
+    "letter": "E",
+    "definition": "The connected set of processes that extract, transform, and load data from a source into a target repository.",
+    "url": "https://www.qlik.com/us/etl/etl-pipeline",
+    "active": true
+  },
+  {
+    "term": "ETL Tool",
+    "letter": "E",
+    "definition": "Software that consolidates multi-sourced data into a common format and loads it into a warehouse or mart.",
+    "url": "https://www.qlik.com/us/etl/etl-tool",
+    "active": true
+  },
+  {
+    "term": "Explainable AI",
+    "letter": "E",
+    "definition": "Techniques that reveal the reasoning behind a machine learning model's output so people can trust it.",
+    "url": "https://www.qlik.com/us/augmented-analytics/explainable-ai",
+    "active": true
+  },
+  {
+    "term": "Financial Analysis",
+    "letter": "F",
+    "definition": "Examining financial statements and related data to judge an organization's health and performance.",
+    "url": "https://www.qlik.com/us/data-analytics/financial-analysis",
+    "active": true
+  },
+  {
+    "term": "Financial Analytics",
+    "letter": "F",
+    "definition": "Combining and analyzing datasets to gain insight into an organization's financial performance.",
+    "url": "https://www.qlik.com/us/data-analytics/financial-analytics",
+    "active": true
+  },
+  {
+    "term": "Foundation Model",
+    "letter": "F",
+    "definition": "A large model pre-trained on broad data that can be adapted to many downstream tasks.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Generative AI",
+    "letter": "G",
+    "definition": "Models that create new text, images, audio, or code by learning patterns from large training datasets.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Interactive Data Visualization",
+    "letter": "I",
+    "definition": "A visual representation of data that users can explore and analyze directly within the graphic itself.",
+    "url": "https://www.qlik.com/us/data-visualization/interactive-data-visualization",
+    "active": true
+  },
+  {
+    "term": "iPaaS",
+    "letter": "I",
+    "definition": "A cloud platform that integrates applications and data sources across cloud and on-premise environments.",
+    "url": "https://www.qlik.com/us/data-integration/ipaas",
+    "active": true
+  },
+  {
+    "term": "Kafka Streams",
+    "letter": "K",
+    "definition": "An API that processes real-time feeds from source systems into message sequences apps and analytics can consume.",
+    "url": "https://www.qlik.com/us/streaming-data/kafka-streams",
+    "active": true
+  },
+  {
+    "term": "Knowledge Graph",
+    "letter": "K",
+    "definition": "A network of entities and their relationships that lets machines connect and reason over linked facts.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "KPI",
+    "letter": "K",
+    "definition": "A quantifiable measure of performance over time tracked against a specific objective.",
+    "url": "https://www.qlik.com/us/kpi",
+    "active": true
+  },
+  {
+    "term": "KPI Dashboard",
+    "letter": "K",
+    "definition": "A display of key indicators in interactive charts and graphs for quick, organized performance review.",
+    "url": "https://www.qlik.com/us/dashboard-examples/kpi-dashboards",
+    "active": true
+  },
+  {
+    "term": "KPI Reports",
+    "letter": "K",
+    "definition": "A graphical, real-time view of key metrics that helps leaders track company, department, or project performance.",
+    "url": "https://www.qlik.com/us/kpi/kpi-reporting",
+    "active": true
+  },
+  {
+    "term": "Large Language Model (LLM)",
+    "letter": "L",
+    "definition": "A neural network trained on massive text corpora to understand and produce human-readable content.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Machine Learning",
+    "letter": "M",
+    "definition": "A field of AI where systems learn patterns from data to improve at a task without being explicitly programmed.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Marketing Analytics",
+    "letter": "M",
+    "definition": "Combining and analyzing datasets to find patterns that improve the ROI of marketing efforts.",
+    "url": "https://www.qlik.com/us/data-analytics/marketing-analytics",
+    "active": true
+  },
+  {
+    "term": "Marketing KPIs",
+    "letter": "M",
+    "definition": "Quantifiable performance measures tied to specific strategic marketing objectives.",
+    "url": "https://www.qlik.com/us/kpi/kpi-marketing",
+    "active": true
+  },
+  {
+    "term": "Master Data Management (MDM)",
+    "letter": "M",
+    "definition": "Maintaining one consistent, authoritative version of core business entities like customers and products.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Metadata Management",
+    "letter": "M",
+    "definition": "Organizing and controlling the descriptive data that defines the technical, business, or operational traits of other data.",
+    "url": "https://www.qlik.com/us/data-management/metadata-management",
+    "active": true
+  },
+  {
+    "term": "MLOps",
+    "letter": "M",
+    "definition": "Practices for deploying, monitoring, and maintaining machine learning models reliably in production.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Model Context Protocol (MCP)",
+    "letter": "M",
+    "definition": "An open standard that lets AI assistants connect to external tools and data sources in a consistent way.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Multimodal AI",
+    "letter": "M",
+    "definition": "Models that take in and combine multiple input types, such as text, images, and audio, at once.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Natural Language Processing (NLP)",
+    "letter": "N",
+    "definition": "The branch of AI that enables computers to interpret and work with human speech and writing.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Natural Language Query (NLQ)",
+    "letter": "N",
+    "definition": "Asking a data system questions in plain everyday words instead of writing code or formal syntax.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "OLAP",
+    "letter": "O",
+    "definition": "Technology that organizes data into multidimensional cubes for fast slicing, dicing, and aggregation in analysis.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "People Analytics",
+    "letter": "P",
+    "definition": "Analyzing workforce data to improve hiring, productivity, engagement, and talent retention.",
+    "url": "https://www.qlik.com/us/data-analytics/people-analytics",
+    "active": true
+  },
+  {
+    "term": "Predictive Analytics",
+    "letter": "P",
+    "definition": "Using statistical modeling and machine learning on past and current data to forecast future outcomes.",
+    "url": "https://www.qlik.com/us/predictive-analytics",
+    "active": true
+  },
+  {
+    "term": "Predictive Modeling",
+    "letter": "P",
+    "definition": "A statistical technique that uses historical data to predict the outcome of future events.",
+    "url": "https://www.qlik.com/us/predictive-analytics/predictive-modeling",
+    "active": true
+  },
+  {
+    "term": "Prescriptive Analytics",
+    "letter": "P",
+    "definition": "Advanced analysis that recommends the optimal action or strategy to take next, not just what will happen.",
+    "url": "https://www.qlik.com/us/augmented-analytics/prescriptive-analytics",
+    "active": true
+  },
+  {
+    "term": "Prompt Engineering",
+    "letter": "P",
+    "definition": "Crafting and refining the instructions given to a generative model to steer accurate, useful output.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Real-Time Analytics",
+    "letter": "R",
+    "definition": "Analyzing and responding to information about customers, products, or apps the moment it's generated.",
+    "url": "https://www.qlik.com/us/data-analytics/real-time-analytics",
+    "active": true
+  },
+  {
+    "term": "Real-Time Data",
+    "letter": "R",
+    "definition": "Information made available for use as soon as it is generated, with no storage delay.",
+    "url": "https://www.qlik.com/us/streaming-data/real-time-data",
+    "active": true
+  },
+  {
+    "term": "Responsible AI",
+    "letter": "R",
+    "definition": "The practice of designing and using AI ethically, with fairness, transparency, and accountability built in.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Retrieval-Augmented Generation (RAG)",
+    "letter": "R",
+    "definition": "Grounding a model's answers in external data fetched at query time to cut down on fabrication.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Revenue Operations",
+    "letter": "R",
+    "definition": "A model that aligns customer-facing teams behind shared goals to accelerate revenue.",
+    "url": "https://www.qlik.com/us/data-analytics/revenue-operations",
+    "active": true
+  },
+  {
+    "term": "Reverse ETL",
+    "letter": "R",
+    "definition": "Pushing transformed data from a warehouse back into operational tools like CRMs so teams can act on it.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Self-Service Analytics",
+    "letter": "S",
+    "definition": "An approach that lets business users explore data and build their own reports without relying on IT.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Semantic Layer",
+    "letter": "S",
+    "definition": "A business-friendly abstraction that maps raw data into consistent, reusable metrics and definitions for users.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Single Source of Truth",
+    "letter": "S",
+    "definition": "One trusted, central reference for a given data point that every team relies on instead of conflicting copies.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Spatial Analysis",
+    "letter": "S",
+    "definition": "Collecting and manipulating location data like addresses, GPS, and satellite imagery to uncover place-based insights.",
+    "url": "https://www.qlik.com/us/data-analytics/spatial-analysis",
+    "active": true
+  },
+  {
+    "term": "Streaming Data",
+    "letter": "S",
+    "definition": "Data that flows continuously from source to target, usually generated at high speed by many sources at once.",
+    "url": "https://www.qlik.com/us/streaming-data",
+    "active": true
+  },
+  {
+    "term": "Supply Chain Analytics",
+    "letter": "S",
+    "definition": "Combining data across systems to gain insight into procuring, processing, and distributing goods.",
+    "url": "https://www.qlik.com/us/data-analytics/supply-chain-analytics",
+    "active": true
+  },
+  {
+    "term": "Synthetic Data",
+    "letter": "S",
+    "definition": "Artificially generated data that mimics real datasets, used to train models without exposing sensitive records.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Vector Database",
+    "letter": "V",
+    "definition": "A store optimized to index and search high-dimensional embeddings, the engine behind AI similarity search.",
+    "url": null,
+    "active": true
+  },
+  {
+    "term": "Visual Analytics",
+    "letter": "V",
+    "definition": "Pairing computational analysis with interactive visuals so users can explore and manipulate data in new ways.",
+    "url": "https://www.qlik.com/us/data-visualization/visual-analytics",
+    "active": true
+  }
+]

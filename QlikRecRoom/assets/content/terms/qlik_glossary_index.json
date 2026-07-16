@@ -1,0 +1,590 @@
+[
+  {
+    "term": "AI Analytics",
+    "letter": "A",
+    "url": "https://www.qlik.com/us/augmented-analytics/ai-analytics",
+    "short_definition": "AI analytics refers to the use of machine learning to automate processes, analyze data, derive insights, and make predictions or recommendations."
+  },
+  {
+    "term": "Analytics as a Service",
+    "letter": "A",
+    "url": "https://www.qlik.com/us/cloud-analytics/analytics-as-a-service",
+    "short_definition": "Analytics as a service refers to a subscription-based model in which data analytics and BI processes take place on cloud-based, vendor-managed systems rather than using on-premise hardware."
+  },
+  {
+    "term": "Analytics Dashboard",
+    "letter": "A",
+    "url": "https://www.qlik.com/us/dashboard-examples/analytics-dashboard",
+    "short_definition": "An analytics dashboard is an interactive graphical user interface that allows you to display, track, and analyze key performance indicators and metrics."
+  },
+  {
+    "term": "Apache Kafka",
+    "letter": "A",
+    "url": "https://www.qlik.com/us/streaming-data/apache-kafka",
+    "short_definition": "Apache Kafka is an open-source distributed event streaming platform which is optimized for ingesting and transforming real-time streaming data."
+  },
+  {
+    "term": "Augmented Analytics",
+    "letter": "A",
+    "url": "https://www.qlik.com/us/augmented-analytics",
+    "short_definition": "Augmented analytics describes the use of artificial intelligence (AI) and machine learning technologies within a data analytics platform to enhance human intuition and productivity across the analytics lifecycle."
+  },
+  {
+    "term": "AutoML",
+    "letter": "A",
+    "url": "https://www.qlik.com/us/augmented-analytics/automl",
+    "short_definition": "AutoML (short for automated machine learning) refers to the tools and processes which make it easy to build, train, deploy and serve custom machine learning models."
+  },
+  {
+    "term": "BI Dashboard",
+    "letter": "B",
+    "url": "https://www.qlik.com/us/dashboard-examples/bi-dashboard",
+    "short_definition": "A BI dashboard is a business intelligence tool which allows users to track, analyze and report on key performance indicators and other metrics."
+  },
+  {
+    "term": "Big Data Analytics",
+    "letter": "B",
+    "url": "https://www.qlik.com/us/data-analytics/big-data-analytics",
+    "short_definition": "Big data analytics is the process of collecting, preparing and analyzing large, diverse data sets to generate valuable insights."
+  },
+  {
+    "term": "Business Dashboard",
+    "letter": "B",
+    "url": "https://www.qlik.com/us/dashboard-examples/business-dashboard",
+    "short_definition": "A business dashboard is an interactive data visualization and analysis tool, enabling the presentation, monitoring, and examination of key performance indicators (KPIs) and metrics."
+  },
+  {
+    "term": "Business Intelligence",
+    "letter": "B",
+    "url": "https://www.qlik.com/us/business-intelligence",
+    "short_definition": "Business intelligence (BI) combines applications, processes, and infrastructure that enables access to and analysis of information to improve and optimize decisions and performance."
+  },
+  {
+    "term": "Business Intelligence Reporting",
+    "letter": "B",
+    "url": "https://www.qlik.com/us/business-intelligence/business-intelligence-reporting",
+    "short_definition": "Business Intelligence reporting is broadly defined as the process of using a BI tool to prepare and analyze data to find and share actionable insights."
+  },
+  {
+    "term": "Business Intelligence Tools",
+    "letter": "B",
+    "url": "https://www.qlik.com/us/business-intelligence/business-intelligence-tools",
+    "short_definition": "Business intelligence tools are technology or software applications used to collect, combine, and analyze various types of business-relevant information."
+  },
+  {
+    "term": "CDC SQL Server",
+    "letter": "C",
+    "url": "https://www.qlik.com/us/change-data-capture/cdc-sql-server",
+    "short_definition": "SQL Server CDC (change data capture) is the process of recording changes in a Microsoft SQL Server database and then delivering those changes to a downstream system."
+  },
+  {
+    "term": "Change Data Capture",
+    "letter": "C",
+    "url": "https://www.qlik.com/us/change-data-capture/cdc-change-data-capture",
+    "short_definition": "Change data capture (CDC) refers to the process of identifying and capturing changes made to data in a database and then delivering those changes in real-time to a downstream process or system."
+  },
+  {
+    "term": "Cloud Analytics",
+    "letter": "C",
+    "url": "https://www.qlik.com/us/cloud-analytics",
+    "short_definition": "Cloud analytics is a service model in which data analytics and business intelligence processes occur on a public or private cloud rather than on a company's on-premise servers to help streamline the process of taking raw data to insights."
+  },
+  {
+    "term": "Cloud Data Warehouse",
+    "letter": "C",
+    "url": "https://www.qlik.com/us/cloud-data-migration/cloud-data-warehouse",
+    "short_definition": "A cloud data warehouse is a database stored as a managed service in a public cloud and optimized for scalable BI and analytics."
+  },
+  {
+    "term": "Dashboard",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/dashboard-examples",
+    "short_definition": "A dashboard presents critical data, visualizations, and KPIs focused on the specific needs of analytics user segments, allowing for a quicker, more organized review and analysis of business-critical information and trends."
+  },
+  {
+    "term": "Dashboard Reporting",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/dashboard-examples/dashboard-reporting",
+    "short_definition": "Dashboard reporting helps businesses make better informed decisions by allowing users to not only visualize KPIs and track performance, but also interact with data directly within the dashboard to analyze trends and gain insights."
+  },
+  {
+    "term": "Dashboard Software",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/dashboard-examples/dashboard-software",
+    "short_definition": "Dashboard software allows users to create visual representations of data and KPIs, helping them recognize patterns and make faster, data-driven decisions."
+  },
+  {
+    "term": "Data Aggregation",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-management/data-aggregation",
+    "short_definition": "Data aggregation is the process of combining datasets from diverse sources into a single format and summarizing it to support analysis and decision-making."
+  },
+  {
+    "term": "Data Analytics",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-analytics",
+    "short_definition": "Data analytics refers to the use of processes and technology to combine and examine datasets, identify meaningful patterns, correlations, and trends in them, and most importantly, extract valuable insights."
+  },
+  {
+    "term": "Data Analytics Tools",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-analytics/data-analytics-tools",
+    "short_definition": "Data analytics tools are technology or software applications that allow users to find patterns, trends, and relationships in their data."
+  },
+  {
+    "term": "Data Catalog",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-management/data-catalog",
+    "short_definition": "A data catalog is an inventory of data assets, organized by metadata and data management and search tools, which provides on-demand access to business-ready data."
+  },
+  {
+    "term": "Data Dashboard",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/dashboard-examples/data-dashboard",
+    "short_definition": "A data dashboard is an interactive tool that allows you to track, analyze, and display KPIs and metrics."
+  },
+  {
+    "term": "Data Discovery",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-analytics/data-discovery",
+    "short_definition": "Data discovery refers to the process of exploring and analyzing data to uncover patterns, identify relationships, and gain insights that improve decision making and business performance."
+  },
+  {
+    "term": "Data Exploration",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-analytics/data-exploration",
+    "short_definition": "Data exploration refers to the process of reviewing a raw dataset to uncover characteristics and initial patterns for further analysis."
+  },
+  {
+    "term": "Data Fabric",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-management/data-fabric",
+    "short_definition": "Data fabric refers to a machine-enabled data integration architecture that utilizes metadata assets to unify, integrate, and govern disparate data environments."
+  },
+  {
+    "term": "Data Governance",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-governance",
+    "short_definition": "Data governance refers to the set of roles, processes, policies and tools which ensure proper data quality throughout the data lifecycle and proper data usage across an organization."
+  },
+  {
+    "term": "Data Ingestion",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-ingestion",
+    "short_definition": "Data ingestion refers to the tools & processes used to collect data from various sources and move it to a target site, either in batches or in real-time."
+  },
+  {
+    "term": "Data Integration",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-integration",
+    "short_definition": "Data integration is the process of synchronizing data across applications and data platforms and providing users with comprehensive, accurate, and up-to-date information for business intelligence and analytics."
+  },
+  {
+    "term": "Data Integrity",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-management/data-integrity",
+    "short_definition": "Data integrity refers to the accuracy, consistency, and completeness of data throughout its lifecycle."
+  },
+  {
+    "term": "Data Lake",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-lake",
+    "short_definition": "A data lake is a centralized repository that holds all of your organization's structured and unstructured data. It employs a flat architecture which allows you to store raw data at any scale without the need to structure it first."
+  },
+  {
+    "term": "Data Lake Architecture",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-lake/data-lake-architecture",
+    "short_definition": "The modern data lake architecture provides rapid data access and analytics by having all necessary compute resources and storage objects internal to the data lake platform."
+  },
+  {
+    "term": "Data Lake vs Data Warehouse",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-lake/data-lake-vs-data-warehouse",
+    "short_definition": "Data lakes and data warehouses are both universal data repositories. Data lakes typically store large volumes of unstructured data and data warehouses store structured data that has been processed based on predefined business needs."
+  },
+  {
+    "term": "Data Lakehouse",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-lake/data-lakehouse",
+    "short_definition": "A data lakehouse is a data management architecture which combines key capabilities of data lakes and data warehouses."
+  },
+  {
+    "term": "Data Lineage",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-management/data-lineage",
+    "short_definition": "Data lineage refers to the process of understanding and visualizing data flows from source to current location and tracking any alterations made to the data on its journey."
+  },
+  {
+    "term": "Data Literacy",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-literacy",
+    "short_definition": "Data literacy is the ability to read, work with, analyze and communicate with data, building the skills to ask the right questions of data and machines to make decisions and communicate meaning to others."
+  },
+  {
+    "term": "Data Management",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-management",
+    "short_definition": "Data management refers to the process of collecting, storing, organizing, and maintaining data to support analysis and decision-making."
+  },
+  {
+    "term": "Data Mart",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-warehouse/data-mart",
+    "short_definition": "A data mart is a structured data repository purpose-built to support the analytical needs of a particular department, line of business, or geographic region within an enterprise."
+  },
+  {
+    "term": "Data Mesh",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-management/data-mesh",
+    "short_definition": "Data mesh refers to a data architecture where data is owned and managed by the teams that use it. A data mesh decentralizes data ownership and provides a self-serve data platform and federated computational governance."
+  },
+  {
+    "term": "Data Migration",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-migration",
+    "short_definition": "Data migration is the process of moving data between storage systems, applications, or formats. Typically a one-time process, it can include prepping, extracting, transforming and loading the data."
+  },
+  {
+    "term": "Data Mining",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-analytics/data-mining",
+    "short_definition": "Data mining is the process of using statistical analysis and machine learning to discover hidden patterns, correlations, and anomalies within large datasets."
+  },
+  {
+    "term": "Data Modeling",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-modeling",
+    "short_definition": "Data modeling is the process of creating a diagram that represents your data system and defines the structure, attributes, and relationships of your data entities."
+  },
+  {
+    "term": "Data Pipeline",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-integration/data-pipeline",
+    "short_definition": "A data pipeline is a set of tools and processes used to automate the movement and transformation of data between a source system and a target repository."
+  },
+  {
+    "term": "Data Products",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-management/data-products",
+    "short_definition": "Data products are highly trusted, re-usable, and consumable data assets purposefully designed for domain-specific business outcomes."
+  },
+  {
+    "term": "Data Quality",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-governance/data-quality",
+    "short_definition": "Data quality assesses the extent to which a dataset meets established standards for accuracy, consistency, reliability, completeness, and timeliness."
+  },
+  {
+    "term": "Data Replication",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-replication",
+    "short_definition": "Data replication is the process of creating and maintaining identical copies of data across multiple storage locations, systems, or databases in real-time or periodically."
+  },
+  {
+    "term": "Data Science vs Data Analytics",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-analytics/data-science-vs-data-analytics",
+    "short_definition": "Data science and data analytics are closely related but there are differences between the two fields. One key difference is that data science involves creating custom data models."
+  },
+  {
+    "term": "Data Strategy",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-management/data-strategy",
+    "short_definition": "A data strategy is a structured plan outlining how your organization will manage, utilize, and derive value from your data assets."
+  },
+  {
+    "term": "Data Transformation",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-management/data-transformation",
+    "short_definition": "Data transformation refers to the process of cleaning, validating, and preparing data to match that of a target system."
+  },
+  {
+    "term": "Data Trends",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/bi/data-trends",
+    "short_definition": "Our experts help you understand the top 10 emerging BI and data trends, and find out how to use them to your advantage."
+  },
+  {
+    "term": "Data Vault",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-warehouse/data-vault",
+    "short_definition": "A data vault is a flexible, agile, and scalable data modeling approach in data warehousing to handle complex data structures and support enterprise analytics."
+  },
+  {
+    "term": "Data Visualization",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-visualization",
+    "short_definition": "Data visualization enables people to easily uncover actionable insights by presenting information and data in graphical, and often interactive graphs, charts, and maps."
+  },
+  {
+    "term": "Data Visualization Examples",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-visualization/data-visualization-examples",
+    "short_definition": "This guide showcases the ten most compelling and interesting data visualization examples from recent years."
+  },
+  {
+    "term": "Data Visualization Tools",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-visualization/data-visualization-tools",
+    "short_definition": "Data visualization tools let users create graphics and imagery that help them make sense out of large amounts of data and make more informed decisions."
+  },
+  {
+    "term": "Data Warehouse",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-warehouse",
+    "short_definition": "A data warehouse is a data management system which aggregates large volumes of data from multiple sources into a single repository of highly structured and unified historical data."
+  },
+  {
+    "term": "Data Warehouse Automation",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/products/data-warehouse-automation",
+    "short_definition": "The process of automating the entire data warehouse lifecycle from data modeling and real-time ingestion to data marts and governance to accelerate the availability of analytics-ready data."
+  },
+  {
+    "term": "Data Wrangling",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-management/data-wrangling",
+    "short_definition": "Data wrangling is the process of cleaning, structuring, and transforming raw data into a usable format for analysis."
+  },
+  {
+    "term": "Database Replication",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-replication/database-replication",
+    "short_definition": "Database replication refers to the process of copying data from a primary database to one or more replica databases in order to improve data accessibility and system fault-tolerance and reliability."
+  },
+  {
+    "term": "DataOps",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/dataops",
+    "short_definition": "DataOps is a data management methodology that aims to improve the communication, integration, and automation of data flows between data management and consumers throughout an organization."
+  },
+  {
+    "term": "Decision Support System",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/business-intelligence/decision-support-system",
+    "short_definition": "A decision support system (DSS) is an analytics software program used to gather and analyze data to inform decision making."
+  },
+  {
+    "term": "Delta Lake",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/data-lake/delta-lake",
+    "short_definition": "Delta Lake is an open-source storage layer that uses the ACID compliance of transactional databases to bring reliability, performance, and flexibility to data lakes."
+  },
+  {
+    "term": "Descriptive Analytics",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/reporting-analytics/descriptive-analytics",
+    "short_definition": "Descriptive analytics focuses on summarizing and interpreting historical data to gain insights into events, patterns, and trends in a business."
+  },
+  {
+    "term": "Digital Dashboard",
+    "letter": "D",
+    "url": "https://www.qlik.com/us/dashboard-examples/digital-dashboard",
+    "short_definition": "A digital dashboard is an electronic interface which allows users to track, analyze and report on KPIs and metrics."
+  },
+  {
+    "term": "ELT",
+    "letter": "E",
+    "url": "https://www.qlik.com/us/elt",
+    "short_definition": "ELT stands for \"Extract, Load, and Transform\" and describes the set of data integration processes to extract data from one system, load it into a target repository, and then transform it for downstream uses."
+  },
+  {
+    "term": "Embedded Analytics",
+    "letter": "E",
+    "url": "https://www.qlik.com/us/data-analytics/embedded-analytics",
+    "short_definition": "Embedded analytics refers to the seamless integration of data analysis and reporting capabilities directly into other software applications."
+  },
+  {
+    "term": "ETL",
+    "letter": "E",
+    "url": "https://www.qlik.com/us/etl",
+    "short_definition": "ETL stands for \"Extract, Transform, and Load\" and describes the set of processes to extract data from one system, transform it, and load it into a target repository."
+  },
+  {
+    "term": "ETL Pipeline",
+    "letter": "E",
+    "url": "https://www.qlik.com/us/etl/etl-pipeline",
+    "short_definition": "An ETL pipeline is a set of processes to extract data from one system, transform it, and load it into a target repository."
+  },
+  {
+    "term": "ETL Tool",
+    "letter": "E",
+    "url": "https://www.qlik.com/us/etl/etl-tool",
+    "short_definition": "An ETL tool is used to consolidate and transform multi-sourced data into a common format and load the transformed data into an easy-to-access storage environment such as a data warehouse or data mart."
+  },
+  {
+    "term": "ETL vs ELT",
+    "letter": "E",
+    "url": "https://www.qlik.com/us/etl/etl-vs-elt",
+    "short_definition": "The ETL and ELT acronyms both describe processes of extracting, transforming and loading data from a source into a target repository."
+  },
+  {
+    "term": "Explainable AI",
+    "letter": "E",
+    "url": "https://www.qlik.com/us/augmented-analytics/explainable-ai",
+    "short_definition": "Explainable AI (XAI) refers to a set of techniques and processes that help you understand the rationale behind the output of a machine learning algorithm."
+  },
+  {
+    "term": "Financial Analysis",
+    "letter": "F",
+    "url": "https://www.qlik.com/us/data-analytics/financial-analysis",
+    "short_definition": "Financial analysis is the process of examining financial statements and other relevant data to assess the financial health and performance of an organization."
+  },
+  {
+    "term": "Financial Analytics",
+    "letter": "F",
+    "url": "https://www.qlik.com/us/data-analytics/financial-analytics",
+    "short_definition": "Financial analytics is the use of tools and processes to combine and analyze datasets to gain insights into the financial performance of your organization."
+  },
+  {
+    "term": "Interactive Data Visualization",
+    "letter": "I",
+    "url": "https://www.qlik.com/us/data-visualization/interactive-data-visualization",
+    "short_definition": "Interactive data visualization is the use of tools and processes to produce a visual representation of data which can be explored and analyzed directly within the visualization itself."
+  },
+  {
+    "term": "iPaaS",
+    "letter": "I",
+    "url": "https://www.qlik.com/us/data-integration/ipaas",
+    "short_definition": "Integration platform as a service (iPaaS) refers to a cloud-based platform that enables the integration of various applications and data sources across different cloud and on-premise environments."
+  },
+  {
+    "term": "Kafka Streams",
+    "letter": "K",
+    "url": "https://www.qlik.com/us/streaming-data/kafka-streams",
+    "short_definition": "Kafka streams integrate real-time data from diverse source systems and make that data consumable as a message sequence by applications and analytics platforms such as data lake systems."
+  },
+  {
+    "term": "KPI",
+    "letter": "K",
+    "url": "https://www.qlik.com/us/kpi",
+    "short_definition": "KPI stands for key performance indicator, a quantifiable measure of performance over time for a specific objective."
+  },
+  {
+    "term": "KPI Dashboard",
+    "letter": "K",
+    "url": "https://www.qlik.com/us/dashboard-examples/kpi-dashboards",
+    "short_definition": "A KPI dashboard displays key performance indicators in interactive charts and graphs, allowing for quick, organized review and analysis."
+  },
+  {
+    "term": "KPI Examples",
+    "letter": "K",
+    "url": "https://www.qlik.com/us/kpi/kpi-examples",
+    "short_definition": "KPI examples provide stakeholders guidance in selecting the most impactful key performance indicators for their organization and teams."
+  },
+  {
+    "term": "KPI Reports",
+    "letter": "K",
+    "url": "https://www.qlik.com/us/kpi/kpi-reporting",
+    "short_definition": "KPI reports provide a graphical, at-a-glance view of key metrics in real-time, helping decision-makers track the performance of their company, department, or initiatives."
+  },
+  {
+    "term": "Machine Learning vs AI",
+    "letter": "M",
+    "url": "https://www.qlik.com/us/augmented-analytics/machine-learning-vs-ai",
+    "short_definition": "Machine learning is a subset of AI focused on algorithms enabling computers to learn and make predictions without being programmed."
+  },
+  {
+    "term": "Marketing Analytics",
+    "letter": "M",
+    "url": "https://www.qlik.com/us/data-analytics/marketing-analytics",
+    "short_definition": "Marketing analytics is the practice of combining and analyzing datasets, identifying patterns, and then coming away with actionable insights that improve the ROI of marketing efforts."
+  },
+  {
+    "term": "Marketing KPIs",
+    "letter": "M",
+    "url": "https://www.qlik.com/us/kpi/kpi-marketing",
+    "short_definition": "Marketing KPIs are quantifiable measures of performance for specific strategic objectives."
+  },
+  {
+    "term": "Metadata Management",
+    "letter": "M",
+    "url": "https://www.qlik.com/us/data-management/metadata-management",
+    "short_definition": "Metadata management refers to the organization and control of data which describes technical, business, or operational aspects of other data."
+  },
+  {
+    "term": "People Analytics",
+    "letter": "P",
+    "url": "https://www.qlik.com/us/data-analytics/people-analytics",
+    "short_definition": "People analytics refers to the tools and processes used to analyze data to gain insights into the hiring, productivity, engagement and retention of talent."
+  },
+  {
+    "term": "Predictive Analytics",
+    "letter": "P",
+    "url": "https://www.qlik.com/us/predictive-analytics",
+    "short_definition": "Predictive analytics refers to the use of statistical modeling, data mining techniques and machine learning to make predictions about future outcomes based on historical and current data."
+  },
+  {
+    "term": "Predictive Analytics Examples",
+    "letter": "P",
+    "url": "https://www.qlik.com/us/predictive-analytics/predictive-analytics-examples",
+    "short_definition": "A wide range of industries and job roles leverage predictive analytics for use cases such as fraud detection, forecasting, and healthcare diagnosis."
+  },
+  {
+    "term": "Predictive Modeling",
+    "letter": "P",
+    "url": "https://www.qlik.com/us/predictive-analytics/predictive-modeling",
+    "short_definition": "Predictive modeling is a statistical technique used to predict the outcome of future events based on historical data."
+  },
+  {
+    "term": "Prescriptive Analytics",
+    "letter": "P",
+    "url": "https://www.qlik.com/us/augmented-analytics/prescriptive-analytics",
+    "short_definition": "Prescriptive analytics is the use of advanced processes and tools to analyze data and content to recommend the optimal course of action or strategy moving forward."
+  },
+  {
+    "term": "Predictive vs Prescriptive Analytics",
+    "letter": "P",
+    "url": "https://www.qlik.com/us/predictive-analytics/predictive-vs-prescriptive-analytics",
+    "short_definition": "Predictive analytics focuses on forecasting outcomes to help you make decisions. Prescriptive analytics takes the extra step to recommend the specific, optimal course of action or strategy."
+  },
+  {
+    "term": "Real-Time Analytics",
+    "letter": "R",
+    "url": "https://www.qlik.com/us/data-analytics/real-time-analytics",
+    "short_definition": "Real-time analytics refers to the use of tools and processes to analyze and respond to real-time information about your customers, products, and applications as it is generated."
+  },
+  {
+    "term": "Real-Time Data",
+    "letter": "R",
+    "url": "https://www.qlik.com/us/streaming-data/real-time-data",
+    "short_definition": "Real-time data refers to information that is made available for use as soon as it is generated."
+  },
+  {
+    "term": "Reporting vs Analytics",
+    "letter": "R",
+    "url": "https://www.qlik.com/us/reporting-analytics",
+    "short_definition": "Reporting is the process of gathering and presenting data in a structured way. Analytics is the process of analyzing your data to find patterns and gain insights."
+  },
+  {
+    "term": "Revenue Operations",
+    "letter": "R",
+    "url": "https://www.qlik.com/us/data-analytics/revenue-operations",
+    "short_definition": "Revenue operations (RevOps) is a management model that accelerates revenue by aligning customer-facing teams behind shared objectives."
+  },
+  {
+    "term": "Spatial Analysis",
+    "letter": "S",
+    "url": "https://www.qlik.com/us/data-analytics/spatial-analysis",
+    "short_definition": "Spatial analysis is the collection, display and manipulation of location data-or geodata-such as addresses, satellite images and GPS coordinates to uncover location-based insights."
+  },
+  {
+    "term": "Streaming Data",
+    "letter": "S",
+    "url": "https://www.qlik.com/us/streaming-data",
+    "short_definition": "Streaming data refers to data which is continuously flowing from a source system to a target. It is usually generated at high speed by many data sources."
+  },
+  {
+    "term": "Supply Chain Analytics",
+    "letter": "S",
+    "url": "https://www.qlik.com/us/data-analytics/supply-chain-analytics",
+    "short_definition": "Supply chain analytics refers to the tools and processes used to combine and analyze data from multiple systems to gain insights into the procurement, processing and distribution of goods."
+  },
+  {
+    "term": "Visual Analytics",
+    "letter": "V",
+    "url": "https://www.qlik.com/us/data-visualization/visual-analytics",
+    "short_definition": "Visual analytics integrates computational analysis techniques with interactive visualizations, offering users a new and innovative way to interact with, explore, and manipulate data."
+  }
+]
