@@ -379,6 +379,12 @@
     <div id="audioToggles">
       <button id="muteMusic" title="Music on/off" onclick="toggleMusicMute()"></button>
       <button id="muteSfx" title="Sound FX on/off" onclick="toggleSfxMute()"></button>
+      <button id="fsBtn" title="Full screen" onclick="toggleFullscreen()">
+        <svg id="fsIcoEnter" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cfe6ff" stroke-width="2.4" stroke-linecap="round">
+          <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        <svg id="fsIcoExit" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10CFC9" stroke-width="2.4" stroke-linecap="round" style="display:none">
+          <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+      </button>
     </div>
     <canvas id="game" width="1280" height="720"></canvas>
     <video id="freezeVid" muted playsinline preload="auto"></video>
@@ -2817,6 +2823,20 @@ function fitStage(){
   const tooSmall = sw < 640 || sh < 380 || sw < sh;
   document.getElementById('guard').style.display = tooSmall ? 'flex' : 'none';
 }
+function toggleFullscreen(){
+  if (document.fullscreenElement) document.exitFullscreen().catch(function(){});
+  else document.documentElement.requestFullscreen().catch(function(){});
+}
+(function(){
+  var b = document.getElementById('fsBtn');
+  if (!document.fullscreenEnabled){ b.style.display = 'none'; return; }   // host chain blocks it
+  document.addEventListener('fullscreenchange', function(){
+    var fs = !!document.fullscreenElement;
+    document.getElementById('fsIcoEnter').style.display = fs ? 'none' : '';
+    document.getElementById('fsIcoExit').style.display  = fs ? '' : 'none';
+    fitStage();
+  });
+})();
 window.addEventListener('resize', fitStage);
 if (window.visualViewport) window.visualViewport.addEventListener('resize', fitStage);
 try{ new ResizeObserver(function(){ fitStage(); }).observe(document.documentElement); }catch(e){}
