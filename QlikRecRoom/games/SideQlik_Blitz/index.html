@@ -604,7 +604,7 @@
 
 /* ---- asset base (overridable for local testing via ?assets=...) ---- */
 const ASSET_BASE = new URLSearchParams(location.search).get('assets') || 'assets/';
-const API_BASE = '/api/';   // game's own root /api/ (standalone Vercel project)
+const API_BASE = '/api/blitz/';   // consolidated QlikGSE root api, blitz namespace
 
 /* ============================================================================
    AUDIO  —  Web Audio bus. Two channels: Music + Sound FX, each its own volume.

@@ -832,7 +832,7 @@ if(document.fonts && document.fonts.ready){ document.fonts.ready.then(alignTabs)
 window.addEventListener('resize', alignTabs);
 
 /* ---- market pulse (live via the Vercel proxy) ---- */
-const MARKET_ENDPOINT = '/api/market';   /* same-origin on Vercel — no domain to hardcode */
+const MARKET_ENDPOINT = '/api/command/market';   /* same-origin on Vercel — no domain to hardcode */
 const SAMPLE = [   /* placeholder shown until the live endpoint answers — no LIVE badge until it does */
   {t:'SPY', label:'S&P 500',    price:5894.20, pct:0.42},
   {t:'QQQ', label:'Nasdaq 100', price:21340.70, pct:0.61},
@@ -870,7 +870,7 @@ fetch(MARKET_ENDPOINT)
   .catch(()=>{ /* endpoint not live yet — keep sample, leave LIVE off */ });
 
 /* ---- news ticker (merged GNews + MarketAux via /api/news) ---- */
-const NEWS_ENDPOINT = '/api/news';
+const NEWS_ENDPOINT = '/api/command/news';
 const SAMPLE_NEWS = [   /* placeholder until the live endpoint answers */
   {title:'Qlik expands Open Lakehouse with real-time streaming ingestion', source:'Qlik', url:'#'},
   {title:'Enterprises double down on trusted data for AI initiatives', source:'Industry', url:'#'},
