@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!--
+  STELLAR-SELLER #1 · comic reader (v1 — reviewer/phone build)
+  Deploy: SalesCommand/comic.html  ·  pages: SalesCommand/assets/comic/issue1/page01..12.webp
+  Swipe/tap on touch, arrows/click-zones on desktop. No dependencies.
+  Booth curl-flip version comes later; this is the reliable reviewer version.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Stellar-Seller &amp; the Side-Qlik — Issue #1</title>
+<style>
+  :root{--teal:#10CFC9;--purple:#7C5CFF;--ink:#eaf2ff;--navy:#060b18;}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:var(--navy);overflow:hidden;
+    font-family:'Inter',system-ui,sans-serif;color:var(--ink);
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #track{position:relative;height:100%;width:100%;display:flex;align-items:center;justify-content:center}
+  .page{position:absolute;max-height:100%;max-width:100%;height:auto;width:auto;
+    object-fit:contain;opacity:0;transition:opacity .32s ease;
+    box-shadow:0 10px 50px rgba(0,0,0,.6);pointer-events:none}
+  .page.active{opacity:1}
+  /* click zones (desktop) */
+  .zone{position:fixed;top:0;bottom:0;width:32%;z-index:5;cursor:pointer}
+  .zone.left{left:0}.zone.right{right:0}
+  /* HUD */
+  .counter{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:8;
+    font-size:13px;letter-spacing:.14em;color:var(--teal);background:rgba(6,11,24,.72);
+    border:1px solid rgba(16,207,201,.4);border-radius:999px;padding:6px 16px}
+  .nav{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:8;
+    display:flex;gap:10px;align-items:center;background:rgba(6,11,24,.72);
+    border:1px solid rgba(124,92,255,.35);border-radius:999px;padding:7px 10px}
+  .nav button{width:40px;height:40px;border:0;border-radius:50%;cursor:pointer;
+    background:rgba(255,255,255,.06);color:var(--ink);font-size:20px;line-height:1;
+    display:flex;align-items:center;justify-content:center;transition:background .15s}
+  .nav button:hover{background:rgba(16,207,201,.25)}
+  .nav button:disabled{opacity:.3;cursor:default}
+  .hint{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:8;
+    font-size:12px;color:#7f97ba;opacity:.9;transition:opacity .5s;text-align:center;white-space:nowrap}
+  .hint.gone{opacity:0}
+</style>
+</head>
+<body>
+<div id="stage"><div id="track"></div></div>
+
+<div class="zone left"  onclick="prev()"></div>
+<div class="zone right" onclick="next()"></div>
+
+<div class="counter" id="counter">1 / 12</div>
+<div class="nav">
+  <button id="btnPrev" onclick="prev()" aria-label="Previous">&#8249;</button>
+  <button id="btnNext" onclick="next()" aria-label="Next">&#8250;</button>
+</div>
+<div class="hint" id="hint">Swipe or tap sides to turn the page</div>
+
+<script>
+  const BASE = 'assets/comic/issue1/';
+  const N = 12;
+  let cur = 0;
+  const track = document.getElementById('track');
+  const imgs = [];
+
+  // build pages; eager-load current+neighbors, lazy the rest
+  for (let i = 0; i < N; i++){
+    const im = document.createElement('img');
+    im.className = 'page';
+    im.alt = 'Page ' + (i+1);
+    im.dataset.src = BASE + 'page' + String(i+1).padStart(2,'0') + '.webp';
+    track.appendChild(im);
+    imgs.push(im);
+  }
+  function load(i){ if(i>=0 && i<N && !imgs[i].src) imgs[i].src = imgs[i].dataset.src; }
+
+  function show(i){
+    cur = Math.max(0, Math.min(N-1, i));
+    load(cur); load(cur-1); load(cur+1);         // preload neighbors
+    imgs.forEach((im,idx)=>im.classList.toggle('active', idx===cur));
+    document.getElementById('counter').textContent = (cur+1) + ' / ' + N;
+    document.getElementById('btnPrev').disabled = cur===0;
+    document.getElementById('btnNext').disabled = cur===N-1;
+  }
+  function next(){ if(cur<N-1) show(cur+1); }
+  function prev(){ if(cur>0)   show(cur-1); }
+
+  // keyboard
+  addEventListener('keydown', e=>{
+    if(e.key==='ArrowRight'||e.key===' ') next();
+    else if(e.key==='ArrowLeft') prev();
+  });
+
+  // swipe
+  let sx=0, sy=0;
+  addEventListener('touchstart', e=>{ sx=e.touches[0].clientX; sy=e.touches[0].clientY; }, {passive:true});
+  addEventListener('touchend', e=>{
+    const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
+    if(Math.abs(dx)>40 && Math.abs(dx)>Math.abs(dy)){ dx<0 ? next() : prev(); }
+  }, {passive:true});
+
+  // dismiss hint on first interaction
+  let hinted=false;
+  function dropHint(){ if(!hinted){hinted=true; document.getElementById('hint').classList.add('gone');} }
+  addEventListener('keydown',dropHint); addEventListener('touchstart',dropHint); addEventListener('click',dropHint);
+  setTimeout(dropHint, 5000);
+
+  show(0);
+</script>
+</body>
+</html>
