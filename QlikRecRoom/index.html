@@ -17,7 +17,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>REC ROOM</title>
-  <meta name="build" content="2026-07-16-1000">
+  <meta name="build" content="2026-07-16-2100">
   <script>
     (function(){var s=new URLSearchParams(location.search).get('section');
       if(s)document.documentElement.setAttribute('data-section',s);})();
@@ -54,6 +54,18 @@
       min-width: 1024px;
       min-height: 100vh;
     }
+
+    /* ---- mobile game launcher (game section on touch/small viewports) ---- */
+    .launchcard{position:absolute;inset:0;z-index:8;display:none;flex-direction:column;
+      align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;
+      background:linear-gradient(160deg,#0a1430 0%,#131b3a 60%,#0a1226 100%)}
+    .launchcard.show{display:flex}
+    .launchcard .lc-title{font-family:'VT323',monospace;font-size:2rem;letter-spacing:.08em;color:#fff}
+    .launchcard .lc-sub{font-size:1.05rem;color:#9fb6d8;max-width:420px;line-height:1.35}
+    .launchcard button{font-family:'VT323',monospace;font-size:1.4rem;letter-spacing:.1em;
+      color:#041018;background:#10CFC9;border:0;border-radius:10px;padding:14px 34px;cursor:pointer;
+      box-shadow:0 0 22px rgba(16,207,201,.5)}
+    .launchcard .lc-note{font-size:.8rem;color:#5f7699}
 
     /* ---- widget sections: ?section=banner|game|scoreboard (no param = full page) ---- */
     html[data-section] .widget{min-width:0;min-height:0}
@@ -461,6 +473,12 @@
       <svg style="position:absolute;bottom:14px;left:14px;width:18px;height:18px" viewBox="0 0 18 18"><polygon points="0,18 0,0 18,18" fill="#10CFC9" opacity="0.55"/></svg>
       <svg style="position:absolute;bottom:14px;right:14px;width:18px;height:18px" viewBox="0 0 18 18"><polygon points="18,18 0,18 18,0" fill="#10CFC9" opacity="0.55"/></svg>
       <iframe id="gameFrame" title="SIDE-QLIK BLITZ" allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>
+      <div class="launchcard" id="launchCard">
+        <div class="lc-title">SIDE-QLIK BLITZ</div>
+        <div class="lc-sub">This game plays best in your browser, in landscape. Tap below to launch &mdash; sign in with your trigram and go.</div>
+        <button onclick="launchGame()">&#9654;&nbsp; PLAY IN BROWSER</button>
+        <div class="lc-note">Opens in a new tab &middot; rotate to landscape</div>
+      </div>
       <div class="ph-online">
         <div class="placeholder-text" id="gameMsg">SIDE-QLIK BLITZ</div>
         <button class="play-btn" id="playBtn">Sign In to Play</button>
@@ -530,7 +548,7 @@
 </div>
 
 <script>
-console.log('[REC Room build] 2026-07-16-1000');
+console.log('[REC Room build] 2026-07-16-2100');
 /* ============================================================
    TEMP CONFIG  —  replace the value below with your real
    MT_SESSION_REF before go-live, then delete this comment block.
@@ -539,7 +557,7 @@ console.log('[REC Room build] 2026-07-16-1000');
    ============================================================ */
 const SESSION_KEY = "eOkos0aXU6rs3gfwmXcUZkcD";
 // Deployed SIDE-QLIK BLITZ game (its own Vercel project). Verify this matches your deploy.
-const GAME_URL = "/QlikRecRoom/games/SideQlik_Blitz/";   // same-origin in QlikGSE
+const GAME_URL = "https://sideqlik-blitz.vercel.app/";
 const SECTION = document.documentElement.getAttribute('data-section') || '';
 if (SECTION){
   // sections run as separate MT widget documents — don't let each one loop a webm
@@ -647,7 +665,7 @@ trigramInput.addEventListener('input', () => {
 
 async function prefillFromTrigram(tri) {
   try {
-    const res = await fetch(`/api/recroom/lookupTrigram?trigram=${encodeURIComponent(tri)}`);
+    const res = await fetch(`/api/lookupTrigram?trigram=${encodeURIComponent(tri)}`);
     if (!res.ok) return;
     const data = await res.json();
     if (trigramInput.value.trim().toUpperCase() !== tri) return;   // they kept typing; ignore stale
@@ -680,7 +698,7 @@ async function attemptEnter() {
 
   enterBtn.disabled = true; enterBtn.textContent = 'Checking...';
   try {
-    const res  = await fetch(`/api/recroom/lookupTrigram?trigram=${encodeURIComponent(tri)}`);
+    const res  = await fetch(`/api/lookupTrigram?trigram=${encodeURIComponent(tri)}`);
     const data = await res.json();
 
     if (!data.exists) { return enterRoom({ trigram: tri, country_code: selectedCountry.c, territory: terr }); }
@@ -714,7 +732,7 @@ async function confirmRelocate() {
   const { tri, chosenTerr } = pendingRelocate;
   mismatchModal.classList.remove('open');
   try {
-    const res = await fetch('/api/recroom/updateIdentity', {
+    const res = await fetch('/api/updateIdentity', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key: SESSION_KEY, trigram: tri, territory: chosenTerr, country_code: selectedCountry.c })
     });
@@ -725,7 +743,7 @@ async function confirmRelocate() {
 }
 
 function silentCountrySync(tri, terr, code) {
-  fetch('/api/recroom/updateIdentity', {
+  fetch('/api/updateIdentity', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ key: SESSION_KEY, trigram: tri, territory: terr, country_code: code })
   }).catch(() => {});
@@ -765,7 +783,7 @@ async function sendInit() {
   // to the current top run in the player's region (drives the color unlocks).
   let territoryHigh = 0;
   try {
-    const res = await fetch('/api/recroom/getTerritoryHigh');
+    const res = await fetch('/api/getTerritoryHigh');
     if (res.ok) {
       const d = await res.json();
       territoryHigh = (d.highs && d.highs[currentPlayer.territory]) || 0;
@@ -809,7 +827,7 @@ async function submitScore(r) {
     durationSec
   };
   try {
-    const res = await fetch('/api/recroom/logScore', {
+    const res = await fetch('/api/logScore', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
@@ -831,7 +849,18 @@ window.addEventListener('message', e => {
   if (d.type === 'BLITZ_RESULT') submitScore(d);
 });
 // Preload the game behind the frosted sign-in so its start screen ghosts through (desktop/tablet only).
-if (SHOW_GAME && window.matchMedia('(min-width: 1024px)').matches) gameFrame.src = GAME_URL;
+const LAUNCHED = new URLSearchParams(location.search).get('launched') === '1';
+const IS_TOUCH_SMALL = window.matchMedia('(pointer: coarse)').matches && Math.min(screen.width, window.innerWidth) < 1024;
+function launchGame(){
+  window.open(location.pathname + '?section=game&launched=1', '_blank');
+}
+if (SHOW_GAME){
+  if (SECTION === 'game' && IS_TOUCH_SMALL && !LAUNCHED){
+    document.getElementById('launchCard').classList.add('show');   // widget becomes a launcher on mobile
+  } else if (LAUNCHED || window.matchMedia('(min-width: 1024px)').matches){
+    gameFrame.src = GAME_URL;                                      // launched tab bypasses the desktop gate
+  }
+}
 
 /* --- embed auto-height: report our content height to the hub (hero2) --- */
 (function(){
@@ -885,7 +914,7 @@ const medalImg  = ['medal_first','medal_second','medal_third'];
 
 async function loadBoard() {
   try {
-    const res = await fetch('/api/recroom/getLeaderboard');
+    const res = await fetch('/api/getLeaderboard');
     board = await res.json();
     renderTerritoryRanking();
     paintMap();
@@ -1079,7 +1108,7 @@ function fxLoop() {
 
 /* ---- 48h territory performance chart ---- */
 async function loadTrend() {
-  try { const res = await fetch('/api/recroom/trend'); const d = await res.json(); drawTrend(d.series || {}); }
+  try { const res = await fetch('/api/trend'); const d = await res.json(); drawTrend(d.series || {}); }
   catch (err) { console.warn('Trend load failed:', err); }
 }
 function drawTrend(series) {
@@ -1128,7 +1157,7 @@ async function fetchPool() {
     if (overlay) { overlay.classList.add('show'); showedOverlay = true; }
   }, 300);
   try {
-    const res = await fetch('/api/recroom/getRecentScores');
+    const res = await fetch('/api/getRecentScores');
     const data = await res.json();
     const scores = data.scores || [];
     if (Number(data.refreshSeconds)) refreshSeconds = Number(data.refreshSeconds);
