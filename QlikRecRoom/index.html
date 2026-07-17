@@ -6,6 +6,8 @@
     ?section=banner       logo banner only. Static. No polling, no game, no bg video.
     ?section=game         Program Interface + game iframe + sign-in. No polling, no bg video.
     ?section=scoreboard   scoreboard grid. Polling ON (the ONLY sectioned view that touches Neon).
+    ?section=play         MOBILE full-bleed game: edge-to-edge, no chrome, sign-in + identity
+                          bridge intact. Destination of the mobile launch card. No polling.
   INVARIANTS:
     - Exactly one view boots Neon polling per document: full or ?section=scoreboard.
     - Recent-scores renders a fixed RECENT_ROWS rows -> scoreboard height is deterministic.
@@ -17,7 +19,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>REC ROOM</title>
-  <meta name="build" content="2026-07-16-2130">
+  <meta name="build" content="2026-07-16-2230">
   <script>
     (function(){var s=new URLSearchParams(location.search).get('section');
       if(s)document.documentElement.setAttribute('data-section',s);})();
@@ -61,6 +63,16 @@
       background:linear-gradient(160deg,#0a1430 0%,#131b3a 60%,#0a1226 100%)}
     .launchcard.show{display:flex}
     .game-frame.launch{aspect-ratio:auto;height:auto;min-height:360px}
+    /* ---- ?section=play: chrome-less mobile game ---- */
+    html[data-section="play"], html[data-section="play"] body{overflow:hidden;height:100%}
+    html[data-section="play"] .widget{min-height:0}
+    html[data-section="play"] .header,
+    html[data-section="play"] .content > .section-label,
+    html[data-section="play"] .scoreboard{display:none}
+    html[data-section="play"] .content{padding:0;max-width:none}
+    html[data-section="play"] .game-frame{position:fixed;inset:0;width:100%;height:100%;
+      aspect-ratio:auto;border:0;border-radius:0;box-shadow:none;margin:0}
+    html[data-section="play"] .game-frame .corner{display:none}
     .launchcard .lc-title{font-family:'VT323',monospace;font-size:2rem;letter-spacing:.08em;color:#fff}
     .launchcard .lc-sub{font-size:1.05rem;color:#9fb6d8;max-width:420px;line-height:1.35}
     .launchcard button{font-family:'VT323',monospace;font-size:1.4rem;letter-spacing:.1em;
@@ -549,7 +561,7 @@
 </div>
 
 <script>
-console.log('[REC Room build] 2026-07-16-2130');
+console.log('[REC Room build] 2026-07-16-2230');
 /* ============================================================
    TEMP CONFIG  —  replace the value below with your real
    MT_SESSION_REF before go-live, then delete this comment block.
@@ -565,7 +577,7 @@ if (SECTION){
   var _bv = document.querySelector('.bg-video'); if (_bv) _bv.remove();
   if (SECTION !== 'banner'){ var _lv = document.querySelector('.logo-video'); if (_lv) _lv.remove(); }
 }
-const SHOW_GAME  = !SECTION || SECTION === 'game';
+const SHOW_GAME  = !SECTION || SECTION === 'game' || SECTION === 'play';
 const SHOW_BOARD = !SECTION || SECTION === 'scoreboard';
 const gameFrame = document.getElementById('gameFrame');
 let gameReady = false;
@@ -853,14 +865,14 @@ window.addEventListener('message', e => {
 const LAUNCHED = new URLSearchParams(location.search).get('launched') === '1';
 const IS_TOUCH_SMALL = window.matchMedia('(pointer: coarse)').matches && Math.min(screen.width, window.innerWidth) < 1024;
 function launchGame(){
-  window.open(location.pathname + '?section=game&launched=1', '_blank');
+  window.open(location.pathname + '?section=play', '_blank');
 }
 if (SHOW_GAME){
   if (SECTION === 'game' && IS_TOUCH_SMALL && !LAUNCHED){
     document.getElementById('launchCard').classList.add('show');   // widget becomes a launcher on mobile
     document.querySelector('.game-frame').classList.add('launch'); // frame sizes to the card, not 16:9
-  } else if (LAUNCHED || window.matchMedia('(min-width: 1024px)').matches){
-    gameFrame.src = GAME_URL;                                      // launched tab bypasses the desktop gate
+  } else if (SECTION === 'play' || LAUNCHED || window.matchMedia('(min-width: 1024px)').matches){
+    gameFrame.src = GAME_URL;                                      // play/launched views bypass the desktop gate
   }
 }
 
