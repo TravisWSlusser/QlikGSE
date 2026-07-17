@@ -17,7 +17,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>REC ROOM</title>
-  <meta name="build" content="2026-07-16-2100">
+  <meta name="build" content="2026-07-16-2130">
   <script>
     (function(){var s=new URLSearchParams(location.search).get('section');
       if(s)document.documentElement.setAttribute('data-section',s);})();
@@ -60,6 +60,7 @@
       align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px;
       background:linear-gradient(160deg,#0a1430 0%,#131b3a 60%,#0a1226 100%)}
     .launchcard.show{display:flex}
+    .game-frame.launch{aspect-ratio:auto;height:auto;min-height:360px}
     .launchcard .lc-title{font-family:'VT323',monospace;font-size:2rem;letter-spacing:.08em;color:#fff}
     .launchcard .lc-sub{font-size:1.05rem;color:#9fb6d8;max-width:420px;line-height:1.35}
     .launchcard button{font-family:'VT323',monospace;font-size:1.4rem;letter-spacing:.1em;
@@ -548,7 +549,7 @@
 </div>
 
 <script>
-console.log('[REC Room build] 2026-07-16-2100');
+console.log('[REC Room build] 2026-07-16-2130');
 /* ============================================================
    TEMP CONFIG  —  replace the value below with your real
    MT_SESSION_REF before go-live, then delete this comment block.
@@ -857,6 +858,7 @@ function launchGame(){
 if (SHOW_GAME){
   if (SECTION === 'game' && IS_TOUCH_SMALL && !LAUNCHED){
     document.getElementById('launchCard').classList.add('show');   // widget becomes a launcher on mobile
+    document.querySelector('.game-frame').classList.add('launch'); // frame sizes to the card, not 16:9
   } else if (LAUNCHED || window.matchMedia('(min-width: 1024px)').matches){
     gameFrame.src = GAME_URL;                                      // launched tab bypasses the desktop gate
   }
