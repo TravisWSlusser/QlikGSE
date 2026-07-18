@@ -55,7 +55,7 @@
     font-size:clamp(1rem,2vw,1.2rem);line-height:1.55}
   .ss-logo{display:block;margin:0 auto;width:min(560px,82%);height:auto;
     filter:drop-shadow(0 8px 30px rgba(124,92,255,.35))}
-  .se-logo{display:block;margin:0 auto 20px;height:clamp(22px,3.4vw,30px);width:auto;opacity:.95}
+  .se-logo{display:block;margin:0 auto 18px;height:clamp(16px,2.2vw,22px);width:auto;opacity:.9}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
     clip:rect(0,0,0,0);white-space:nowrap;border:0}
   .previewpill{display:inline-block;margin-top:26px;font-family:'VT323',monospace;font-size:1.05rem;
@@ -128,81 +128,95 @@
       letter-spacing:.1em;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.8)}
   }
 
-  /* ---------- DORCS declassified ---------- */
-  .dorcs{margin:clamp(40px,6vw,68px) 0;padding:clamp(28px,4vw,44px) 0;
-    background:radial-gradient(120% 90% at 50% -10%, #0d1a3a 0%, transparent 60%)}
-  .dorcs .sec-head{text-align:center;margin-bottom:clamp(26px,4vw,42px)}
-  .dorcs .sec-head .h{font-family:'Press Start 2P',monospace;font-size:clamp(15px,2.8vw,26px);
-    letter-spacing:.1em;color:#fff;text-shadow:0 0 18px rgba(124,92,255,.5)}
-  .dorcs .sec-head .s{margin-top:12px;color:var(--teal);font-family:'VT323',monospace;
-    font-size:clamp(1.05rem,2.2vw,1.35rem);letter-spacing:.06em}
-  .dorcs .sec-head .b{margin:16px auto 0;max-width:720px;color:var(--muted);
-    font-size:clamp(.92rem,1.7vw,1.02rem);line-height:1.6}
-  .dorc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,3vw,30px);
-    max-width:840px;margin:0 auto}
-  @media (max-width:760px){.dorc-grid{grid-template-columns:repeat(2,1fr)}}
-  @media (max-width:440px){.dorc-grid{grid-template-columns:1fr;max-width:280px}}
-  .dorc{aspect-ratio:1;perspective:1200px;cursor:pointer;background:transparent}
-  .dorc .inner{position:relative;width:100%;height:100%;trans-style:preserve-3d;
-    transform-style:preserve-3d;transition:transform .6s cubic-bezier(.22,1,.36,1)}
-  .dorc.flipped .inner{transform:rotateY(180deg)}
-  .dorc .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
-    border-radius:50%;overflow:hidden;display:flex;flex-direction:column}
-  /* FRONT */
-  .dorc .front{background:#050b18}
-  .dorc .badge{position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;
-    background:#0a1024}
-  .dorc .badge img,.dorc .badge video{position:absolute;inset:0;width:100%;height:100%;
-    object-fit:cover;border-radius:50%}
-  .dorc .badge video{opacity:0;transition:opacity .3s}
-  .dorc .badge video.on{opacity:1}
-  .dorc .cap{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:14% 12% 12%;
-    text-align:center;background:linear-gradient(to top, rgba(4,8,20,.92) 30%, transparent)}
-  .dorc .cap .nm{font-family:'Press Start 2P',monospace;font-size:clamp(8px,1.5vw,11px);
-    color:#fff;letter-spacing:.04em;margin-bottom:6px;line-height:1.3}
-  .dorc .cap .bl{font-size:clamp(10px,1.6vw,12px);color:#cfe6ff;line-height:1.3}
-  .dorc .ring-glow{position:absolute;inset:0;border-radius:50%;z-index:3;pointer-events:none;
-    box-shadow:0 0 0 0 rgba(16,207,201,0);transition:box-shadow .3s}
-  .dorc:hover .ring-glow,.dorc.flipped .ring-glow{box-shadow:0 0 26px 3px rgba(16,207,201,.45)}
-  /* BACK */
-  .dorc .back{transform:rotateY(180deg);background:linear-gradient(160deg,#101b3e,#0a1226);
-    align-items:center;justify-content:center;text-align:center;padding:14%}
-  .dorc .back .lbl{font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:.12em;
-    color:var(--purple);margin-bottom:10px}
-  .dorc .back .real{color:#dceaff;font-size:clamp(.82rem,1.6vw,.94rem);line-height:1.4;margin-bottom:14px}
-  .dorc .back .beat{color:var(--teal);font-weight:700;font-size:clamp(.8rem,1.5vw,.92rem);line-height:1.3}
-  .dorc .back .beat small{display:block;color:var(--muted);font-weight:400;font-size:.72rem;
-    letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
-  .dorc .flip-hint{position:absolute;top:8%;right:10%;z-index:4;font-size:9px;color:rgba(255,255,255,.5);
-    letter-spacing:.1em;pointer-events:none}
-  .dorc.flipped .flip-hint{display:none}
+  /* ---------- full-width hero trailer ---------- */
+  .trailer{position:relative;width:100%;margin:clamp(24px,4vw,40px) 0 clamp(30px,5vw,52px);
+    border-radius:18px;overflow:hidden;border:1px solid var(--line);
+    box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 40px rgba(16,207,201,.08);background:#000;aspect-ratio:16/9}
+  .trailer iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  .trailer .t-overlay{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;
+    align-items:center;justify-content:flex-end;padding:clamp(18px,3vw,34px);pointer-events:none;
+    background:linear-gradient(to top, rgba(4,8,20,.55) 0%, transparent 42%)}
+  .trailer .t-overlay .lab{font-family:'Press Start 2P',monospace;font-size:clamp(9px,1.4vw,12px);
+    letter-spacing:.14em;color:var(--teal);text-shadow:0 2px 10px rgba(0,0,0,.9)}
+  .trailer .t-overlay .cap{margin-top:8px;color:#eaf2ff;font-size:clamp(.85rem,1.6vw,1rem);
+    text-shadow:0 2px 10px rgba(0,0,0,.9)}
+  .trailer .unmute{position:absolute;top:14px;right:14px;z-index:4;pointer-events:auto;cursor:pointer;
+    background:rgba(6,11,24,.7);border:1px solid rgba(16,207,201,.5);border-radius:999px;
+    color:var(--ink);font-size:12px;letter-spacing:.08em;padding:8px 14px;display:flex;gap:7px;align-items:center}
+  .trailer .unmute:hover{border-color:var(--teal);box-shadow:0 0 14px rgba(16,207,201,.4)}
 
-  /* ---------- cinematic videos ---------- */
-  .films{margin:clamp(40px,6vw,68px) 0}
-  .films .sec-head{text-align:center;margin-bottom:clamp(24px,4vw,38px)}
-  .films .sec-head .h{font-weight:800;font-size:clamp(1.5rem,3.6vw,2.3rem)}
-  .films .sec-head .s{margin-top:10px;color:var(--muted);font-size:clamp(.95rem,1.8vw,1.05rem)}
-  .film-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-  @media (max-width:860px){.film-grid{grid-template-columns:1fr;max-width:520px;margin:0 auto}}
+  /* ---------- DORCS case-file database ---------- */
+  .casedb{margin:clamp(40px,6vw,68px) 0}
+  .casedb .sec-head{text-align:center;margin-bottom:clamp(22px,3.5vw,36px)}
+  .casedb .sec-head .h{font-family:'Press Start 2P',monospace;font-size:clamp(14px,2.6vw,24px);
+    letter-spacing:.1em;color:#fff;text-shadow:0 0 18px rgba(124,92,255,.5)}
+  .casedb .sec-head .s{margin-top:12px;color:var(--teal);font-family:'VT323',monospace;
+    font-size:clamp(1.05rem,2.2vw,1.35rem);letter-spacing:.06em}
+  .casedb .sec-head .b{margin:14px auto 0;max-width:720px;color:var(--muted);
+    font-size:clamp(.9rem,1.6vw,1rem);line-height:1.6}
+  /* roster */
+  .roster{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;max-width:760px;margin:0 auto 26px}
+  @media (max-width:760px){.roster{grid-template-columns:repeat(3,1fr)}}
+  .suspect{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;cursor:pointer;
+    background:#0a1024;border:1px solid rgba(124,92,255,.25);transition:border-color .2s,transform .15s,box-shadow .2s}
+  .suspect img{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:88%;height:auto}
+  .suspect::after{content:"";position:absolute;inset:0;border-radius:12px;pointer-events:none;
+    box-shadow:inset 0 -30px 30px -20px rgba(0,0,0,.7)}
+  .suspect .no{position:absolute;top:5px;left:7px;z-index:2;font-family:'Press Start 2P',monospace;
+    font-size:7px;color:rgba(255,255,255,.5)}
+  .suspect:hover{transform:translateY(-2px)}
+  .suspect.active{border-color:var(--teal);box-shadow:0 0 18px rgba(16,207,201,.5)}
+  .suspect.active::before{content:"";position:absolute;inset:0;z-index:1;
+    background:radial-gradient(circle at 50% 120%, rgba(16,207,201,.28), transparent 60%)}
+  /* dossier */
+  .dossier{display:grid;grid-template-columns:1.15fr 1fr;gap:0;border:1px solid var(--line);
+    border-radius:18px;overflow:hidden;background:linear-gradient(160deg,#0d1730,#0a1226);
+    box-shadow:0 16px 44px rgba(0,0,0,.45)}
+  @media (max-width:820px){.dossier{grid-template-columns:1fr}}
+  .dossier .scene{position:relative;min-height:300px;background-size:cover;background-position:center}
+  .dossier .scene::after{content:"";position:absolute;inset:0;
+    background:linear-gradient(90deg,transparent 60%,#0a1226 100%)}
+  @media (max-width:820px){.dossier .scene{min-height:210px}
+    .dossier .scene::after{background:linear-gradient(to bottom,transparent 55%,#0a1226 100%)}}
+  .dossier .scene .stamp{position:absolute;top:16px;left:16px;z-index:2;
+    font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:.12em;color:#fff;
+    background:rgba(255,45,155,.85);padding:6px 10px;border-radius:5px;transform:rotate(-3deg)}
+  .dossier .brief{padding:clamp(22px,3vw,34px);display:flex;flex-direction:column;gap:16px}
+  .brief .cno{font-family:'Press Start 2P',monospace;font-size:8px;letter-spacing:.14em;color:var(--purple)}
+  .brief .nm{font-weight:800;font-size:clamp(1.4rem,3vw,2rem);line-height:1.05;margin-top:-6px}
+  .brief .field{border-top:1px solid rgba(255,255,255,.08);padding-top:12px}
+  .brief .field .k{font-family:'Press Start 2P',monospace;font-size:7px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .brief .field .v{font-size:.98rem;line-height:1.45;color:#dceaff}
+  .brief .counter{display:flex;align-items:center;gap:14px;margin-top:2px;
+    border-top:1px solid rgba(16,207,201,.25);padding-top:14px}
+  .brief .counter .gif{width:64px;height:64px;border-radius:50%;flex-shrink:0;
+    box-shadow:0 0 18px rgba(16,207,201,.35)}
+  .brief .counter .txt .k{color:var(--teal)}
+  .brief .counter .txt .tool{font-weight:700;font-size:1.05rem;color:#fff}
+
+  /* ---------- cinematic films (secondary two) ---------- */
+  .films{margin:clamp(40px,6vw,64px) 0}
+  .films .sec-head{text-align:center;margin-bottom:clamp(22px,4vw,34px)}
+  .films .sec-head .h{font-weight:800;font-size:clamp(1.4rem,3.2vw,2rem)}
+  .films .sec-head .s{margin-top:8px;color:var(--muted);font-size:clamp(.92rem,1.7vw,1rem)}
+  .film-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:820px;margin:0 auto}
+  @media (max-width:700px){.film-grid{grid-template-columns:1fr;max-width:460px}}
   .film{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--navy-1)}
-  .film .frame{position:relative;aspect-ratio:16/9;cursor:pointer;background:#05media0b18}
-  .film .frame{background:#050b18}
-  .film .frame .thumb{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-    display:flex;align-items:center;justify-content:center}
+  .film .frame{position:relative;aspect-ratio:16/9;cursor:pointer;background:#050b18}
   .film .frame .play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;
-    width:60px;height:60px;border-radius:50%;background:rgba(16,207,201,.92);color:#041018;
-    display:flex;align-items:center;justify-content:center;font-size:24px;
-    box-shadow:0 0 24px rgba(16,207,201,.55);transition:transform .15s}
+    width:56px;height:56px;border-radius:50%;background:rgba(16,207,201,.92);color:#041018;
+    display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 24px rgba(16,207,201,.55)}
   .film .frame:hover .play{transform:translate(-50%,-50%) scale(1.1)}
   .film .frame .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-    background:linear-gradient(150deg,#101b3e,#0a1226);color:#3f5478;font-size:12px;
+    background:linear-gradient(150deg,#101b3e,#0a1226);color:#3f5478;font-size:11px;
     letter-spacing:.14em;text-transform:uppercase}
   .film .frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-  .film .meta{padding:14px 16px}
+  .film .meta{padding:13px 15px}
   .film .meta .ord{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--purple);
-    letter-spacing:.1em;margin-bottom:8px}
-  .film .meta .t{font-weight:700;font-size:1rem;margin-bottom:4px}
-  .film .meta .c{color:var(--muted);font-size:.85rem;line-height:1.4}
+    letter-spacing:.1em;margin-bottom:7px}
+  .film .meta .t{font-weight:700;font-size:.98rem;margin-bottom:3px}
+  .film .meta .c{color:var(--muted);font-size:.83rem;line-height:1.4}
 
   /* ---------- full experience note ---------- */
   .fullnote{border-left:3px solid var(--purple);border-radius:0 12px 12px 0;
@@ -231,6 +245,19 @@
     <span class="previewpill">&#9679; PUBLIC PREVIEW</span>
   </section>
 
+  <section>
+    <div class="trailer" id="trailer">
+      <iframe id="trailerFrame"
+        src="https://player.vimeo.com/video/1210933776?autoplay=1&loop=1&muted=1&background=1&title=0&byline=0&portrait=0"
+        allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Teaser Trailer"></iframe>
+      <button class="unmute" id="unmuteBtn" onclick="toggleTrailerSound()">&#128263;&nbsp; Tap for sound</button>
+      <div class="t-overlay">
+        <div class="lab">&#9654; TEASER TRAILER</div>
+        <div class="cap">The origin of the Stellar-Seller Universe &mdash; the thing that started it all.</div>
+      </div>
+    </div>
+  </section>
+
   <section class="pillars">
     <div class="pillar">
       <div class="tag">The Comic</div>
@@ -256,7 +283,7 @@
     </div>
   </section>
 
-  <section class="dorcs">
+  <section class="casedb">
     <div class="wrap">
       <div class="sec-head">
         <div class="h">DORCS DECLASSIFIED</div>
@@ -264,136 +291,49 @@
         <p class="b">These are the hidden blockers that quietly derail sales momentum &mdash; not
           mistakes or a lack of effort, just familiar daily patterns where progress slows, confidence
           dips, or clarity vanishes right when it's needed most. The creatures merely put a face to
-          the issue. The goal isn't to pretend they don't exist. It's to recognize who they are &mdash;
-          and know what beats them.</p>
+          the issue. The goal isn't to pretend they don't exist. It's to recognize who they are
+          &mdash; and know what beats them. Select a suspect to open the case file.</p>
       </div>
-      <div class="dorc-grid">
-      <div class="dorc" onclick="flipDorc(this)">
-        <div class="inner">
-          <div class="face front">
-            <div class="badge">
-              <img class="poster" src="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/TheBlocks%20Loop700.jpg" alt="The Blocks">
-              <video class="loop" muted loop playsinline preload="none" poster="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/TheBlocks%20Loop700.jpg" data-src="SalesCommand/assets/images/brand_misc/dorcs_loop/TheBlocks%20Loop700.webm"></video>
-            </div>
-            <div class="ring-glow"></div>
-            <div class="flip-hint">&#8635;</div>
-            <div class="cap">
-              <div class="nm">The Blocks</div>
-              <div class="bl">Searching for answers when you should be selling.</div>
-            </div>
+      <div class="roster">
+      <div class="suspect" data-i="0" onclick="showCase(0)" style="--c:#ff8a3d">
+        <span class="no">#01</span>
+        <img src="SalesCommand/assets/images/brand_misc/dorcs_solo/Blocks_01.png" alt="THE BLOCKS">
+      </div>
+      <div class="suspect" data-i="1" onclick="showCase(1)" style="--c:#ffd23d">
+        <span class="no">#02</span>
+        <img src="SalesCommand/assets/images/brand_misc/dorcs_solo/Jump_Start_01.png" alt="THE JUMP-START">
+      </div>
+      <div class="suspect" data-i="2" onclick="showCase(2)" style="--c:#3ddc84">
+        <span class="no">#03</span>
+        <img src="SalesCommand/assets/images/brand_misc/dorcs_solo/Boogie_01.png" alt="THE BOOGIE">
+      </div>
+      <div class="suspect" data-i="3" onclick="showCase(3)" style="--c:#ff2d9b">
+        <span class="no">#04</span>
+        <img src="SalesCommand/assets/images/brand_misc/dorcs_solo/Drat_Pack_01.png" alt="THE DRAT-PACK">
+      </div>
+      <div class="suspect" data-i="4" onclick="showCase(4)" style="--c:#7c5cff">
+        <span class="no">#05</span>
+        <img src="SalesCommand/assets/images/brand_misc/dorcs_solo/Fogg_01.png" alt="THE FOGG">
+      </div>
+      <div class="suspect" data-i="5" onclick="showCase(5)" style="--c:#3d8bff">
+        <span class="no">#06</span>
+        <img src="SalesCommand/assets/images/brand_misc/dorcs_solo/South_Paw_01.png" alt="SOUTH PAW">
+      </div>
+      </div>
+      <div class="dossier">
+        <div class="scene" id="caseScene"><div class="stamp" id="caseStamp">CASE #01</div></div>
+        <div class="brief">
+          <div>
+            <div class="cno" id="caseNo">CASE FILE #01</div>
+            <div class="nm" id="caseName">THE BLOCKS</div>
           </div>
-          <div class="face back">
-            <div class="lbl">What it really is</div>
-            <div class="real">You lose selling time hunting for information you should have at your fingertips.</div>
-            <div class="beat"><small>Beaten by</small>Mindtickle Copilot</div>
+          <div class="field"><div class="k">Known For</div><div class="v" id="caseBlocker"></div></div>
+          <div class="field"><div class="k">Threat Assessment</div><div class="v" id="caseThreat"></div></div>
+          <div class="counter">
+            <img class="gif" id="caseGif" src="" alt="">
+            <div class="txt"><div class="k">Countermeasure</div><div class="tool" id="caseTool"></div></div>
           </div>
         </div>
-      </div>
-      <div class="dorc" onclick="flipDorc(this)">
-        <div class="inner">
-          <div class="face front">
-            <div class="badge">
-              <img class="poster" src="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/Jump%20Start%20Loop%20700.jpg" alt="The Jump-Start">
-              <video class="loop" muted loop playsinline preload="none" poster="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/Jump%20Start%20Loop%20700.jpg" data-src="SalesCommand/assets/images/brand_misc/dorcs_loop/Jump%20Start%20Loop%20700.webm"></video>
-            </div>
-            <div class="ring-glow"></div>
-            <div class="flip-hint">&#8635;</div>
-            <div class="cap">
-              <div class="nm">The Jump-Start</div>
-              <div class="bl">Learning comes too late and takes too long.</div>
-            </div>
-          </div>
-          <div class="face back">
-            <div class="lbl">What it really is</div>
-            <div class="real">Enablement arrives after the moment of need, and eats hours you don't have.</div>
-            <div class="beat"><small>Beaten by</small>AI Sales Learning Modules</div>
-          </div>
-        </div>
-      </div>
-      <div class="dorc" onclick="flipDorc(this)">
-        <div class="inner">
-          <div class="face front">
-            <div class="badge">
-              <img class="poster" src="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/Boogie%20Loop_700.jpg" alt="The Boogie">
-              <video class="loop" muted loop playsinline preload="none" poster="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/Boogie%20Loop_700.jpg" data-src="SalesCommand/assets/images/brand_misc/dorcs_loop/Boogie%20Loop_700.webm"></video>
-            </div>
-            <div class="ring-glow"></div>
-            <div class="flip-hint">&#8635;</div>
-            <div class="cap">
-              <div class="nm">The Boogie</div>
-              <div class="bl">Unable to practice the pitch.</div>
-            </div>
-          </div>
-          <div class="face back">
-            <div class="lbl">What it really is</div>
-            <div class="real">You go live without a safe place to rehearse and sharpen the message first.</div>
-            <div class="beat"><small>Beaten by</small>Mindtickle AI Role Plays</div>
-          </div>
-        </div>
-      </div>
-      <div class="dorc" onclick="flipDorc(this)">
-        <div class="inner">
-          <div class="face front">
-            <div class="badge">
-              <img class="poster" src="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/Drat%20Pack%20Loop700.jpg" alt="The Drat-Pack">
-              <video class="loop" muted loop playsinline preload="none" poster="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/Drat%20Pack%20Loop700.jpg" data-src="SalesCommand/assets/images/brand_misc/dorcs_loop/Drat%20Pack%20Loop700.webm"></video>
-            </div>
-            <div class="ring-glow"></div>
-            <div class="flip-hint">&#8635;</div>
-            <div class="cap">
-              <div class="nm">The Drat-Pack</div>
-              <div class="bl">Meeting review and follow-up is time-consuming.</div>
-            </div>
-          </div>
-          <div class="face back">
-            <div class="lbl">What it really is</div>
-            <div class="real">Post-call notes and next steps swallow the time you could spend selling.</div>
-            <div class="beat"><small>Beaten by</small>Mindtickle Call AI (Notetaker)</div>
-          </div>
-        </div>
-      </div>
-      <div class="dorc" onclick="flipDorc(this)">
-        <div class="inner">
-          <div class="face front">
-            <div class="badge">
-              <img class="poster" src="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/The%20Fogg%20Loop%20700.jpg" alt="The Fogg">
-              <video class="loop" muted loop playsinline preload="none" poster="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/The%20Fogg%20Loop%20700.jpg" data-src="SalesCommand/assets/images/brand_misc/dorcs_loop/The%20Fogg%20Loop%20700.webm"></video>
-            </div>
-            <div class="ring-glow"></div>
-            <div class="flip-hint">&#8635;</div>
-            <div class="cap">
-              <div class="nm">The Fogg</div>
-              <div class="bl">The full story of the deal is scattered.</div>
-            </div>
-          </div>
-          <div class="face back">
-            <div class="lbl">What it really is</div>
-            <div class="real">Deal context lives in ten places, so the whole picture is never in one view.</div>
-            <div class="beat"><small>Beaten by</small>Mindtickle Deal Guides</div>
-          </div>
-        </div>
-      </div>
-      <div class="dorc" onclick="flipDorc(this)">
-        <div class="inner">
-          <div class="face front">
-            <div class="badge">
-              <img class="poster" src="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/South%20Paw%20Loop700.jpg" alt="South Paw">
-              <video class="loop" muted loop playsinline preload="none" poster="SalesCommand/assets/images/brand_misc/dorcs_loop/posters/South%20Paw%20Loop700.jpg" data-src="SalesCommand/assets/images/brand_misc/dorcs_loop/South%20Paw%20Loop700.webm"></video>
-            </div>
-            <div class="ring-glow"></div>
-            <div class="flip-hint">&#8635;</div>
-            <div class="cap">
-              <div class="nm">South Paw</div>
-              <div class="bl">The deal has a scenario you haven't practiced.</div>
-            </div>
-          </div>
-          <div class="face back">
-            <div class="lbl">What it really is</div>
-            <div class="real">An unfamiliar curveball shows up live, on a scenario you never rehearsed.</div>
-            <div class="beat"><small>Beaten by</small>Mindtickle Real Deal Role Plays</div>
-          </div>
-        </div>
-      </div>
       </div>
     </div>
   </section>
@@ -435,33 +375,22 @@
     <div class="wrap">
       <div class="sec-head">
         <div class="h">Watch the Universe</div>
-        <div class="s">The story spine &mdash; origin, stakes, resolution.</div>
+        <div class="s">The story continues &mdash; from stakes to resolution.</div>
       </div>
       <div class="film-grid">
         <div class="film">
-          <div class="frame" data-vimeo="1210933776" onclick="loadFilm(this)">
-            <div class="ph">Teaser Trailer</div>
-            <div class="play">&#9654;</div>
-          </div>
-          <div class="meta"><div class="ord">01 &middot; Origin</div>
-            <div class="t">Teaser Trailer</div>
-            <div class="c">The original comic announcement &mdash; the thing that started it all.</div></div>
-        </div>
-        <div class="film">
           <div class="frame" data-vimeo="1210932463" onclick="loadFilm(this)">
-            <div class="ph">SKO Opening</div>
-            <div class="play">&#9654;</div>
+            <div class="ph">SKO Opening</div><div class="play">&#9654;</div>
           </div>
-          <div class="meta"><div class="ord">02 &middot; Stakes</div>
+          <div class="meta"><div class="ord">Chapter 02 &middot; The Stakes</div>
             <div class="t">SKO Opening</div>
             <div class="c">The story continues after the comic and sets up the DORCS.</div></div>
         </div>
         <div class="film">
           <div class="frame" data-vimeo="1210932464" onclick="loadFilm(this)">
-            <div class="ph">SKO Tool Reveal</div>
-            <div class="play">&#9654;</div>
+            <div class="ph">SKO Tool Reveal</div><div class="play">&#9654;</div>
           </div>
-          <div class="meta"><div class="ord">03 &middot; Resolution</div>
+          <div class="meta"><div class="ord">Chapter 03 &middot; The Resolution</div>
             <div class="t">SKO Tool Reveal</div>
             <div class="c">Introduces the tools that defeat each DORC.</div></div>
         </div>
@@ -531,6 +460,47 @@
     ifr.setAttribute('allowfullscreen','');
     frame.innerHTML = '';
     frame.appendChild(ifr);
+  }
+</script>
+<script>
+  const CASES = [{"no": "01", "name": "THE BLOCKS", "color": "#ff8a3d", "scene": "SalesCommand/assets/images/brand_misc/dorcs_scenes/The_Blocks_01.jpg", "blocker": "Searching for answers when you should be selling.", "threat": "Selling time bleeds away hunting for information that should be at your fingertips.", "tool": "Mindtickle Copilot", "gif": "SalesCommand/assets/images/brand_misc/tool_gifs/AI%20Copilot.gif"}, {"no": "02", "name": "THE JUMP-START", "color": "#ffd23d", "scene": "SalesCommand/assets/images/brand_misc/dorcs_scenes/The_Jump_Start_01.jpg", "blocker": "Learning comes too late and takes too long.", "threat": "Enablement lands after the moment of need and eats hours you don't have.", "tool": "AI Sales Learning Modules", "gif": "SalesCommand/assets/images/brand_misc/tool_gifs/AI%20Learning.gif"}, {"no": "03", "name": "THE BOOGIE", "color": "#3ddc84", "scene": "SalesCommand/assets/images/brand_misc/dorcs_scenes/The_Boggie_01.jpg", "blocker": "Unable to practice the pitch.", "threat": "You go live without a safe place to rehearse and sharpen the message first.", "tool": "Mindtickle AI Role Plays", "gif": "SalesCommand/assets/images/brand_misc/tool_gifs/AI%20Role%20Plays.gif"}, {"no": "04", "name": "THE DRAT-PACK", "color": "#ff2d9b", "scene": "SalesCommand/assets/images/brand_misc/dorcs_scenes/The_Drat_Pack_01.jpg", "blocker": "Meeting review and follow-up is time-consuming.", "threat": "Post-call notes and next steps swallow the time you could spend selling.", "tool": "Mindtickle Call AI (Notetaker)", "gif": "SalesCommand/assets/images/brand_misc/tool_gifs/Call%20AI.gif"}, {"no": "05", "name": "THE FOGG", "color": "#7c5cff", "scene": "SalesCommand/assets/images/brand_misc/dorcs_scenes/The_Fogg_01.jpg", "blocker": "The full story of the deal is scattered.", "threat": "Deal context lives in ten places, so the whole picture is never in one view.", "tool": "Mindtickle Deal Guides", "gif": "SalesCommand/assets/images/brand_misc/tool_gifs/Deal%20Guides.gif"}, {"no": "06", "name": "SOUTH PAW", "color": "#3d8bff", "scene": "SalesCommand/assets/images/brand_misc/dorcs_scenes/South_Paw_01.jpg", "blocker": "The deal has a scenario you haven't practiced.", "threat": "An unfamiliar curveball shows up live, on a scenario you never rehearsed.", "tool": "Mindtickle Real Deal Role Plays", "gif": "SalesCommand/assets/images/brand_misc/tool_gifs/RP%20Deals.gif"}];
+
+  function showCase(i){
+    const c = CASES[i];
+    document.querySelectorAll('.suspect').forEach(s=>s.classList.toggle('active', +s.dataset.i===i));
+    const scene = document.getElementById('caseScene');
+    scene.style.backgroundImage = "url('" + c.scene + "')";
+    document.getElementById('caseStamp').textContent = 'CASE #' + c.no;
+    document.getElementById('caseNo').textContent = 'CASE FILE #' + c.no;
+    document.getElementById('caseName').textContent = c.name;
+    document.getElementById('caseName').style.color = c.color;
+    document.getElementById('caseBlocker').textContent = c.blocker;
+    document.getElementById('caseThreat').textContent = c.threat;
+    document.getElementById('caseTool').textContent = c.tool;
+    const g = document.getElementById('caseGif'); g.src = c.gif; g.alt = c.tool;
+  }
+  showCase(0);
+
+  // ---- trailer sound: swap background(muted) embed for a sound-on one ----
+  let trailerSound = false;
+  function toggleTrailerSound(){
+    trailerSound = !trailerSound;
+    const f = document.getElementById('trailerFrame');
+    const base = 'https://player.vimeo.com/video/1210933776?loop=1&title=0&byline=0&portrait=0&autoplay=1';
+    f.src = trailerSound ? (base + '&muted=0') : (base + '&muted=1&background=1');
+    document.getElementById('unmuteBtn').innerHTML = trailerSound
+      ? '&#128266;&nbsp; Mute' : '&#128263;&nbsp; Tap for sound';
+  }
+
+  // ---- film lazy embed ----
+  function loadFilm(frame){
+    if(frame.dataset.loaded) return; frame.dataset.loaded='1';
+    const id = frame.getAttribute('data-vimeo');
+    const ifr = document.createElement('iframe');
+    ifr.src = 'https://player.vimeo.com/video/'+id+'?autoplay=1&title=0&byline=0&portrait=0';
+    ifr.allow = 'autoplay; fullscreen; picture-in-picture';
+    ifr.setAttribute('allowfullscreen','');
+    frame.innerHTML=''; frame.appendChild(ifr);
   }
 </script>
 </body>
