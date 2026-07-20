@@ -47,6 +47,13 @@
     padding:clamp(20px,3.5vw,44px) clamp(18px,4vw,56px)}
   body[data-view="all"] .sec{display:flex;min-height:560px;border-bottom:1px solid var(--line)}
   body[data-view="one"] .sec.on{display:flex;height:100vh}
+  body[data-view="all"] .sec.diag{display:none}
+
+  /* ===== DIAGNOSTIC: canary (?s=canary) — height-mechanism test readout ===== */
+  .diag{align-items:center;justify-content:center;text-align:center;flex-direction:column;gap:10px}
+  .diag .dims{font-family:var(--font-display);font-weight:900;font-size:clamp(56px,14vw,120px);line-height:1;color:var(--sky)}
+  .diag .note{font-family:var(--font-mono);font-size:clamp(12px,1.6vw,14px);color:var(--muted);letter-spacing:.08em}
+  .diag .ua{font-size:10px;color:var(--muted);opacity:.6;max-width:90%;word-break:break-all}
 
   /* ===== STELLA STAGING SYSTEM =====
      Full-body transparent portraits. Rules: explicit aspect-ratio per pose,
@@ -157,12 +164,18 @@
 <!-- ============ SECTION: prep (patch 4) ============ -->
 <!-- ============ SECTION: calendar (patch 5) ============ -->
 
+<!-- ============ DIAGNOSTIC: canary — remove after height mechanism is confirmed ============ -->
+<section class="sec diag" data-s="canary" aria-label="Widget height diagnostic">
+  <p class="dims" id="dims">—</p>
+  <p class="note" id="dimnote">iframe viewport, live — resize or rotate to test</p>
+  <p class="ua" id="ua"></p>
+</section>
+
 <script>
 /* ===== CONFIG — edit content here, never the layout ===== */
 const CONFIG = {
   links: {
-    /* TODO(Travis): real ToolBox URL before first publish */
-    toolbox: "#"
+    toolbox: "https://daves-ai-toolbox.replit.app/"
   }
 };
 
@@ -178,6 +191,17 @@ const CONFIG = {
     const url = CONFIG.links[el.dataset.cfg];
     if (url && url !== "#") el.href = url;
   });
+
+  /* canary readout — only active on ?s=canary */
+  const dims = document.getElementById("dims");
+  if (dims && document.querySelector(".diag.on")) {
+    const report = function () {
+      dims.textContent = window.innerWidth + " × " + window.innerHeight;
+    };
+    document.getElementById("ua").textContent = navigator.userAgent;
+    window.addEventListener("resize", report);
+    report();
+  }
 })();
 </script>
 </body>
