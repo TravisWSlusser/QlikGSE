@@ -75,21 +75,22 @@
   #sec-hero .streaks i:nth-child(2){top:24%;width:32%}
   #sec-hero .streaks i:nth-child(3){top:30%;width:22%;opacity:.3}
   .hero-copy{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;
-    gap:clamp(10px,1.6vw,16px);max-width:640px;flex:1 1 auto}
+    gap:clamp(8px,1.3vw,14px);flex:1 1 auto;
+    max-width:min(620px, calc(100% - clamp(200px,25vw,330px)))}
   .eyebrow{font-family:var(--font-mono);font-size:clamp(11px,1.2vw,13px);letter-spacing:.22em;
     color:var(--sky);text-transform:uppercase}
   .lockup{font-family:var(--font-display);font-weight:900;text-transform:uppercase;
-    line-height:.86;letter-spacing:.01em;font-size:clamp(64px,9vw,118px)}
+    line-height:.86;letter-spacing:.01em;font-size:clamp(60px,8.2vw,104px)}
   .lockup .l1{display:block;color:var(--green)}
   .lockup .l2{display:block;color:var(--ink)}
-  .lead{font-family:var(--font-display);font-weight:600;font-size:clamp(20px,2.6vw,28px);color:var(--ink)}
-  .arc{color:var(--muted);font-size:clamp(13.5px,1.5vw,15.5px);line-height:1.55;max-width:56ch}
+  .lead{font-family:var(--font-display);font-weight:600;font-size:clamp(20px,2.4vw,27px);color:var(--ink)}
+  .arc{color:var(--muted);font-size:clamp(13px,1.4vw,15px);line-height:1.5;max-width:56ch}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{font-family:var(--font-mono);font-size:clamp(11px,1.2vw,12.5px);letter-spacing:.06em;
     color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 12px;
     background:rgba(255,255,255,.04)}
   .chip b{color:var(--sky);font-weight:400}
-  .cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:4px}
+  .cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:2px}
   .btn{display:inline-block;font-family:var(--font-body);font-weight:600;font-size:15px;
     color:#fff;background:linear-gradient(92deg,var(--green),#00b551);text-decoration:none;
     border-radius:999px;padding:13px 26px;box-shadow:0 8px 24px -10px rgba(0,152,69,.65);
@@ -97,18 +98,32 @@
   .btn:hover{transform:translateY(-2px);box-shadow:0 12px 28px -10px rgba(0,152,69,.8)}
   .windows{display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--muted)}
   .windows b{color:var(--ink);font-weight:600}
-  .stella-say{position:relative;z-index:2;align-self:flex-end;margin-bottom:10px;
-    font-size:12.5px;color:var(--muted);font-style:italic;max-width:190px;text-align:right}
-  #sec-hero .stella{width:clamp(150px,22vw,300px)}
 
-  /* hero mobile: single column, Stella shares the floor, budget 640px */
+  /* Stella, hero staging: absolute floor anchor + grounding platform (shadow + sky glow) */
+  #sec-hero .stella{position:absolute;right:clamp(10px,4vw,60px);bottom:0;z-index:1;
+    height:min(90%,470px);align-self:auto}
+  #sec-hero .stella img{height:calc(100% - 16px);width:auto;margin-bottom:12px;object-position:bottom}
+  #sec-hero .stella::before{content:"";position:absolute;left:50%;bottom:5px;transform:translateX(-50%);
+    width:118%;height:26px;border-radius:50%;
+    background:radial-gradient(closest-side, rgba(0,0,0,.5), transparent 70%)}
+  #sec-hero .stella::after{content:"";position:absolute;left:50%;bottom:8px;transform:translateX(-50%);
+    width:94%;height:15px;border-radius:50%;
+    background:radial-gradient(closest-side, rgba(16,207,201,.38), transparent 72%)}
+
+  /* narrator line: speech bubble at her shoulder, clear of the bottom edge */
+  .stella-say{position:absolute;z-index:2;right:clamp(250px,27vw,380px);top:24%;
+    max-width:185px;font-size:12.5px;font-style:italic;line-height:1.45;color:var(--ink);
+    text-align:right;background:rgba(255,255,255,.05);border:1px solid var(--line);
+    border-radius:12px 12px 2px 12px;padding:10px 13px;backdrop-filter:blur(6px)}
+  @media (max-width:980px){.stella-say{display:none}}
+
+  /* hero mobile: single column, Stella grounded bottom-right, budget 640px */
   @media (max-width:720px){
     #sec-hero{flex-direction:column;padding-bottom:0}
     .hero-copy{max-width:none;justify-content:flex-start;gap:9px}
     .lockup{font-size:clamp(56px,17vw,72px)}
     .arc{font-size:13px}
-    .stella-say{display:none}
-    #sec-hero .stella{position:absolute;right:2px;bottom:0;height:32%;width:auto;z-index:1;opacity:.95}
+    #sec-hero .stella{right:4px;height:34%;min-height:180px}
     #sec-hero .streaks i{display:none}
     .cta-row{margin-bottom:14px}
   }
