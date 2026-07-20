@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<!--
+  BUILT TO WIN — 2026 Q3 Sales Certification · Mindtickle series overview sections
+  Deploy: Certifications/2026/FY26_Q3/index.html -> https://qlik-gse.vercel.app/Certifications/2026/FY26_Q3/
+  Usage:  ?s=hero (single-section mode, one per Mindtickle Custom HTML/CSS widget iframe)
+          no param = full stacked preview for review + Playwright passes
+  Sections: hero | loop | steps | prep | calendar   (v1 ships hero; others land as patches)
+  Copy source: Q3 Spotlight doc. Terminology: Blue Sheet. Voice: terse, direct, lightly humorous.
+  Assets: images/Stella/*, images/misc/*, images/thumbnails/* (committed alongside)
+  Edit rule: content + links live in CONFIG at the bottom. Layout never needs editing.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Built to Win — 2026 Q3 Sales Certification</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,800;0,900;1,900&family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  /* ===== TOKENS (canonical: project instructions) ===== */
+  :root{
+    --navy-0:#0B1F33; --navy-1:#11304D; --deep:#19426C;
+    --green:#009845; --sky:#10CFC9; --ocean:#006580;
+    --ink:#EDF3F9; --muted:#90A6BD;
+    --line:rgba(255,255,255,.10);
+    --radius:14px;
+    --font-display:'Barlow Condensed',sans-serif;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-mono:'Share Tech Mono',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{overflow-x:clip}
+  body{
+    font-family:var(--font-body);color:var(--ink);
+    background:
+      radial-gradient(140% 120% at 88% -10%, #1b4670 0%, var(--deep) 26%, var(--navy-1) 58%, var(--navy-0) 100%);
+    min-height:100vh;overflow-x:clip;
+  }
+  img{display:block;max-width:100%}
+  a{color:var(--sky)}
+  :focus-visible{outline:2px solid var(--sky);outline-offset:3px;border-radius:4px}
+
+  /* ===== SECTION SHELL / ROUTER MODES ===== */
+  .sec{display:none;position:relative;overflow:hidden;
+    padding:clamp(20px,3.5vw,44px) clamp(18px,4vw,56px)}
+  body[data-view="all"] .sec{display:flex;min-height:560px;border-bottom:1px solid var(--line)}
+  body[data-view="one"] .sec.on{display:flex;height:100vh}
+
+  /* ===== STELLA STAGING SYSTEM =====
+     Full-body transparent portraits. Rules: explicit aspect-ratio per pose,
+     object-fit:contain, floor-anchored (bottom), never overflow-crop the head.
+     Mirror with .flip ONLY for prop-free poses. */
+  .stella{align-self:flex-end;flex:0 0 auto;height:100%;display:flex;align-items:flex-end;justify-content:center}
+  .stella img{height:96%;width:auto;object-fit:contain;object-position:bottom}
+  .stella.flip img{transform:scaleX(-1)}
+
+  /* =====================================================
+     SECTION: hero  (?s=hero)
+     Budget: 560px desktop / 640px mobile
+     ===================================================== */
+  #sec-hero{align-items:stretch;gap:clamp(12px,3vw,40px)}
+  #sec-hero .streaks{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  #sec-hero .streaks i{position:absolute;right:-4%;height:10px;border-radius:999px;
+    background:linear-gradient(90deg,transparent,var(--sky));opacity:.5}
+  #sec-hero .streaks i:nth-child(1){top:16%;width:44%;background:linear-gradient(90deg,transparent,var(--green));height:14px}
+  #sec-hero .streaks i:nth-child(2){top:24%;width:32%}
+  #sec-hero .streaks i:nth-child(3){top:30%;width:22%;opacity:.3}
+  .hero-copy{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;
+    gap:clamp(10px,1.6vw,16px);max-width:640px;flex:1 1 auto}
+  .eyebrow{font-family:var(--font-mono);font-size:clamp(11px,1.2vw,13px);letter-spacing:.22em;
+    color:var(--sky);text-transform:uppercase}
+  .lockup{font-family:var(--font-display);font-weight:900;text-transform:uppercase;
+    line-height:.86;letter-spacing:.01em;font-size:clamp(64px,9vw,118px)}
+  .lockup .l1{display:block;color:var(--green)}
+  .lockup .l2{display:block;color:var(--ink)}
+  .lead{font-family:var(--font-display);font-weight:600;font-size:clamp(20px,2.6vw,28px);color:var(--ink)}
+  .arc{color:var(--muted);font-size:clamp(13.5px,1.5vw,15.5px);line-height:1.55;max-width:56ch}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-family:var(--font-mono);font-size:clamp(11px,1.2vw,12.5px);letter-spacing:.06em;
+    color:var(--ink);border:1px solid var(--line);border-radius:999px;padding:6px 12px;
+    background:rgba(255,255,255,.04)}
+  .chip b{color:var(--sky);font-weight:400}
+  .cta-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin-top:4px}
+  .btn{display:inline-block;font-family:var(--font-body);font-weight:600;font-size:15px;
+    color:#fff;background:linear-gradient(92deg,var(--green),#00b551);text-decoration:none;
+    border-radius:999px;padding:13px 26px;box-shadow:0 8px 24px -10px rgba(0,152,69,.65);
+    transition:transform .15s ease,box-shadow .15s ease}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 28px -10px rgba(0,152,69,.8)}
+  .windows{display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--muted)}
+  .windows b{color:var(--ink);font-weight:600}
+  .stella-say{position:relative;z-index:2;align-self:flex-end;margin-bottom:10px;
+    font-size:12.5px;color:var(--muted);font-style:italic;max-width:190px;text-align:right}
+  #sec-hero .stella{width:clamp(150px,22vw,300px)}
+
+  /* hero mobile: single column, Stella shares the floor, budget 640px */
+  @media (max-width:720px){
+    #sec-hero{flex-direction:column;padding-bottom:0}
+    .hero-copy{max-width:none;justify-content:flex-start;gap:9px}
+    .lockup{font-size:clamp(56px,17vw,72px)}
+    .arc{font-size:13px}
+    .stella-say{display:none}
+    #sec-hero .stella{position:absolute;right:2px;bottom:0;height:32%;width:auto;z-index:1;opacity:.95}
+    #sec-hero .streaks i{display:none}
+    .cta-row{margin-bottom:14px}
+  }
+
+  /* ===== MOTION (earns its place; guarded) ===== */
+  @media (prefers-reduced-motion:no-preference){
+    .rise{opacity:0;transform:translateY(14px);animation:rise .7s ease forwards}
+    .rise.d1{animation-delay:.08s}.rise.d2{animation-delay:.16s}
+    .rise.d3{animation-delay:.24s}.rise.d4{animation-delay:.32s}.rise.d5{animation-delay:.4s}
+    @keyframes rise{to{opacity:1;transform:none}}
+    #sec-hero .streaks i{transform-origin:right center;transform:scaleX(0);animation:sweep 1s .2s cubic-bezier(.2,.7,.2,1) forwards}
+    #sec-hero .streaks i:nth-child(2){animation-delay:.35s}
+    #sec-hero .streaks i:nth-child(3){animation-delay:.5s}
+    @keyframes sweep{to{transform:scaleX(1)}}
+    .stella img{opacity:0;transform:translateY(10px);animation:rise .8s .3s ease forwards}
+  }
+</style>
+</head>
+<body data-view="all">
+
+<!-- ============ SECTION: hero ============ -->
+<section class="sec" id="sec-hero" data-s="hero" aria-label="Built to Win — Q3 2026 Sales Certification">
+  <div class="streaks" aria-hidden="true"><i></i><i></i><i></i></div>
+  <div class="hero-copy">
+    <p class="eyebrow rise">2026 Q3 Sales Certification · AI-Powered</p>
+    <h1 class="lockup rise d1"><span class="l1">Built to</span><span class="l2">Win</span></h1>
+    <p class="lead rise d2">This certification gives you superpowers.</p>
+    <p class="arc rise d3">Q1 gave you the message. Q2 gave you the story. Q3 gives you the
+      conversion layer — built on the Blue Sheet and a live deal from your own pipeline,
+      so you walk away with real work product you can use right now.</p>
+    <div class="chips rise d4" role="list">
+      <span class="chip" role="listitem"><b>4</b> steps</span>
+      <span class="chip" role="listitem"><b>4</b> activities</span>
+      <span class="chip" role="listitem"><b>1</b> deal</span>
+      <span class="chip" role="listitem"><b>~60</b> min</span>
+    </div>
+    <div class="cta-row rise d5">
+      <a class="btn" data-cfg="toolbox" href="#" target="_top">Open Dave's AI ToolBox</a>
+      <p class="windows">
+        <span><b>People Leaders</b> · Jul 20 – Aug 7</span>
+        <span><b>Global</b> · Aug 17 – Sep 14</span>
+      </p>
+    </div>
+  </div>
+  <p class="stella-say">Grab your Blue Sheet.<br>I'll walk you through the rest.</p>
+  <div class="stella" aria-hidden="true">
+    <img src="images/Stella/Stella_ThumbsUp_1%20-%20Edited.png" alt="" width="720" height="1280" loading="eager">
+  </div>
+</section>
+
+<!-- ============ SECTION: loop (patch 2) ============ -->
+<!-- ============ SECTION: steps (patch 3) ============ -->
+<!-- ============ SECTION: prep (patch 4) ============ -->
+<!-- ============ SECTION: calendar (patch 5) ============ -->
+
+<script>
+/* ===== CONFIG — edit content here, never the layout ===== */
+const CONFIG = {
+  links: {
+    /* TODO(Travis): real ToolBox URL before first publish */
+    toolbox: "#"
+  }
+};
+
+/* ===== ROUTER — ?s=<section> shows one section (widget mode); no param = preview all ===== */
+(function () {
+  const want = new URLSearchParams(location.search).get("s");
+  const hit = want && document.querySelector('.sec[data-s="' + want + '"]');
+  if (hit) {
+    document.body.dataset.view = "one";
+    hit.classList.add("on");
+  }
+  document.querySelectorAll("[data-cfg]").forEach(function (el) {
+    const url = CONFIG.links[el.dataset.cfg];
+    if (url && url !== "#") el.href = url;
+  });
+})();
+</script>
+</body>
+</html>
