@@ -129,10 +129,10 @@
   }
 
   /* =====================================================
-     SECTION: loop  (?s=loop) — the roadmap
-     Budget: 660px desktop / 820px mobile
+     SECTION: loop  (?s=loop) — straight-rail walkthrough
+     Budget: 520px desktop / 760px mobile
      ===================================================== */
-  #sec-loop{flex-direction:column;gap:clamp(10px,1.6vw,18px)}
+  #sec-loop{flex-direction:column;gap:clamp(12px,1.8vw,20px)}
   .loop-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
   .loop-title{font-family:var(--font-display);font-weight:800;font-size:clamp(24px,3vw,34px);
     text-transform:uppercase;letter-spacing:.02em}
@@ -140,70 +140,66 @@
     color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);
     border-radius:999px;padding:8px 16px;cursor:pointer}
   .loop-play:hover{border-color:var(--sky);color:var(--sky)}
-  .loop-body{display:grid;grid-template-columns:clamp(120px,13vw,180px) minmax(0,1fr) clamp(300px,26vw,350px);
-    gap:clamp(12px,2vw,26px);flex:1 1 auto;min-height:0}
-  .loop-stella{position:relative;display:flex;align-items:flex-end;justify-content:center}
-  .loop-stella img{height:calc(100% - 14px);width:auto;object-fit:contain;object-position:bottom;margin-bottom:10px}
-  .loop-stella::before{content:"";position:absolute;left:50%;bottom:3px;transform:translateX(-50%);
-    width:110%;height:22px;border-radius:50%;
-    background:radial-gradient(closest-side, rgba(0,0,0,.5), transparent 70%)}
-  .loop-stella::after{content:"";position:absolute;left:50%;bottom:6px;transform:translateX(-50%);
-    width:88%;height:13px;border-radius:50%;
-    background:radial-gradient(closest-side, rgba(16,207,201,.34), transparent 72%)}
 
-  .road-wrap{position:relative;min-width:0}
-  .road-wrap svg{width:100%;height:100%;display:block}
-  .road-base{fill:none;stroke-width:9;stroke-linecap:round}
-  .road-L{stroke:rgba(0,152,69,.45)}
-  .road-M{stroke:rgba(16,207,201,.35);stroke-dasharray:1 16;stroke-width:6}
-  .road-marker{filter:drop-shadow(0 0 8px rgba(16,207,201,.9))}
-  .legend{display:flex;gap:14px;align-items:center}
-  .legend span{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.14em;color:var(--muted);
-    text-transform:uppercase;display:inline-flex;align-items:center;gap:6px}
-  .legend i{width:22px;height:0;border-top:3px solid rgba(0,152,69,.8);border-radius:2px}
-  .legend .m i{border-top-style:dotted;border-top-color:rgba(16,207,201,.8)}
-  .station{position:absolute;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;
+  /* the rail: one straight line, stops on top, marker sliding along */
+  .rail{position:relative;padding:10px 6px 4px}
+  .rail .track{position:absolute;left:22px;right:22px;top:50%;height:4px;border-radius:2px;
+    background:linear-gradient(90deg,rgba(0,152,69,.55),rgba(16,207,201,.45))}
+  .rail .rmarker{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;
+    background:var(--sky);transform:translate(-50%,-50%);
+    box-shadow:0 0 10px rgba(16,207,201,.9);pointer-events:none}
+  .rail .stops{position:relative;display:flex;justify-content:space-between}
+  .station{width:34px;height:34px;border-radius:50%;flex:0 0 auto;
     border:2px solid var(--line);background:var(--navy-1);color:var(--muted);cursor:pointer;
-    font-family:var(--font-mono);font-size:12px;display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-mono);font-size:13px;display:flex;align-items:center;justify-content:center;
     transition:border-color .2s,color .2s,box-shadow .2s,background .2s;padding:0}
   .station.done{border-color:var(--ocean);color:var(--sky)}
   .station.live{border-color:var(--green);background:var(--green);color:#fff;
     box-shadow:0 0 0 6px rgba(0,152,69,.22),0 0 18px rgba(0,152,69,.6)}
   .station.cross{border-style:double;border-width:4px;border-color:var(--sky)}
   .station.cross.live{border-color:var(--green)}
-  .station.finale{width:38px;height:38px;font-size:15px}
+  .station.finale{font-size:15px}
 
-  .loop-card{position:relative;display:flex;flex-direction:column;gap:9px;min-height:0;
+  /* horizontal card: image left, narration right */
+  .loop-card{position:relative;display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);
+    gap:clamp(14px,2.4vw,26px);align-items:center;flex:1 1 auto;min-height:0;
     background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:var(--radius);
-    padding:14px;overflow:hidden}
+    padding:clamp(14px,1.8vw,20px);overflow:hidden}
   /* feathered zoom-drift screenshot treatment: no hard edges, dead space cropped out */
-  .loop-card .shot{position:relative;height:clamp(210px,23vw,260px);overflow:hidden;border-radius:10px}
+  .loop-card .shot{position:relative;height:clamp(220px,24vw,300px);overflow:hidden;border-radius:10px}
   .loop-card .shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
     transform:scale(var(--z,1.4));
     -webkit-mask-image:radial-gradient(115% 100% at 50% 50%, #000 52%, transparent 80%);
     mask-image:radial-gradient(115% 100% at 50% 50%, #000 52%, transparent 80%)}
-  .loop-badges{display:flex;align-items:center;gap:8px}
+  .loop-info{display:flex;flex-direction:column;gap:10px;min-width:0}
+  .loop-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .sys-badge{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--sky);
     border:1px solid rgba(16,207,201,.4);border-radius:999px;padding:3px 10px;text-transform:uppercase}
   .sys-badge.tb{display:inline-flex;align-items:center;padding:3px 10px}
   .sys-badge.tb img{height:16px;width:auto}
   .sys-badge.xbadge{color:#7fe3a8;border-color:rgba(0,152,69,.5)}
-  .loop-card h3{font-family:var(--font-display);font-weight:800;font-size:clamp(17px,1.7vw,21px);
+  .loop-card h3{font-family:var(--font-display);font-weight:800;font-size:clamp(19px,2vw,25px);
     text-transform:uppercase;letter-spacing:.02em}
-  .loop-card .say{font-size:13px;line-height:1.5;color:var(--muted);font-style:italic}
-  .card-swap{transition:opacity .25s ease}
-  .card-swap.fade{opacity:0}
+  .say-row{display:flex;gap:10px;align-items:flex-start}
+  .say-row .ava{width:38px;height:38px;border-radius:50%;flex:0 0 auto;overflow:hidden;
+    border:2px solid rgba(16,207,201,.5)}
+  .say-row .ava img{width:100%;height:100%;object-fit:cover;object-position:50% 6%}
+  .loop-card .say{font-size:clamp(13px,1.3vw,14.5px);line-height:1.55;color:var(--muted);font-style:italic}
+  .card-swap{display:contents}
+  .fade-t .shot img,.fade-t .loop-info{opacity:0}
+  .shot img,.loop-info{transition:opacity .25s ease}
 
-  /* mobile roadmap: dot strip + docked card (skimmed variant) */
-  .dot-strip{display:none}
+  /* mobile: stacked card, same rail */
   @media (max-width:720px){
-    .loop-body{display:flex;flex-direction:column;gap:10px}
-    .loop-stella,.road-wrap{display:none}
-    .dot-strip{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
-    .dot-strip .station{position:static;transform:none;width:30px;height:30px;font-size:12px}
-    .loop-card{flex:1 1 auto}
-    .loop-card .shot img{max-height:34vh}
+    .loop-card{display:flex;flex-direction:column;align-items:stretch}
+    .loop-card .shot{height:32vh}
+    .rail .track{left:14px;right:14px}
+    .station{width:30px;height:30px;font-size:12px}
     .loop-play{padding:6px 13px}
+  }
+  @media (max-width:430px){
+    .station{width:26px;height:26px;font-size:11px}
+    .station.cross{border-width:3px}
   }
 
   /* ===== MOTION (earns its place; guarded) ===== */
@@ -261,39 +257,31 @@
 <section class="sec" id="sec-loop" data-s="loop" aria-label="How the certification works">
   <div class="loop-head">
     <p class="eyebrow">How it works</p>
-    <h2 class="loop-title">Two paths. One deal. Certified.</h2>
-    <div class="legend" aria-hidden="true">
-      <span><i></i>Learner</span>
-      <span class="m"><i></i>Manager</span>
-    </div>
+    <h2 class="loop-title">One loop. Four times. Certified.</h2>
     <button class="loop-play" id="loopPlay" aria-pressed="true">❚❚ Pause tour</button>
   </div>
-  <div class="loop-body">
-    <div class="loop-stella" aria-hidden="true">
-      <img src="images/Stella/Sella_map_01.png" alt="" width="594" height="1713" loading="lazy">
-    </div>
-    <div class="road-wrap">
-      <svg id="roadSvg" viewBox="0 0 700 470" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-        <path id="pathM" class="road-base road-M" d=""/>
-        <path id="pathL" class="road-base road-L" d=""/>
-        <circle id="roadMarker" class="road-marker" r="8" fill="#10CFC9"/>
-      </svg>
-      <div id="stationLayer"></div>
-    </div>
-    <div class="loop-card" aria-live="polite">
-      <div class="card-swap" id="cardSwap">
-        <div class="shot"><img id="cardImg" src="images/thumbnails/26_Q3_Overview_Thumb.webp" alt="" width="712" height="682"></div>
-        <div class="loop-badges" style="margin-top:10px">
+  <div class="rail">
+    <div class="track" aria-hidden="true"></div>
+    <div class="rmarker" id="railMarker" aria-hidden="true"></div>
+    <div class="stops" id="stops"></div>
+  </div>
+  <div class="loop-card" aria-live="polite">
+    <div class="card-swap" id="cardSwap">
+      <div class="shot"><img id="cardImg" src="images/thumbnails/26_Q3_Overview_Thumb.webp" alt="" width="712" height="682"></div>
+      <div class="loop-info">
+        <div class="loop-badges">
           <span class="sys-badge" id="badgeMt">Mindtickle</span>
           <span class="sys-badge tb" id="badgeTb" hidden><img src="images/misc/Daves_Toolkit_Logo_Horizontal.webp" alt="Dave's AI ToolBox"></span>
-          <span class="sys-badge xbadge" id="badgeX" hidden>✕ Paths meet</span>
+          <span class="sys-badge xbadge" id="badgeX" hidden>Manager checkpoint</span>
         </div>
-        <h3 id="cardTitle" style="margin-top:8px"></h3>
-        <p class="say" id="cardSay"></p>
+        <h3 id="cardTitle"></h3>
+        <div class="say-row">
+          <span class="ava" aria-hidden="true"><img src="images/Stella/Stella_ThumbsUp_1%20-%20Edited.png" alt=""></span>
+          <p class="say" id="cardSay"></p>
+        </div>
       </div>
     </div>
   </div>
-  <div class="dot-strip" id="dotStrip" aria-hidden="false"></div>
 </section>
 
 <!-- ============ SECTION: steps (patch 3) ============ -->
@@ -315,40 +303,30 @@ const CONFIG = {
   }
 };
 
-/* Roadmap stations — the Learner path (Sales / CSO). x:true = manager-path crossing.
-   z = image zoom (screenshots carry dead space; thumbnails are full-bleed).
-   Narration is Stella's voice: terse, direct, lightly humorous. */
+/* Walkthrough stops — 9. Each step describes its actual activity (source: Spotlight/Manager Guide).
+   sys: "mt" | "tb" | "both" (module + activity). x:true = the AI + manager gate.
+   z = image zoom (screenshots carry dead space; thumbnails are full-bleed). */
 const STATIONS = [
-  { sys:"mt", z:1.05, img:"images/thumbnails/26_Q3_Overview_Thumb.webp", title:"Watch the openers",
-    say:"Two short modules set the table — Introduction to Built to Win, then Overview of Activities. Watch both." },
-  { sys:"mt", z:1.05, img:"images/thumbnails/26_Q3_Step1_Thumb.webp", title:"Step 1 module",
-    say:"The Proposal Starts at First Contact. Finish the module and the Activity Launcher points you to the ToolBox." },
+  { sys:"mt", z:1.05, img:"images/thumbnails/26_Q3_Overview_Thumb.webp", title:"Watch the modules",
+    say:"Start in Mindtickle: the intro, the overview, then each step's module. The module unlocks the activity." },
   { sys:"tb", z:1.5, img:"images/misc/02_Learner_Select.webp", title:"Open the ToolBox",
-    say:"Head to Dave's AI ToolBox, open the Training Center, and pick Certifications – Learner. That's home base." },
-  { sys:"tb", z:1.45, img:"images/misc/03_StartCert.webp", title:"Start Built to Win",
-    say:"From Certification Programs, open Built to Win. Sign in with your Qlik credentials if it asks." },
+    say:"Dave's AI ToolBox → Training Center → Certifications – Learner. Open Built to Win and sign in with Qlik if it asks." },
   { sys:"tb", z:1.45, img:"images/misc/05_Opportunity_Select.webp", title:"Pick your deal",
-    say:"Choose a viable early-to-mid-stage deal with a completed Blue Sheet — one you actually want to win. It rides with you through all four steps." },
-  { sys:"tb", z:1.5, img:"images/misc/06_Step1_Entry.webp", title:"Work the activity",
-    say:"Fill out the Step 1 activity. Kept your Blue Sheet current? Most of this pre-populates and your job gets very easy." },
-  { sys:"tb", z:1.5, img:"images/misc/07_Grading_with_AI.webp", title:"Submit for AI grading",
-    say:"Claude grades it in seconds, flags anything off, and tells you exactly how to fix it." },
-  { sys:"tb", x:true, z:1.45, img:"images/misc/08_Step_Passed.webp", title:"Manager review",
-    say:"Pass the AI, and your submission goes to your manager for the in-depth look. This is where your path and theirs meet." },
-  { sys:"mt", z:1.4, img:"images/misc/10_Step1_Approved_Email.webp", title:"Approved → Step 2",
-    say:"Approval lands in your inbox with your marching orders: back to Mindtickle for Step 2." },
-  { sys:"mt", x:true, z:1.05, img:"images/thumbnails/26_Q3_Step2_Thumb.webp", title:"Step 2 — same loop",
-    say:"Building Value with Every Buying Influence. Module, activity, AI, manager. Same deal, next layer." },
-  { sys:"mt", x:true, z:1.05, img:"images/thumbnails/26_Q3_Step3_Thumb.webp", title:"Step 3 — same loop",
-    say:"Good / Better / Best: Strategic Proposal Architecture. You know the drill by now." },
-  { sys:"mt", x:true, z:1.05, img:"images/thumbnails/26_Q3_Step4_Thumb.webp", title:"Step 4 — final lap",
-    say:"Winning on Value, Not Price. Last activity. Finish strong." },
-  { sys:"mt", z:1.4, img:"images/misc/19_Step4_Approved_Email.webp", title:"Your finished asset",
-    say:"The final congrats email carries your completed asset — built on your real deal, ready for your next deal review with that customer." },
-  { sys:"mt", z:1.05, finale:true, img:"images/thumbnails/26_Q3_Survey_Thumb.webp", title:"Survey → certified",
-    say:"One quick exit survey in Mindtickle and the cert is yours. That's the whole road." }
+    say:"Choose a viable early-to-mid-stage deal with a completed Blue Sheet — one you want to win. It rides with you through all four steps." },
+  { sys:"both", z:1.05, img:"images/thumbnails/26_Q3_Step1_Thumb.webp", title:"Step 1 — First Contact",
+    say:"Map the people who decide this deal — Economic, Technical, and User Buying Influences, plus your Coach: the result each needs, their personal win, and the gap if they do nothing." },
+  { sys:"tb", x:true, z:1.45, img:"images/misc/08_Step_Passed.webp", title:"The gate — after every step",
+    say:"Each step ends the same way: Claude grades the craft in seconds and flags exactly what to fix. Pass, and your manager reviews the strategy. Their approval unlocks the next step." },
+  { sys:"both", z:1.05, img:"images/thumbnails/26_Q3_Step2_Thumb.webp", title:"Step 2 — Building Value",
+    say:"Turn that map into a tight, tailored value story for one of your Buying Influences — their world, the disruption, and a resolution they can repeat when you're not in the room." },
+  { sys:"both", z:1.05, img:"images/thumbnails/26_Q3_Step3_Thumb.webp", title:"Step 3 — Good / Better / Best",
+    say:"Architect three proposal tiers in buyer-outcome language. Best gives up nothing; every compromise below it traces back to a Step 1 outcome. Structure, not pricing." },
+  { sys:"both", z:1.05, img:"images/thumbnails/26_Q3_Step4_Thumb.webp", title:"Step 4 — Value, Not Price",
+    say:"Rehearse the price pushback: anchor to an outcome, name the cost of doing nothing, end on a question — and never reach for a discount." },
+  { sys:"mt", z:1.4, finale:true, img:"images/misc/19_Step4_Approved_Email.webp", title:"Asset, survey, certified",
+    say:"The final email carries your finished asset — ready for your next deal review with that customer. One quick exit survey in Mindtickle and the cert is yours." }
 ];
-const DWELL_MS = 6000, TRAVEL_MS = 1300;
+const DWELL_MS = 6000, TRAVEL_MS = 900;
 
 /* ===== ROUTER — ?s=<section> shows one section (widget mode); no param = preview all ===== */
 (function () {
@@ -374,14 +352,11 @@ const DWELL_MS = 6000, TRAVEL_MS = 1300;
     report();
   }
 
-  /* ===== roadmap engine — active whenever #sec-loop is rendered ===== */
+  /* ===== walkthrough engine — active whenever #sec-loop is rendered ===== */
   const loopSec = document.getElementById("sec-loop");
   if (loopSec && (loopSec.classList.contains("on") || document.body.dataset.view === "all")) {
-    const pathL = document.getElementById("pathL");
-    const pathM = document.getElementById("pathM");
-    const marker = document.getElementById("roadMarker");
-    const layer = document.getElementById("stationLayer");
-    const strip = document.getElementById("dotStrip");
+    const stopsBox = document.getElementById("stops");
+    const marker = document.getElementById("railMarker");
     const swap = document.getElementById("cardSwap");
     const playBtn = document.getElementById("loopPlay");
     const els = {
@@ -390,78 +365,41 @@ const DWELL_MS = 6000, TRAVEL_MS = 1300;
       tb: document.getElementById("badgeTb"), x: document.getElementById("badgeX")
     };
     const N = STATIONS.length;
-    const VW = 700, VH = 470, MID = 235;
-
-    /* learner wave y-values, hand-tuned; manager mirrors around MID except at crossings */
-    const ysL = [120, 210, 320, 360, 300, 200, 145, 235, 330, 300, 200, 300, 210, 110];
-    const pts = STATIONS.map(function (s, i) {
-      return { x: 42 + i * ((VW - 84) / (N - 1)), y: ysL[i] };
-    });
-    const ptsM = STATIONS.map(function (s, i) {
-      return { x: pts[i].x, y: s.x ? pts[i].y : Math.max(70, Math.min(VH - 60, 2 * MID - pts[i].y)) };
-    });
-
-    /* Catmull-Rom -> cubic bezier path string */
-    function rom(p) {
-      let d = "M " + p[0].x + " " + p[0].y;
-      for (let i = 0; i < p.length - 1; i++) {
-        const p0 = p[Math.max(0, i - 1)], p1 = p[i], p2 = p[i + 1], p3 = p[Math.min(p.length - 1, i + 2)];
-        const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6;
-        const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
-        d += " C " + c1x + " " + c1y + ", " + c2x + " " + c2y + ", " + p2.x + " " + p2.y;
-      }
-      return d;
-    }
-    pathL.setAttribute("d", rom(pts));
-    pathM.setAttribute("d", rom(ptsM));
-
-    /* measured path length at each station (for marker travel along the learner wave) */
-    const total = pathL.getTotalLength();
-    const lens = pts.map(function (p) {
-      let best = 0, bd = 1e9;
-      for (let l = 0; l <= total; l += total / 900) {
-        const q = pathL.getPointAtLength(l);
-        const d = (q.x - p.x) * (q.x - p.x) + (q.y - p.y) * (q.y - p.y);
-        if (d < bd) { bd = d; best = l; }
-      }
-      return best;
-    });
-
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let cur = 0, playing = !reduced, timer = null, raf = null;
 
-    const btns = [], dots = [];
+    const btns = [];
     STATIONS.forEach(function (s, i) {
       const b = document.createElement("button");
       b.className = "station" + (s.finale ? " finale" : "") + (s.x ? " cross" : "");
       b.textContent = s.finale ? "★" : (i + 1);
-      b.setAttribute("aria-label", "Stop " + (i + 1) + ": " + s.title + (s.x ? " (manager path crossing)" : ""));
-      b.style.left = (pts[i].x / VW * 100) + "%";
-      b.style.top = (pts[i].y / VH * 100) + "%";
+      b.setAttribute("aria-label", "Stop " + (i + 1) + ": " + s.title + (s.x ? " (manager checkpoint)" : ""));
       b.addEventListener("click", function () { jump(i); });
-      layer.appendChild(b); btns.push(b);
-      const d = b.cloneNode(true);
-      d.addEventListener("click", function () { jump(i); });
-      strip.appendChild(d); dots.push(d);
+      stopsBox.appendChild(b); btns.push(b);
     });
 
-    function setMarker(len) {
-      const pt = pathL.getPointAtLength(len);
-      marker.setAttribute("cx", pt.x); marker.setAttribute("cy", pt.y);
+    /* marker positions = stop centers, in px relative to the rail; recomputed on resize */
+    function centers() {
+      const rail = stopsBox.parentElement.getBoundingClientRect();
+      return btns.map(function (b) {
+        const r = b.getBoundingClientRect();
+        return r.left - rail.left + r.width / 2;
+      });
     }
+    function setMarker(px) { marker.style.left = px + "px"; }
     function paintCard(i) {
       const s = STATIONS[i];
-      swap.classList.add("fade");
+      swap.parentElement.classList.add("fade-t");
       setTimeout(function () {
         els.img.src = s.img; els.img.alt = s.title;
         els.img.style.setProperty("--z", s.z || 1.4);
         els.title.textContent = s.title; els.say.textContent = s.say;
-        els.mt.hidden = s.sys !== "mt"; els.tb.hidden = s.sys !== "tb";
+        els.mt.hidden = !(s.sys === "mt" || s.sys === "both");
+        els.tb.hidden = !(s.sys === "tb" || s.sys === "both");
         els.x.hidden = !s.x;
-        swap.classList.remove("fade");
+        swap.parentElement.classList.remove("fade-t");
       }, reduced ? 0 : 220);
-      btns.concat(dots).forEach(function (b, k) {
-        const idx = k % N;
+      btns.forEach(function (b, idx) {
         b.classList.toggle("live", idx === i);
         b.classList.toggle("done", idx < i);
       });
@@ -469,12 +407,13 @@ const DWELL_MS = 6000, TRAVEL_MS = 1300;
       const pre = new Image(); pre.src = next.img;   /* preload the next stop */
     }
     function travel(from, to, done) {
-      if (reduced) { setMarker(lens[to]); return done(); }
+      const c = centers();
+      if (reduced) { setMarker(c[to]); return done(); }
       const t0 = performance.now();
       const step = function (t) {
         const p = Math.min(1, (t - t0) / TRAVEL_MS);
         const e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;  /* easeInOutQuad */
-        setMarker(lens[from] + (lens[to] - lens[from]) * e);
+        setMarker(c[from] + (c[to] - c[from]) * e);
         if (p < 1) raf = requestAnimationFrame(step); else done();
       };
       raf = requestAnimationFrame(step);
@@ -488,7 +427,7 @@ const DWELL_MS = 6000, TRAVEL_MS = 1300;
     }
     function halt() { clearTimeout(timer); if (raf) cancelAnimationFrame(raf); }
     function jump(i) {
-      halt(); cur = i; setMarker(lens[i]); paintCard(i);
+      halt(); cur = i; setMarker(centers()[i]); paintCard(i);
       if (playing) schedule();
     }
     playBtn.addEventListener("click", function () {
@@ -499,9 +438,10 @@ const DWELL_MS = 6000, TRAVEL_MS = 1300;
     });
     loopSec.addEventListener("mouseenter", halt);
     loopSec.addEventListener("mouseleave", function () { halt(); if (playing) schedule(); });
+    window.addEventListener("resize", function () { setMarker(centers()[cur]); });
 
     if (reduced) { playing = false; playBtn.textContent = "▶ Play tour"; playBtn.setAttribute("aria-pressed", "false"); }
-    setMarker(lens[0]); paintCard(0); if (playing) schedule();
+    setMarker(centers()[0]); paintCard(0); if (playing) schedule();
   }
 })();
 </script>
