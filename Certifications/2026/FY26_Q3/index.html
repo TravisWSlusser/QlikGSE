@@ -162,12 +162,12 @@
   .station.finale{font-size:15px}
 
   /* horizontal card: image left, narration right */
-  .loop-card{position:relative;display:grid;grid-template-columns:minmax(0,36%) minmax(0,1fr);
+  .loop-card{position:relative;display:grid;grid-template-columns:minmax(0,30%) minmax(0,1fr);
     gap:clamp(12px,2vw,22px);align-items:start;flex:1 1 auto;min-height:0;
     background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:var(--radius);
     padding:clamp(12px,1.6vw,18px);overflow:hidden}
   /* thumbnail treatment: uniform module art, framed, gentle alternating tilt */
-  .loop-card .shot{position:relative;height:clamp(180px,19vw,240px);overflow:hidden;border-radius:12px;
+  .loop-card .shot{position:relative;height:clamp(150px,16vw,210px);overflow:hidden;border-radius:12px;
     border:1px solid rgba(255,255,255,.16);background:var(--navy-0);
     box-shadow:0 14px 30px -14px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.04);
     transform:rotate(-1.1deg)}
@@ -188,8 +188,8 @@
   .mins{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.08em}
 
   /* sub-task walk: dim -> lit -> done */
-  .subs{list-style:none;counter-reset:st;display:flex;flex-direction:column;gap:3px;margin-top:2px}
-  .subs li{counter-increment:st;font-size:12px;color:var(--muted);display:flex;gap:8px;line-height:1.35;
+  .subs{list-style:none;counter-reset:st;display:flex;flex-direction:column;gap:2px;margin-top:2px}
+  .subs li{counter-increment:st;font-size:11.5px;color:var(--muted);display:flex;gap:8px;line-height:1.3;
     align-items:flex-start;padding:2px 6px;border-radius:8px;opacity:.55;
     transition:opacity .3s ease,background .3s ease}
   .subs li span:first-child{flex:1 1 auto;min-width:0}
@@ -204,27 +204,29 @@
   .subs li.done::before{content:"✓";border-color:rgba(16,207,201,.6)}
   @media (prefers-reduced-motion:reduce){.subs li{opacity:1}}
   .loop-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .sys-badge{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--sky);
-    border:1px solid rgba(16,207,201,.4);border-radius:999px;padding:3px 10px;text-transform:uppercase}
-  .sys-badge.tb{display:inline-flex;align-items:center;padding:3px 10px}
-  .sys-badge.tb img{height:16px;width:auto}
-  .sys-badge.xbadge{color:#7fe3a8;border-color:rgba(0,152,69,.5)}
+  .aud.ai{color:#fff;background:var(--ocean);border-color:var(--ocean)}
+  /* task rows carry their owner's color on the left edge */
+  .subs li{border-left:3px solid transparent}
+  .subs li[data-a="l"]{border-left-color:var(--green)}
+  .subs li[data-a="m"]{border-left-color:var(--sky)}
+  .subs li[data-a="ai"]{border-left-color:var(--ocean)}
+  .subs li[data-a="all"]{border-left-color:rgba(255,255,255,.55)}
   .loop-card h3{font-family:var(--font-display);font-weight:800;font-size:clamp(17px,1.8vw,22px);
     text-transform:uppercase;letter-spacing:.02em}
-  .say-row{display:flex;gap:9px;align-items:flex-start}
-  .say-row .ava{width:32px;height:32px;border-radius:50%;flex:0 0 auto;overflow:hidden;
+  .say-row{display:flex;gap:8px;align-items:center}
+  .say-row .ava{width:26px;height:26px;border-radius:50%;flex:0 0 auto;overflow:hidden;
     border:2px solid rgba(16,207,201,.5)}
   .say-row .ava img{width:100%;height:100%;object-fit:cover;object-position:50% 6%}
-  .loop-card .say{font-size:clamp(12px,1.2vw,13.5px);line-height:1.45;color:var(--muted);font-style:italic}
+  .loop-card .say{font-size:clamp(11.5px,1.1vw,12.5px);line-height:1.4;color:var(--muted);font-style:italic}
   .card-swap{display:contents}
   .fade-t .shot img,.fade-t .loop-info{opacity:0}
   .shot img,.loop-info{transition:opacity .25s ease}
 
-  /* mobile: stacked card, same rail */
+  /* mobile: stacked card, slim thumbnail strip, same rail */
   @media (max-width:720px){
-    .loop-card{display:flex;flex-direction:column;align-items:stretch}
-    .loop-card .shot{height:24vh;min-height:150px}
-    .subs li{font-size:11.5px}
+    .loop-card{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+    .loop-card .shot{height:14vh;min-height:96px}
+    .subs li{font-size:11px}
     .subs li .aud{display:none}
     .subs li.lit .aud{display:inline-block}
     @media (prefers-reduced-motion:reduce){.subs li .aud{display:inline-block}}
@@ -270,7 +272,7 @@
       <span class="chip" role="listitem"><b>~60</b> min</span>
     </div>
     <div class="cta-row rise d5">
-      <a class="btn" data-cfg="toolbox" href="#" target="_top">Open Dave's AI ToolBox</a>
+      <a class="btn" data-cfg="certApp" href="#" target="_top">Open the Certification App</a>
       <p class="windows">
         <span><b>People Leaders</b> · Jul 20 – Aug 7</span>
         <span><b>Global</b> · Aug 17 – Sep 14</span>
@@ -289,7 +291,7 @@
     <p class="eyebrow">How it works</p>
     <h2 class="loop-title">One loop. Four times. Certified.</h2>
     <div class="legend" aria-hidden="true">
-      <span class="aud l">Learner</span><span class="aud m">Manager</span><span class="aud all">Everyone</span>
+      <span class="aud l">Learner</span><span class="aud m">Manager</span><span class="aud ai">AI</span><span class="aud all">Manager + Learner</span>
     </div>
     <button class="loop-play" id="loopPlay" aria-pressed="true">❚❚ Pause tour</button>
   </div>
@@ -329,59 +331,69 @@
 /* ===== CONFIG — edit content here, never the layout ===== */
 const CONFIG = {
   links: {
-    toolbox: "https://daves-ai-toolbox.replit.app/"
+    /* TODO(Travis): replace with the Certification App page URL when it exists */
+    certApp: "https://daves-ai-toolbox.replit.app/"
   }
 };
 
 /* The full module map — every launch-state module from the learning-paths sheet.
-   aud: "l" learner-only | "m" manager-only | "all". mins from the sheet (validate before launch).
-   Each sub has its own audience tag: {t:"...", a:"l"|"m"|"all"}. */
+   aud: "l" learner | "m" manager | "ai" automated | "all" manager + learner.
+   mins from the sheet (validate before launch). Steps follow the canonical cycle:
+   module → activity → AI grading → email to manager → manager approval → email to learner → return to Mindtickle. */
 const STATIONS = [
   { aud:"all", mins:6, title:"Introduction to Built to Win",
-    say:"Everyone starts here — learners and managers alike.",
-    subs:[{t:"Watch the intro module",a:"all"},
-          {t:"What this cert is and why it exists",a:"all"}] },
+    say:"Everyone starts here.",
+    subs:[{t:"Complete the introduction module in Mindtickle",a:"all"}] },
   { aud:"m", mins:11, img:"images/thumbnails/26_Q3_Managers_Thumb.webp", title:"For People Leaders Only",
-    say:"Managers, this one's yours. Learners skip ahead.",
-    subs:[{t:"Manager-facing content + the Manager Guide",a:"m"},
-          {t:"All modules assigned to you up front",a:"m"},
-          {t:"You review and approve activities — you don't complete them",a:"m"}] },
+    say:"Managers, this module is yours.",
+    subs:[{t:"Complete the module and review the Manager Guide",a:"m"},
+          {t:"All modules are assigned to managers up front",a:"m"},
+          {t:"Managers review and approve activities; they do not complete them",a:"m"}] },
   { aud:"all", mins:5, img:"images/thumbnails/26_Q3_Overview_Thumb.webp", title:"Overview of Activities",
-    say:"A quick video on how the ToolBox activities work.",
-    subs:[{t:"Watch the overview video",a:"all"},
-          {t:"Managers: this is what your team will be building",a:"m"}] },
-  { aud:"all", mins:14, img:"images/thumbnails/26_Q3_Step1_Thumb.webp", title:"Step 1 — First Contact",
-    say:"Map the people who actually decide this deal.",
-    subs:[{t:"Watch the Step 1 module",a:"all"},
-          {t:"ToolBox: pick your live deal — early-to-mid stage, Blue Sheet complete",a:"l"},
-          {t:"Build the Buying Influence Outcome Map — influences, wins, gaps",a:"l"},
-          {t:"Submit — Claude grades it, flags exact fixes",a:"l"},
-          {t:"Review the strategy and approve",a:"m"},
-          {t:"Next module auto-assigns on approval",a:"l"}] },
-  { aud:"all", mins:15, img:"images/thumbnails/26_Q3_Step2_Thumb.webp", title:"Step 2 — Building Value",
-    say:"Turn the map into a story they repeat without you.",
-    subs:[{t:"Watch the Step 2 module",a:"all"},
-          {t:"Write the tailored value story for one Buying Influence — same deal",a:"l"},
-          {t:"Submit — AI grade in seconds",a:"l"},
-          {t:"Approve to unlock Step 3",a:"m"}] },
-  { aud:"all", mins:18, img:"images/thumbnails/26_Q3_Step3_Thumb.webp", title:"Step 3 — Good / Better / Best",
-    say:"Three tiers, buyer-outcome language, zero pricing.",
-    subs:[{t:"Watch the Step 3 module",a:"all"},
-          {t:"Build the tiers — every compromise traces to a Step 1 outcome",a:"l"},
-          {t:"Submit — AI grade",a:"l"},
-          {t:"Approve to unlock Step 4",a:"m"}] },
-  { aud:"all", mins:11, img:"images/thumbnails/26_Q3_Step4_Thumb.webp", title:"Step 4 — Value, Not Price",
-    say:"The pushback is coming. Walk in with the answer.",
-    subs:[{t:"Watch the Step 4 module",a:"all"},
-          {t:"Write the price-objection reframe — outcome-anchored, no discounts",a:"l"},
-          {t:"Submit — AI grade",a:"l"},
-          {t:"Final approval — that's all four",a:"m"}] },
-  { aud:"all", mins:5, finale:true, img:"images/thumbnails/26_Q3_Survey_Thumb.webp", title:"The finish line",
-    say:"Cross it with something you'll actually use.",
-    subs:[{t:"Completion Report lands in your email — deal-review ready",a:"l"},
-          {t:"Exit survey: Quick Survey for Sales & Renewals",a:"l"},
-          {t:"Exit survey: Quick Survey for People Leaders",a:"m"},
-          {t:"Certified",a:"all"}] }
+    say:"How the activities work, end to end.",
+    subs:[{t:"Watch the overview of the certification activities",a:"all"},
+          {t:"Gives managers visibility into the work they will review",a:"m"}] },
+  { aud:"all", mins:14, img:"images/thumbnails/26_Q3_Step1_Thumb.webp", title:"Step 1 — The Proposal Starts at First Contact",
+    say:"Map the people who decide this deal.",
+    subs:[{t:"Complete the Step 1 module in Mindtickle",a:"all"},
+          {t:"Select your live opportunity and complete the Buying Influence Outcome Map in the Certification App",a:"l"},
+          {t:"Submission is graded and approved by AI",a:"ai"},
+          {t:"Approval email is sent to your manager",a:"ai"},
+          {t:"Manager reviews the submission and approves",a:"m"},
+          {t:"Approval email is sent to you",a:"ai"},
+          {t:"Return to Mindtickle to begin the next module",a:"l"}] },
+  { aud:"all", mins:15, img:"images/thumbnails/26_Q3_Step2_Thumb.webp", title:"Step 2 — Building Value with Every Buying Influence",
+    say:"Build value for every Buying Influence.",
+    subs:[{t:"Complete the Step 2 module in Mindtickle",a:"all"},
+          {t:"Complete the Analyse Buying Signals activity in the Certification App",a:"l"},
+          {t:"Submission is graded and approved by AI",a:"ai"},
+          {t:"Approval email is sent to your manager",a:"ai"},
+          {t:"Manager reviews the submission and approves",a:"m"},
+          {t:"Approval email is sent to you",a:"ai"},
+          {t:"Return to Mindtickle to begin the next module",a:"l"}] },
+  { aud:"all", mins:18, img:"images/thumbnails/26_Q3_Step3_Thumb.webp", title:"Step 3 — Good / Better / Best: Strategic Proposal Architecture",
+    say:"Structure the proposal around their outcomes.",
+    subs:[{t:"Complete the Step 3 module in Mindtickle",a:"all"},
+          {t:"Complete the Generate Proposal Draft activity in the Certification App",a:"l"},
+          {t:"Submission is graded and approved by AI",a:"ai"},
+          {t:"Approval email is sent to your manager",a:"ai"},
+          {t:"Manager reviews the submission and approves",a:"m"},
+          {t:"Approval email is sent to you",a:"ai"},
+          {t:"Return to Mindtickle to begin the next module",a:"l"}] },
+  { aud:"all", mins:11, img:"images/thumbnails/26_Q3_Step4_Thumb.webp", title:"Step 4 — Winning on Value, Not Price",
+    say:"Defend value without discounting.",
+    subs:[{t:"Complete the Step 4 module in Mindtickle",a:"all"},
+          {t:"Complete the final Module Assessment activity in the Certification App",a:"l"},
+          {t:"Submission is graded and approved by AI",a:"ai"},
+          {t:"Approval email is sent to your manager",a:"ai"},
+          {t:"Manager reviews the submission and approves",a:"m"},
+          {t:"Final approval email delivers your completed asset",a:"ai"},
+          {t:"Return to Mindtickle to complete the exit survey",a:"l"}] },
+  { aud:"all", mins:5, finale:true, img:"images/thumbnails/26_Q3_Survey_Thumb.webp", title:"The Finish Line",
+    say:"Finish strong — you've earned it.",
+    subs:[{t:"Complete the exit survey — Quick Survey for Sales & Renewals",a:"l"},
+          {t:"Managers complete the Quick Survey for People Leaders",a:"m"},
+          {t:"Certification complete",a:"all"}] }
 ];
 const SUB_DWELL_MS = 2200, TRAVEL_MS = 900;
 
@@ -443,7 +455,7 @@ const SUB_DWELL_MS = 2200, TRAVEL_MS = 900;
       });
     }
     function setMarker(px) { marker.style.left = px + "px"; }
-    const AUD_LABEL = { l: "Learner", m: "Manager", all: "Everyone" };
+    const AUD_LABEL = { l: "Learner", m: "Manager", ai: "AI", all: "Manager + Learner" };
     function paintCard(i) {
       const s = STATIONS[i];
       swap.parentElement.classList.add("fade-t");
@@ -465,6 +477,7 @@ const SUB_DWELL_MS = 2200, TRAVEL_MS = 900;
         ol.textContent = "";
         s.subs.forEach(function (sub) {
           const li = document.createElement("li");
+          li.dataset.a = sub.a;
           const txt = document.createElement("span"); txt.textContent = sub.t;
           const tag = document.createElement("span");
           tag.className = "aud " + sub.a; tag.textContent = AUD_LABEL[sub.a];
