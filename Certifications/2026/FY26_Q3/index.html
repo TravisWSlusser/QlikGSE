@@ -128,6 +128,75 @@
     .cta-row{margin-bottom:14px}
   }
 
+  /* =====================================================
+     SECTION: loop  (?s=loop) — the roadmap
+     Budget: 660px desktop / 820px mobile
+     ===================================================== */
+  #sec-loop{flex-direction:column;gap:clamp(10px,1.6vw,18px)}
+  .loop-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+  .loop-title{font-family:var(--font-display);font-weight:800;font-size:clamp(24px,3vw,34px);
+    text-transform:uppercase;letter-spacing:.02em}
+  .loop-play{margin-left:auto;font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;
+    color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);
+    border-radius:999px;padding:8px 16px;cursor:pointer}
+  .loop-play:hover{border-color:var(--sky);color:var(--sky)}
+  .loop-body{display:grid;grid-template-columns:clamp(120px,13vw,180px) minmax(0,1fr) clamp(300px,26vw,350px);
+    gap:clamp(12px,2vw,26px);flex:1 1 auto;min-height:0}
+  .loop-stella{position:relative;display:flex;align-items:flex-end;justify-content:center}
+  .loop-stella img{height:calc(100% - 14px);width:auto;object-fit:contain;object-position:bottom;margin-bottom:10px}
+  .loop-stella::before{content:"";position:absolute;left:50%;bottom:3px;transform:translateX(-50%);
+    width:110%;height:22px;border-radius:50%;
+    background:radial-gradient(closest-side, rgba(0,0,0,.5), transparent 70%)}
+  .loop-stella::after{content:"";position:absolute;left:50%;bottom:6px;transform:translateX(-50%);
+    width:88%;height:13px;border-radius:50%;
+    background:radial-gradient(closest-side, rgba(16,207,201,.34), transparent 72%)}
+
+  .road-wrap{position:relative;min-width:0}
+  .road-wrap svg{width:100%;height:100%;display:block}
+  .road-base{fill:none;stroke:rgba(255,255,255,.14);stroke-width:10;stroke-linecap:round}
+  .road-dash{fill:none;stroke:rgba(255,255,255,.32);stroke-width:2;stroke-dasharray:2 14;stroke-linecap:round}
+  .road-marker{filter:drop-shadow(0 0 8px rgba(16,207,201,.9))}
+  .station{position:absolute;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;
+    border:2px solid var(--line);background:var(--navy-1);color:var(--muted);cursor:pointer;
+    font-family:var(--font-mono);font-size:13px;display:flex;align-items:center;justify-content:center;
+    transition:border-color .2s,color .2s,box-shadow .2s,background .2s;padding:0}
+  .station.done{border-color:var(--ocean);color:var(--sky)}
+  .station.live{border-color:var(--green);background:var(--green);color:#fff;
+    box-shadow:0 0 0 6px rgba(0,152,69,.22),0 0 18px rgba(0,152,69,.6)}
+  .station.finale{width:40px;height:40px;font-size:16px}
+
+  .loop-card{position:relative;display:flex;flex-direction:column;gap:10px;min-height:0;
+    background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px}
+  .loop-card .shot{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line);
+    background:var(--navy-0)}
+  .loop-card .shot::before{content:"";display:block;height:18px;
+    background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));
+    border-bottom:1px solid var(--line)}
+  .loop-card .shot img{width:100%;height:auto;max-height:290px;object-fit:cover;object-position:top}
+  .loop-badges{display:flex;align-items:center;gap:8px}
+  .sys-badge{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--sky);
+    border:1px solid rgba(16,207,201,.4);border-radius:999px;padding:3px 10px;text-transform:uppercase}
+  .sys-badge.tb{display:inline-flex;align-items:center;padding:3px 10px}
+  .sys-badge.tb img{height:16px;width:auto}
+  .loop-card h3{font-family:var(--font-display);font-weight:800;font-size:clamp(17px,1.7vw,21px);
+    text-transform:uppercase;letter-spacing:.02em}
+  .loop-card .say{font-size:13px;line-height:1.5;color:var(--muted);font-style:italic}
+  .card-swap{transition:opacity .25s ease}
+  .card-swap.fade{opacity:0}
+
+  /* mobile roadmap: dot strip + docked card (skimmed variant) */
+  .dot-strip{display:none}
+  @media (max-width:720px){
+    .loop-body{display:flex;flex-direction:column;gap:10px}
+    .loop-stella,.road-wrap{display:none}
+    .dot-strip{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+    .dot-strip .station{position:static;transform:none;width:30px;height:30px;font-size:12px}
+    .loop-card{flex:1 1 auto}
+    .loop-card .shot img{max-height:34vh}
+    .loop-play{padding:6px 13px}
+  }
+
   /* ===== MOTION (earns its place; guarded) ===== */
   @media (prefers-reduced-motion:no-preference){
     .rise{opacity:0;transform:translateY(14px);animation:rise .7s ease forwards}
@@ -174,7 +243,42 @@
   </div>
 </section>
 
-<!-- ============ SECTION: loop (patch 2) ============ -->
+<!-- ============ SECTION: loop ============ -->
+<section class="sec" id="sec-loop" data-s="loop" aria-label="How the certification works">
+  <div class="loop-head">
+    <p class="eyebrow">How it works</p>
+    <h2 class="loop-title">One loop. Four times. Certified.</h2>
+    <button class="loop-play" id="loopPlay" aria-pressed="true">❚❚ Pause tour</button>
+  </div>
+  <div class="loop-body">
+    <div class="loop-stella" aria-hidden="true">
+      <img src="images/Stella/Sella_map_01.png" alt="" width="594" height="1713" loading="lazy">
+    </div>
+    <div class="road-wrap">
+      <svg id="roadSvg" viewBox="0 0 700 470" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <path id="roadPath" class="road-base"
+          d="M 40 420 C 180 420, 240 340, 350 340 S 560 400, 640 330 S 520 210, 380 220 S 130 260, 90 180 S 260 90, 420 100 S 640 130, 660 60"/>
+        <path class="road-dash"
+          d="M 40 420 C 180 420, 240 340, 350 340 S 560 400, 640 330 S 520 210, 380 220 S 130 260, 90 180 S 260 90, 420 100 S 640 130, 660 60"/>
+        <circle id="roadMarker" class="road-marker" r="8" fill="#10CFC9"/>
+      </svg>
+      <div id="stationLayer"></div>
+    </div>
+    <div class="loop-card" aria-live="polite">
+      <div class="card-swap" id="cardSwap">
+        <div class="shot"><img id="cardImg" src="images/thumbnails/26_Q3_Overview_Thumb.webp" alt="" width="712" height="682"></div>
+        <div class="loop-badges" style="margin-top:10px">
+          <span class="sys-badge" id="badgeMt">Mindtickle</span>
+          <span class="sys-badge tb" id="badgeTb" hidden><img src="images/misc/Daves_Toolkit_Logo_Horizontal.webp" alt="Dave's AI ToolBox"></span>
+        </div>
+        <h3 id="cardTitle" style="margin-top:8px"></h3>
+        <p class="say" id="cardSay"></p>
+      </div>
+    </div>
+  </div>
+  <div class="dot-strip" id="dotStrip" aria-hidden="false"></div>
+</section>
+
 <!-- ============ SECTION: steps (patch 3) ============ -->
 <!-- ============ SECTION: prep (patch 4) ============ -->
 <!-- ============ SECTION: calendar (patch 5) ============ -->
@@ -193,6 +297,29 @@ const CONFIG = {
     toolbox: "https://daves-ai-toolbox.replit.app/"
   }
 };
+
+/* Roadmap stations — copy is Stella's narration (voice: terse, direct, lightly humorous) */
+const STATIONS = [
+  { sys:"mt", img:"images/thumbnails/26_Q3_Overview_Thumb.webp",  title:"Watch the module",
+    say:"Each step starts with a short module. Watch it in Mindtickle first — the ToolBox assumes you did." },
+  { sys:"tb", img:"images/misc/01_Daves_Toolbox.webp",            title:"Open Dave's AI ToolBox",
+    say:"Then hop over to the ToolBox. This is where the real work happens." },
+  { sys:"tb", img:"images/misc/02_Learner_Select.webp",           title:"Tell it who you are",
+    say:"Find your name in the Training Center. Three letters, no password drama." },
+  { sys:"tb", img:"images/misc/03_StartCert.webp",                title:"Start the certification",
+    say:"Hit Start Certification. Four steps, one deal, about an hour of your life." },
+  { sys:"tb", img:"images/misc/05_Opportunity_Select.webp",       title:"Pick your live deal",
+    say:"Sign in to Qlik and your pipeline loads. Pick a deal you actually want to win." },
+  { sys:"tb", img:"images/misc/06_Step1_Entry.webp",              title:"Work the activity",
+    say:"Do the step on that real deal. Your Blue Sheet data is already pre-filled." },
+  { sys:"tb", img:"images/misc/07_Grading_with_AI.webp",          title:"Grade with AI",
+    say:"Submit for AI review. It checks the craft in seconds and tells you exactly what to fix." },
+  { sys:"tb", img:"images/misc/08_Step_Passed.webp",              title:"Manager signs off",
+    say:"Pass, and it goes straight to your manager. Their approval unlocks the next step." },
+  { sys:"mt", img:"images/thumbnails/26_Q3_Survey_Thumb.webp",    title:"×4 → survey → certified", finale:true,
+    say:"Do that loop four times, knock out the final survey in Mindtickle, and you're certified. Again from the top?" }
+];
+const DWELL_MS = 6000, TRAVEL_MS = 1300;
 
 /* ===== ROUTER — ?s=<section> shows one section (widget mode); no param = preview all ===== */
 (function () {
@@ -216,6 +343,100 @@ const CONFIG = {
     document.getElementById("ua").textContent = navigator.userAgent;
     window.addEventListener("resize", report);
     report();
+  }
+
+  /* ===== roadmap engine — active whenever #sec-loop is rendered ===== */
+  const loopSec = document.getElementById("sec-loop");
+  if (loopSec && (loopSec.classList.contains("on") || document.body.dataset.view === "all")) {
+    const path = document.getElementById("roadPath");
+    const marker = document.getElementById("roadMarker");
+    const layer = document.getElementById("stationLayer");
+    const strip = document.getElementById("dotStrip");
+    const swap = document.getElementById("cardSwap");
+    const playBtn = document.getElementById("loopPlay");
+    const els = {
+      img: document.getElementById("cardImg"), title: document.getElementById("cardTitle"),
+      say: document.getElementById("cardSay"), mt: document.getElementById("badgeMt"),
+      tb: document.getElementById("badgeTb")
+    };
+    const total = path.getTotalLength();
+    const N = STATIONS.length;
+    const frac = STATIONS.map(function (_, i) { return i / (N - 1); });
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let cur = 0, playing = !reduced, timer = null, raf = null;
+
+    /* station buttons on both surfaces (road overlay + mobile dot strip) */
+    const btns = [], dots = [];
+    STATIONS.forEach(function (s, i) {
+      const pt = path.getPointAtLength(frac[i] * total);
+      const b = document.createElement("button");
+      b.className = "station" + (s.finale ? " finale" : "");
+      b.textContent = s.finale ? "★" : (i + 1);
+      b.setAttribute("aria-label", "Station " + (i + 1) + ": " + s.title);
+      b.style.left = (pt.x / 700 * 100) + "%";
+      b.style.top = (pt.y / 470 * 100) + "%";
+      b.addEventListener("click", function () { jump(i); });
+      layer.appendChild(b); btns.push(b);
+      const d = b.cloneNode(true);
+      d.addEventListener("click", function () { jump(i); });
+      strip.appendChild(d); dots.push(d);
+    });
+
+    function setMarker(f) {
+      const pt = path.getPointAtLength(f * total);
+      marker.setAttribute("cx", pt.x); marker.setAttribute("cy", pt.y);
+    }
+    function paintCard(i) {
+      const s = STATIONS[i];
+      swap.classList.add("fade");
+      setTimeout(function () {
+        els.img.src = s.img; els.img.alt = s.title;
+        els.title.textContent = s.title; els.say.textContent = s.say;
+        els.mt.hidden = s.sys !== "mt"; els.tb.hidden = s.sys !== "tb";
+        swap.classList.remove("fade");
+      }, reduced ? 0 : 220);
+      btns.concat(dots).forEach(function (b, k) {
+        const idx = k % N;
+        b.classList.toggle("live", idx === i);
+        b.classList.toggle("done", idx < i);
+      });
+      const next = STATIONS[(i + 1) % N];
+      const pre = new Image(); pre.src = next.img;   /* preload the next stop */
+    }
+    function travel(from, to, done) {
+      if (reduced) { setMarker(frac[to]); return done(); }
+      const t0 = performance.now();
+      const step = function (t) {
+        const p = Math.min(1, (t - t0) / TRAVEL_MS);
+        const e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;  /* easeInOutQuad */
+        setMarker(frac[from] + (frac[to] - frac[from]) * e);
+        if (p < 1) raf = requestAnimationFrame(step); else done();
+      };
+      raf = requestAnimationFrame(step);
+    }
+    function schedule() {
+      if (!playing) return;
+      timer = setTimeout(function () {
+        const nxt = (cur + 1) % N;
+        travel(cur, nxt, function () { cur = nxt; paintCard(cur); schedule(); });
+      }, DWELL_MS);
+    }
+    function halt() { clearTimeout(timer); if (raf) cancelAnimationFrame(raf); }
+    function jump(i) {
+      halt(); cur = i; setMarker(frac[i]); paintCard(i);
+      if (playing) schedule();
+    }
+    playBtn.addEventListener("click", function () {
+      playing = !playing;
+      playBtn.setAttribute("aria-pressed", String(playing));
+      playBtn.textContent = playing ? "❚❚ Pause tour" : "▶ Play tour";
+      halt(); if (playing) schedule();
+    });
+    loopSec.addEventListener("mouseenter", halt);
+    loopSec.addEventListener("mouseleave", function () { halt(); if (playing) schedule(); });
+
+    if (reduced) { playing = false; playBtn.textContent = "▶ Play tour"; playBtn.setAttribute("aria-pressed", "false"); }
+    setMarker(0); paintCard(0); if (playing) schedule();
   }
 })();
 </script>
