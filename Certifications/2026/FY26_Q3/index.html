@@ -132,7 +132,8 @@
      SECTION: loop  (?s=loop) — straight-rail walkthrough
      Budget: 520px desktop / 760px mobile
      ===================================================== */
-  #sec-loop{flex-direction:column;gap:clamp(12px,1.8vw,20px)}
+  #sec-loop{flex-direction:column;gap:clamp(10px,1.4vw,16px);
+    padding-top:clamp(16px,2vw,26px);padding-bottom:clamp(16px,2vw,26px)}
   .loop-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
   .loop-title{font-family:var(--font-display);font-weight:800;font-size:clamp(24px,3vw,34px);
     text-transform:uppercase;letter-spacing:.02em}
@@ -161,41 +162,60 @@
   .station.finale{font-size:15px}
 
   /* horizontal card: image left, narration right */
-  .loop-card{position:relative;display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);
-    gap:clamp(14px,2.4vw,26px);align-items:center;flex:1 1 auto;min-height:0;
+  .loop-card{position:relative;display:grid;grid-template-columns:minmax(0,36%) minmax(0,1fr);
+    gap:clamp(12px,2vw,22px);align-items:start;flex:1 1 auto;min-height:0;
     background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:var(--radius);
-    padding:clamp(14px,1.8vw,20px);overflow:hidden}
-  /* screenshot treatment: the FULL screenshot is always shown (contain — never cropped).
-     Dead space fills with a blurred echo of the same image; a framed, slightly tilted
-     "specimen" presentation makes varied capture sizes read as intentional. */
-  .loop-card .shot{position:relative;height:clamp(220px,24vw,300px);overflow:hidden;border-radius:12px;
+    padding:clamp(12px,1.6vw,18px);overflow:hidden}
+  /* thumbnail treatment: uniform module art, framed, gentle alternating tilt */
+  .loop-card .shot{position:relative;height:clamp(180px,19vw,240px);overflow:hidden;border-radius:12px;
     border:1px solid rgba(255,255,255,.16);background:var(--navy-0);
     box-shadow:0 14px 30px -14px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.04);
     transform:rotate(-1.1deg)}
   .loop-card.alt .shot{transform:rotate(1.1deg)}
-  .loop-card .shot .bg{position:absolute;inset:-10%;background-size:cover;background-position:center;
-    filter:blur(20px) saturate(1.15);opacity:.45}
-  .loop-card .shot img{position:relative;z-index:1;width:100%;height:100%;object-fit:contain;
-    padding:10px}
+  .loop-card .shot img{width:100%;height:100%;object-fit:contain;padding:8px}
+  .loop-card.noimg{display:flex}
+  .loop-card.noimg .shot{display:none}
   .loop-info{display:flex;flex-direction:column;gap:9px;min-width:0}
-  .subs{list-style:none;counter-reset:st;display:flex;flex-direction:column;gap:5px;margin-top:2px}
-  .subs li{counter-increment:st;font-size:12.5px;color:var(--muted);display:flex;gap:8px;line-height:1.4}
-  .subs li::before{content:counter(st);flex:0 0 auto;width:17px;height:17px;border-radius:50%;
+
+  /* audience designation: who completes what */
+  .aud{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+    border-radius:999px;padding:3px 10px;border:1px solid}
+  .aud.l{color:#7fe3a8;border-color:rgba(0,152,69,.55)}
+  .aud.m{color:var(--sky);border-color:rgba(16,207,201,.5)}
+  .aud.all{color:var(--ink);border-color:var(--line);
+    background:linear-gradient(90deg,rgba(0,152,69,.18),rgba(16,207,201,.18))}
+  .legend{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .mins{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:.08em}
+
+  /* sub-task walk: dim -> lit -> done */
+  .subs{list-style:none;counter-reset:st;display:flex;flex-direction:column;gap:3px;margin-top:2px}
+  .subs li{counter-increment:st;font-size:12px;color:var(--muted);display:flex;gap:8px;line-height:1.35;
+    align-items:flex-start;padding:2px 6px;border-radius:8px;opacity:.55;
+    transition:opacity .3s ease,background .3s ease}
+  .subs li span:first-child{flex:1 1 auto;min-width:0}
+  .subs li::before{content:counter(st);flex:0 0 auto;width:16px;height:16px;border-radius:50%;
     border:1px solid rgba(16,207,201,.4);color:var(--sky);font-family:var(--font-mono);font-size:10px;
-    display:flex;align-items:center;justify-content:center;margin-top:1px}
+    display:flex;align-items:center;justify-content:center;margin-top:1px;
+    transition:background .3s ease,color .3s ease,border-color .3s ease}
+  .subs li .aud{flex:0 0 auto;padding:1px 7px;font-size:8.5px;margin-top:1px}
+  .subs li.lit{opacity:1;background:rgba(0,152,69,.14);color:var(--ink)}
+  .subs li.lit::before{background:var(--green);border-color:var(--green);color:#fff}
+  .subs li.done{opacity:.85}
+  .subs li.done::before{content:"✓";border-color:rgba(16,207,201,.6)}
+  @media (prefers-reduced-motion:reduce){.subs li{opacity:1}}
   .loop-badges{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .sys-badge{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--sky);
     border:1px solid rgba(16,207,201,.4);border-radius:999px;padding:3px 10px;text-transform:uppercase}
   .sys-badge.tb{display:inline-flex;align-items:center;padding:3px 10px}
   .sys-badge.tb img{height:16px;width:auto}
   .sys-badge.xbadge{color:#7fe3a8;border-color:rgba(0,152,69,.5)}
-  .loop-card h3{font-family:var(--font-display);font-weight:800;font-size:clamp(19px,2vw,25px);
+  .loop-card h3{font-family:var(--font-display);font-weight:800;font-size:clamp(17px,1.8vw,22px);
     text-transform:uppercase;letter-spacing:.02em}
-  .say-row{display:flex;gap:10px;align-items:flex-start}
-  .say-row .ava{width:38px;height:38px;border-radius:50%;flex:0 0 auto;overflow:hidden;
+  .say-row{display:flex;gap:9px;align-items:flex-start}
+  .say-row .ava{width:32px;height:32px;border-radius:50%;flex:0 0 auto;overflow:hidden;
     border:2px solid rgba(16,207,201,.5)}
   .say-row .ava img{width:100%;height:100%;object-fit:cover;object-position:50% 6%}
-  .loop-card .say{font-size:clamp(13px,1.3vw,14.5px);line-height:1.55;color:var(--muted);font-style:italic}
+  .loop-card .say{font-size:clamp(12px,1.2vw,13.5px);line-height:1.45;color:var(--muted);font-style:italic}
   .card-swap{display:contents}
   .fade-t .shot img,.fade-t .loop-info{opacity:0}
   .shot img,.loop-info{transition:opacity .25s ease}
@@ -203,7 +223,11 @@
   /* mobile: stacked card, same rail */
   @media (max-width:720px){
     .loop-card{display:flex;flex-direction:column;align-items:stretch}
-    .loop-card .shot{height:32vh}
+    .loop-card .shot{height:24vh;min-height:150px}
+    .subs li{font-size:11.5px}
+    .subs li .aud{display:none}
+    .subs li.lit .aud{display:inline-block}
+    @media (prefers-reduced-motion:reduce){.subs li .aud{display:inline-block}}
     .rail .track{left:14px;right:14px}
     .station{width:30px;height:30px;font-size:12px}
     .loop-play{padding:6px 13px}
@@ -215,11 +239,6 @@
 
   /* ===== MOTION (earns its place; guarded) ===== */
   @media (prefers-reduced-motion:no-preference){
-    .loop-card .shot .bg{animation:drift 11s ease-in-out infinite alternate}
-    @keyframes drift{
-      0%{transform:scale(1) translate(0,0)}
-      100%{transform:scale(1.08) translate(-1.5%,1.5%)}
-    }
     .rise{opacity:0;transform:translateY(14px);animation:rise .7s ease forwards}
     .rise.d1{animation-delay:.08s}.rise.d2{animation-delay:.16s}
     .rise.d3{animation-delay:.24s}.rise.d4{animation-delay:.32s}.rise.d5{animation-delay:.4s}
@@ -269,6 +288,9 @@
   <div class="loop-head">
     <p class="eyebrow">How it works</p>
     <h2 class="loop-title">One loop. Four times. Certified.</h2>
+    <div class="legend" aria-hidden="true">
+      <span class="aud l">Learner</span><span class="aud m">Manager</span><span class="aud all">Everyone</span>
+    </div>
     <button class="loop-play" id="loopPlay" aria-pressed="true">❚❚ Pause tour</button>
   </div>
   <div class="rail">
@@ -278,13 +300,9 @@
   </div>
   <div class="loop-card" aria-live="polite">
     <div class="card-swap" id="cardSwap">
-      <div class="shot"><div class="bg" id="cardBg"></div><img id="cardImg" src="images/thumbnails/26_Q3_Overview_Thumb.webp" alt="" width="712" height="682"></div>
+      <div class="shot"><img id="cardImg" src="images/thumbnails/26_Q3_Overview_Thumb.webp" alt="" width="1125" height="750"></div>
       <div class="loop-info">
-        <div class="loop-badges">
-          <span class="sys-badge" id="badgeMt">Mindtickle</span>
-          <span class="sys-badge tb" id="badgeTb" hidden><img src="images/misc/Daves_Toolkit_Logo_Horizontal.webp" alt="Dave's AI ToolBox"></span>
-          <span class="sys-badge xbadge" id="badgeX" hidden>Manager checkpoint</span>
-        </div>
+        <div class="loop-badges" id="audRow"></div>
         <h3 id="cardTitle"></h3>
         <div class="say-row">
           <span class="ava" aria-hidden="true"><img src="images/Stella/Stella_ThumbsUp_1%20-%20Edited.png" alt=""></span>
@@ -315,38 +333,57 @@ const CONFIG = {
   }
 };
 
-/* Walkthrough stops — 9. Each stop carries its sub-steps in order.
-   sys: "mt" | "tb" | "both" (module + activity). x:true = the AI + manager gate. */
+/* The full module map — every launch-state module from the learning-paths sheet.
+   aud: "l" learner-only | "m" manager-only | "all". mins from the sheet (validate before launch).
+   Each sub has its own audience tag: {t:"...", a:"l"|"m"|"all"}. */
 const STATIONS = [
-  { sys:"mt", img:"images/thumbnails/26_Q3_Overview_Thumb.webp", title:"Watch the modules",
-    say:"Start in Mindtickle. Short modules, in order — and after Step 1, the app assigns each next module automatically as you earn it.",
-    subs:["Introduction to Built to Win","Overview of Activities","Step modules arrive automatically as you progress"] },
-  { sys:"tb", img:"images/misc/02_Learner_Select.webp", title:"Open the ToolBox",
-    say:"Home base for every activity in this certification.",
-    subs:["Open Dave's AI ToolBox","Training Center → Certifications – Learner","Open Built to Win","Sign in with Qlik if prompted"] },
-  { sys:"tb", img:"images/misc/05_Opportunity_Select.webp", title:"Pick your deal",
-    say:"Choose wisely — this one rides with you through all four steps.",
-    subs:["Early-to-mid-stage deal you want to win","Completed Blue Sheet","Same deal for every step"] },
-  { sys:"both", img:"images/thumbnails/26_Q3_Step1_Thumb.webp", title:"Step 1 — First Contact",
+  { aud:"all", mins:6, title:"Introduction to Built to Win",
+    say:"Everyone starts here — learners and managers alike.",
+    subs:[{t:"Watch the intro module",a:"all"},
+          {t:"What this cert is and why it exists",a:"all"}] },
+  { aud:"m", mins:11, img:"images/thumbnails/26_Q3_Managers_Thumb.webp", title:"For People Leaders Only",
+    say:"Managers, this one's yours. Learners skip ahead.",
+    subs:[{t:"Manager-facing content + the Manager Guide",a:"m"},
+          {t:"All modules assigned to you up front",a:"m"},
+          {t:"You review and approve activities — you don't complete them",a:"m"}] },
+  { aud:"all", mins:5, img:"images/thumbnails/26_Q3_Overview_Thumb.webp", title:"Overview of Activities",
+    say:"A quick video on how the ToolBox activities work.",
+    subs:[{t:"Watch the overview video",a:"all"},
+          {t:"Managers: this is what your team will be building",a:"m"}] },
+  { aud:"all", mins:14, img:"images/thumbnails/26_Q3_Step1_Thumb.webp", title:"Step 1 — First Contact",
     say:"Map the people who actually decide this deal.",
-    subs:["Watch the Step 1 module","Open the activity — Blue Sheet data pre-fills","Map Economic, Technical & User influences, plus your Coach","Result, personal win, and gap-if-nothing for each","Submit when it's tight"] },
-  { sys:"tb", x:true, img:"images/misc/08_Step_Passed.webp", title:"The gate — after every step",
-    say:"Every step ends here. Two reviewers, two different jobs.",
-    subs:["Claude grades the craft in seconds, flags exact fixes","Pass → your manager reviews the strategy","Approval unlocks the next module automatically"] },
-  { sys:"both", img:"images/thumbnails/26_Q3_Step2_Thumb.webp", title:"Step 2 — Building Value",
-    say:"Turn the map into a story someone repeats when you're not in the room.",
-    subs:["Watch the Step 2 module","Pick one Buying Influence from your map","Write their tailored value story","Submit → AI → manager"] },
-  { sys:"both", img:"images/thumbnails/26_Q3_Step3_Thumb.webp", title:"Step 3 — Good / Better / Best",
+    subs:[{t:"Watch the Step 1 module",a:"all"},
+          {t:"ToolBox: pick your live deal — early-to-mid stage, Blue Sheet complete",a:"l"},
+          {t:"Build the Buying Influence Outcome Map — influences, wins, gaps",a:"l"},
+          {t:"Submit — Claude grades it, flags exact fixes",a:"l"},
+          {t:"Review the strategy and approve",a:"m"},
+          {t:"Next module auto-assigns on approval",a:"l"}] },
+  { aud:"all", mins:15, img:"images/thumbnails/26_Q3_Step2_Thumb.webp", title:"Step 2 — Building Value",
+    say:"Turn the map into a story they repeat without you.",
+    subs:[{t:"Watch the Step 2 module",a:"all"},
+          {t:"Write the tailored value story for one Buying Influence — same deal",a:"l"},
+          {t:"Submit — AI grade in seconds",a:"l"},
+          {t:"Approve to unlock Step 3",a:"m"}] },
+  { aud:"all", mins:18, img:"images/thumbnails/26_Q3_Step3_Thumb.webp", title:"Step 3 — Good / Better / Best",
     say:"Three tiers, buyer-outcome language, zero pricing.",
-    subs:["Watch the Step 3 module","Build the Good / Better / Best tiers","Trace every compromise to a Step 1 outcome","Submit → AI → manager"] },
-  { sys:"both", img:"images/thumbnails/26_Q3_Step4_Thumb.webp", title:"Step 4 — Value, Not Price",
+    subs:[{t:"Watch the Step 3 module",a:"all"},
+          {t:"Build the tiers — every compromise traces to a Step 1 outcome",a:"l"},
+          {t:"Submit — AI grade",a:"l"},
+          {t:"Approve to unlock Step 4",a:"m"}] },
+  { aud:"all", mins:11, img:"images/thumbnails/26_Q3_Step4_Thumb.webp", title:"Step 4 — Value, Not Price",
     say:"The pushback is coming. Walk in with the answer.",
-    subs:["Watch the Step 4 module","Write the price-objection reframe","Anchor to an outcome, end on a question","Submit → AI → manager"] },
-  { sys:"mt", finale:true, img:"images/misc/19_Step4_Approved_Email.webp", title:"Report, survey, certified",
-    say:"You cross the line with something you'll actually use.",
-    subs:["Final email delivers your Certification Completion Report","Your full build — submissions, AI feedback, manager comments — deal-review ready","Back to Mindtickle for the quick exit survey","Certified"] }
+    subs:[{t:"Watch the Step 4 module",a:"all"},
+          {t:"Write the price-objection reframe — outcome-anchored, no discounts",a:"l"},
+          {t:"Submit — AI grade",a:"l"},
+          {t:"Final approval — that's all four",a:"m"}] },
+  { aud:"all", mins:5, finale:true, img:"images/thumbnails/26_Q3_Survey_Thumb.webp", title:"The finish line",
+    say:"Cross it with something you'll actually use.",
+    subs:[{t:"Completion Report lands in your email — deal-review ready",a:"l"},
+          {t:"Exit survey: Quick Survey for Sales & Renewals",a:"l"},
+          {t:"Exit survey: Quick Survey for People Leaders",a:"m"},
+          {t:"Certified",a:"all"}] }
 ];
-const DWELL_MS = 6000, TRAVEL_MS = 900;
+const SUB_DWELL_MS = 2200, TRAVEL_MS = 900;
 
 /* ===== ROUTER — ?s=<section> shows one section (widget mode); no param = preview all ===== */
 (function () {
@@ -381,8 +418,7 @@ const DWELL_MS = 6000, TRAVEL_MS = 900;
     const playBtn = document.getElementById("loopPlay");
     const els = {
       img: document.getElementById("cardImg"), title: document.getElementById("cardTitle"),
-      say: document.getElementById("cardSay"), mt: document.getElementById("badgeMt"),
-      tb: document.getElementById("badgeTb"), x: document.getElementById("badgeX")
+      say: document.getElementById("cardSay")
     };
     const N = STATIONS.length;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -407,20 +443,33 @@ const DWELL_MS = 6000, TRAVEL_MS = 900;
       });
     }
     function setMarker(px) { marker.style.left = px + "px"; }
+    const AUD_LABEL = { l: "Learner", m: "Manager", all: "Everyone" };
     function paintCard(i) {
       const s = STATIONS[i];
       swap.parentElement.classList.add("fade-t");
       setTimeout(function () {
-        els.img.src = s.img; els.img.alt = s.title;
-        document.getElementById("cardBg").style.backgroundImage = "url('" + s.img + "')";
+        if (s.img) { els.img.src = s.img; els.img.alt = s.title; }
+        swap.parentElement.classList.toggle("noimg", !s.img);
         els.title.textContent = s.title; els.say.textContent = s.say;
-        els.mt.hidden = !(s.sys === "mt" || s.sys === "both");
-        els.tb.hidden = !(s.sys === "tb" || s.sys === "both");
-        els.x.hidden = !s.x;
+        const row = document.getElementById("audRow");
+        row.textContent = "";
+        const chip = document.createElement("span");
+        chip.className = "aud " + s.aud; chip.textContent = AUD_LABEL[s.aud];
+        row.appendChild(chip);
+        if (s.mins) {
+          const m = document.createElement("span");
+          m.className = "mins"; m.textContent = "· ~" + s.mins + " min";
+          row.appendChild(m);
+        }
         const ol = document.getElementById("cardSubs");
         ol.textContent = "";
-        (s.subs || []).forEach(function (t) {
-          const li = document.createElement("li"); li.textContent = t; ol.appendChild(li);
+        s.subs.forEach(function (sub) {
+          const li = document.createElement("li");
+          const txt = document.createElement("span"); txt.textContent = sub.t;
+          const tag = document.createElement("span");
+          tag.className = "aud " + sub.a; tag.textContent = AUD_LABEL[sub.a];
+          li.appendChild(txt); li.appendChild(tag);
+          ol.appendChild(li);
         });
         swap.parentElement.classList.toggle("alt", i % 2 === 1);
         swap.parentElement.classList.remove("fade-t");
@@ -430,7 +479,23 @@ const DWELL_MS = 6000, TRAVEL_MS = 900;
         b.classList.toggle("done", idx < i);
       });
       const next = STATIONS[(i + 1) % N];
-      const pre = new Image(); pre.src = next.img;   /* preload the next stop */
+      if (next.img) { const pre = new Image(); pre.src = next.img; }
+    }
+    /* walk the sub-tasks: highlight each in sequence, mark done, then travel on */
+    function walkSubs(then) {
+      if (reduced) return;   /* static mode: everything visible, no walk */
+      let k = 0;
+      const step = function () {
+        const items = document.querySelectorAll("#cardSubs li");  /* live query — card repaints async */
+        items.forEach(function (li, j) {
+          li.classList.toggle("lit", j === k);
+          li.classList.toggle("done", j < k);
+        });
+        if (k < items.length) {
+          k++; timer = setTimeout(step, SUB_DWELL_MS);
+        } else { then(); }
+      };
+      timer = setTimeout(step, 500);
     }
     function travel(from, to, done) {
       const c = centers();
@@ -446,10 +511,12 @@ const DWELL_MS = 6000, TRAVEL_MS = 900;
     }
     function schedule() {
       if (!playing) return;
-      timer = setTimeout(function () {
-        const nxt = (cur + 1) % N;
-        travel(cur, nxt, function () { cur = nxt; paintCard(cur); schedule(); });
-      }, DWELL_MS);
+      walkSubs(function () {
+        timer = setTimeout(function () {
+          const nxt = (cur + 1) % N;
+          travel(cur, nxt, function () { cur = nxt; paintCard(cur); schedule(); });
+        }, 600);
+      });
     }
     function halt() { clearTimeout(timer); if (raf) cancelAnimationFrame(raf); }
     function jump(i) {
