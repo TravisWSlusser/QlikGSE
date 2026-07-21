@@ -76,7 +76,7 @@
   #sec-hero .streaks i:nth-child(3){top:30%;width:22%;opacity:.3}
   .hero-copy{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;
     gap:clamp(8px,1.3vw,14px);flex:1 1 auto;
-    max-width:min(620px, calc(100% - clamp(200px,25vw,330px)))}
+    max-width:min(620px, calc(100% - clamp(250px,30vw,390px)))}
   .eyebrow{font-family:var(--font-mono);font-size:clamp(11px,1.2vw,13px);letter-spacing:.22em;
     color:var(--sky);text-transform:uppercase}
   .lockup{font-family:var(--font-display);font-weight:900;text-transform:uppercase;
@@ -99,19 +99,20 @@
   .windows{display:flex;flex-direction:column;gap:2px;font-size:12.5px;color:var(--muted)}
   .windows b{color:var(--ink);font-weight:600}
 
-  /* Stella, hero staging: absolute floor anchor + grounding platform (shadow + sky glow) */
-  #sec-hero .stella{position:absolute;right:clamp(10px,4vw,60px);bottom:0;z-index:1;
-    height:min(90%,470px);align-self:auto}
-  #sec-hero .stella img{height:calc(100% - 16px);width:auto;margin-bottom:12px;object-position:bottom}
-  #sec-hero .stella::before{content:"";position:absolute;left:50%;bottom:5px;transform:translateX(-50%);
-    width:118%;height:26px;border-radius:50%;
+  /* Stella, hero staging: absolute floor anchor + grounding platform (shadow + sky glow).
+     Square-canvas victory pose: width-driven, bottom-anchored, head/fist always in frame. */
+  #sec-hero .stella{position:absolute;right:clamp(6px,3vw,48px);bottom:0;z-index:1;
+    width:clamp(240px,28vw,360px);height:auto;align-self:auto}
+  #sec-hero .stella img{width:100%;height:auto;margin-bottom:10px;object-position:bottom}
+  #sec-hero .stella::before{content:"";position:absolute;left:47%;bottom:4px;transform:translateX(-50%);
+    width:84%;height:24px;border-radius:50%;
     background:radial-gradient(closest-side, rgba(0,0,0,.5), transparent 70%)}
-  #sec-hero .stella::after{content:"";position:absolute;left:50%;bottom:8px;transform:translateX(-50%);
-    width:94%;height:15px;border-radius:50%;
+  #sec-hero .stella::after{content:"";position:absolute;left:47%;bottom:7px;transform:translateX(-50%);
+    width:64%;height:14px;border-radius:50%;
     background:radial-gradient(closest-side, rgba(16,207,201,.38), transparent 72%)}
 
-  /* narrator line: speech bubble at her shoulder, clear of the bottom edge */
-  .stella-say{position:absolute;z-index:2;right:clamp(250px,27vw,380px);top:24%;
+  /* narrator line: speech bubble beside her, clear of the bottom edge */
+  .stella-say{position:absolute;z-index:2;right:clamp(270px,32vw,430px);top:24%;
     max-width:185px;font-size:12.5px;font-style:italic;line-height:1.45;color:var(--ink);
     text-align:right;background:rgba(255,255,255,.05);border:1px solid var(--line);
     border-radius:12px 12px 2px 12px;padding:10px 13px;backdrop-filter:blur(6px)}
@@ -123,7 +124,7 @@
     .hero-copy{max-width:none;justify-content:flex-start;gap:9px}
     .lockup{font-size:clamp(56px,17vw,72px)}
     .arc{font-size:13px}
-    #sec-hero .stella{right:4px;height:34%;min-height:180px}
+    #sec-hero .stella{right:-14px;width:44vw;max-width:190px;min-width:150px}
     #sec-hero .streaks i{display:none}
     .cta-row{margin-bottom:14px}
   }
@@ -281,7 +282,7 @@
   </div>
   <p class="stella-say">Grab your Blue Sheet.<br>I'll walk you through the rest.</p>
   <div class="stella" aria-hidden="true">
-    <img src="images/Stella/Stella_ThumbsUp_1%20-%20Edited.png" alt="" width="720" height="1280" loading="eager">
+    <img src="images/Stella/Stella_hero_01.png" alt="" width="700" height="700" loading="eager">
   </div>
 </section>
 
