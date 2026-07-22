@@ -129,14 +129,16 @@
      SECTION: loop  (?s=loop) — straight-rail walkthrough
      Budget: 520px desktop / 760px mobile
      ===================================================== */
-  #sec-loop{flex-direction:column;gap:clamp(10px,1.4vw,16px);
-    padding-top:clamp(16px,2vw,26px);padding-bottom:clamp(16px,2vw,26px)}
+  #sec-loop{flex-direction:column;gap:clamp(8px,1.2vw,14px);
+    padding-top:clamp(14px,1.8vw,22px);padding-bottom:clamp(56px,7vh,64px)}
   .loop-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
-  .loop-title{font-family:var(--font-display);font-weight:800;font-size:clamp(24px,3vw,34px);
+  .loop-title{font-family:var(--font-display);font-weight:800;font-size:clamp(22px,2.6vw,30px);
     text-transform:uppercase;letter-spacing:.02em}
-  .loop-play{margin-left:auto;font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;
-    color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);
-    border-radius:999px;padding:8px 16px;cursor:pointer}
+  .loop-play{position:absolute;right:clamp(18px,4vw,56px);bottom:12px;width:42px;height:42px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-mono);font-size:14px;line-height:1;color:var(--ink);
+    background:var(--navy-1);border:1px solid var(--line);border-radius:10px;cursor:pointer;
+    box-shadow:0 6px 16px -8px rgba(0,0,0,.6)}
   .loop-play:hover{border-color:var(--sky);color:var(--sky)}
 
   /* the rail: one straight line, stops on top, marker sliding along */
@@ -160,7 +162,7 @@
 
   /* horizontal card: image left, narration right */
   .loop-card{position:relative;display:grid;grid-template-columns:minmax(0,30%) minmax(0,1fr);
-    gap:clamp(12px,2vw,22px);align-items:start;flex:1 1 auto;min-height:0;
+    gap:clamp(12px,2vw,22px);align-items:center;flex:1 1 auto;min-height:0;
     background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:var(--radius);
     padding:clamp(12px,1.6vw,18px);overflow:hidden}
   /* thumbnail treatment: uniform module art, framed, gentle alternating tilt */
@@ -229,7 +231,7 @@
     @media (prefers-reduced-motion:reduce){.subs li .aud{display:inline-block}}
     .rail .track{left:14px;right:14px}
     .station{width:30px;height:30px;font-size:12px}
-    .loop-play{padding:6px 13px}
+    .loop-play{right:14px;bottom:10px;width:38px;height:38px}
   }
   @media (max-width:430px){
     .station{width:26px;height:26px;font-size:11px}
@@ -286,11 +288,10 @@
 <section class="sec" id="sec-loop" data-s="loop" aria-label="How the certification works">
   <div class="loop-head">
     <p class="eyebrow">How it works</p>
-    <h2 class="loop-title">One loop. Four times. Certified.</h2>
+    <h2 class="loop-title">The Flow of Operations</h2>
     <div class="legend" aria-hidden="true">
       <span class="aud l">Learner</span><span class="aud m">Manager</span><span class="aud ai">AI</span><span class="aud all">Manager + Learner</span>
     </div>
-    <button class="loop-play" id="loopPlay" aria-pressed="true">❚❚ Pause tour</button>
   </div>
   <div class="rail">
     <div class="track" aria-hidden="true"></div>
@@ -311,6 +312,7 @@
       </div>
     </div>
   </div>
+  <button class="loop-play" id="loopPlay" aria-pressed="true" aria-label="Pause tour">❚❚</button>
 </section>
 
 <!-- ============ SECTION: steps (patch 3) ============ -->
@@ -536,14 +538,15 @@ const SUB_DWELL_MS = 2200, TRAVEL_MS = 900;
     playBtn.addEventListener("click", function () {
       playing = !playing;
       playBtn.setAttribute("aria-pressed", String(playing));
-      playBtn.textContent = playing ? "❚❚ Pause tour" : "▶ Play tour";
+      playBtn.textContent = playing ? "❚❚" : "▶";
+      playBtn.setAttribute("aria-label", playing ? "Pause tour" : "Play tour");
       halt(); if (playing) schedule();
     });
     loopSec.addEventListener("mouseenter", halt);
     loopSec.addEventListener("mouseleave", function () { halt(); if (playing) schedule(); });
     window.addEventListener("resize", function () { setMarker(centers()[cur]); });
 
-    if (reduced) { playing = false; playBtn.textContent = "▶ Play tour"; playBtn.setAttribute("aria-pressed", "false"); }
+    if (reduced) { playing = false; playBtn.textContent = "▶"; playBtn.setAttribute("aria-label", "Play tour"); playBtn.setAttribute("aria-pressed", "false"); }
     setMarker(centers()[0]); paintCard(0); if (playing) schedule();
   }
 })();
