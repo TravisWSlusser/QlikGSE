@@ -129,12 +129,12 @@
      SECTION: loop  (?s=loop) — straight-rail walkthrough
      Budget: 520px desktop / 760px mobile
      ===================================================== */
-  #sec-loop{flex-direction:column;gap:clamp(8px,1.2vw,14px);
-    padding-top:clamp(14px,1.8vw,22px);padding-bottom:clamp(56px,7vh,64px)}
+  #sec-loop{flex-direction:column;gap:clamp(6px,1vw,10px);
+    padding:clamp(10px,1.4vw,16px) clamp(14px,2.6vw,36px) 50px}
   .loop-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
   .loop-title{font-family:var(--font-display);font-weight:800;font-size:clamp(22px,2.6vw,30px);
     text-transform:uppercase;letter-spacing:.02em}
-  .loop-play{position:absolute;right:clamp(18px,4vw,56px);bottom:12px;width:42px;height:42px;
+  .loop-play{position:absolute;right:clamp(14px,2.6vw,36px);bottom:6px;width:40px;height:40px;
     display:flex;align-items:center;justify-content:center;
     font-family:var(--font-mono);font-size:14px;line-height:1;color:var(--ink);
     background:var(--navy-1);border:1px solid var(--line);border-radius:10px;cursor:pointer;
@@ -142,7 +142,7 @@
   .loop-play:hover{border-color:var(--sky);color:var(--sky)}
 
   /* the rail: one straight line, stops on top, marker sliding along */
-  .rail{position:relative;padding:10px 6px 4px}
+  .rail{position:relative;padding:6px 4px 2px}
   .rail .track{position:absolute;left:22px;right:22px;top:50%;height:4px;border-radius:2px;
     background:linear-gradient(90deg,rgba(0,152,69,.55),rgba(16,207,201,.45))}
   .rail .rmarker{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;
@@ -162,9 +162,9 @@
 
   /* horizontal card: image left, narration right */
   .loop-card{position:relative;display:grid;grid-template-columns:minmax(0,30%) minmax(0,1fr);
-    gap:clamp(12px,2vw,22px);align-items:center;flex:1 1 auto;min-height:0;
+    gap:clamp(10px,1.6vw,16px);align-items:center;flex:1 1 auto;min-height:0;
     background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:var(--radius);
-    padding:clamp(12px,1.6vw,18px);overflow:hidden}
+    padding:clamp(10px,1.2vw,14px);overflow:hidden}
   /* thumbnail treatment: uniform module art, framed, gentle alternating tilt */
   .loop-card .shot{position:relative;height:clamp(150px,16vw,210px);overflow:hidden;border-radius:12px;
     border:1px solid rgba(255,255,255,.16);background:var(--navy-0);
@@ -236,6 +236,52 @@
   @media (max-width:430px){
     .station{width:26px;height:26px;font-size:11px}
     .station.cross{border-width:3px}
+  }
+
+  /* =====================================================
+     SECTION: calendar  (?s=calendar) — cohort windows + countdowns
+     Budget: 460px desktop / 580px mobile
+     ===================================================== */
+  #sec-cal{flex-direction:column;gap:clamp(12px,1.6vw,18px);
+    padding-top:clamp(16px,2vw,24px);padding-bottom:clamp(16px,2vw,24px)}
+  .cal-cards{display:flex;flex-direction:column;gap:clamp(10px,1.4vw,16px);flex:1 1 auto;justify-content:center}
+  .cal-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(14px,3vw,40px);
+    align-items:center;background:rgba(255,255,255,.035);border:1px solid var(--line);
+    border-radius:var(--radius);padding:clamp(14px,1.8vw,20px) clamp(16px,2.2vw,26px);
+    transition:border-color .2s ease,transform .2s ease}
+  .cal-card:hover{border-color:rgba(16,207,201,.45);transform:translateY(-2px)}
+  .cal-card.closed{opacity:.55}
+  .cal-left{display:flex;flex-direction:column;gap:9px;min-width:0}
+  .cal-name{font-family:var(--font-display);font-weight:800;font-size:clamp(17px,1.8vw,22px);
+    text-transform:uppercase;letter-spacing:.02em}
+  .cal-dates{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);letter-spacing:.08em}
+  .winbar{position:relative;height:8px;border-radius:4px;background:rgba(255,255,255,.09);overflow:visible}
+  .winbar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:4px;
+    background:linear-gradient(90deg,var(--green),var(--sky))}
+  .winbar .today{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;
+    transform:translate(-50%,-50%);background:var(--sky);border:2px solid var(--navy-0);
+    box-shadow:0 0 10px rgba(16,207,201,.9)}
+  .cd{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+  .cd-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.22em;color:var(--sky);text-transform:uppercase}
+  .cd-cells{display:flex;gap:6px}
+  .cd-cell{display:flex;flex-direction:column;align-items:center;gap:2px;
+    background:var(--navy-0);border:1px solid var(--line);border-radius:8px;
+    padding:7px 8px;min-width:52px}
+  .cd-cell b{font-family:var(--font-mono);font-weight:400;font-size:clamp(19px,2vw,24px);
+    color:var(--ink);line-height:1;transition:transform .18s ease}
+  .cd-cell b.tick{transform:scale(1.18);color:var(--sky)}
+  .cd-cell i{font-family:var(--font-mono);font-style:normal;font-size:8.5px;letter-spacing:.16em;
+    color:var(--muted);text-transform:uppercase}
+  .cal-card.closed .cd-label{color:var(--muted)}
+  @media (prefers-reduced-motion:no-preference){
+    .winbar .today{animation:todaypulse 2.2s ease-in-out infinite}
+  }
+  @keyframes todaypulse{0%,100%{box-shadow:0 0 6px rgba(16,207,201,.7)}50%{box-shadow:0 0 16px rgba(16,207,201,1)}}
+  @media (max-width:720px){
+    .cal-card{display:flex;flex-direction:column;align-items:stretch;gap:12px}
+    .cd{align-items:flex-start}
+    .cd-cell{min-width:0;flex:1 1 auto}
+    .cd-cells{width:100%}
   }
 
   /* ===== MOTION (earns its place; guarded) ===== */
@@ -317,7 +363,18 @@
 
 <!-- ============ SECTION: steps (patch 3) ============ -->
 <!-- ============ SECTION: prep (patch 4) ============ -->
-<!-- ============ SECTION: calendar (patch 5) ============ -->
+<!-- ============ SECTION: calendar ============ -->
+<section class="sec" id="sec-cal" data-s="calendar" aria-label="Certification windows and countdowns">
+  <div class="loop-head">
+    <p class="eyebrow">When it happens</p>
+    <h2 class="loop-title">Windows &amp; Countdowns</h2>
+  </div>
+  <div class="say-row">
+    <span class="ava" aria-hidden="true"><img src="images/Stella/Stella_ThumbsUp_1%20-%20Edited.png" alt=""></span>
+    <p class="say">Due dates wait for no one. Start early, finish relaxed.</p>
+  </div>
+  <div class="cal-cards" id="calCards"></div>
+</section>
 
 <!-- ============ DIAGNOSTIC: canary — remove after height mechanism is confirmed ============ -->
 <section class="sec diag" data-s="canary" aria-label="Widget height diagnostic">
@@ -332,7 +389,14 @@ const CONFIG = {
   links: {
     /* TODO(Travis): replace with the Certification App page URL when it exists */
     certApp: "https://daves-ai-toolbox.replit.app/"
-  }
+  },
+  /* Cohort windows — from the learning-paths sheet (as of 14 Jul; VALIDATE before launch).
+     NOTE: the People Leaders due date is flagged in the sheet to change before Global Launch.
+     Due dates count down to 11:59 PM local time on the date given. */
+  cohorts: [
+    { label: "People Leaders", aud: "m", start: "2026-07-20", due: "2026-08-07" },
+    { label: "Sales & Renewal Quota Carriers", aud: "l", start: "2026-08-17", due: "2026-09-14" }
+  ]
 };
 
 /* The full module map — every launch-state module from the learning-paths sheet.
@@ -548,6 +612,74 @@ const SUB_DWELL_MS = 2200, TRAVEL_MS = 900;
 
     if (reduced) { playing = false; playBtn.textContent = "▶"; playBtn.setAttribute("aria-label", "Play tour"); playBtn.setAttribute("aria-pressed", "false"); }
     setMarker(centers()[0]); paintCard(0); if (playing) schedule();
+  }
+  /* ===== calendar engine — cohort windows + live countdowns ===== */
+  const calSec = document.getElementById("sec-cal");
+  if (calSec && (calSec.classList.contains("on") || document.body.dataset.view === "all")) {
+    const fmt = function (iso) {
+      const d = new Date(iso + "T00:00:00");
+      return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    };
+    const cardsBox = document.getElementById("calCards");
+    const cards = CONFIG.cohorts.map(function (c) {
+      const start = new Date(c.start + "T00:00:00").getTime();
+      const due = new Date(c.due + "T23:59:59").getTime();
+      const card = document.createElement("div");
+      card.className = "cal-card";
+      card.innerHTML =
+        '<div class="cal-left">' +
+          '<div class="loop-badges"><span class="aud ' + c.aud + '"></span></div>' +
+          '<h3 class="cal-name"></h3>' +
+          '<div class="winbar"><div class="fill"></div><div class="today"></div></div>' +
+          '<p class="cal-dates"></p>' +
+        '</div>' +
+        '<div class="cd"><p class="cd-label"></p><div class="cd-cells">' +
+          ['Days','Hrs','Min','Sec'].map(function (u) {
+            return '<div class="cd-cell"><b>0</b><i>' + u + '</i></div>';
+          }).join('') +
+        '</div></div>';
+      card.querySelector(".aud").textContent = c.aud === "m" ? "Manager" : "Learner";
+      card.querySelector(".cal-name").textContent = c.label;
+      card.querySelector(".cal-dates").textContent =
+        "Opens " + fmt(c.start) + "  ·  Due " + fmt(c.due);
+      cardsBox.appendChild(card);
+      return { start: start, due: due, el: card,
+               label: card.querySelector(".cd-label"),
+               cells: card.querySelectorAll(".cd-cell b"),
+               fill: card.querySelector(".fill"),
+               today: card.querySelector(".today") };
+    });
+    function paintCal() {
+      const now = Date.now();
+      cards.forEach(function (c) {
+        let target, lbl, closed = false;
+        if (now < c.start) { target = c.start; lbl = "T-minus · opens in"; }
+        else if (now <= c.due) { target = c.due; lbl = "T-minus · due in"; }
+        else { target = null; lbl = "Window closed"; closed = true; }
+        c.el.classList.toggle("closed", closed);
+        c.label.textContent = lbl;
+        const pct = Math.max(0, Math.min(1, (now - c.start) / (c.due - c.start)));
+        c.fill.style.width = (pct * 100) + "%";
+        c.today.style.left = (pct * 100) + "%";
+        c.today.style.display = closed ? "none" : "";
+        let vals = [0, 0, 0, 0];
+        if (target) {
+          let s = Math.max(0, Math.floor((target - now) / 1000));
+          vals = [Math.floor(s / 86400), Math.floor(s % 86400 / 3600),
+                  Math.floor(s % 3600 / 60), s % 60];
+        }
+        c.cells.forEach(function (b, i) {
+          const v = String(vals[i]).padStart(2, "0");
+          if (b.textContent !== v) {
+            b.textContent = v;
+            b.classList.add("tick");
+            setTimeout(function () { b.classList.remove("tick"); }, 180);
+          }
+        });
+      });
+    }
+    paintCal();
+    setInterval(paintCal, 1000);
   }
 })();
 </script>
