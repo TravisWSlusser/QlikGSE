@@ -4,6 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Qlik Sales Enablement — Home</title>
+<!-- ===========================================================================
+  SECTIONED VIEWS  —  one file, multiple Mindtickle widgets. Never fork this file.
+    (no param)      full standalone page. Everything renders.
+    ?section=hero   brand line + headline + sub + tiles. No right column.
+    ?section=rail   greeting/clock/quote + world clocks ONLY.
+  Mindtickle embeds each section URL as its own fixed-height Custom HTML widget.
+  Adding a section = a visibility block at the END of the stylesheet. Nothing else.
+  =========================================================================== -->
+<script>
+(function(){var s=new URLSearchParams(location.search).get('section');
+  if(s)document.documentElement.setAttribute('data-section',s);})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,900;1,900&family=Inter:wght@400;500;600&family=Share+Tech+Mono&family=Playfair+Display:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
@@ -517,6 +529,33 @@
   [data-theme="light"] .beta-txt{color:#5a6b7d}
   [data-theme="light"] .beta-txt b{color:#C77F12}
   @media (prefers-reduced-motion:reduce){.beta-cone,.beta-strip::before,.beta-badge{animation:none}}
+
+  /* ================= SECTIONED VIEWS — MUST STAY LAST IN THIS STYLESHEET =====
+     These override the 960px herorow block above. Move them and that block wins.
+     ========================================================================= */
+  /* shared: strip the standalone page chrome so the widget card is the frame */
+  html[data-section] body{padding-inline:0;min-height:0;background:transparent}
+  html[data-section] .wrap{margin:0;padding:clamp(14px,2vw,22px);border-radius:0;
+    background:transparent;border:none;box-shadow:none;
+    backdrop-filter:none;-webkit-backdrop-filter:none}
+  html[data-section] .contrail{display:none}
+
+  /* ---- ?section=hero : everything except the right-hand info column ---- */
+  html[data-section="hero"] .hr-bodyR{display:none}
+  html[data-section="hero"] .herorow{grid-template-columns:minmax(0,1fr)}
+  html[data-section="hero"] .hr-brandline,
+  html[data-section="hero"] .hr-bodyL{grid-column:1}
+
+  /* ---- ?section=rail : the right-hand info column, alone ---- */
+  html[data-section="rail"] .beta-strip,
+  html[data-section="rail"] .hotlinks,
+  html[data-section="rail"] .lowerthird,
+  html[data-section="rail"] .hr-brandline,
+  html[data-section="rail"] .hr-bodyL,
+  html[data-section="rail"] .divider,
+  html[data-section="rail"] .tiles{display:none}
+  html[data-section="rail"] .herorow{grid-template-columns:1fr;padding:0}
+  html[data-section="rail"] .hr-bodyR{grid-column:1;grid-row:1;align-self:auto}
 </style>
 </head>
 <body>

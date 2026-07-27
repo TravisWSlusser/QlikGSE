@@ -1,0 +1,84 @@
+<!--
+  ===========================================================================
+  MINDTICKLE EMBED CODE  ·  Qlik 2026 Sales Command
+  ===========================================================================
+  Page layout : 1 COLUMN
+  Structure   : ONE widget row containing TWO Custom HTML and CSS widgets
+                [ WIDGET A: hero ]  [ WIDGET B: rail ]
+
+  Paste each block below into that widget's HTML tab. Leave the CSS tab empty
+  (Mindtickle scopes it away from the page grid, so it buys us nothing).
+  Set each widget's height to Fixed so Mindtickle does not add its own
+  scrollbar on top of ours.
+
+  The <style> block travels inside the HTML tab on purpose. Mindtickle's own
+  docs allow CSS in the HTML tab, and keeping it there means the rule sits in
+  the same scope as the iframe it targets. That is what lets the frame grow on
+  a phone without any JS.
+  ===========================================================================
+-->
+
+
+<!-- ======================= WIDGET A · HERO (left) ======================= -->
+
+<style>
+  .qlik-sc-hero{
+    width:100%;
+    height:820px;          /* measured: 787-820px from 600px wide and up */
+    border:0;
+    display:block;
+  }
+  /* tiles collapse to a single column under ~520px, so the page gets taller */
+  @media (max-width:520px){
+    .qlik-sc-hero{ height:1140px; }
+  }
+</style>
+
+<iframe
+  class="qlik-sc-hero"
+  src="https://qlik-gse.vercel.app/SalesCommand/qlikmt-hero.html?section=hero"
+  title="Qlik Sales Enablement Command Center"
+  loading="lazy"
+  scrolling="no"></iframe>
+
+
+<!-- ======================= WIDGET B · RAIL (right) ====================== -->
+
+<style>
+  .qlik-sc-rail{
+    width:100%;
+    height:300px;          /* measured: 293px at 342-500px wide */
+    border:0;
+    display:block;
+  }
+  /* above ~960px the clocks return to a 2x2 grid and the block grows */
+  @media (min-width:961px){
+    .qlik-sc-rail{ height:350px; }
+  }
+</style>
+
+<iframe
+  class="qlik-sc-rail"
+  src="https://qlik-gse.vercel.app/SalesCommand/qlikmt-hero.html?section=rail"
+  title="Time, greeting and world clocks"
+  loading="lazy"
+  scrolling="no"></iframe>
+
+
+<!--
+  ===========================================================================
+  MEASURED HEIGHTS  (headless Chromium, actual rendered scrollHeight)
+  ===========================================================================
+  HERO      1074px wide -> 810px      RAIL     342px wide -> 293px
+             900px wide -> 787px                400px wide -> 293px
+             760px wide -> 798px                500px wide -> 293px
+             700px wide -> 820px                700px wide -> 235px
+             600px wide -> 795px                950px wide -> 262px
+             480px wide -> 1069px              1200px wide -> 341px
+             380px wide -> 1129px
+
+  The hero is flat from 600px up and jumps once the tile grid drops to one
+  column. The media query above covers that. If Mindtickle hands the hero a
+  width between 520 and 600px the height is still inside tolerance.
+  ===========================================================================
+-->
