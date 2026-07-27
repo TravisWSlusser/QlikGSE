@@ -5,12 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Qlik Sales Enablement — Home</title>
 <!-- ===========================================================================
-  SECTIONED VIEWS  —  one file, multiple Mindtickle widgets. Never fork this file.
-    (no param)      full standalone page. Everything renders.
-    ?section=hero   brand line + headline + sub + tiles. No right column.
-    ?section=rail   greeting/clock/quote + world clocks ONLY.
-  Mindtickle embeds each section URL as its own fixed-height Custom HTML widget.
-  Adding a section = a visibility block at the END of the stylesheet. Nothing else.
+  SECTIONED VIEWS — one file, four Mindtickle widgets. Never fork this file.
+    (no param)          full standalone page, everything renders
+    ?section=topbar     theme toggle + beta strip, quick links beneath
+    ?section=ticker     Current News crawl + Markets ribbon
+    ?section=highlights logo/title + highlights rotator (2fr) | greeting stack (1fr)
+    ?section=hubs       hub tabs + tiles
+  Exactly one view fetches news/markets per document. See BOOT GATING below.
+  Adding a section = a visibility block at the END of the stylesheet + a SHOW_*
+  flag. Nothing else.
   =========================================================================== -->
 <script>
 (function(){var s=new URLSearchParams(location.search).get('section');
@@ -65,7 +68,35 @@
     padding-bottom:14px;border-bottom:1px solid var(--line)}
   .hotlinks a{color:var(--muted);text-decoration:none;letter-spacing:.02em;transition:color .2s}
   .hotlinks a:hover{color:var(--sky)}
-  .herorow{display:grid;grid-template-columns:minmax(0,1fr) clamp(260px,32%,360px);column-gap:34px;
+
+  /* ---- top line: theme toggle hard left, beta strip fills the rest ---- */
+  .topline{display:flex;align-items:stretch;gap:12px;margin:0 0 clamp(12px,1.6vw,18px)}
+  .topline .themetoggle{margin-left:0;flex:0 0 auto;align-self:center}
+  .topline .beta-strip{flex:1 1 auto;margin:0}
+
+  /* ---- highlights rotator (manager-controlled posts) ---- */
+  .hl{position:relative;display:flex;flex-direction:column;min-width:0;height:100%}
+  .hl-stage{position:relative;flex:1 1 auto;min-height:clamp(150px,15vw,196px)}
+  .hl-item{position:absolute;inset:0;opacity:0;transform:translateY(8px);
+    transition:opacity .5s ease, transform .5s ease;pointer-events:none}
+  .hl-item.on{opacity:1;transform:none;pointer-events:auto}
+  .hl-kicker{font-family:'Barlow Condensed';font-weight:500;font-size:12px;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--sky);display:inline-flex;align-items:center;gap:7px}
+  .hl-kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sky);flex:0 0 auto}
+  .hl-title{font-family:'Barlow Condensed';font-weight:600;line-height:1.04;
+    font-size:clamp(30px,4.2vw,50px);letter-spacing:-.01em;margin:.22em 0 .3em;text-wrap:balance}
+  .hl-title .ac{color:var(--green)}
+  .hl-body{font-size:clamp(14px,1.4vw,16px);line-height:1.55;color:#bccfe2;max-width:560px}
+  [data-theme="light"] .hl-body{color:#42566c}
+  .hl-cta{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:13px;
+    color:var(--sky);text-decoration:none;border-bottom:1px solid rgba(16,207,201,.35);padding-bottom:2px}
+  .hl-cta:hover{border-bottom-color:var(--sky)}
+  .hl-dots{display:flex;gap:7px;margin-top:14px;flex:0 0 auto}
+  .hl-dots button{width:8px;height:8px;border-radius:50%;border:0;padding:0;cursor:pointer;
+    background:var(--line);transition:background .2s, transform .2s}
+  .hl-dots button:hover{background:var(--muted)}
+  .hl-dots button.on{background:var(--sky);transform:scale(1.25)}
+  .herorow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);column-gap:34px;
     row-gap:clamp(6px,0.9vw,12px);align-items:baseline;
     padding:clamp(18px,2.6vw,28px) 0 clamp(12px,2vw,20px)}
   .hr-brandline{grid-column:1/-1;grid-row:1;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
@@ -531,46 +562,49 @@
   @media (prefers-reduced-motion:reduce){.beta-cone,.beta-strip::before,.beta-badge{animation:none}}
 
   /* ================= SECTIONED VIEWS — MUST STAY LAST IN THIS STYLESHEET =====
-     These override the 960px herorow block above. Move them and that block wins.
+     Each section is its own document in its own Mindtickle widget, so each one
+     paints its own background. A flat fill is used instead of the page gradient
+     so four stacked widgets read as one continuous surface rather than four
+     mismatched slices of the same radial.
      ========================================================================= */
-  /* shared: strip the standalone page chrome so the widget card is the frame */
-  html[data-section] body{padding-inline:0;min-height:0;background:transparent}
+  html[data-section] body{background:var(--navy-1);padding-inline:0;min-height:0}
+  html[data-section][data-theme="light"] body{background:#eef3f9}
   html[data-section] .wrap{margin:0;padding:clamp(14px,2vw,22px);border-radius:0;
     background:transparent;border:none;box-shadow:none;
     backdrop-filter:none;-webkit-backdrop-filter:none}
   html[data-section] .contrail{display:none}
 
-  /* ---- ?section=hero : everything except the right-hand info column ---- */
-  html[data-section="hero"] .hr-bodyR{display:none}
-  html[data-section="hero"] .herorow{grid-template-columns:minmax(0,1fr)}
-  html[data-section="hero"] .hr-brandline,
-  html[data-section="hero"] .hr-bodyL{grid-column:1}
+  /* hide every top-level block, then re-show only what this section owns.
+     The show rules match the hide rule's specificity and come after it. */
+  html[data-section] .wrap > *{display:none}
 
-  /* ---- ?section=rail : the right-hand info column, alone ---- */
-  html[data-section="rail"] .beta-strip,
-  html[data-section="rail"] .hotlinks,
-  html[data-section="rail"] .lowerthird,
-  html[data-section="rail"] .hr-brandline,
-  html[data-section="rail"] .hr-bodyL,
-  html[data-section="rail"] .divider,
-  html[data-section="rail"] .tiles{display:none}
-  html[data-section="rail"] .herorow{grid-template-columns:1fr;padding:0}
-  html[data-section="rail"] .hr-bodyR{grid-column:1;grid-row:1;align-self:auto}
+  html[data-section="topbar"] .topline{display:flex}
+  html[data-section="topbar"] .hotlinks{display:flex}
+  html[data-section="topbar"] .hotlinks{border-bottom:none;padding-bottom:0}
+
+  html[data-section="ticker"] .lowerthird{display:block;margin-top:0}
+
+  html[data-section="highlights"] .herorow{display:grid;padding-top:0}
+
+  html[data-section="hubs"] .tiles{display:grid;margin-top:0}
 </style>
 </head>
 <body>
   <div class="contrail c-top" aria-hidden="true"></div>
 
   <div class="wrap">
-    <div class="beta-strip rise d1" role="status">
-      <svg class="beta-cone" viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="5" y="18.3" width="14" height="2.6" rx="1.2" fill="#E8941A"/>
-        <path d="M12 3.4 L16.6 18.4 H7.4 Z" fill="#FF9F1C"/>
-        <path d="M10 11 H14 L14.5 13.2 H9.5 Z" fill="#fff"/>
-        <path d="M11 7 H13 L13.45 9 H10.55 Z" fill="#fff"/>
-      </svg>
-      <span class="beta-badge">Beta</span>
-      <span class="beta-txt"><b>Pardon our dust!</b> This page is in beta testing and improving every day — thanks for bearing with us.</span>
+    <div class="topline rise d1">
+      <button id="themeToggle" class="themetoggle" type="button"></button>
+      <div class="beta-strip" role="status">
+        <svg class="beta-cone" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="5" y="18.3" width="14" height="2.6" rx="1.2" fill="#E8941A"/>
+          <path d="M12 3.4 L16.6 18.4 H7.4 Z" fill="#FF9F1C"/>
+          <path d="M10 11 H14 L14.5 13.2 H9.5 Z" fill="#fff"/>
+          <path d="M11 7 H13 L13.45 9 H10.55 Z" fill="#fff"/>
+        </svg>
+        <span class="beta-badge">Beta</span>
+        <span class="beta-txt"><b>Pardon our dust!</b> This page is in beta testing and improving every day — thanks for bearing with us.</span>
+      </div>
     </div>
     <nav class="hotlinks rise d1" aria-label="Quick links">
       <!-- Top-level Mindtickle destinations. target="_top" breaks out of the embedded widget iframe. Rooms = internal REC Room, link TBD. -->
@@ -580,7 +614,6 @@
       <a href="#">Rooms</a>
       <a href="https://qlik.mindtickle.com/new/ui/callai/recordings" target="_top">Call AI</a>
       <a href="https://qlik.mindtickle.com/new/ui/callai/my-analytics" target="_top">Analytics</a>
-      <button id="themeToggle" class="themetoggle" type="button"></button>
     </nav>
 
     <div class="lowerthird rise d2">
@@ -605,8 +638,13 @@
       </div>
 
       <div class="hr-bodyL rise d3">
-        <h1 class="hr-title">Accelerate your pipeline with <span class="ac">AI</span>.</h1>
-        <p class="sub">Find what you need, jump straight in, and let the connected workflow carry the deal forward — everything that helps you win, in one place.</p>
+        <!-- HIGHLIGHTS — rotating custom posts. Content will come from the
+             manager control app once it exists. Until then HIGHLIGHTS[] below
+             is the source of truth and is safe to hand-edit. -->
+        <div class="hl" id="hl">
+          <div class="hl-stage" id="hlStage"></div>
+          <div class="hl-dots" id="hlDots"></div>
+        </div>
       </div>
 
       <div class="hr-bodyR rise d3">
@@ -629,6 +667,69 @@
 <script>
 function brandFallback(){ var b=document.getElementById('brand'); if(b) b.classList.add('fb'); }
 function sfBrandFallback(img){ var p=img.closest('.sf-brand'); if(p) p.classList.add('fb'); }
+
+/* ---- BOOT GATING ---------------------------------------------------------
+   Each section is its own document. Without this, all four widgets would poll
+   the news + market endpoints and run their own timers four times over. */
+const SECTION   = document.documentElement.getAttribute('data-section') || '';
+const SHOW_TOP  = !SECTION || SECTION === 'topbar';
+const SHOW_TICK = !SECTION || SECTION === 'ticker';
+const SHOW_HL   = !SECTION || SECTION === 'highlights';
+const SHOW_HUBS = !SECTION || SECTION === 'hubs';
+
+/* ---- HIGHLIGHTS — rotating custom posts ----------------------------------
+   Hand-edit this array until the manager control app can write it. Each entry:
+     kicker  short eyebrow label
+     title   supports <span class="ac"> for the green accent word
+     body    one or two sentences
+     cta     optional { label, href }   omit for a text-only post           */
+const HIGHLIGHTS = [
+  { kicker:'This Week',
+    title:'Accelerate your pipeline with <span class="ac">AI</span>.',
+    body:'Find what you need, jump straight in, and let the connected workflow carry the deal forward — everything that helps you win, in one place.' },
+  { kicker:'New Release',
+    title:'Deal Guides are <span class="ac">live</span>.',
+    body:'Every open opportunity now carries a guided next-best-action built from the methodology your team already runs.',
+    cta:{ label:'Open Deal Guides', href:'#' } },
+  { kicker:'Stellar-Seller',
+    title:'Issue #1 is on the <span class="ac">shelf</span>.',
+    body:'The D.O.R.C.S. are loose and the only thing standing between them and your quota is a very confident hologram.',
+    cta:{ label:'Read the issue', href:'https://deeplinks.mindtickle.com/8lIR3uOka3b' } },
+];
+const HL_MS = 9000;
+
+if (SHOW_HL){
+  const hlStage = document.getElementById('hlStage');
+  const hlDots  = document.getElementById('hlDots');
+  const hlNodes = HIGHLIGHTS.map(function(h,i){
+    const d = document.createElement('div');
+    d.className = 'hl-item' + (i===0 ? ' on' : '');
+    d.innerHTML = '<span class="hl-kicker">'+h.kicker+'</span>'
+      + '<h1 class="hl-title">'+h.title+'</h1>'
+      + '<p class="hl-body">'+h.body+'</p>'
+      + (h.cta ? '<a class="hl-cta" href="'+h.cta.href+'"'
+          + (h.cta.href.indexOf('http')===0 ? ' target="_top"' : '')
+          + '>'+h.cta.label+' &#8599;</a>' : '');
+    hlStage.appendChild(d);
+    return d;
+  });
+  const hlBtns = HIGHLIGHTS.map(function(h,i){
+    const b = document.createElement('button');
+    b.type='button'; b.className = i===0 ? 'on' : '';
+    b.setAttribute('aria-label','Highlight '+(i+1));
+    b.addEventListener('click', function(){ hlGo(i); hlHold(); });
+    hlDots.appendChild(b);
+    return b;
+  });
+  let hlI = 0, hlTimer = null;
+  function hlGo(n){
+    hlI = (n + hlNodes.length) % hlNodes.length;
+    hlNodes.forEach(function(el,i){ el.classList.toggle('on', i===hlI); });
+    hlBtns.forEach(function(el,i){ el.classList.toggle('on', i===hlI); });
+  }
+  function hlHold(){ clearInterval(hlTimer); hlTimer = setInterval(function(){ hlGo(hlI+1); }, HL_MS); }
+  if (hlNodes.length > 1) hlHold(); else hlDots.style.display='none';
+}
 
 /* HUB TAXONOMY — categorized content hubs. href='#' = placeholder for real MT links. */
 const HUB_CATS = [
@@ -778,7 +879,7 @@ function tickClocks(){
     n.el.classList.toggle('closed', weekend || H<9 || H>=18);   /* dark when out of business hours where they are */
   });
 }
-tickClocks(); setInterval(tickClocks, 1000);
+tickClocks(); if (SHOW_HL) setInterval(tickClocks, 1000);
 
 /* ---- greeting + digital clock + rotating quote (right-column widget) ---- */
 const TOD = {
@@ -793,7 +894,7 @@ function tick(){
   document.getElementById('greet').innerHTML = label + ' <span class="tod">' + TOD[key] + '</span>';
   document.getElementById('clock').textContent = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
 }
-tick(); setInterval(tick, 30000);
+tick(); if (SHOW_HL) setInterval(tick, 30000);
 
 const QUOTES = [
   ["Approach each customer with the idea of helping solve a problem.","Brian Tracy"],
@@ -835,7 +936,7 @@ function showQuote(){
   scramble('\u201C'+QUOTES[qi][0]+'\u201D', ()=>{ qb.textContent = '\u2014 '+QUOTES[qi][1]; qb.style.opacity = 1; });
 }
 showQuote();
-setInterval(()=>{ qi=(qi+1)%QUOTES.length; showQuote(); }, 13000);
+if (SHOW_HL) setInterval(()=>{ qi=(qi+1)%QUOTES.length; showQuote(); }, 13000);
 
 /* ---- light / dark toggle (always starts dark) ---- */
 const SUN_ICON='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.3M12 19.1v2.3M2.6 12h2.3M19.1 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>';
@@ -861,7 +962,7 @@ window.addEventListener('storage', (e)=>{ if(e.key===THEME_KEY){ theme = e.newVa
 /* keep the NEWS + MARKETS tabs the same width so their shapes line up */
 function alignTabs(){
   const a=document.querySelector('.qnews'), b=document.querySelector('.mk-bug');
-  if(!a||!b) return;
+  if(!a||!b||!a.offsetParent) return;
   a.style.width=b.style.width='';
   const w=Math.ceil(Math.max(a.offsetWidth,b.offsetWidth));
   a.style.width=b.style.width=w+'px';
@@ -903,7 +1004,7 @@ function renderChips(list, live){
   if(liveDot) liveDot.classList.toggle('on', !!live);
 }
 renderChips(SAMPLE, false);
-fetch(MARKET_ENDPOINT)
+if (SHOW_TICK) fetch(MARKET_ENDPOINT)
   .then(r => r.ok ? r.json() : Promise.reject())
   .then(d => { if(d && d.quotes && d.quotes.length) renderChips(d.quotes, true); })
   .catch(()=>{ /* endpoint not live yet — keep sample, leave LIVE off */ });
@@ -931,7 +1032,7 @@ function renderNews(list){
   newsTrack.innerHTML = html + html;   /* duplicate for a seamless loop */
 }
 renderNews(SAMPLE_NEWS);
-fetch(NEWS_ENDPOINT)
+if (SHOW_TICK) fetch(NEWS_ENDPOINT)
   .then(r => r.ok ? r.json() : Promise.reject())
   .then(d => { if(d && d.items && d.items.length) renderNews(d.items); })
   .catch(()=>{ /* endpoint not live yet — keep sample headlines */ });
