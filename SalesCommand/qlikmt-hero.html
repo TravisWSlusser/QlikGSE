@@ -569,7 +569,7 @@
      ========================================================================= */
   html[data-section] body{background:var(--navy-1);padding-inline:0;min-height:0}
   html[data-section][data-theme="light"] body{background:#eef3f9}
-  html[data-section] .wrap{margin:0;padding:clamp(14px,2vw,22px);border-radius:0;
+  html[data-section] .wrap{margin:0;max-width:none;padding:clamp(14px,2vw,22px);border-radius:0;
     background:transparent;border:none;box-shadow:none;
     backdrop-filter:none;-webkit-backdrop-filter:none}
   html[data-section] .contrail{display:none}
@@ -938,26 +938,54 @@ function showQuote(){
 showQuote();
 if (SHOW_HL) setInterval(()=>{ qi=(qi+1)%QUOTES.length; showQuote(); }, 13000);
 
-/* ---- light / dark toggle (always starts dark) ---- */
+/* ---- light / dark toggle (always starts dark) ----------------------------
+   The toggle button only exists in the topbar widget, but all four widgets
+   are separate documents on the same origin and must stay in step. Three
+   independent channels carry the change, because in the Mindtickle embed any
+   one of them can be blocked by third-party storage partitioning:
+     1. localStorage + the storage event   instant, but partition-dependent
+     2. BroadcastChannel                   instant, works without storage
+     3. a 1.5s poll of localStorage        slow, but catches anything missed
+   Whichever arrives first wins; applyTheme() is idempotent.                */
 const SUN_ICON='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.3M12 19.1v2.3M2.6 12h2.3M19.1 12h2.3M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>';
 const MOON_ICON='<svg viewBox="0 0 24 24"><path d="M20.5 13.5A8 8 0 1110.5 3.5a6.3 6.3 0 0010 10z"/></svg>';
 const tBtn = document.getElementById('themeToggle');
 const THEME_KEY = 'qlikTheme';
 let theme = 'dark';
 try { theme = localStorage.getItem(THEME_KEY) || 'dark'; } catch(e){}
-function setTheme(m){
+
+let themeChan = null;
+try { themeChan = new BroadcastChannel('qlik-theme'); } catch(e){}
+
+function paintTheme(m){
   if(m==='light') document.documentElement.setAttribute('data-theme','light');
   else document.documentElement.removeAttribute('data-theme');
-  tBtn.innerHTML = (m==='light') ? MOON_ICON : SUN_ICON;
-  tBtn.setAttribute('aria-label', (m==='light') ? 'Switch to dark mode' : 'Switch to light mode');
+  if(tBtn){
+    tBtn.innerHTML = (m==='light') ? MOON_ICON : SUN_ICON;
+    tBtn.setAttribute('aria-label', (m==='light') ? 'Switch to dark mode' : 'Switch to light mode');
+  }
 }
-setTheme(theme);
-tBtn.addEventListener('click', ()=>{
-  theme = (theme==='dark') ? 'light' : 'dark';
-  try { localStorage.setItem(THEME_KEY, theme); } catch(e){}
-  setTheme(theme);
+function applyTheme(m){
+  m = (m==='light') ? 'light' : 'dark';
+  if(m === theme && document.documentElement.hasAttribute('data-theme') === (m==='light')) return;
+  theme = m; paintTheme(theme);
+}
+paintTheme(theme);
+
+if(tBtn) tBtn.addEventListener('click', ()=>{
+  const next = (theme==='dark') ? 'light' : 'dark';
+  try { localStorage.setItem(THEME_KEY, next); } catch(e){}
+  if(themeChan) try { themeChan.postMessage(next); } catch(e){}
+  applyTheme(next);
 });
-window.addEventListener('storage', (e)=>{ if(e.key===THEME_KEY){ theme = e.newValue || 'dark'; setTheme(theme); } });
+
+window.addEventListener('storage', (e)=>{ if(e.key===THEME_KEY) applyTheme(e.newValue); });
+if(themeChan) themeChan.onmessage = (e)=>{ applyTheme(e.data); };
+setInterval(()=>{
+  let stored = null;
+  try { stored = localStorage.getItem(THEME_KEY); } catch(e){ return; }
+  if(stored) applyTheme(stored);
+}, 1500);
 
 /* keep the NEWS + MARKETS tabs the same width so their shapes line up */
 function alignTabs(){

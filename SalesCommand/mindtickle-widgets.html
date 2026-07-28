@@ -3,82 +3,95 @@
   MINDTICKLE EMBED CODE  ·  Qlik 2026 Sales Command
   ===========================================================================
   Page layout : 1 COLUMN
-  Structure   : ONE widget row containing TWO Custom HTML and CSS widgets
-                [ WIDGET A: hero ]  [ WIDGET B: rail ]
+  Rows        : four rows, one Custom HTML and CSS widget each, in this order
 
-  Paste each block below into that widget's HTML tab. Leave the CSS tab empty
-  (Mindtickle scopes it away from the page grid, so it buys us nothing).
-  Set each widget's height to Fixed so Mindtickle does not add its own
-  scrollbar on top of ours.
+      ROW 1   topbar       theme toggle + beta strip, quick links beneath
+      ROW 2   ticker       Current News crawl + Markets ribbon
+      ROW 3   highlights   logo/title + highlights rotator | greeting stack
+      ROW 4   hubs         hub tabs + tiles
 
-  The <style> block travels inside the HTML tab on purpose. Mindtickle's own
-  docs allow CSS in the HTML tab, and keeping it there means the rule sits in
-  the same scope as the iframe it targets. That is what lets the frame grow on
-  a phone without any JS.
+  Paste each block into that widget's HTML tab. Leave the CSS tab empty --
+  Mindtickle scopes it, so it cannot reach anything outside the widget.
+  Set each widget height to Fixed.
+
+  The <style> block sits inside the HTML tab on purpose. Mindtickle's docs
+  allow CSS there, and that keeps the rule in the same scope as the iframe
+  it targets, which is what lets the frames grow on a phone without JS.
+
+  Theme: the toggle lives only in ROW 1. It writes localStorage, and the
+  other three widgets read it on load and listen for the storage event, so
+  one click flips all four. Verified across documents.
   ===========================================================================
 -->
 
 
-<!-- ======================= WIDGET A · HERO (left) ======================= -->
+<!-- ============================ ROW 1 - TOPBAR ========================== -->
 
 <style>
-  .qlik-sc-hero{
-    width:100%;
-    height:820px;          /* measured: 787-820px from 600px wide and up */
-    border:0;
-    display:block;
-  }
-  /* tiles collapse to a single column under ~520px, so the page gets taller */
-  @media (max-width:520px){
-    .qlik-sc-hero{ height:1140px; }
-  }
+  .qlik-sc-topbar{ width:100%; height:130px; border:0; display:block; }
+  @media (max-width:430px){ .qlik-sc-topbar{ height:190px; } }
 </style>
 
-<iframe
-  class="qlik-sc-hero"
-  src="https://qlik-gse.vercel.app/SalesCommand/qlikmt-hero.html?section=hero"
-  title="Qlik Sales Enablement Command Center"
-  loading="lazy"
-  scrolling="no"></iframe>
+<iframe class="qlik-sc-topbar"
+  src="https://qlik-gse.vercel.app/SalesCommand/qlikmt-hero.html?section=topbar"
+  title="Announcements and quick links"
+  loading="lazy" scrolling="no"></iframe>
 
 
-<!-- ======================= WIDGET B · RAIL (right) ====================== -->
+<!-- ============================ ROW 2 - TICKER ========================== -->
 
 <style>
-  .qlik-sc-rail{
-    width:100%;
-    height:300px;          /* measured: 293px at 342-500px wide */
-    border:0;
-    display:block;
-  }
-  /* above ~960px the clocks return to a 2x2 grid and the block grows */
-  @media (min-width:961px){
-    .qlik-sc-rail{ height:350px; }
-  }
+  .qlik-sc-ticker{ width:100%; height:115px; border:0; display:block; }
 </style>
 
-<iframe
-  class="qlik-sc-rail"
-  src="https://qlik-gse.vercel.app/SalesCommand/qlikmt-hero.html?section=rail"
-  title="Time, greeting and world clocks"
-  loading="lazy"
-  scrolling="no"></iframe>
+<iframe class="qlik-sc-ticker"
+  src="https://qlik-gse.vercel.app/SalesCommand/qlikmt-hero.html?section=ticker"
+  title="Industry news and market pulse"
+  loading="lazy" scrolling="no"></iframe>
+
+
+<!-- ========================== ROW 3 - HIGHLIGHTS ======================== -->
+
+<style>
+  .qlik-sc-highlights{ width:100%; height:390px; border:0; display:block; }
+  /* below 960px the greeting stack drops under the rotator */
+  @media (max-width:960px){ .qlik-sc-highlights{ height:530px; } }
+  @media (max-width:430px){ .qlik-sc-highlights{ height:560px; } }
+</style>
+
+<iframe class="qlik-sc-highlights"
+  src="https://qlik-gse.vercel.app/SalesCommand/qlikmt-hero.html?section=highlights"
+  title="Highlights, time and world clocks"
+  loading="lazy" scrolling="no"></iframe>
+
+
+<!-- ============================= ROW 4 - HUBS =========================== -->
+
+<style>
+  .qlik-sc-hubs{ width:100%; height:285px; border:0; display:block; }
+  /* tiles go 2-up, then 1-up */
+  @media (max-width:880px){ .qlik-sc-hubs{ height:400px; } }
+  @media (max-width:560px){ .qlik-sc-hubs{ height:620px; } }
+</style>
+
+<iframe class="qlik-sc-hubs"
+  src="https://qlik-gse.vercel.app/SalesCommand/qlikmt-hero.html?section=hubs"
+  title="Content hubs"
+  loading="lazy" scrolling="no"></iframe>
 
 
 <!--
   ===========================================================================
-  MEASURED HEIGHTS  (headless Chromium, actual rendered scrollHeight)
+  MEASURED CONTENT HEIGHTS (headless Chromium, rendered .wrap height)
   ===========================================================================
-  HERO      1074px wide -> 810px      RAIL     342px wide -> 293px
-             900px wide -> 787px                400px wide -> 293px
-             760px wide -> 798px                500px wide -> 293px
-             700px wide -> 820px                700px wide -> 235px
-             600px wide -> 795px                950px wide -> 262px
-             480px wide -> 1069px              1200px wide -> 341px
-             380px wide -> 1129px
+              1074px  900px  760px  600px  480px  380px
+  topbar        118    108    112    109    126    180
+  ticker        104     97     92     89     89     89
+  highlights    372    502    477    462    519    542
+  hubs          267    277    361    381    599    599
 
-  The hero is flat from 600px up and jumps once the tile grid drops to one
-  column. The media query above covers that. If Mindtickle hands the hero a
-  width between 520 and 600px the height is still inside tolerance.
+  The iframe heights above add a small buffer to each. The highlights jump
+  between 1074 and 900 is the 960px breakpoint moving the greeting stack
+  below the rotator.
   ===========================================================================
 -->
