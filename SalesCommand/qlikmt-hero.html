@@ -78,7 +78,10 @@
   .topline .beta-strip{flex:1 1 auto;margin:0}
 
   /* ---- highlights rotator (manager-controlled posts) ---- */
-  .hl{position:relative;display:flex;flex-direction:column;min-width:0;height:100%}
+  .hl{position:relative;display:flex;flex-direction:column;min-width:0;height:100%;
+    border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:clamp(12px,1.6vw,18px)}
+  [data-theme="light"] .hl{background:rgba(255,255,255,.42);border-color:rgba(15,40,70,.12)}
   .hl-stage{position:relative;flex:1 1 auto;min-height:clamp(150px,15vw,196px)}
   .hl-item{position:absolute;inset:0;opacity:0;transform:translateY(8px);
     transition:opacity .5s ease, transform .5s ease;pointer-events:none}
@@ -105,7 +108,7 @@
   .hr-brandline{grid-column:1/-1;grid-row:1;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
   .hr-brandline .eyebrow{border-left:1px solid var(--line);padding-left:12px}
   .hr-greet{grid-column:2;grid-row:1;text-align:right;position:relative;top:3px}
-  .hr-bodyL{grid-column:1;grid-row:2;min-width:0;padding-top:clamp(8px,1.2vw,14px)}
+  .hr-bodyL{grid-column:1;grid-row:2;min-width:0}
   .hr-bodyR{grid-column:2;grid-row:2;text-align:right;display:flex;flex-direction:column;align-self:stretch;gap:clamp(10px,1.4vw,14px)}
   .hr-title{margin:0;max-width:680px}
   .hr-bodyL .sub{margin-top:clamp(12px,1.6vw,20px)}
