@@ -524,7 +524,7 @@
   .bg {
     position: absolute;
     inset: 0;
-    background-image: url('https://raw.githubusercontent.com/TravisWSlusser/QlikMindtickleApps/main/images/HQBackground_compressed.png');
+    background-image: url('assets/images/ai_hq/HQBackground_compressed.png');
     background-size: cover;
     background-position: center;
     filter: brightness(0.55);
@@ -1056,7 +1056,7 @@
 #hq-ai{z-index:2;display:flex;flex-direction:column;background:#0a090b;transform:translateY(0);transition:transform .92s cubic-bezier(.74,0,.16,1);will-change:transform}
 .hq-stage.showing-rec #hq-ai{transform:translateY(100%)}
 #hq-ai .hq-bannercard{flex:0 0 auto;border-radius:16px 16px 0 0;border-bottom:0}
-.hq-bedrock{position:relative;flex:1 1 auto;min-height:0;border:1px solid rgba(255,255,255,.10);border-top:0;border-radius:0 0 16px 16px;background:url(https://raw.githubusercontent.com/TravisWSlusser/QlikMT_Main/main/assets/images/ai_hq/rock_bottom_web.webp) bottom center/100% auto no-repeat,linear-gradient(180deg,#0f2840 0%,#0b1d30 32%,#0a1119 60%,#0a0a0d 100%)}
+.hq-bedrock{position:relative;flex:1 1 auto;min-height:0;border:1px solid rgba(255,255,255,.10);border-top:0;border-radius:0 0 16px 16px;background:url(assets/images/ai_hq/rock_bottom_web.webp) bottom center/100% auto no-repeat,linear-gradient(180deg,#0f2840 0%,#0b1d30 32%,#0a1119 60%,#0a0a0d 100%)}
 .hq-bedrock::before{content:'';position:absolute;left:0;right:0;top:0;height:90px;background:linear-gradient(180deg,rgba(6,18,30,.9),transparent);pointer-events:none}
 /* persistent footnote overlay — pinned to the stage bottom, stays through the slide */
 .hq-foot{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:34px clamp(22px,4vw,46px) 15px;background:linear-gradient(180deg,transparent,rgba(5,8,12,.5) 26%,rgba(4,6,10,.9));pointer-events:none}
@@ -1228,7 +1228,7 @@
   </div>
 
   <img class="side-qlik" id="sideQlik"
-    src="https://raw.githubusercontent.com/TravisWSlusser/QlikMindtickleApps/main/images/SideQlik1.png"
+    src="assets/images/ai_hq/SideQlik1.png"
     alt="Side-Qlik">
 
   <div class="content" id="mainContent">
@@ -1250,7 +1250,7 @@
     <button class="panel-close" onclick="closePanel()" title="Close">✕</button>
     <div class="panel-content">
       <div class="panel-visual">
-        <img class="panel-cover" src="https://raw.githubusercontent.com/TravisWSlusser/QlikMT_Main/main/assets/images/ai_hq/Comic_Cover_01.png" alt="Stellar-Seller and the Side-Qlik — Issue #1 cover">
+        <img class="panel-cover" src="assets/images/ai_hq/Comic_Cover_01.png" alt="Stellar-Seller and the Side-Qlik — Issue #1 cover">
       </div>
       <div class="panel-text">
         <div class="panel-tag"><span class="panel-tag-dot"></span>Classified · Field Intelligence</div>
@@ -1308,7 +1308,7 @@
   -webkit-backdrop-filter: blur(12px) brightness(0.35);
   background: rgba(13, 42, 71, 0.6);">
   <img id="mobileIcon"
-    src="https://raw.githubusercontent.com/TravisWSlusser/QlikMindtickleApps/main/images/icons/BadFX2.png"
+    src="assets/images/ai_hq/icons/BadFX2.png"
     class="mobile-icon"
     onerror="this.style.display='none'"
     style="width:70px; height:70px;">
@@ -1319,7 +1319,7 @@
       <div class="hq-bedrock" aria-hidden="true"></div>
     </section>
     <section class="hq-panel" id="hq-rec" role="tabpanel">
-      <div class="hq-reccard"><div class="hq-recmid"><div class="rk">Q-Cade Arcade</div><div class="rt">REC Room</div><div class="rn">Loading the live REC Room&hellip;</div></div><iframe id="hqRecFrame" class="hq-recframe" data-src="https://qlik-rec-room.vercel.app/" title="Q-Cade REC Room" allow="fullscreen" allowfullscreen loading="lazy" scrolling="no"></iframe></div>
+      <div class="hq-reccard"><div class="hq-recmid"><div class="rk">Q-Cade Arcade</div><div class="rt">REC Room</div><div class="rn">Loading the live REC Room&hellip;</div></div><iframe id="hqRecFrame" class="hq-recframe" data-src="https://qlik-gse.vercel.app/QlikRecRoom/" title="Q-Cade REC Room" allow="fullscreen" allowfullscreen loading="lazy" scrolling="no"></iframe></div>
     </section>
     <div class="hq-foot">  <footer class="sitefoot">
     <div class="sf-cred"><span class="sf-u sf-brand">A <img class="sf-logo sf-logo-dark" src="assets/images/logos/Sales_Enablement_Logos/Typemark_Qlik-Sales-Enablement_2cReverse.svg" alt="Qlik Sales Enablement" onerror="sfBrandFallback(this)"><img class="sf-logo sf-logo-light" src="assets/images/logos/Sales_Enablement_Logos/Typemark_Qlik-Sales-Enablement_Color.svg" alt="Qlik Sales Enablement" onerror="sfBrandFallback(this)"><span class="sf-logo-fallback">Qlik Sales Enablement</span> initiative&nbsp;&middot;</span> <span class="sf-u">Designed &amp; developed by <strong>Travis Slusser</strong>,</span> <span class="sf-u">Senior Learning Strategist&nbsp;&middot;</span> <span class="sf-u"><a href="mailto:Travis.Slusser@Qlik.com">Travis.Slusser@Qlik.com</a></span></div>
@@ -1610,7 +1610,7 @@ if(document.fonts && document.fonts.ready) document.fonts.ready.then(setupOtdMar
 function loadOTD(){
   var d = new Date();
   renderToday();
-  fetch('/api/onthisday?m='+(d.getMonth()+1)+'&d='+d.getDate())
+  fetch('/api/command/onthisday?m='+(d.getMonth()+1)+'&d='+d.getDate())
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(j){ if(j && j.events && j.events.length){ otdList = j.events; renderToday(); } })
     .catch(function(){ /* keep fallback */ });
@@ -1762,9 +1762,9 @@ setInterval(renderToday, 10*60*1000);   // re-evaluate the 4x/day slot while the
 
   function initMobileBlock() {
     var icons = [
-      'https://raw.githubusercontent.com/TravisWSlusser/QlikMindtickleApps/main/images/icons/BadFX1.png',
-      'https://raw.githubusercontent.com/TravisWSlusser/QlikMindtickleApps/main/images/icons/BadFX2.png',
-      'https://raw.githubusercontent.com/TravisWSlusser/QlikMindtickleApps/main/images/icons/BadFX3.png'
+      'assets/images/ai_hq/icons/BadFX1.png',
+      'assets/images/ai_hq/icons/BadFX2.png',
+      'assets/images/ai_hq/icons/BadFX3.png'
     ];
     mobileIcon.src = icons[Math.floor(Math.random() * icons.length)];
     setTimeout(function() { mobileIcon.classList.add('visible'); }, 300);
@@ -1802,7 +1802,7 @@ setInterval(renderToday, 10*60*1000);   // re-evaluate the 4x/day slot while the
       console.log('QLIKMT-HEIGHT:', h); }
   }
   window.addEventListener('message', function(e){
-    if (e.origin !== 'https://qlik-rec-room.vercel.app') return;
+    if (e.origin !== 'https://qlik-gse.vercel.app') return;
     var d = e.data || {};
     if (d.type === 'REC_ROOM_HEIGHT' && d.height){
       var nh = Math.ceil(d.height);
@@ -1819,7 +1819,7 @@ setInterval(renderToday, 10*60*1000);   // re-evaluate the 4x/day slot while the
   var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   function clock(){var n=new Date(),h=n.getHours(),m=String(n.getMinutes()).padStart(2,'0'),ap=h>=12?'PM':'AM';h=h%12||12;document.getElementById('hqTime').textContent=h+':'+m+' '+ap;document.getElementById('hqDate').textContent=days[n.getDay()]+', '+months[n.getMonth()]+' '+n.getDate()+', '+n.getFullYear();var p=n.toLocaleTimeString('en-us',{timeZoneName:'short'}).split(' ');document.getElementById('hqTz').textContent=p[2]||'LOCAL';}
   clock();setInterval(clock,1000);
-  var NEWS='https://qlik-mt-main.vercel.app/api/news';
+  var NEWS='/api/command/news';
   var SAMPLE=[{title:'Qlik expands Open Lakehouse with real-time streaming ingestion',source:'Qlik',url:'#'},{title:'Enterprises double down on trusted data for AI initiatives',source:'Industry',url:'#'},{title:'Analytics buyers prioritize governance and data quality in 2026',source:'Market',url:'#'},{title:'Competitive shifts among cloud data platforms continue',source:'Markets',url:'#'},{title:'AI copilots reshape how sellers prep for customer calls',source:'Trends',url:'#'}];
   var track=document.getElementById('hqNewsTrack');
   function esc(x){return (x||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -1832,7 +1832,7 @@ setInterval(renderToday, 10*60*1000);   // re-evaluate the 4x/day slot while the
 
 /* ===== AI status bar ===== */
 (function(){
-  var API='https://qlik-mindtickle-apps.vercel.app/api/status';
+  var API='/api/command/status';
   var META={'Claude':{url:'https://status.anthropic.com',icon:'<svg class="provider-icon" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M17.3 3h-3.1L9.7 14.4H12l1.2-3.3h4.1l1.2 3.3h2.3L17.3 3zm-3.4 6.6 1.5-4.1 1.5 4.1h-3zM6.7 3H4.4L1 21h2.3l.9-4.1h4.1L9.2 21h2.3L8.1 3H6.7zm-2 11.6 1.5-7 1.5 7h-3z"/></svg>'},'ChatGPT':{url:'https://status.openai.com',icon:'<svg class="provider-icon" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M22.28 9.29a5.93 5.93 0 0 0-.51-4.87 6 6 0 0 0-6.44-2.88 5.93 5.93 0 0 0-4.47-2A6 6 0 0 0 5.14 3.2a5.93 5.93 0 0 0-4 2.88 6 6 0 0 0 .74 7 5.93 5.93 0 0 0 .51 4.87 6 6 0 0 0 6.44 2.88 5.93 5.93 0 0 0 4.47 2 6 6 0 0 0 5.72-4.16 5.93 5.93 0 0 0 4-2.88 6 6 0 0 0-.74-7.3zM13.38 21a4.44 4.44 0 0 1-2.85-1 .09.09 0 0 1 0 0l.36-.21 4.74-2.73a.77.77 0 0 0 .39-.68v-6.67l2 1.16a.07.07 0 0 1 0 .05v5.52A4.49 4.49 0 0 1 13.38 21zm-9.7-4.12a4.44 4.44 0 0 1-.53-3 .09.09 0 0 1 0 0l.36.21 4.74 2.73a.77.77 0 0 0 .78 0L14.49 14v2.32a.08.08 0 0 1 0 .06l-4.8 2.77a4.49 4.49 0 0 1-6.01-2.27zM3.08 8.09A4.44 4.44 0 0 1 5.44 6l-.01.42v5.46a.77.77 0 0 0 .39.68l5.36 3.09-2 1.16a.08.08 0 0 1-.06 0L4.32 14a4.49 4.49 0 0 1-1.24-5.91zm16.44 3.87-5.36-3.09 2-1.16a.07.07 0 0 1 .06 0l4.8 2.77a4.49 4.49 0 0 1-.7 8.1v-.42l.01-5.46a.77.77 0 0 0-.39-.67l-.01-.07zm2-3a.09.09 0 0 1 0 0l-.36-.21-4.74-2.73a.77.77 0 0 0-.78 0L9.51 9V6.68a.07.07 0 0 1 0-.06l4.8-2.77a4.49 4.49 0 0 1 6.67 4.65l-.46-.54zm-12.54 4.13-2-1.16a.08.08 0 0 1 0-.05V6.36a4.49 4.49 0 0 1 7.37-3.44l-.36.21-4.74 2.73a.77.77 0 0 0-.39.68l.12 6.66zm1.09-2.35L12 9.53l2 1.14v2.28l-2 1.14-2-1.15V10.7z"/></svg>'},'Gemini':{url:'https://status.cloud.google.com',icon:'<svg class="provider-icon" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 24A14.3 14.3 0 0 1 9.8 12 14.3 14.3 0 0 1 12 0a14.3 14.3 0 0 1 2.2 12A14.3 14.3 0 0 1 12 24zm0 0a14.3 14.3 0 0 1-12-2.2A14.3 14.3 0 0 1 12 9.8a14.3 14.3 0 0 1 12 2.2A14.3 14.3 0 0 1 12 24z"/></svg>'}};
   function label(s){return s==='operational'?'All Clear':s==='minor'?'Potential D.O.R.C.S. Activity':(s==='major'||s==='critical')?'D.O.R.C.S. Attacking!':'Status Unknown';}
   function build(list){var c=document.getElementById('sbProviders');if(!c)return;c.innerHTML='';list.forEach(function(p,i){if(i>0){var d=document.createElement('div');d.className='sb-div';c.appendChild(d);}var m=META[p.name]||{url:'#',icon:''};var a=document.createElement('a');a.className='sb-provider';a.href=m.url;a.target='_blank';a.rel='noopener noreferrer';a.innerHTML='<div class="sb-dot '+p.status+'"></div>'+m.icon+'<span class="sb-name">'+p.name+'</span><span class="sb-status">'+label(p.status)+'</span>';c.appendChild(a);});var n=new Date();var u=document.getElementById('sbUpdated');if(u)u.textContent='Updated '+n.toLocaleTimeString('en-us',{hour:'numeric',minute:'2-digit'});}
