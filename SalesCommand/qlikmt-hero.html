@@ -26,6 +26,9 @@
   /* Content lives in the DESTINATIONS array at the bottom.
      Mindtickle deep-links go in each "href". Layout never needs editing. */
   :root{
+    --news-speed:130s;   /* news crawl — higher = slower */
+    --mkt-speed:150s;    /* markets ribbon */
+
     --navy-0:#0B1F33; --navy-1:#11304D; --navy-2:#19426C;
     --green:#00A651; --sky:#10CFC9;
     --cat-review:#FF6B35; --cat-training:#10CFC9; --cat-deadline:#FF6B6B; --cat-event:#00A651; --cat-content:#9B59FF;
@@ -239,7 +242,8 @@
   .mtape-win{position:relative;flex:1;display:flex;align-items:center;height:100%;overflow:hidden;padding-left:6px;
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent);
     mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
-  .mtape-track{display:inline-flex;white-space:nowrap;will-change:transform;animation:marquee 95s linear infinite}
+  .mtape-track{display:inline-flex;white-space:nowrap;will-change:transform;
+    animation:marquee var(--mkt-speed) linear infinite}
   .pulse:hover .mtape-track{animation-play-state:paused}
   .chip{display:inline-flex;align-items:center;gap:7px;padding:0 15px;position:relative}
   .chip::after{content:"";position:absolute;right:0;top:50%;transform:translateY(-50%);
@@ -281,7 +285,9 @@
   .ticker-win{position:relative;flex:1;display:flex;align-items:center;height:100%;overflow:hidden;padding-left:8px;
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);
     mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
-  .ticker-track{display:inline-flex;white-space:nowrap;will-change:transform;animation:marquee 80s linear infinite}
+  /* --news-speed / --mkt-speed: higher = slower. One knob each. */
+  .ticker-track{display:inline-flex;white-space:nowrap;will-change:transform;
+    animation:marquee var(--news-speed) linear infinite}
   .ticker:hover .ticker-track{animation-play-state:paused}
   @keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   .ticker-item{display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:var(--ink);
@@ -1059,7 +1065,7 @@ function renderNews(list){
   const html = list.map(n => {
     const fav = faviconFor(n.url);
     const img = fav ? '<img class="ticker-fav" src="'+fav+'" alt="" onerror="this.style.display=\'none\'">' : '';
-    const tgt = (n.url && n.url.indexOf('http')===0) ? ' target="_top"' : '';
+    const tgt = (n.url && n.url.indexOf('http')===0) ? ' target="_blank" rel="noopener noreferrer"' : '';
     return '<a class="ticker-item" href="'+esc(n.url)+'"'+tgt+'>'+img
       + '<span class="ti-title">'+esc(n.title)+'</span> <span class="ti-src">'+esc(n.source)+'</span></a>';
   }).join('');

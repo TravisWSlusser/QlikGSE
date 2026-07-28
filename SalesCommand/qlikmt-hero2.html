@@ -13,6 +13,8 @@
   /* Content lives in the DESTINATIONS array at the bottom.
      Mindtickle deep-links go in each "href". Layout never needs editing. */
   :root{
+    --news-speed:130s;   /* AI-HQ news crawl — higher = slower */
+
     --navy-0:#0B1F33; --navy-1:#11304D; --navy-2:#19426C;
     --green:#00A651; --sky:#10CFC9;
     --cat-review:#FF6B35; --cat-training:#10CFC9; --cat-deadline:#FF6B6B; --cat-event:#00A651; --cat-content:#9B59FF;
@@ -1077,7 +1079,9 @@
 .hqt-k::before,.hqt-k::after{content:"";width:9px;height:1px;background:currentColor;opacity:.5;flex:0 0 auto}
 .hqt-w{position:relative;z-index:1;font-family:'Playfair Display',serif;font-weight:400;font-size:18px;color:#EDF3F9;line-height:1;letter-spacing:.03em}
 .hqt-win{position:relative;flex:1;display:flex;align-items:center;height:100%;overflow:hidden;padding-left:8px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
-.hqt-track{display:inline-flex;white-space:nowrap;will-change:transform;animation:hqtmarquee 80s linear infinite reverse}
+/* --news-speed: higher = slower. */
+.hqt-track{display:inline-flex;white-space:nowrap;will-change:transform;
+  animation:hqtmarquee var(--news-speed) linear infinite reverse}
 .hqt:hover .hqt-track{animation-play-state:paused}
 @keyframes hqtmarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .hqt-item{display:inline-flex;align-items:center;gap:7px;text-decoration:none;color:#EDF3F9;font-size:12px;padding:0 18px;position:relative}
@@ -1824,7 +1828,7 @@ setInterval(renderToday, 10*60*1000);   // re-evaluate the 4x/day slot while the
   var track=document.getElementById('hqNewsTrack');
   function esc(x){return (x||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   function fav(u){try{return 'https://www.google.com/s2/favicons?domain='+new URL(u).hostname+'&sz=64';}catch(e){return '';}}
-  function build(list){track.innerHTML='';var h=list.map(function(n){var f=fav(n.url);var img=f?'<img class="hqt-fav" src="'+f+'" alt="" onerror="this.style.display=\'none\'">':'';var tg=(n.url&&n.url.indexOf('http')===0)?' target="_top"':'';return '<a class="hqt-item" href="'+esc(n.url)+'"'+tg+'>'+img+'<span class="hqt-title">'+esc(n.title)+'</span> <span class="hqt-src">'+esc(n.source)+'</span></a>';}).join('');track.innerHTML=h+h;}
+  function build(list){track.innerHTML='';var h=list.map(function(n){var f=fav(n.url);var img=f?'<img class="hqt-fav" src="'+f+'" alt="" onerror="this.style.display=\'none\'">':'';var tg=(n.url&&n.url.indexOf('http')===0)?' target="_blank" rel="noopener noreferrer"':'';return '<a class="hqt-item" href="'+esc(n.url)+'"'+tg+'>'+img+'<span class="hqt-title">'+esc(n.title)+'</span> <span class="hqt-src">'+esc(n.source)+'</span></a>';}).join('');track.innerHTML=h+h;}
   build(SAMPLE);
   fetch(NEWS).then(function(r){return r.ok?r.json():Promise.reject();}).then(function(d){if(d&&d.items&&d.items.length)build(d.items);}).catch(function(){});
 })();
