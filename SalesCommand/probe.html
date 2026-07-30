@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Widget size probe</title>
+<title>Widget size + scroll probe</title>
 <!-- ===========================================================================
   THROWAWAY DIAGNOSTIC — delete once the mobile questions are answered.
   Reports the size the iframe is actually given, live. Read the big number
@@ -11,7 +11,8 @@
   =========================================================================== -->
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
+  html{height:100%}
+  body{min-height:1600px}   /* taller than the 822px expanded window on purpose */
   /* Everything jammed into the TOP-LEFT corner. Whatever the crop turns out
      to be, that corner is the one region guaranteed to survive it. */
   body{background:#11304D;color:#EDF3F9;
@@ -35,6 +36,10 @@
   .foot{position:absolute;left:8px;right:6px;bottom:7px;
     font-size:10px;color:#6E869E;display:flex;justify-content:space-between;gap:8px}
   .bot{position:absolute;left:0;right:0;bottom:0;height:5px;background:#00A651}
+  /* sits at 1500px — only reachable if the expanded view can scroll */
+  .deep{position:absolute;left:0;right:0;top:1500px;height:90px;background:#00A651;
+    color:#04121F;display:flex;align-items:center;justify-content:center;
+    font-size:17px;font-weight:800;letter-spacing:.04em;text-align:center;padding:0 14px}
 </style>
 </head>
 <body>
@@ -45,6 +50,7 @@
   <div class="note" id="note">Read this number, then tap the expand icon and read it again.</div>
 
   <div class="foot"><span id="dpr"></span><span id="mode"></span></div>
+  <div class="deep">YOU SCROLLED TO 1500px &mdash; SCROLLING WORKS</div>
   <div class="bot"></div>
 
 <script>
@@ -68,7 +74,7 @@
     /* Labelled 10px bands through the crop zone. Read the LAST number you can
        see on the phone — that is the visible window height. */
     rulerEl.innerHTML = '';
-    for (var y = 100; y < Math.min(h, 320); y += 10){
+    for (var y = 100; y < 320; y += 10){
       var d = document.createElement('div');
       d.className = 'band ' + (y % 50 === 0 ? 'big' : (y % 20 === 0 ? 'a' : 'b'));
       d.style.top = y + 'px';
