@@ -85,16 +85,13 @@
   /* Beta rect stays IN FLOW. It must keep position:relative or its ::before
      caution stripe escapes to .hotlinks and paints down the whole bubble. */
   .hotlinks .beta-strip{position:relative;flex:0 0 auto;margin:0;
-    padding:2px 11px 2px 15px;gap:0;height:var(--tgl-h);
-    flex-direction:column;align-items:stretch;justify-content:center}
-  .beta-row{display:flex;align-items:center;gap:7px;line-height:1}
-  .beta-sub{display:block;width:100%;text-align:center;
-    font-family:'Barlow Condensed',sans-serif;font-weight:500;font-size:8px;
-    letter-spacing:.13em;text-transform:uppercase;color:var(--muted);line-height:1.1;margin-top:1px}
-  [data-theme="light"] .beta-sub{color:#6c7d8f}
-  /* links centre in the space left between the rect and the toggle */
-  .hl-links{flex:1 1 auto;display:flex;align-items:center;justify-content:center;
-    gap:20px;flex-wrap:wrap}
+    padding:0 13px 0 17px;gap:0;height:var(--tgl-h);
+    flex-direction:row;align-items:center;justify-content:center}
+  .beta-row{display:flex;align-items:center;gap:8px;line-height:1}
+  /* Links centre on the bubble itself, not on the space left over, so the beta
+     rect's width has no effect on where they sit. */
+  .hl-links{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    display:flex;align-items:center;justify-content:center;gap:20px;white-space:nowrap}
 
   /* ---- highlights rotator (manager-controlled posts) ---- */
   /* two containers: the text stack, and a reserved media panel on the right */
@@ -103,15 +100,18 @@
     column-gap:0;transition:none;
     border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:clamp(12px,1.6vw,18px)}
-  .hl.has-media{grid-template-columns:minmax(0,1fr) clamp(140px,26%,230px);column-gap:18px}
-  .hl-media{grid-column:2;grid-row:1 / span 2;display:none;overflow:hidden;border-radius:11px;
+  .hl.has-media{grid-template-columns:minmax(0,1fr) clamp(120px,22%,190px);column-gap:20px}
+  /* square slot, cropped to a circle; sits centred in its column */
+  .hl-media{grid-column:2;grid-row:1 / span 2;display:none;
+    width:100%;aspect-ratio:1 / 1;align-self:center;justify-self:center;
+    overflow:hidden;border-radius:50%;
     border:1px solid var(--line);background:rgba(255,255,255,.04)}
   .hl.has-media .hl-media{display:block}
-  .hl-media img{width:100%;height:100%;object-fit:cover;display:block}
+  .hl-media img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
   [data-theme="light"] .hl-media{background:rgba(15,40,70,.05);border-color:rgba(15,40,70,.12)}
   [data-theme="light"] .hl{background:rgba(255,255,255,.42);border-color:rgba(15,40,70,.12)}
   .hl-stage{position:relative;grid-column:1;grid-row:1;min-height:clamp(130px,13vw,180px)}
-  .hl-item{position:absolute;inset:0;opacity:0;transform:translateY(8px);
+  .hl-item{position:absolute;left:0;right:0;top:0;opacity:0;transform:translateY(8px);
     transition:opacity .5s ease, transform .5s ease;pointer-events:none}
   .hl-item.on{opacity:1;transform:none;pointer-events:auto}
   .hl-kicker{font-family:'Barlow Condensed';font-weight:500;font-size:12px;letter-spacing:.2em;
@@ -122,7 +122,8 @@
   .hl-title .ac{color:var(--green)}
   .hl-body{font-size:clamp(14px,1.4vw,16px);line-height:1.55;color:#bccfe2;max-width:560px}
   [data-theme="light"] .hl-body{color:#42566c}
-  .hl-cta{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:13px;
+  .hl-ctas{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;margin-top:14px}
+  .hl-cta{display:inline-flex;align-items:center;gap:6px;font-size:13px;
     color:var(--sky);text-decoration:none;border-bottom:1px solid rgba(16,207,201,.35);padding-bottom:2px}
   .hl-cta:hover{border-bottom-color:var(--sky)}
   .hl-dots{grid-column:1;grid-row:2;display:flex;gap:7px;margin-top:14px}
@@ -612,15 +613,7 @@
     border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:clamp(12px,1.6vw,18px)}
   [data-theme="light"] .vs-infobox{background:rgba(255,255,255,.42);border-color:rgba(15,40,70,.12)}
-  @media (max-width:960px){
-    .herorow{grid-template-columns:1fr;row-gap:clamp(14px,2.4vw,20px);column-gap:0}
-    .hr-brandline{grid-column:1;grid-row:auto}
-    .hr-bodyL{grid-column:1;grid-row:auto}
-    .hr-bodyR{grid-column:1;grid-row:auto;align-self:auto;text-align:left}
-    .vs-infobox{text-align:left;max-width:420px}
-    .quote{border-right:none;border-left:2px solid var(--green);padding-right:0;padding-left:13px;text-align:left}
-    .clocks{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
-}
+
   /* ── beta / under-construction strip ── */
   .beta-strip{display:flex;align-items:center;gap:11px;position:relative;overflow:hidden;
     margin:0 0 clamp(12px,1.6vw,18px);padding:9px 16px 9px 22px;border-radius:12px;
@@ -630,13 +623,13 @@
     background:repeating-linear-gradient(45deg,#F5A623 0 6px,#10243b 6px 12px);
     background-size:auto 17px;animation:beta-stripes 1.1s linear infinite}
   @keyframes beta-stripes{to{background-position:0 -17px}}
-  .beta-cone{width:15px;height:15px;flex:0 0 auto;transform-origin:50% 88%;animation:beta-bob 2.6s ease-in-out infinite}
+  .beta-cone{width:17px;height:17px;flex:0 0 auto;transform-origin:50% 88%;animation:beta-bob 2.6s ease-in-out infinite}
   @keyframes beta-bob{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
-  .beta-badge{flex:0 0 auto;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:9px;
-    letter-spacing:1.2px;text-transform:uppercase;color:#241704;background:#F5A623;border-radius:4px;
-    padding:1px 6px;line-height:1.3;animation:beta-glow 2.8s ease-in-out infinite}
+  .beta-badge{flex:0 0 auto;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:10px;
+    letter-spacing:1.3px;text-transform:uppercase;color:#241704;background:#F5A623;border-radius:4px;
+    padding:2px 7px;line-height:1.25;animation:beta-glow 2.8s ease-in-out infinite}
   @keyframes beta-glow{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,0)}50%{box-shadow:0 0 16px -2px rgba(245,166,35,.65)}}
-  .beta-txt{font-family:'Inter',system-ui,sans-serif;font-size:11px;line-height:1.15;color:var(--muted);white-space:nowrap}
+  .beta-txt{font-family:'Inter',system-ui,sans-serif;font-size:12.5px;line-height:1.15;color:var(--muted);white-space:nowrap}
   .beta-txt b{color:#F5A623;font-weight:700}
   [data-theme="light"] .beta-strip{background:linear-gradient(90deg,rgba(245,166,35,.16),rgba(245,166,35,.05));border-color:rgba(216,140,20,.45)}
   [data-theme="light"] .beta-strip::before{background:repeating-linear-gradient(45deg,#E8941A 0 6px,#cfd8e2 6px 12px)}
@@ -644,9 +637,18 @@
   [data-theme="light"] .beta-txt b{color:#C77F12}
   @media (prefers-reduced-motion:reduce){.beta-cone,.beta-strip::before,.beta-badge{animation:none}}
 
-  @media (max-width:620px){
-    .hotlinks{flex-direction:column;align-items:stretch;gap:10px;padding:12px 12px}
+  /* True centring and an inline beta rect can't both fit once the bubble gets
+     narrow. The rect keeps its cone and badge and drops the wordmark, which
+     buys back ~150px and keeps the links dead centre. */
+  @media (max-width:1010px){
+    .hotlinks .beta-txt{display:none}
+    .hotlinks .beta-strip{padding:0 11px 0 15px}
+  }
+  @media (max-width:700px){
+    .hotlinks{flex-direction:column;align-items:stretch;gap:10px;padding:12px}
+    .hotlinks .beta-txt{display:inline}
     .hotlinks .beta-strip{align-self:flex-start}
+    .hl-links{position:static;transform:none;flex-wrap:wrap}
     .hotlinks .themetoggle{top:12px;transform:none}
   }
 
@@ -680,6 +682,40 @@
   html[data-section="highlights"] .herorow{display:grid;padding-top:0}
 
   html[data-section="hubs"] .tiles{display:grid;margin-top:0}
+
+  /* ── stacked layout — sits after the section rules on purpose, because
+     html[data-section="highlights"] .herorow{display:grid} would otherwise
+     outrank it and keep the two-column grid at narrow widths ──────────────────────────────────────────────────────
+     display:contents on .hr-bodyR promotes the greeting and the clocks to
+     siblings of .hr-bodyL, so they can be ordered independently: greeting on
+     top, then the highlight card, key dates, legend, and the clocks last.   */
+  @media (max-width:960px){
+    html:not([data-section]) .herorow,
+    html[data-section="highlights"] .herorow{display:flex;flex-direction:column;
+      align-items:stretch;row-gap:clamp(12px,2vw,16px);column-gap:0;padding-right:0}
+    .hr-brandline{order:0}
+    .hr-bodyR{display:contents}
+    .vs-infobox{order:1}
+    .hr-bodyL{order:2;align-self:auto}
+    .ue-legend{order:3}
+    .clocks{order:4;margin-top:0}
+    /* greeting spans the full width of the highlight card but keeps its
+       right alignment — it must not flip sides when the layout reorders */
+    .vs-infobox{text-align:right;max-width:none;width:100%}
+    .quote{border-right:2px solid var(--green);border-left:none;
+      padding-right:13px;padding-left:0;text-align:right}
+    /* colour key centres while stacked, returns to right-aligned when wide */
+    .ue-legend{justify-content:center}
+    /* never an odd number on a line: four across, then two and two */
+    .clocks{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+  @media (max-width:680px){
+    .clocks{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+  @media (max-width:520px){
+    .hl.has-media{grid-template-columns:minmax(0,1fr) 0;column-gap:0}
+    .hl.has-media .hl-media{display:none}
+}
 </style>
 </head>
 <body>
@@ -698,7 +734,6 @@
         <span class="beta-badge">Beta</span>
         <span class="beta-txt"><b>Pardon our dust!</b></span>
       </span>
-      <span class="beta-sub">Under Construction</span>
       </div>
       <span class="hl-links">
       <!-- Top-level Mindtickle destinations. target="_top" breaks out of the embedded widget iframe. Rooms = internal REC Room, link TBD. -->
@@ -786,7 +821,8 @@ const SHOW_HUBS = !SECTION || SECTION === 'hubs';
      kicker  short eyebrow label
      title   supports <span class="ac"> for the green accent word
      body    one or two sentences
-     cta     optional { label, href }   omit for a text-only post
+     cta     optional { label, href } or an array of them — multiple links
+             always render side by side, never stacked
      image   optional URL — shows in the reserved media panel on the right.
              Omit and the panel collapses so the text uses the full width.     */
 const HIGHLIGHTS = [
@@ -917,9 +953,15 @@ if (SHOW_HL){
     d.innerHTML = '<span class="hl-kicker">'+h.kicker+'</span>'
       + '<h1 class="hl-title">'+h.title+'</h1>'
       + '<p class="hl-body">'+h.body+'</p>'
-      + (h.cta ? '<a class="hl-cta" href="'+h.cta.href+'"'
-          + (h.cta.href.indexOf('http')===0 ? ' target="_top"' : '')
-          + '>'+h.cta.label+' &#8599;</a>' : '');
+      + (function(){
+          if(!h.cta) return '';
+          const list = Array.isArray(h.cta) ? h.cta : [h.cta];
+          return '<span class="hl-ctas">' + list.map(function(c){
+            return '<a class="hl-cta" href="'+c.href+'"'
+              + (c.href.indexOf('http')===0 ? ' target="_top"' : '')
+              + '>'+c.label+' &#8599;</a>';
+          }).join('') + '</span>';
+        })();
     hlStage.appendChild(d);
     return d;
   });
@@ -931,6 +973,23 @@ if (SHOW_HL){
     hlDots.appendChild(b);
     return b;
   });
+  /* Slides are absolutely stacked for the crossfade, so the stage has no
+     natural height. Measure the tallest slide and reserve that much, or a long
+     slide's CTA overflows the card and lands on the key-date chips. */
+  function sizeHlStage(){
+    let tall = 0;
+    hlNodes.forEach(function(el){
+      /* offsetTop/offsetHeight are layout values, so they ignore the
+         translateY on inactive slides — getBoundingClientRect() does not.
+         scrollHeight alone drops the CTA's bottom margin, hence the max(). */
+      let h = el.scrollHeight;
+      const last = el.lastElementChild;
+      if (last) h = Math.max(h, last.offsetTop + last.offsetHeight);
+      tall = Math.max(tall, h);
+    });
+    if (tall > 0 && tall + 4 > parseFloat(hlStage.style.minHeight || 0))
+      hlStage.style.minHeight = (tall + 4) + 'px';
+  }
   const hlBox = document.getElementById('hl');
   const hlMedia = document.getElementById('hlMedia');
   let hlI = 0, hlTimer = null;
@@ -942,7 +1001,19 @@ if (SHOW_HL){
     hlBox.classList.toggle('has-media', !!img);
     hlMedia.innerHTML = img ? '<img src="'+img+'" alt="">' : '';
   }
+  sizeHlStage();
   hlGo(0);
+  /* Re-measure whenever anything actually reflows: fonts arriving late, the
+     responsive breakpoints, or a slide's copy changing. The stage only ever
+     grows, so this settles rather than oscillating. */
+  window.addEventListener('resize', sizeHlStage);
+  window.addEventListener('load', sizeHlStage);
+  requestAnimationFrame(sizeHlStage);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeHlStage);
+  if (window.ResizeObserver){
+    const hro = new ResizeObserver(sizeHlStage);
+    hlNodes.forEach(function(n){ hro.observe(n); });
+  }
   function hlHold(){ clearInterval(hlTimer); hlTimer = setInterval(function(){ hlGo(hlI+1); }, HL_MS); }
   if (hlNodes.length > 1) hlHold(); else hlDots.style.display='none';
 }
