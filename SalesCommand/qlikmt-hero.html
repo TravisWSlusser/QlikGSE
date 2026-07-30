@@ -10,7 +10,6 @@
     ?section=topbar     theme toggle + beta strip, quick links beneath
     ?section=ticker     Current News crawl + Markets ribbon
     ?section=highlights logo/title + highlights rotator (2fr) | greeting stack (1fr)
-    ?section=hubs       hub tabs + tiles
   Exactly one view fetches news/markets per document. See BOOT GATING below.
   Adding a section = a visibility block at the END of the stylesheet + a SHOW_*
   flag. Nothing else.
@@ -258,38 +257,7 @@
     text-transform:uppercase;color:var(--muted);margin:clamp(10px,1.6vw,14px) 0 12px;
     display:inline-flex;align-items:center;gap:7px}
   .qaz-h .qh-ic{width:14px;height:14px;flex:0 0 auto;fill:none;stroke:var(--sky);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  .tiles{display:grid;grid-template-columns:auto 1fr;gap:0 16px;margin-top:16px;padding-bottom:clamp(6px,1vw,12px)}
-  .hub-panels{display:grid;padding:10px 0}
-  .hub-panel{grid-row:1;grid-column:1;display:grid;gap:8px;grid-template-columns:repeat(3,minmax(0,1fr));align-content:start;transition:opacity .15s ease}
-  .hub-panel:not(.active){visibility:hidden;opacity:0;pointer-events:none}
-  .hub-tabs{display:flex;flex-direction:column;justify-content:center;gap:0;border-right:1px solid var(--line);padding:10px 0}
-  .hub-tab{min-width:0;text-align:left;font-family:'Barlow Condensed';font-weight:600;font-size:11px;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--muted);background:transparent;
-    border:none;border-right:2px solid transparent;border-radius:0;padding:8px 14px 8px 4px;white-space:nowrap;cursor:pointer;
-    transition:color .2s ease,border-right-color .2s ease}
-  .hub-tab:hover{color:var(--ink);border-right-color:rgba(16,207,201,.35)}
-  .hub-tab.active{color:var(--sky);border-right-color:var(--sky);
-    box-shadow:none}
-  [data-theme="light"] .hub-tab{background:transparent}
-  [data-theme="light"] .hub-tab.active{color:#0E8A84;border-right-color:#0E8A84}
-  .tile{position:relative;display:flex;align-items:center;gap:11px;min-width:0;
-    text-decoration:none;color:inherit;
-    background:rgba(255,255,255,.045);border:1px solid var(--line);
-    border-radius:var(--radius);padding:5px 11px;
-    transition:transform .25s ease, border-color .25s ease, background .25s ease}
-  .tile:hover{transform:translateY(-3px);background:rgba(255,255,255,.08);
-    border-color:rgba(16,207,201,.55)}
-  .tile:focus-visible{outline:2px solid var(--sky);outline-offset:3px}
-  .tico{width:30px;height:30px;flex:0 0 auto;border-radius:8px;display:grid;place-items:center;
-    background:rgba(16,207,201,.1);border:1px solid rgba(16,207,201,.22)}
-  .tico svg{width:15px;height:15px;stroke:var(--sky);fill:none;stroke-width:1.7;
-    stroke-linecap:round;stroke-linejoin:round}
-  .tbody{flex:1;min-width:0}
-  .tile h3{font-family:'Barlow Condensed';font-weight:600;font-size:17px;letter-spacing:.01em;line-height:1.1}
-  .tile p{font-size:11.5px;line-height:1.3;color:var(--muted);margin-top:1px;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tarrow{flex:0 0 auto;color:var(--muted);font-size:15px;transition:transform .25s ease, color .25s ease}
-  .tile:hover .tarrow{transform:translate(2px,-2px);color:var(--sky)}
 
   /* ---------- LIGHT MODE (variable overrides + card adjustments) ---------- */
   [data-theme="light"]{
@@ -309,11 +277,6 @@
   [data-theme="light"] .kd-empty{background:rgba(15,40,70,.06);border-color:rgba(15,40,70,.1)}
   [data-theme="light"] .kd-panel{background:#fff}
   [data-theme="light"] .quote #qby{color:#6b7f95}
-  [data-theme="light"] .tile{background:#ffffff;border-color:rgba(15,40,70,.12);
-    box-shadow:0 1px 2px rgba(15,40,70,.05)}
-  [data-theme="light"] .tile:hover{background:#ffffff;border-color:var(--sky);
-    box-shadow:0 10px 24px -14px rgba(14,138,132,.55)}
-  [data-theme="light"] .tico{background:rgba(14,138,132,.08);border-color:rgba(15,40,70,.12)}
 
   /* theme toggle */
   .themetoggle{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;
@@ -611,18 +574,8 @@
   .rise{opacity:0;transform:translateY(14px);animation:rise .7s ease forwards}
   .d1{animation-delay:.04s}.d2{animation-delay:.12s}.d3{animation-delay:.2s}.d4{animation-delay:.28s}
   @keyframes rise{to{opacity:1;transform:none}}
-  .tiles .tile{opacity:0;transform:translateY(16px);animation:rise .6s ease forwards}
-  @media (prefers-reduced-motion:reduce){*{animation:none!important}.rise,.tiles .tile{opacity:1;transform:none}.contrail path{stroke-dashoffset:0}}
-  @media (max-width:880px){.hub-panel{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  @media (max-width:600px){.tiles{grid-template-columns:1fr}
-  .hub-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 14px;min-width:0;
-    border-right:none;border-bottom:1px solid var(--line);padding:0 0 8px}
-  .hub-tab{text-align:left;border-right:none;border-bottom:2px solid transparent;
-    padding:6px 2px 4px;white-space:normal}
-  .hub-tab.active{border-right-color:transparent;border-bottom-color:var(--sky)}
-  .hub-tab:hover{border-right-color:transparent;border-bottom-color:rgba(16,207,201,.35)}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}.rise{opacity:1;transform:none}.contrail path{stroke-dashoffset:0}}
   @media (max-width:620px){.kd-row{grid-template-columns:repeat(3,1fr)}}
-  @media (max-width:560px){.hub-panel{grid-template-columns:1fr}}
 
   .vs-infobox{text-align:right;
     border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);
@@ -756,7 +709,6 @@
 
   html[data-section="highlights"] .herorow{display:grid;padding-top:0}
 
-  html[data-section="hubs"] .tiles{display:grid;margin-top:0}
 
   /* ---- ?section=mobile : one widget, two states -------------------------
      data-mode is set from the viewport height. Collapsed inside a Mindtickle
@@ -782,7 +734,6 @@
   html[data-section="mobile"] .hotlinks{justify-content:space-between;padding:8px 10px}
   html[data-section="mobile"][data-mode="full"] .lowerthird{display:block;margin-top:12px}
   html[data-section="mobile"][data-mode="full"] .herorow{display:flex;margin-top:12px}
-  html[data-section="mobile"][data-mode="full"] .tiles{display:grid;margin-top:14px}
 
   /* ── stacked layout — sits after the section rules on purpose, because
      html[data-section="highlights"] .herorow{display:grid} would otherwise
@@ -924,7 +875,6 @@
 
     <div class="divider rise d4" aria-hidden="true"></div>
 
-    <nav class="tiles" id="tiles" aria-label="Quick action zone"></nav>
 
   </div>
 
@@ -940,7 +890,6 @@ const IS_MOBILE = SECTION === 'mobile';
 const SHOW_TOP  = !SECTION || SECTION === 'topbar'     || IS_MOBILE;
 const SHOW_TICK = !SECTION || SECTION === 'ticker'     || IS_MOBILE;
 const SHOW_HL   = !SECTION || SECTION === 'highlights' || IS_MOBILE;
-const SHOW_HUBS = !SECTION || SECTION === 'hubs'       || IS_MOBILE;
 
 /* ---- mobile: card vs full ------------------------------------------------
    Collapsed, Mindtickle gives this iframe roughly 200px. Expanded it gets the
@@ -1260,98 +1209,7 @@ if (SHOW_HL){
 }
 
 /* HUB TAXONOMY — categorized content hubs. href='#' = placeholder for real MT links. */
-const HUB_CATS = [
-  { id:'daily', label:'Essential Hubs', hubs:[
-    { label:'Sales Plays',            desc:'Plays, frameworks, and battle-tested motions.',    icon:'target',  href:'#' },
-    { label:'Use Cases & Solutions',   desc:'Industry solutions and use-case positioning.',    icon:'solution',href:'#' },
-    { label:'Pitch & Decks',          desc:'Customer-ready presentations and templates.',     icon:'present', href:'#' },
-    { label:'Competitive (Battlecards)',desc:'Win against the competition.',                  icon:'shield',  href:'#' },
-    { label:'Customer Stories',        desc:'Proof points and customer case studies.',         icon:'star',    href:'#' },
-    { label:'ICP & Personas',          desc:'Ideal customer profiles and buyer personas.',    icon:'users',   href:'#' },
-    { label:'Industry',                desc:'Vertical-specific content and insights.',        icon:'building',href:'#' },
-    { label:'Customer-Ready Content',  desc:'Approved assets ready to share externally.',     icon:'send',    href:'#' },
-    { label:'Sales Methodology',       desc:'Frameworks, story selling, the Qlik way.',       icon:'compass', href:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/490326426994658761' },
-  ]},
-  { id:'product', label:'Product & Credibility', hubs:[
-    { label:'Qlik Platform',          desc:'Platform overview, architecture, and demos.',     icon:'layers',  href:'#' },
-    { label:'Product Releases',        desc:'Latest releases and what\'s new.',               icon:'spark',   href:'#' },
-    { label:'Services',                desc:'Professional services and implementation.',      icon:'tool',    href:'#' },
-    { label:'Security & Compliance',   desc:'Trust, security, and compliance resources.',     icon:'lock',    href:'#' },
-  ]},
-  { id:'commercial', label:'Commercial', hubs:[
-    { label:'Pricing & Packaging',     desc:'Current pricing, bundles, and deal guidance.',   icon:'tag',     href:'#' },
-    { label:'Legal',                   desc:'Contract templates, terms, and legal resources.',icon:'file',    href:'#' },
-  ]},
-  { id:'internal', label:'Internal & Support', hubs:[
-    { label:'Tools & Processes',       desc:'Internal tools, workflows, and how-tos.',        icon:'tool',    href:'#' },
-  ]},
-];
 
-const ICONS = {
-  target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
-  solution:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
-  present:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>',
-  shield:'<path d="M12 2l8 4v5c0 5.5-3.8 10.7-8 12-4.2-1.3-8-6.5-8-12V6l8-4z"/>',
-  star:'<path d="M12 2l3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/>',
-  users:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
-  building:'<rect x="4" y="2" width="16" height="20" rx="1"/><path d="M9 22V12h6v10M9 6h.01M15 6h.01M9 10h.01M15 10h.01"/>',
-  send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>',
-  layers:'<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>',
-  tool:'<path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>',
-  lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',
-  tag:'<path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1"/>',
-  file:'<path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7z"/><path d="M13 2v5h5"/>',
-  spark:'<path d="M12 3v6M12 15v6M3 12h6M15 12h6M6 6l3 3M15 15l3 3M18 6l-3 3M9 15l-3 3"/>',
-  compass:'<circle cx="12" cy="12" r="9"/><path d="M16 8l-2 6-6 2 2-6 6-2z"/>',
-  play:'<circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z"/>',
-  message:'<path d="M4 5h16v11H8l-4 4V5z"/>',
-  link:'<path d="M9 12a4 4 0 014-4h3a4 4 0 010 8h-3M15 12a4 4 0 01-4 4H8a4 4 0 010-8h3"/>',
-  grid:'<path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/>',
-};
-
-function makeTile(h, delay){
-  var a = document.createElement('a');
-  a.className='tile'; a.href=h.href; a.style.animationDelay=(0.32+delay*0.05)+'s';
-  if(h.href.startsWith('http')){ a.target='_top'; }
-  a.innerHTML='<span class="tico"><svg viewBox="0 0 24 24">'+(ICONS[h.icon]||ICONS.grid)+'</svg></span>'+
-    '<span class="tbody"><h3>'+h.label+'</h3><p>'+h.desc+'</p></span>'+
-    '<span class="tarrow" aria-hidden="true">&#8599;</span>';
-  return a;
-}
-
-var tiles = document.getElementById('tiles');
-var tabBar = document.createElement('div');
-tabBar.className='hub-tabs'; tabBar.setAttribute('role','tablist');
-var hubPanels = document.createElement('div');
-hubPanels.className='hub-panels';
-HUB_CATS.forEach(function(cat,ci){
-  var grid=document.createElement('div');
-  grid.className='hub-panel'+(ci===0?' active':'');
-  grid.setAttribute('role','tabpanel');
-  cat.hubs.forEach(function(h,i){ grid.appendChild(makeTile(h,i)); });
-  hubPanels.appendChild(grid);
-});
-
-function showCat(idx){
-  hubPanels.querySelectorAll('.hub-panel').forEach(function(p,i){ p.classList.toggle('active',i===idx); });
-  tabBar.querySelectorAll('.hub-tab').forEach(function(t,i){
-    t.classList.toggle('active',i===idx);
-    t.setAttribute('aria-selected',i===idx);
-  });
-}
-
-HUB_CATS.forEach(function(cat,idx){
-  var tab=document.createElement('button');
-  tab.type='button'; tab.className='hub-tab'+(idx===0?' active':'');
-  tab.setAttribute('role','tab'); tab.setAttribute('aria-selected',idx===0);
-  tab.textContent=cat.label;
-  tab.addEventListener('click',function(){ showCat(idx); });
-  tabBar.appendChild(tab);
-});
-
-tiles.appendChild(tabBar);
-tiles.appendChild(hubPanels);
-showCat(0);
 
 /* ---- QNews channel icon fallback (until the PNG is in the repo) ---- */
 function qnewsFallback(){ var e=document.getElementById('qnews'); if(e) e.classList.add('fb'); }
