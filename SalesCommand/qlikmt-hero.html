@@ -651,12 +651,20 @@
     letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
   .lc-time{font-family:'Barlow Condensed',sans-serif;font-weight:700;
     font-size:clamp(30px,9vw,42px);line-height:.95;color:var(--ink);font-variant-numeric:tabular-nums}
-  .lc-cta{display:inline-flex;align-items:center;gap:9px;align-self:flex-start;
-    font-size:12.5px;letter-spacing:.03em;color:var(--sky);
-    border:1px solid rgba(16,207,201,.38);border-radius:999px;padding:7px 15px 7px 11px;
-    background:rgba(16,207,201,.08)}
-  .lc-ico{width:15px;height:15px;display:inline-block;flex:0 0 auto}
-  .lc-ico svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+  /* Mindtickle's expand control sits just off the top-right of our iframe and
+     we cannot restyle or move it. So this is a POINTER, not a button — no
+     border, no fill, nothing that invites a tap on the wrong thing. */
+  .lc-cta{position:absolute;top:14px;right:16px;display:flex;align-items:flex-start;gap:7px;
+    font-size:11.5px;line-height:1.25;letter-spacing:.02em;color:var(--sky);
+    text-align:right;max-width:150px;opacity:.95}
+  .lc-cta b{font-weight:600;display:block}
+  .lc-arrow{width:26px;height:26px;flex:0 0 auto;margin-top:-4px;
+    animation:lcNudge 1.8s ease-in-out infinite}
+  .lc-arrow svg{width:100%;height:100%;fill:none;stroke:currentColor;
+    stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  @keyframes lcNudge{0%,100%{transform:translate(0,0)}50%{transform:translate(3px,-3px)}}
+  @media (prefers-reduced-motion:reduce){.lc-arrow{animation:none}}
+  .launch{position:relative}
 
   @media (prefers-reduced-motion:reduce){.beta-cone,.beta-strip::before,.beta-badge{animation:none}}
 
@@ -724,6 +732,7 @@
      top, then the highlight card, key dates, legend, and the clocks last.   */
   @media (max-width:960px){
     html:not([data-section]) .herorow,
+    html[data-section="mobile"] .herorow,
     html[data-section="highlights"] .herorow{display:flex;flex-direction:column;
       align-items:stretch;row-gap:clamp(12px,2vw,16px);column-gap:0;padding-right:0}
     .hr-brandline{order:0}
@@ -769,10 +778,10 @@
         <span class="lc-time" id="lcTime">&mdash;</span>
       </div>
       <div class="lc-cta">
-        <span class="lc-ico" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        <span><b>Expand</b> to open</span>
+        <span class="lc-arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 19C7 11 12 7 19 6"/><path d="M13 5.6L19.4 5.6L19.4 12"/></svg>
         </span>
-        Tap to launch
       </div>
     </div>
     <nav class="hotlinks rise d1" aria-label="Quick links">
