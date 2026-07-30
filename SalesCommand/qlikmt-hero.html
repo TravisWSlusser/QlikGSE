@@ -157,6 +157,13 @@
   .ue-date{font-weight:700;white-space:nowrap;flex:0 0 auto}
   .ue-title{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:11px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:auto}
+  /* when the label is wider than the chip, drop the ellipsis and crawl it */
+  .ue-title > span{display:inline-block;max-width:none}  /* inline spans report scrollWidth 0 */
+  .ue-title.roll{text-overflow:clip;margin-left:auto}
+  .ue-title.roll span{display:inline-block;padding-right:26px;
+    animation:ueRoll var(--roll,9s) linear infinite}
+  @keyframes ueRoll{0%,12%{transform:translateX(0)}88%,100%{transform:translateX(var(--rollx,-40px))}}
+  @media (prefers-reduced-motion:reduce){.ue-title.roll span{animation:none}}
   .kd-row.open .ue-title{margin-left:0}
   .ue-detail{flex:1 1 auto;min-width:0;color:var(--muted);font-size:12.5px;
     letter-spacing:0;text-transform:none;text-align:center;
@@ -167,7 +174,9 @@
   .ue-x:hover{color:var(--ink)}
   .ue-x svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
   .ue-legend{grid-column:1;grid-row:3;display:flex;flex-wrap:wrap;justify-content:flex-end;
-    gap:12px;font-size:9.5px;letter-spacing:.02em;color:var(--muted);padding-top:7px}
+    gap:8px 12px;font-size:9.5px;letter-spacing:.02em;color:var(--muted);padding-top:7px}
+  /* the last two travel as one unit, so a wrap gives 3+2 and never 4+1 */
+  .ue-legpair{display:flex;align-items:center;gap:12px;flex:0 0 auto}
   .ue-leg{display:inline-flex;align-items:center;gap:5px}
   .ue-leg i{width:6px;height:6px;border-radius:50%;background:var(--uec);display:inline-block}
   .herorow{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);column-gap:34px;
@@ -602,8 +611,10 @@
   @media (prefers-reduced-motion:reduce){*{animation:none!important}.rise,.tiles .tile{opacity:1;transform:none}.contrail path{stroke-dashoffset:0}}
   @media (max-width:880px){.hub-panel{grid-template-columns:repeat(2,minmax(0,1fr))}}
   @media (max-width:600px){.tiles{grid-template-columns:1fr}
-  .hub-tabs{flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:4px 14px;min-width:0;border-right:none;border-bottom:1px solid var(--line);padding:0 0 8px}
-  .hub-tab{text-align:left;flex:0 1 auto;border-right:none;border-bottom:2px solid transparent;padding:6px 2px 4px}
+  .hub-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px 14px;min-width:0;
+    border-right:none;border-bottom:1px solid var(--line);padding:0 0 8px}
+  .hub-tab{text-align:left;border-right:none;border-bottom:2px solid transparent;
+    padding:6px 2px 4px;white-space:normal}
   .hub-tab.active{border-right-color:transparent;border-bottom-color:var(--sky)}
   .hub-tab:hover{border-right-color:transparent;border-bottom-color:rgba(16,207,201,.35)}}
   @media (max-width:620px){.kd-row{grid-template-columns:repeat(3,1fr)}}
@@ -649,19 +660,21 @@
   .lc-mid{display:flex;align-items:baseline;gap:10px 12px;flex-wrap:wrap;margin:8px 0 9px}
   .lc-date{font-family:'Barlow Condensed',sans-serif;font-weight:500;font-size:12px;
     letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .lc-teaser{display:flex;align-items:center;gap:8px;min-width:0;font-size:12px;
-    padding-top:9px;border-top:1px solid var(--line);
-    opacity:0;transform:translateY(4px);transition:opacity .45s ease,transform .45s ease}
-  .lc-teaser.on{opacity:1;transform:none}
-  .lc-dot{width:6px;height:6px;border-radius:50%;background:var(--sky);flex:0 0 auto;
-    box-shadow:0 0 0 0 rgba(16,207,201,.55);animation:lcPulse 2.4s ease-out infinite}
-  @keyframes lcPulse{0%{box-shadow:0 0 0 0 rgba(16,207,201,.5)}
-    70%{box-shadow:0 0 0 7px rgba(16,207,201,0)}100%{box-shadow:0 0 0 0 rgba(16,207,201,0)}}
+  .lc-teaser{display:flex;align-items:center;gap:10px;min-width:0;font-size:12px;
+    padding-top:9px;border-top:1px solid var(--line);opacity:1}
   .lc-teaser em{font-style:normal;font-family:'Barlow Condensed',sans-serif;font-weight:600;
-    font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sky);flex:0 0 auto}
-  .lc-teaser b{font-weight:500;color:var(--ink);min-width:0;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  @media (prefers-reduced-motion:reduce){.lc-dot{animation:none}}
+    font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);flex:0 0 auto}
+  .lc-dates{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
+  .lc-date-chip{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--ink);
+    border:1px solid var(--uec,var(--line));border-radius:7px;padding:3px 9px;
+    background:rgba(255,255,255,.04)}
+  .lc-date-chip i{width:6px;height:6px;border-radius:50%;background:var(--uec,var(--sky));
+    flex:0 0 auto;box-shadow:0 0 0 0 rgba(16,207,201,.55);animation:lcPulse 2.4s ease-out infinite}
+  @keyframes lcPulse{0%{box-shadow:0 0 0 0 currentColor}
+    70%{box-shadow:0 0 0 6px rgba(16,207,201,0)}100%{box-shadow:0 0 0 0 rgba(16,207,201,0)}}
+  @media (prefers-reduced-motion:reduce){.lc-date-chip i{animation:none}}
   .lc-greet{font-family:'Barlow Condensed',sans-serif;font-weight:500;font-size:11px;
     letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
   .lc-time{font-family:'Barlow Condensed',sans-serif;font-weight:700;
@@ -736,6 +749,11 @@
   html[data-section="mobile"][data-mode="full"] .topline,
   html[data-section="mobile"][data-mode="full"] .hotlinks{display:flex}
   html[data-section="mobile"] .hl-links{display:none}
+  /* three chips across 408px leaves ~31px for a label. Stack them instead. */
+  html[data-section="mobile"] .ue{height:auto !important;padding:6px}
+  html[data-section="mobile"] .ue-row{grid-template-columns:minmax(0,1fr);gap:6px;height:auto}
+  html[data-section="mobile"] .ue-chip{height:auto;padding:7px 12px}
+  html[data-section="mobile"] .ue-title{font-size:11.5px}
   html[data-section="mobile"] .hotlinks{justify-content:space-between;padding:8px 10px}
   html[data-section="mobile"][data-mode="full"] .lowerthird{display:block;margin-top:12px}
   html[data-section="mobile"][data-mode="full"] .herorow{display:flex;margin-top:12px}
@@ -796,7 +814,7 @@
         <span class="lc-date" id="lcDate"></span>
       </div>
       <!-- rotates through the live highlights so the card has a reason to be tapped -->
-      <div class="lc-teaser" id="lcTeaser"><span class="lc-dot"></span><em id="lcTeaseK"></em><b id="lcTeaseT"></b></div>
+      <div class="lc-teaser" id="lcTeaser"><em>Coming up</em><span class="lc-dates" id="lcDates"></span></div>
       <div class="lc-cta">
         <span><b>Expand</b> to open</span>
         <span class="lc-arrow" aria-hidden="true">
@@ -965,19 +983,7 @@ if (IS_MOBILE){
   }
   lcDate(); setInterval(lcDate, 60000);
 
-  let lcI = -1;
-  function lcRotate(){
-    if (!HIGHLIGHTS.length) return;
-    lcI = (lcI + 1) % HIGHLIGHTS.length;
-    const h = HIGHLIGHTS[lcI];
-    lcTe.classList.remove('on');
-    setTimeout(function(){
-      lcTk.textContent = h.kicker;
-      lcTt.textContent = strip(h.title).replace(/\.$/, '');
-      lcTe.classList.add('on');
-    }, 260);
-  }
-  lcRotate(); setInterval(lcRotate, 4200);
+
 }
 
 /* ---- UPCOMING EVENTS ------------------------------------------------------
@@ -1005,19 +1011,49 @@ const KEY_DATES = [
   { date:'2026-07-08', category:'event',    month:'JUL', day:'8',  title:'SKO 2026 Recap Live',       detail:'Live recap of SKO themes with the on-demand content links.' },
   { date:'2026-07-15', category:'content',  month:'JUL', day:'15', title:'New Deal Guides Drop',      detail:'Updated Deal Guides land in the AI Selling Toolkit hub.' }
 ];
-const UE_SHOW = 3;   /* how many chips sit in the row */
+const UE_SHOW = 3;
+
+/* launch-card date chips — defined here because they read KEY_DATES */
+if (IS_MOBILE){
+  /* three upcoming key dates, colour-coded, no titles — just enough for
+     someone to see whether something is landing soon. */
+  const lcDates = document.getElementById('lcDates');
+  function lcBuildDates(){
+    if(!lcDates || typeof KEY_DATES === 'undefined') return;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const sorted = KEY_DATES.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+    const ahead  = sorted.filter(function(d){ return new Date(d.date+'T00:00:00') >= today; });
+    const behind = sorted.filter(function(d){ return new Date(d.date+'T00:00:00') <  today; });
+    const list = ahead.concat(behind.slice(-(3 - ahead.length))).slice(0, 3);
+    lcDates.innerHTML = '';
+    list.forEach(function(d){
+      const c = document.createElement('span');
+      c.className = 'lc-date-chip';
+      c.style.setProperty('--uec', (CATEGORIES[d.category]||{}).color || 'var(--sky)');
+      c.innerHTML = '<i></i>' + d.month + ' ' + d.day;
+      lcDates.appendChild(c);
+    });
+  }
+  lcBuildDates();
+}   /* how many chips sit in the row */
 
 if (SHOW_HL){
   const ueRow = document.getElementById('ueRow');
   const ueLeg = document.getElementById('ueLegend');
   const X_SVG = '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 
-  Object.keys(CATEGORIES).forEach(function(k){
-    const s = document.createElement('span');
-    s.className='ue-leg'; s.style.setProperty('--uec', CATEGORIES[k].color);
-    s.innerHTML = '<i></i>'+CATEGORIES[k].label;
-    ueLeg.appendChild(s);
-  });
+  const catKeys = Object.keys(CATEGORIES);
+  const mkLeg = function(k){
+    const el = document.createElement('span');
+    el.className='ue-leg'; el.style.setProperty('--uec', CATEGORIES[k].color);
+    el.innerHTML = '<i></i>'+CATEGORIES[k].label;
+    return el;
+  };
+  catKeys.slice(0, catKeys.length - 2).forEach(function(k){ ueLeg.appendChild(mkLeg(k)); });
+  const pair = document.createElement('span');
+  pair.className = 'ue-legpair';
+  catKeys.slice(-2).forEach(function(k){ pair.appendChild(mkLeg(k)); });
+  ueLeg.appendChild(pair);
 
   /* Always UE_SHOW slots, always filled if the data can fill them.
      Next upcoming events first; if there aren't enough upcoming, back-fill with
@@ -1046,7 +1082,7 @@ if (SHOW_HL){
       b.className='ue-chip';
       b.style.setProperty('--uec', (CATEGORIES[d.category]||{}).color || 'var(--sky)');
       b.innerHTML='<span class="ue-date">'+d.month+' '+d.day+'</span>'
-                 +'<span class="ue-title">'+d.title+'</span>';
+                 +'<span class="ue-title"><span>'+d.title+'</span></span>';
       b.addEventListener('click', function(){ expanded(i); });
       ueRow.appendChild(b);
     }
@@ -1068,15 +1104,33 @@ if (SHOW_HL){
   }
   collapsed();
 
+  /* Any chip label wider than its chip crawls sideways instead of truncating. */
+  function rollTitles(){
+    ueRow.querySelectorAll('.ue-title').forEach(function(t){
+      const inner = t.firstElementChild; if(!inner) return;
+      t.classList.remove('roll'); inner.style.removeProperty('animation-duration');
+      const over = inner.scrollWidth - t.clientWidth;
+      if (over > 4){
+        t.classList.add('roll');
+        t.style.setProperty('--rollx', (-over - 8) + 'px');
+        t.style.setProperty('--roll', Math.max(6, (over + 8) / 22 + 4).toFixed(1) + 's');
+      }
+    });
+  }
+
   /* Match the events frame to a single world-clock card so the two line up. */
   const ueBox = document.getElementById('ue');
   function syncUeHeight(){
+    if (IS_MOBILE){ ueBox.style.removeProperty('height'); return; }
     const clk = document.querySelector('.clk');
     if(!clk) return;
     const h = Math.round(clk.getBoundingClientRect().height);
     if(h > 0) ueBox.style.height = h + 'px';
   }
   syncUeHeight();
+  rollTitles();
+  window.addEventListener('resize', rollTitles);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(rollTitles);
   if (window.ResizeObserver){
     const ro = new ResizeObserver(syncUeHeight);
     const c = document.querySelector('.clocks'); if(c) ro.observe(c);
