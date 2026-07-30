@@ -661,28 +661,40 @@
   .lc-logo{height:17px;width:auto;flex:0 0 auto}
   .lc-kicker{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;
     letter-spacing:.22em;text-transform:uppercase;color:var(--sky);white-space:nowrap}
-  .lc-mid{display:flex;align-items:baseline;gap:10px 12px;flex-wrap:wrap;margin:8px 0 9px}
-  .lc-date{font-family:'Barlow Condensed',sans-serif;font-weight:500;font-size:12px;
+  .lc-mid{display:flex;flex-direction:column;align-items:flex-start;gap:1px;margin:6px 0 8px}
+  .lc-date{font-family:'Barlow Condensed',sans-serif;font-weight:500;font-size:11.5px;
     letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
   .lc-teaser{display:flex;align-items:center;gap:10px;min-width:0;font-size:12px;
-    padding-top:9px;border-top:1px solid var(--line);opacity:1}
+    padding-top:8px;border-top:1px solid var(--line);opacity:1}
   .lc-teaser em{font-style:normal;font-family:'Barlow Condensed',sans-serif;font-weight:600;
     font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);flex:0 0 auto}
   .lc-dates{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
+  /* Default is quiet. Only a date within seven days gets its category colour
+     and the pulse, so "soon" actually reads as soon. */
   .lc-date-chip{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;
     font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;
-    letter-spacing:.08em;text-transform:uppercase;color:var(--ink);
-    border:1px solid var(--uec,var(--line));border-radius:7px;padding:3px 9px;
-    background:rgba(255,255,255,.04)}
-  .lc-date-chip i{width:6px;height:6px;border-radius:50%;background:var(--uec,var(--sky));
-    flex:0 0 auto;box-shadow:0 0 0 0 rgba(16,207,201,.55);animation:lcPulse 2.4s ease-out infinite}
+    letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    border:1px solid var(--line);border-radius:7px;padding:3px 9px;
+    background:rgba(255,255,255,.03)}
+  .lc-date-chip i{width:6px;height:6px;border-radius:50%;background:var(--line);flex:0 0 auto}
+  .lc-date-chip.soon{color:var(--ink);border-color:var(--uec,var(--sky));
+    background:rgba(255,255,255,.06)}
+  .lc-date-chip.soon i{background:var(--uec,var(--sky));
+    box-shadow:0 0 0 0 rgba(16,207,201,.55);animation:lcPulse 2.4s ease-out infinite}
   @keyframes lcPulse{0%{box-shadow:0 0 0 0 currentColor}
     70%{box-shadow:0 0 0 6px rgba(16,207,201,0)}100%{box-shadow:0 0 0 0 rgba(16,207,201,0)}}
-  @media (prefers-reduced-motion:reduce){.lc-date-chip i{animation:none}}
+  @media (prefers-reduced-motion:reduce){.lc-date-chip.soon i{animation:none}}
+  /* on a narrow handset the label costs a whole chip, so it goes first */
+  @media (max-width:400px){
+    .lc-teaser em{display:none}
+    .lc-teaser{gap:0}
+    .lc-date-chip{padding:3px 7px;gap:5px;letter-spacing:.05em}
+    .lc-dates{gap:6px}
+  }
   .lc-greet{font-family:'Barlow Condensed',sans-serif;font-weight:500;font-size:11px;
     letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
   .lc-time{font-family:'Barlow Condensed',sans-serif;font-weight:700;
-    font-size:clamp(30px,9vw,42px);line-height:.95;color:var(--ink);font-variant-numeric:tabular-nums}
+    font-size:clamp(28px,8vw,38px);line-height:1.02;color:var(--ink);font-variant-numeric:tabular-nums}
   /* Mindtickle's expand control sits just off the top-right of our iframe and
      we cannot restyle or move it. So this is a POINTER, not a button — no
      border, no fill, nothing that invites a tap on the wrong thing. */
@@ -1041,7 +1053,8 @@ if (IS_MOBILE){
     lcDates.innerHTML = '';
     list.forEach(function(d){
       const c = document.createElement('span');
-      c.className = 'lc-date-chip';
+      const days = (new Date(d.date+'T00:00:00') - today) / 86400000;
+      c.className = 'lc-date-chip' + (days >= 0 && days <= 7 ? ' soon' : '');
       c.style.setProperty('--uec', (CATEGORIES[d.category]||{}).color || 'var(--sky)');
       c.innerHTML = '<i></i>' + d.month + ' ' + d.day;
       lcDates.appendChild(c);
