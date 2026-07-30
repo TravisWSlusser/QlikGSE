@@ -158,8 +158,12 @@
   .ue-title{color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:11px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:auto}
   /* when the label is wider than the chip, drop the ellipsis and crawl it */
-  .ue-title > span{display:inline-block;max-width:none}  /* inline spans report scrollWidth 0 */
+  .ue-title > span,
+  .ue-detail > span{display:inline-block;max-width:none}  /* inline spans report scrollWidth 0 */
   .ue-title.roll{text-overflow:clip;margin-left:auto}
+  .ue-detail.roll{text-overflow:clip}
+  .ue-detail.roll span{display:inline-block;padding-right:26px;
+    animation:ueRoll var(--roll,9s) linear infinite}
   .ue-title.roll span{display:inline-block;padding-right:26px;
     animation:ueRoll var(--roll,9s) linear infinite}
   @keyframes ueRoll{0%,12%{transform:translateX(0)}88%,100%{transform:translateX(var(--rollx,-40px))}}
@@ -754,6 +758,15 @@
   html[data-section="mobile"] .ue-row{grid-template-columns:minmax(0,1fr);gap:6px;height:auto}
   html[data-section="mobile"] .ue-chip{height:auto;padding:7px 12px}
   html[data-section="mobile"] .ue-title{font-size:11.5px}
+  /* tap a date and it opens in place, full text, siblings untouched */
+  html[data-section="mobile"] .ue-chip{flex-wrap:wrap;text-align:left}
+  html[data-section="mobile"] .ue-more{display:none;flex:1 0 100%;order:3;
+    margin-top:7px;padding-top:7px;border-top:1px solid var(--line);
+    font-size:12px;line-height:1.45;color:var(--muted);
+    white-space:normal;text-transform:none;letter-spacing:0}
+  html[data-section="mobile"] .ue-chip.open .ue-more{display:block}
+  html[data-section="mobile"] .ue-chip.open{background:rgba(255,255,255,.07)}
+  html[data-section="mobile"] .ue-chip.open .ue-title{white-space:normal;overflow:visible}
   html[data-section="mobile"] .hotlinks{justify-content:space-between;padding:8px 10px}
   html[data-section="mobile"][data-mode="full"] .lowerthird{display:block;margin-top:12px}
   html[data-section="mobile"][data-mode="full"] .herorow{display:flex;margin-top:12px}
@@ -1082,8 +1095,21 @@ if (SHOW_HL){
       b.className='ue-chip';
       b.style.setProperty('--uec', (CATEGORIES[d.category]||{}).color || 'var(--sky)');
       b.innerHTML='<span class="ue-date">'+d.month+' '+d.day+'</span>'
-                 +'<span class="ue-title"><span>'+d.title+'</span></span>';
-      b.addEventListener('click', function(){ expanded(i); });
+                 +'<span class="ue-title"><span>'+d.title+'</span></span>'
+                 +(IS_MOBILE ? '<span class="ue-more">'+d.detail+'</span>' : '');
+      /* Desktop swaps the row for one wide chip so the fixed-height widget
+         never grows. Mobile scrolls, so there it opens in place and the other
+         dates stay put. */
+      b.addEventListener('click', function(){
+        if (IS_MOBILE){
+          const wasOpen = b.classList.contains('open');
+          ueRow.querySelectorAll('.ue-chip.open').forEach(function(o){ o.classList.remove('open'); });
+          if (!wasOpen) b.classList.add('open');
+          rollTitles();
+        } else {
+          expanded(i);
+        }
+      });
       ueRow.appendChild(b);
     }
   }
@@ -1096,19 +1122,27 @@ if (SHOW_HL){
     w.style.setProperty('--uec', (CATEGORIES[d.category]||{}).color || 'var(--sky)');
     w.innerHTML='<span class="ue-date">'+d.month+' '+d.day+'</span>'
                +'<span class="ue-title">'+d.title+'</span>'
-               +'<span class="ue-detail">'+d.detail+'</span>';
+               +'<span class="ue-detail"><span>'+d.detail+'</span></span>';
     const x=document.createElement('button');
     x.type='button'; x.className='ue-x'; x.setAttribute('aria-label','Close'); x.innerHTML=X_SVG;
     x.addEventListener('click', collapsed);
     w.appendChild(x); ueRow.appendChild(w);
+    rollTitles();
   }
   collapsed();
 
-  /* Any chip label wider than its chip crawls sideways instead of truncating. */
+  /* Only the ACTIVE item crawls. A collapsed chip that is too narrow simply
+     truncates — several labels sliding at once is noise, not information. */
   function rollTitles(){
-    ueRow.querySelectorAll('.ue-title').forEach(function(t){
+    ueRow.querySelectorAll('.ue-title,.ue-detail').forEach(function(t){
+      t.classList.remove('roll');
+      t.style.removeProperty('--rollx'); t.style.removeProperty('--roll');
+    });
+    const scope = ueRow.querySelector('.ue-chip.open')
+               || (ueRow.classList.contains('open') ? ueRow : null);
+    if (!scope) return;
+    scope.querySelectorAll('.ue-title,.ue-detail').forEach(function(t){
       const inner = t.firstElementChild; if(!inner) return;
-      t.classList.remove('roll'); inner.style.removeProperty('animation-duration');
       const over = inner.scrollWidth - t.clientWidth;
       if (over > 4){
         t.classList.add('roll');
