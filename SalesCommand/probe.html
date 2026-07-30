@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Widget size probe</title>
+<!-- ===========================================================================
+  THROWAWAY DIAGNOSTIC — delete once the mobile questions are answered.
+  Reports the size the iframe is actually given, live. Read the big number
+  collapsed, then tap Mindtickle's expand icon and read it again.
+  =========================================================================== -->
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#11304D;color:#EDF3F9;
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:10px;gap:6px;position:relative}
+
+  /* a ruler down the side: if the whole strip is visible the iframe really is
+     as tall as it claims; if it is cut off, the height is being faked */
+  .ruler{position:absolute;left:0;top:0;bottom:0;width:26px;
+    background:repeating-linear-gradient(180deg,#10CFC9 0 2px,transparent 2px 50px);
+    opacity:.55}
+  .ruler b{position:absolute;left:2px;font-size:8px;color:#10CFC9;font-weight:600}
+
+  .num{font-size:clamp(26px,9vw,54px);font-weight:800;line-height:1;letter-spacing:-.02em}
+  .num span{color:#10CFC9}
+  .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8FA6BC}
+  .note{font-size:12px;color:#B9CBDD;max-width:34ch;line-height:1.45}
+  .foot{position:absolute;left:30px;right:6px;bottom:6px;
+    font-size:10px;color:#6E869E;display:flex;justify-content:space-between;gap:8px}
+  .bot{position:absolute;left:26px;right:0;bottom:0;height:5px;background:#FF6B6B}
+</style>
+</head>
+<body>
+  <div class="ruler" id="ruler"></div>
+
+  <div class="lbl">iframe viewport</div>
+  <div class="num" id="size">–</div>
+  <div class="note" id="note">Read this number, then tap the expand icon and read it again.</div>
+
+  <div class="foot"><span id="dpr"></span><span id="mode"></span></div>
+  <div class="bot"></div>
+
+<script>
+  var sizeEl = document.getElementById('size');
+  var noteEl = document.getElementById('note');
+  var modeEl = document.getElementById('mode');
+  var rulerEl = document.getElementById('ruler');
+  var seenMax = 0;
+
+  function tick(){
+    var w = Math.round(window.innerWidth);
+    var h = Math.round(window.innerHeight);
+    sizeEl.innerHTML = w + ' <span>&times;</span> ' + h;
+
+    if (h > seenMax) seenMax = h;
+    modeEl.textContent = 'tallest seen: ' + seenMax + 'px';
+    noteEl.textContent = (h > 400)
+      ? 'EXPANDED — the iframe really was given more height.'
+      : 'COLLAPSED — this is the cap.';
+
+    // redraw ruler labels every 50px so a cropped view is obvious
+    rulerEl.innerHTML = '';
+    for (var y = 0; y < h; y += 50){
+      var b = document.createElement('b');
+      b.style.top = (y + 2) + 'px';
+      b.textContent = y;
+      rulerEl.appendChild(b);
+    }
+  }
+
+  document.getElementById('dpr').textContent = 'dpr ' + (window.devicePixelRatio || 1);
+  tick();
+  window.addEventListener('resize', tick);
+  if (window.ResizeObserver) new ResizeObserver(tick).observe(document.documentElement);
+  setInterval(tick, 500);
+</script>
+</body>
+</html>
