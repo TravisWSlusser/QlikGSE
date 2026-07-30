@@ -17,22 +17,24 @@
   body{background:#11304D;color:#EDF3F9;
     font-family:'Inter',system-ui,-apple-system,sans-serif;
     display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;
-    text-align:left;padding:4px 8px 8px 22px;gap:2px;position:relative}
+    text-align:left;padding:4px 8px 8px 8px;gap:2px;position:relative}
 
   /* a ruler down the side: if the whole strip is visible the iframe really is
      as tall as it claims; if it is cut off, the height is being faked */
-  .ruler{position:absolute;left:0;top:0;bottom:0;width:17px;
-    background:repeating-linear-gradient(180deg,#10CFC9 0 2px,transparent 2px 50px);
-    opacity:.55}
-  .ruler b{position:absolute;left:1px;font-size:7px;color:#10CFC9;font-weight:600}
+  .ruler{position:absolute;left:0;right:0;top:0;bottom:0;pointer-events:none}
+  .band{position:absolute;left:0;right:0;height:10px;display:flex;align-items:center;
+    font-size:8px;font-weight:700;letter-spacing:.06em;padding-left:5px;color:#0B1F33}
+  .band.a{background:#10CFC9}
+  .band.b{background:#7FE3E0}
+  .band.big{background:#FF6B6B;color:#fff}
 
   .num{font-size:clamp(28px,8vw,46px);font-weight:800;line-height:1;letter-spacing:-.02em}
   .num span{color:#10CFC9}
   .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8FA6BC}
   .note{font-size:11px;color:#B9CBDD;max-width:34ch;line-height:1.35}
-  .foot{position:absolute;left:22px;right:6px;bottom:5px;
+  .foot{position:absolute;left:8px;right:6px;bottom:7px;
     font-size:10px;color:#6E869E;display:flex;justify-content:space-between;gap:8px}
-  .bot{position:absolute;left:17px;right:0;bottom:0;height:5px;background:#FF6B6B}
+  .bot{position:absolute;left:0;right:0;bottom:0;height:5px;background:#00A651}
 </style>
 </head>
 <body>
@@ -63,13 +65,15 @@
       ? 'EXPANDED — the iframe really was given more height.'
       : 'COLLAPSED — this is the cap.';
 
-    // redraw ruler labels every 50px so a cropped view is obvious
+    /* Labelled 10px bands through the crop zone. Read the LAST number you can
+       see on the phone — that is the visible window height. */
     rulerEl.innerHTML = '';
-    for (var y = 0; y < h; y += 50){
-      var b = document.createElement('b');
-      b.style.top = (y + 2) + 'px';
-      b.textContent = y;
-      rulerEl.appendChild(b);
+    for (var y = 100; y < Math.min(h, 320); y += 10){
+      var d = document.createElement('div');
+      d.className = 'band ' + (y % 50 === 0 ? 'big' : (y % 20 === 0 ? 'a' : 'b'));
+      d.style.top = y + 'px';
+      d.textContent = y;
+      rulerEl.appendChild(d);
     }
   }
 
