@@ -646,7 +646,22 @@
   .lc-logo{height:17px;width:auto;flex:0 0 auto}
   .lc-kicker{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;
     letter-spacing:.22em;text-transform:uppercase;color:var(--sky);white-space:nowrap}
-  .lc-mid{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:10px 0 12px}
+  .lc-mid{display:flex;align-items:baseline;gap:10px 12px;flex-wrap:wrap;margin:8px 0 9px}
+  .lc-date{font-family:'Barlow Condensed',sans-serif;font-weight:500;font-size:12px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .lc-teaser{display:flex;align-items:center;gap:8px;min-width:0;font-size:12px;
+    padding-top:9px;border-top:1px solid var(--line);
+    opacity:0;transform:translateY(4px);transition:opacity .45s ease,transform .45s ease}
+  .lc-teaser.on{opacity:1;transform:none}
+  .lc-dot{width:6px;height:6px;border-radius:50%;background:var(--sky);flex:0 0 auto;
+    box-shadow:0 0 0 0 rgba(16,207,201,.55);animation:lcPulse 2.4s ease-out infinite}
+  @keyframes lcPulse{0%{box-shadow:0 0 0 0 rgba(16,207,201,.5)}
+    70%{box-shadow:0 0 0 7px rgba(16,207,201,0)}100%{box-shadow:0 0 0 0 rgba(16,207,201,0)}}
+  .lc-teaser em{font-style:normal;font-family:'Barlow Condensed',sans-serif;font-weight:600;
+    font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sky);flex:0 0 auto}
+  .lc-teaser b{font-weight:500;color:var(--ink);min-width:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @media (prefers-reduced-motion:reduce){.lc-dot{animation:none}}
   .lc-greet{font-family:'Barlow Condensed',sans-serif;font-weight:500;font-size:11px;
     letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
   .lc-time{font-family:'Barlow Condensed',sans-serif;font-weight:700;
@@ -720,6 +735,8 @@
   html[data-section="mobile"][data-mode="card"] .launch{display:flex}
   html[data-section="mobile"][data-mode="full"] .topline,
   html[data-section="mobile"][data-mode="full"] .hotlinks{display:flex}
+  html[data-section="mobile"] .hl-links{display:none}
+  html[data-section="mobile"] .hotlinks{justify-content:space-between;padding:8px 10px}
   html[data-section="mobile"][data-mode="full"] .lowerthird{display:block;margin-top:12px}
   html[data-section="mobile"][data-mode="full"] .herorow{display:flex;margin-top:12px}
   html[data-section="mobile"][data-mode="full"] .tiles{display:grid;margin-top:14px}
@@ -732,7 +749,7 @@
      top, then the highlight card, key dates, legend, and the clocks last.   */
   @media (max-width:960px){
     html:not([data-section]) .herorow,
-    html[data-section="mobile"] .herorow,
+    html[data-section="mobile"][data-mode="full"] .herorow,
     html[data-section="highlights"] .herorow{display:flex;flex-direction:column;
       align-items:stretch;row-gap:clamp(12px,2vw,16px);column-gap:0;padding-right:0}
     .hr-brandline{order:0}
@@ -776,11 +793,14 @@
       <div class="lc-mid">
         <span class="lc-greet" id="lcGreet">Welcome</span>
         <span class="lc-time" id="lcTime">&mdash;</span>
+        <span class="lc-date" id="lcDate"></span>
       </div>
+      <!-- rotates through the live highlights so the card has a reason to be tapped -->
+      <div class="lc-teaser" id="lcTeaser"><span class="lc-dot"></span><em id="lcTeaseK"></em><b id="lcTeaseT"></b></div>
       <div class="lc-cta">
         <span><b>Expand</b> to open</span>
         <span class="lc-arrow" aria-hidden="true">
-          <svg viewBox="0 0 24 24"><path d="M5 19C7 11 12 7 19 6"/><path d="M13 5.6L19.4 5.6L19.4 12"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M6 18L17 7"/><path d="M9.5 7H17.5V15"/></svg>
         </span>
       </div>
     </div>
@@ -928,6 +948,37 @@ const HIGHLIGHTS = [
     cta:{ label:'Read the issue', href:'https://deeplinks.mindtickle.com/8lIR3uOka3b' } },
 ];
 const HL_MS = 9000;
+
+/* ---- LAUNCH CARD extras -------------------------------------------------
+   The collapsed card is the only thing most phone users will see, so it gets
+   the date and a rotating highlight rather than sitting static. Runs only in
+   card mode; the moment the widget expands this stops and the real page shows. */
+if (IS_MOBILE){
+  const lcD = document.getElementById('lcDate');
+  const lcTe = document.getElementById('lcTeaser');
+  const lcTk = document.getElementById('lcTeaseK');
+  const lcTt = document.getElementById('lcTeaseT');
+  const strip = function(h){ const d = document.createElement('div'); d.innerHTML = h; return d.textContent; };
+
+  function lcDate(){
+    lcD.textContent = new Date().toLocaleDateString([], { weekday:'long', month:'long', day:'numeric' });
+  }
+  lcDate(); setInterval(lcDate, 60000);
+
+  let lcI = -1;
+  function lcRotate(){
+    if (!HIGHLIGHTS.length) return;
+    lcI = (lcI + 1) % HIGHLIGHTS.length;
+    const h = HIGHLIGHTS[lcI];
+    lcTe.classList.remove('on');
+    setTimeout(function(){
+      lcTk.textContent = h.kicker;
+      lcTt.textContent = strip(h.title).replace(/\.$/, '');
+      lcTe.classList.add('on');
+    }, 260);
+  }
+  lcRotate(); setInterval(lcRotate, 4200);
+}
 
 /* ---- UPCOMING EVENTS ------------------------------------------------------
    Mirrors KEY_DATES/CATEGORIES in qlikmt-hero2.html so the strip and the AI-HQ
