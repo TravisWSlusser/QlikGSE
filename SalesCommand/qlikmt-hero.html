@@ -635,6 +635,29 @@
   [data-theme="light"] .beta-strip::before{background:repeating-linear-gradient(45deg,#E8941A 0 6px,#cfd8e2 6px 12px)}
   [data-theme="light"] .beta-txt{color:#5a6b7d}
   [data-theme="light"] .beta-txt b{color:#C77F12}
+  /* ---- launch card (mobile collapsed state) ---- */
+  .launch{display:none;flex-direction:column;justify-content:space-between;
+    min-height:150px;padding:16px 18px;border:1px solid var(--line);border-radius:16px;
+    background:linear-gradient(135deg,rgba(16,207,201,.10),rgba(255,255,255,.03) 55%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+  [data-theme="light"] .launch{background:linear-gradient(135deg,rgba(16,207,201,.14),rgba(255,255,255,.5) 55%);
+    border-color:rgba(15,40,70,.12)}
+  .lc-top{display:flex;align-items:center;gap:10px;min-width:0}
+  .lc-logo{height:17px;width:auto;flex:0 0 auto}
+  .lc-kicker{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--sky);white-space:nowrap}
+  .lc-mid{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:10px 0 12px}
+  .lc-greet{font-family:'Barlow Condensed',sans-serif;font-weight:500;font-size:11px;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .lc-time{font-family:'Barlow Condensed',sans-serif;font-weight:700;
+    font-size:clamp(30px,9vw,42px);line-height:.95;color:var(--ink);font-variant-numeric:tabular-nums}
+  .lc-cta{display:inline-flex;align-items:center;gap:9px;align-self:flex-start;
+    font-size:12.5px;letter-spacing:.03em;color:var(--sky);
+    border:1px solid rgba(16,207,201,.38);border-radius:999px;padding:7px 15px 7px 11px;
+    background:rgba(16,207,201,.08)}
+  .lc-ico{width:15px;height:15px;display:inline-block;flex:0 0 auto}
+  .lc-ico svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+
   @media (prefers-reduced-motion:reduce){.beta-cone,.beta-strip::before,.beta-badge{animation:none}}
 
   /* True centring and an inline beta rect can't both fit once the bubble gets
@@ -683,6 +706,16 @@
 
   html[data-section="hubs"] .tiles{display:grid;margin-top:0}
 
+  /* ---- ?section=mobile : one widget, two states -------------------------
+     data-mode is set from the viewport height. Collapsed inside a Mindtickle
+     card it shows the launch card; once expanded it becomes the whole page. */
+  html[data-section="mobile"][data-mode="card"] .launch{display:flex}
+  html[data-section="mobile"][data-mode="full"] .topline,
+  html[data-section="mobile"][data-mode="full"] .hotlinks{display:flex}
+  html[data-section="mobile"][data-mode="full"] .lowerthird{display:block;margin-top:12px}
+  html[data-section="mobile"][data-mode="full"] .herorow{display:flex;margin-top:12px}
+  html[data-section="mobile"][data-mode="full"] .tiles{display:grid;margin-top:14px}
+
   /* ── stacked layout — sits after the section rules on purpose, because
      html[data-section="highlights"] .herorow{display:grid} would otherwise
      outrank it and keep the two-column grid at narrow widths ──────────────────────────────────────────────────────
@@ -722,6 +755,26 @@
   <div class="contrail c-top" aria-hidden="true"></div>
 
   <div class="wrap">
+    <!-- LAUNCH CARD — only rendered by ?section=mobile while the widget is
+         collapsed. Mindtickle's expand control then acts as the launch button
+         and the same document re-renders as the full Command Center. -->
+    <div class="launch" id="launch">
+      <div class="lc-top">
+        <img class="lc-logo" src="assets/images/logos/qlik-sales-enablement.svg" alt="Qlik Sales Enablement"
+             onerror="this.style.display='none'">
+        <span class="lc-kicker">Command Center</span>
+      </div>
+      <div class="lc-mid">
+        <span class="lc-greet" id="lcGreet">Welcome</span>
+        <span class="lc-time" id="lcTime">&mdash;</span>
+      </div>
+      <div class="lc-cta">
+        <span class="lc-ico" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        </span>
+        Tap to launch
+      </div>
+    </div>
     <nav class="hotlinks rise d1" aria-label="Quick links">
       <div class="beta-strip" role="status">
         <span class="beta-row">
@@ -811,10 +864,37 @@ function sfBrandFallback(img){ var p=img.closest('.sf-brand'); if(p) p.classList
    Each section is its own document. Without this, all four widgets would poll
    the news + market endpoints and run their own timers four times over. */
 const SECTION   = document.documentElement.getAttribute('data-section') || '';
-const SHOW_TOP  = !SECTION || SECTION === 'topbar';
-const SHOW_TICK = !SECTION || SECTION === 'ticker';
-const SHOW_HL   = !SECTION || SECTION === 'highlights';
-const SHOW_HUBS = !SECTION || SECTION === 'hubs';
+const IS_MOBILE = SECTION === 'mobile';
+const SHOW_TOP  = !SECTION || SECTION === 'topbar'     || IS_MOBILE;
+const SHOW_TICK = !SECTION || SECTION === 'ticker'     || IS_MOBILE;
+const SHOW_HL   = !SECTION || SECTION === 'highlights' || IS_MOBILE;
+const SHOW_HUBS = !SECTION || SECTION === 'hubs'       || IS_MOBILE;
+
+/* ---- mobile: card vs full ------------------------------------------------
+   Collapsed, Mindtickle gives this iframe roughly 200px. Expanded it gets the
+   whole screen. The gap is large enough that viewport height alone tells us
+   which state we're in — no bridge to the host app required, which is just as
+   well because the widget can't run JS or reach the expand control. */
+const MODE_MIN = 420;
+function syncMode(){
+  if (!IS_MOBILE) return;
+  const m = window.innerHeight >= MODE_MIN ? 'full' : 'card';
+  if (document.documentElement.getAttribute('data-mode') !== m)
+    document.documentElement.setAttribute('data-mode', m);
+}
+if (IS_MOBILE){
+  syncMode();
+  window.addEventListener('resize', syncMode);
+  if (window.ResizeObserver) new ResizeObserver(syncMode).observe(document.documentElement);
+  /* the launch card carries a live clock so the collapsed state isn't static */
+  const lcG = document.getElementById('lcGreet'), lcT = document.getElementById('lcTime');
+  function lcTick(){
+    const d = new Date(), h = d.getHours();
+    lcG.textContent = h < 12 ? 'Good morning' : (h < 18 ? 'Good afternoon' : 'Good evening');
+    lcT.textContent = d.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' });
+  }
+  lcTick(); setInterval(lcTick, 30000);
+}
 
 /* ---- HIGHLIGHTS — rotating custom posts ----------------------------------
    Hand-edit this array until the manager control app can write it. Each entry:
