@@ -20,10 +20,14 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,900;1,900&family=Inter:wght@400;500;600&family=Share+Tech+Mono&family=Playfair+Display:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   /* Content lives in the DESTINATIONS array at the bottom.
      Mindtickle deep-links go in each "href". Layout never needs editing. */
+  /* buttons and form controls do NOT inherit font-family — without this the
+     theme toggle and every key-date chip fall back to the UA font. */
+  button,input,select,textarea{font-family:inherit}
+
   :root{
     --cat-review:#FF6B35; --cat-training:#10CFC9; --cat-deadline:#FF6B6B;
     --cat-event:#00A651;  --cat-content:#9B59FF;
@@ -113,10 +117,10 @@
   .hl-item{position:absolute;left:0;right:0;top:0;opacity:0;transform:translateY(8px);
     transition:opacity .5s ease, transform .5s ease;pointer-events:none}
   .hl-item.on{opacity:1;transform:none;pointer-events:auto}
-  .hl-kicker{font-family:'Barlow Condensed';font-weight:500;font-size:12px;letter-spacing:.2em;
+  .hl-kicker{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:12px;letter-spacing:.2em;
     text-transform:uppercase;color:var(--sky);display:inline-flex;align-items:center;gap:7px}
   .hl-kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sky);flex:0 0 auto}
-  .hl-title{font-family:'Barlow Condensed';font-weight:600;line-height:1.04;
+  .hl-title{font-family:'Inter',system-ui,sans-serif;font-weight:600;line-height:1.04;
     font-size:clamp(30px,4.2vw,50px);letter-spacing:-.01em;margin:.22em 0 .3em;text-wrap:balance}
   .hl-title .ac{color:var(--green)}
   .hl-body{font-size:clamp(14px,1.4vw,16px);line-height:1.55;color:#bccfe2;max-width:560px}
@@ -205,7 +209,7 @@
   .keystrip{display:flex;flex-direction:column;align-items:center;gap:11px;margin-top:clamp(16px,2.4vw,26px);
     padding:clamp(12px,1.6vw,16px) clamp(14px,2vw,20px);border:1px solid var(--line);border-radius:16px;
     background:rgba(255,255,255,.03);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
-  .kd-h{font-family:'Barlow Condensed';font-weight:500;font-size:12px;letter-spacing:.16em;
+  .kd-h{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:12px;letter-spacing:.16em;
     text-transform:uppercase;color:var(--muted);text-align:center;margin:0}
   .kd-h span{color:var(--sky)}
   .kd-nav{display:flex;align-items:center;justify-content:center;gap:10px;width:100%}
@@ -221,15 +225,15 @@
   .kd-card:hover{transform:translateY(-2px);border-color:rgba(16,207,201,.5);background:rgba(255,255,255,.09)}
   .kd-card:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
   .kd-empty{border:1px solid rgba(255,255,255,.05);border-radius:9px;background:rgba(0,0,0,.12)}
-  .kd-m{font-family:'Barlow Condensed';font-weight:500;font-size:10px;letter-spacing:.12em;
+  .kd-m{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:10px;letter-spacing:.12em;
     text-transform:uppercase;color:var(--sky)}
-  .kd-d{font-family:'Barlow Condensed';font-weight:600;font-size:18px;line-height:1;color:var(--ink)}
+  .kd-d{font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:18px;line-height:1;color:var(--ink)}
   .timecard{text-align:right}
-  #greet{display:block;font-family:'Barlow Condensed';font-weight:500;font-size:13px;
+  #greet{display:block;font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:13px;
     letter-spacing:.22em;text-transform:uppercase;color:var(--sky)}
   #greet .tod svg{width:15px;height:15px;vertical-align:-2px;margin-left:4px;
     fill:none;stroke:var(--ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  #clock{display:block;font-family:'Barlow Condensed';font-weight:600;
+  #clock{display:block;font-family:'Inter',system-ui,sans-serif;font-weight:600;
     font-size:clamp(34px,4vw,44px);line-height:1;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:0}
   /* Fixed box: the quote rotates every 13s and longer ones used to add a line
      and shove everything below it. Height is locked and #qtext shrinks to fit. */
@@ -244,16 +248,16 @@
   .quote .scr{color:var(--sky)}
 
   .lead{flex:1 1 auto;min-width:0;max-width:680px}
-  .eyebrow{font-family:'Barlow Condensed';font-weight:500;font-size:14px;
+  .eyebrow{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:14px;
     letter-spacing:.22em;text-transform:uppercase;color:var(--sky)}
-  h1{font-family:'Barlow Condensed';font-weight:600;line-height:1.02;
+  h1{font-family:'Inter',system-ui,sans-serif;font-weight:600;line-height:1.02;
     font-size:clamp(38px,6vw,68px);letter-spacing:-.01em;margin:.32em 0 .42em;text-wrap:balance}
   h1 .ac{color:var(--green)}
   .sub{font-size:clamp(15px,1.5vw,17px);line-height:1.6;color:#bccfe2;max-width:520px}
 
   .divider{margin-top:clamp(14px,2.2vw,22px);height:1px;background:var(--line);position:relative}
   
-  .qaz-h{font-family:'Barlow Condensed';font-weight:500;font-size:12px;letter-spacing:.18em;
+  .qaz-h{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:12px;letter-spacing:.18em;
     text-transform:uppercase;color:var(--muted);margin:clamp(10px,1.6vw,14px) 0 12px;
     display:inline-flex;align-items:center;gap:7px}
   .qaz-h .qh-ic{width:14px;height:14px;flex:0 0 auto;fill:none;stroke:var(--sky);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -305,7 +309,7 @@
   .c-ico{width:13px;height:13px;flex:0 0 auto;border-radius:3px;overflow:hidden;
     background:rgba(255,255,255,.07);display:grid;place-items:center;font-size:6px;font-weight:600;color:var(--muted)}
   .c-ico img{width:100%;height:100%;object-fit:contain;background:#fff}
-  .c-sym{font-family:'Barlow Condensed';font-weight:600;font-size:10.5px;letter-spacing:.04em;color:var(--ink)}
+  .c-sym{font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:10.5px;letter-spacing:.04em;color:var(--ink)}
   .c-p{font-size:10.5px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
   .c-d{font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
   .c-d.up{color:#21c46b}
@@ -336,6 +340,75 @@
   .qn-kicker::before,.qn-kicker::after{content:"";width:9px;height:1px;background:currentColor;opacity:.5;flex:0 0 auto}
   .qn-word{position:relative;z-index:1;font-family:'Playfair Display',serif;font-weight:400;font-size:18px;color:var(--ink);
     line-height:1;letter-spacing:.03em}
+  /* ── Qlik mention easter egg ──────────────────────────────────────────────
+     While a headline mentioning Qlik is inside the visible window, the tab
+     wipes from CURRENT NEWS to NEWS ALERT and the headline itself lights up.
+     Both revert the moment it crawls off. Watcher: watchQlikMentions().     */
+  .qn-face{position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:1px;
+    transition:clip-path .42s cubic-bezier(.4,0,.2,1)}
+  .qn-normal{clip-path:inset(0 0 0 0)}
+  .qn-alertface{clip-path:inset(0 0 100% 0);color:var(--green)}
+  .qn-alertface .qn-kicker{color:var(--green);opacity:.9}
+  .qnews.alert .qn-normal{clip-path:inset(100% 0 0 0)}
+  .qnews.alert .qn-alertface{clip-path:inset(0 0 0 0)}
+  .qnews.alert{background:rgba(0,166,81,.16);animation:qRing 1.5s ease-out infinite}
+  /* Light mode needs its own, gentler pulse: the inset glow that reads well on
+     navy turns into a dark vignette against a pale panel and the tab edge then
+     looks cut out. Softer glow, and the fill feathers toward the band. */
+  [data-theme="light"] .qnews.alert{
+    background:linear-gradient(90deg,#e0f6e9 0%,#e6f8ee 68%,#eefaf4 100%);
+    animation:qRingLight 1.5s ease-in-out infinite}
+  @keyframes qRingLight{
+    0%,100%{box-shadow:inset -1px 0 0 rgba(0,166,81,.20), inset 0 0 8px rgba(0,166,81,.05)}
+    50%    {box-shadow:inset -1px 0 0 rgba(0,166,81,.28), inset 0 0 18px rgba(0,166,81,.16)}}
+
+  /* ALERT breathes rather than sitting still */
+  .qnews.alert .qn-alertface .qn-word{animation:qBreath 1.25s ease-in-out infinite}
+  .qnews.alert .qn-alertface .qn-kicker{animation:qBlink 1.25s steps(1,end) infinite}
+  @keyframes qBreath{0%,100%{text-shadow:0 0 8px rgba(0,166,81,.45)}
+    50%{text-shadow:0 0 24px rgba(0,166,81,1),0 0 42px rgba(0,166,81,.6)}}
+  @keyframes qBlink{0%,60%{opacity:.95}61%,100%{opacity:.35}}
+  /* Spread with no blur draws a hard rectangle and the row clips it square.
+     Breathe an INSET glow instead — soft, and nothing can clip it. */
+  @keyframes qRing{
+    0%,100%{box-shadow:inset -1px 0 0 rgba(0,166,81,.28), inset 0 0 12px rgba(0,166,81,.12)}
+    50%    {box-shadow:inset -1px 0 0 rgba(0,166,81,.40), inset 0 0 30px rgba(0,166,81,.42)}}
+
+  /* a specular sweep travels across the tab */
+  .qnews.alert::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:linear-gradient(105deg,transparent 22%,rgba(255,255,255,.10) 38%,
+      rgba(255,255,255,.42) 50%,rgba(255,255,255,.10) 62%,transparent 78%);
+    background-size:260% 100%;animation:qSweep 2.1s ease-in-out infinite}
+  [data-theme="light"] .qnews.alert::after{
+    background:linear-gradient(105deg,transparent 22%,rgba(0,166,81,.06) 38%,
+      rgba(0,166,81,.20) 50%,rgba(0,166,81,.06) 62%,transparent 78%);
+    background-size:260% 100%}
+  @keyframes qSweep{0%{background-position:150% 0}55%,100%{background-position:-60% 0}}
+
+  /* the whole news band lifts while an alert is live */
+  .ticker.alert-on{background:linear-gradient(90deg,rgba(0,166,81,.13) 0%,rgba(0,166,81,.05) 22%,transparent 55%)}
+  [data-theme="light"] .ticker.alert-on{
+    background:linear-gradient(90deg,rgba(0,166,81,.10) 0%,rgba(0,166,81,.04) 22%,transparent 55%)}
+
+  /* the matched headline carries a moving shine */
+  .ticker-item.is-qlik .ti-title{
+    background-image:linear-gradient(100deg,var(--green) 0 42%,#B4FFD8 50%,var(--green) 58% 100%);
+    background-size:280% 100%;-webkit-background-clip:text;background-clip:text;
+    color:transparent;font-weight:600;animation:qShine 2.6s linear infinite}
+  [data-theme="light"] .ticker-item.is-qlik .ti-title{
+    background-image:linear-gradient(100deg,#068a45 0 42%,#00C766 50%,#068a45 58% 100%);
+    font-weight:700}
+  @keyframes qShine{0%{background-position:140% 0}100%{background-position:-40% 0}}
+  .ti-title .qhit{font-weight:800;letter-spacing:.01em}
+
+  @media (prefers-reduced-motion:reduce){
+    .qn-face{transition:none}
+    .qnews.alert,.qnews.alert::after,.qnews.alert .qn-alertface .qn-word,
+    .qnews.alert .qn-alertface .qn-kicker,.ticker-item.is-qlik .ti-title{animation:none}
+    .ticker-item.is-qlik .ti-title{color:var(--green);background-image:none}
+  }
+
   .ticker-win{position:relative;flex:1;display:flex;align-items:center;height:100%;overflow:hidden;padding-left:8px;
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent);
     mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
@@ -367,9 +440,9 @@
   .cl-s{stroke:var(--sky);stroke-width:1.2;stroke-linecap:round}
   .cl-hub{fill:var(--sky)}
   .clk-txt{min-width:0}
-  .clk-country{font-family:'Barlow Condensed';font-weight:500;font-size:9px;letter-spacing:.1em;
+  .clk-country{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:9px;letter-spacing:.1em;
     text-transform:uppercase;color:var(--muted);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .clk-city{font-family:'Barlow Condensed';font-weight:600;font-size:13px;color:var(--ink);line-height:1.15;white-space:nowrap}
+  .clk-city{font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:13px;color:var(--ink);line-height:1.15;white-space:nowrap}
   .clk-time{font-size:10px;color:var(--sky);font-variant-numeric:tabular-nums;white-space:nowrap}
 
   /* ---- key dates dialog ---- */
@@ -414,13 +487,13 @@
   @keyframes otdScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   @media (prefers-reduced-motion:reduce){.cal-otd-track.scroll{animation:none}.cal-otd{text-overflow:ellipsis;white-space:nowrap}}
   .cal-datebtn{flex:0 0 auto;height:28px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.04);
-    color:var(--ink);font-family:'Barlow Condensed';font-weight:600;font-size:12.5px;letter-spacing:.03em;cursor:pointer;white-space:nowrap;transition:border-color .2s,background .2s}
+    color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:12.5px;letter-spacing:.03em;cursor:pointer;white-space:nowrap;transition:border-color .2s,background .2s}
   .cal-datebtn:hover{border-color:rgba(16,207,201,.5);background:rgba(255,255,255,.08)}
   @media (max-width:820px){.cal-otd{display:none}}
   .cal-bar-ic{width:16px;height:16px;flex:0 0 auto;fill:none;stroke:var(--sky);stroke-width:1.8;stroke-linecap:round;
     stroke-linejoin:round;margin-right:4px}
   .cal-monthsel{position:relative}
-  .cal-month{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-family:'Barlow Condensed';
+  .cal-month{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-family:'Inter',system-ui,sans-serif;
     font-weight:600;font-size:14px;min-width:0;letter-spacing:.02em;color:var(--ink);background:transparent;
     border:1px solid transparent;border-radius:7px;padding:2px 6px;cursor:pointer;transition:border-color .2s,background .2s}
   .cal-month:hover{border-color:var(--line);background:rgba(255,255,255,.04)}
@@ -433,9 +506,9 @@
   [data-theme="light"] .cal-pop{background:#fff}
   .cal-pop[hidden]{display:none}
   .cal-pop-yr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-  .cal-pop-yr span{font-family:'Barlow Condensed';font-weight:600;font-size:16px;letter-spacing:.02em}
+  .cal-pop-yr span{font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:16px;letter-spacing:.02em}
   .cal-pop-months{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-  .cal-mo{font-family:'Barlow Condensed';font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;
+  .cal-mo{font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;
     color:var(--muted);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:8px;padding:8px 0;
     cursor:pointer;transition:color .15s,border-color .15s,background .15s}
   .cal-mo:hover{color:var(--ink);border-color:rgba(16,207,201,.5);background:rgba(255,255,255,.06)}
@@ -445,18 +518,18 @@
   .cal-btn:hover{color:var(--sky);border-color:rgba(16,207,201,.5);background:rgba(255,255,255,.07)}
   .cal-btn svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .cal-tbtn{height:26px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.04);color:var(--ink);
-    font-family:'Barlow Condensed';font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+    font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
     transition:color .2s,border-color .2s,background .2s}
   .cal-tbtn:hover{color:var(--sky);border-color:rgba(16,207,201,.5);background:rgba(255,255,255,.07)}
   .cal-dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
-  .cal-dow span{font-family:'Barlow Condensed';font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  .cal-dow span{font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--muted);text-align:center;padding:3px 0}
   .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-auto-rows:1fr;gap:6px}
   .cal-cell{position:relative;min-height:58px;border:1px solid var(--line);border-radius:9px;background:rgba(255,255,255,.022);
     padding:5px;display:flex;flex-direction:column;gap:3px;overflow:hidden;transition:border-color .2s,background .2s}
   .cal-cell:hover{border-color:rgba(16,207,201,.3);background:rgba(255,255,255,.04)}
   .cal-cell.dim{opacity:.38}
-  .cal-num{align-self:flex-end;font-family:'Barlow Condensed';font-weight:600;font-size:12px;color:var(--muted);
+  .cal-num{align-self:flex-end;font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:12px;color:var(--muted);
     line-height:1;width:19px;height:19px;display:grid;place-items:center;border-radius:50%}
   .cal-cell.today{border-color:rgba(16,207,201,.5)}
   .cal-cell.today .cal-num{background:var(--sky);color:#04222b}
@@ -467,7 +540,7 @@
   .cal-pill:hover{background:rgba(255,255,255,.08)}
   .cal-pill .cdot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
   .cal-pill .ct{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .cal-more{font-size:10px;color:var(--muted);font-family:'Barlow Condensed';font-weight:600;letter-spacing:.04em;
+  .cal-more{font-size:10px;color:var(--muted);font-family:'Inter',system-ui,sans-serif;font-weight:600;letter-spacing:.04em;
     border:0;background:transparent;text-align:left;padding:0 5px}
   .cal-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:13px}
   .cal-legend .lg{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:var(--muted)}
@@ -476,7 +549,7 @@
   .cal-main{position:relative;min-width:0}
   .cal-listwrap{position:relative;display:flex;flex-direction:column;flex:1 1 auto;min-height:0;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.03);
     padding:14px 14px 8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
-  .cal-listwrap h2{font-family:'Barlow Condensed';font-weight:500;font-size:12px;letter-spacing:.18em;
+  .cal-listwrap h2{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:12px;letter-spacing:.18em;
     text-transform:uppercase;color:var(--muted);margin-bottom:6px}
   .cal-li{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;border:0;background:transparent;
     cursor:pointer;font:inherit;color:var(--ink);padding:9px 6px;border-radius:8px;transition:background .15s}
@@ -508,7 +581,7 @@
     50%{box-shadow:0 0 16px 3px color-mix(in srgb, var(--spot, var(--sky)) 55%, transparent)}
   }
   @media (prefers-reduced-motion:reduce){.cal-cell--spot{animation:none;box-shadow:0 0 12px 1px color-mix(in srgb, var(--spot, var(--sky)) 40%, transparent)}}
-  .cal-bb-eyebrow{position:absolute;top:10px;left:12px;z-index:3;font-family:'Barlow Condensed';font-weight:600;font-size:10px;
+  .cal-bb-eyebrow{position:absolute;top:10px;left:12px;z-index:3;font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:10px;
     letter-spacing:.18em;text-transform:uppercase;color:#fff;opacity:.92;display:flex;align-items:center;gap:6px;text-shadow:0 1px 4px rgba(0,0,0,.55)}
   .cal-bb-eyebrow .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--sky);animation:bbpulse 2s infinite}
   @keyframes bbpulse{0%{box-shadow:0 0 0 0 rgba(16,207,201,.5)}70%{box-shadow:0 0 0 7px rgba(16,207,201,0)}100%{box-shadow:0 0 0 0 rgba(16,207,201,0)}}
@@ -516,11 +589,11 @@
   .cal-bb-media{position:relative;height:88px;background-size:cover;background-position:center}
   .cal-bb-media::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,18,32,.1),rgba(7,18,32,.82))}
   .cal-bb-cat{position:absolute;bottom:8px;left:12px;z-index:2;display:inline-flex;align-items:center;gap:6px;
-    font-family:'Barlow Condensed';font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.55)}
+    font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.55)}
   .cal-bb-cat .cdot{width:7px;height:7px;border-radius:50%}
   .cal-bb-body{padding:11px 13px 12px;min-height:138px}
-  .cal-bb-date{font-family:'Barlow Condensed';font-weight:500;font-size:11px;letter-spacing:.06em;color:var(--sky);margin-bottom:3px}
-  .cal-bb-title{font-family:'Barlow Condensed';font-weight:500;font-size:18px;line-height:1.1;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .cal-bb-date{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:11px;letter-spacing:.06em;color:var(--sky);margin-bottom:3px}
+  .cal-bb-title{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:18px;line-height:1.1;margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .cal-bb-desc{font-size:12px;line-height:1.45;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .cal-bb-dots{display:flex;align-items:center;justify-content:flex-start;gap:7px;margin-top:auto;min-height:28px;padding:0 14px 8px 20px}
   .cal-bb-dots .d{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:var(--line);cursor:pointer;transition:background .2s,transform .2s}
@@ -534,14 +607,14 @@
   .cal-modal-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:8px;
     border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;display:grid;place-items:center}
   .cal-modal-close:hover{color:var(--sky);border-color:rgba(16,207,201,.5)}
-  .cm-cat{display:inline-flex;align-items:center;gap:8px;font-family:'Barlow Condensed';font-weight:600;font-size:11px;
+  .cm-cat{display:inline-flex;align-items:center;gap:8px;font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:11px;
     letter-spacing:.14em;text-transform:uppercase;color:var(--ink);margin-bottom:9px}
   .cm-cat .cdot{width:9px;height:9px;border-radius:50%}
-  .cm-date{font-family:'Barlow Condensed';font-weight:500;letter-spacing:.16em;text-transform:uppercase;font-size:12px;color:var(--sky)}
-  .cm-title{font-family:'Barlow Condensed';font-weight:600;font-size:25px;margin:4px 0 11px;color:var(--ink)}
+  .cm-date{font-family:'Inter',system-ui,sans-serif;font-weight:500;letter-spacing:.16em;text-transform:uppercase;font-size:12px;color:var(--sky)}
+  .cm-title{font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:25px;margin:4px 0 11px;color:var(--ink)}
   .cm-desc{font-size:14px;line-height:1.6;color:var(--muted)}
   .cm-link{margin-top:15px;display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:9px;
-    background:var(--sky);color:#04222b;text-decoration:none;font-family:'Barlow Condensed';font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+    background:var(--sky);color:#04222b;text-decoration:none;font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
   .cm-link[hidden]{display:none}
   .cm-link:hover{filter:brightness(1.08)}
   [data-theme="light"] .cal-modal-panel{background:#fff}
@@ -563,8 +636,8 @@
   .kd-back{position:absolute;inset:0;background:rgba(6,16,28,.66);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
   .kd-panel{position:relative;z-index:1;width:100%;max-width:420px;background:var(--navy-1);
     border:1px solid var(--line);border-radius:16px;padding:26px 24px 22px;box-shadow:0 40px 90px -30px rgba(0,0,0,.7)}
-  .kd-panel .pm{font-family:'Barlow Condensed';font-weight:500;letter-spacing:.16em;text-transform:uppercase;font-size:12px;color:var(--sky)}
-  .kd-panel h4{font-family:'Barlow Condensed';font-weight:600;font-size:25px;margin:4px 0 11px;color:var(--ink)}
+  .kd-panel .pm{font-family:'Inter',system-ui,sans-serif;font-weight:500;letter-spacing:.16em;text-transform:uppercase;font-size:12px;color:var(--sky)}
+  .kd-panel h4{font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:25px;margin:4px 0 11px;color:var(--ink)}
   .kd-panel p{font-size:14px;line-height:1.6;color:var(--muted)}
   .kd-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:8px;
     border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;
@@ -593,7 +666,7 @@
   @keyframes beta-stripes{to{background-position:0 -17px}}
   .beta-cone{width:17px;height:17px;flex:0 0 auto;transform-origin:50% 88%;animation:beta-bob 2.6s ease-in-out infinite}
   @keyframes beta-bob{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(7deg)}}
-  .beta-badge{flex:0 0 auto;font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:10px;
+  .beta-badge{flex:0 0 auto;font-family:'Inter',system-ui,sans-serif;font-weight:800;font-size:10px;
     letter-spacing:1.3px;text-transform:uppercase;color:#241704;background:#F5A623;border-radius:4px;
     padding:2px 7px;line-height:1.25;animation:beta-glow 2.8s ease-in-out infinite}
   @keyframes beta-glow{0%,100%{box-shadow:0 0 0 0 rgba(245,166,35,0)}50%{box-shadow:0 0 16px -2px rgba(245,166,35,.65)}}
@@ -612,20 +685,20 @@
     border-color:rgba(15,40,70,.12)}
   .lc-top{display:flex;align-items:center;gap:10px;min-width:0}
   .lc-logo{height:17px;width:auto;flex:0 0 auto}
-  .lc-kicker{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:12px;
+  .lc-kicker{font-family:'Inter',system-ui,sans-serif;font-weight:600;font-size:12px;
     letter-spacing:.22em;text-transform:uppercase;color:var(--sky);white-space:nowrap}
   .lc-mid{display:flex;flex-direction:column;align-items:flex-start;gap:1px;margin:6px 0 8px}
-  .lc-date{font-family:'Barlow Condensed',sans-serif;font-weight:500;font-size:11.5px;
+  .lc-date{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:11.5px;
     letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
   .lc-teaser{display:flex;align-items:center;gap:10px;min-width:0;font-size:12px;
     padding-top:8px;border-top:1px solid var(--line);opacity:1}
-  .lc-teaser em{font-style:normal;font-family:'Barlow Condensed',sans-serif;font-weight:600;
+  .lc-teaser em{font-style:normal;font-family:'Inter',system-ui,sans-serif;font-weight:600;
     font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);flex:0 0 auto}
   .lc-dates{display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden}
   /* Default is quiet. Only a date within seven days gets its category colour
      and the pulse, so "soon" actually reads as soon. */
   .lc-date-chip{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;
-    font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;
+    font-family:'Inter',system-ui,sans-serif;font-weight:700;font-size:12px;
     letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
     border:1px solid var(--line);border-radius:7px;padding:3px 9px;
     background:rgba(255,255,255,.03)}
@@ -644,10 +717,10 @@
     .lc-date-chip{padding:3px 7px;gap:5px;letter-spacing:.05em}
     .lc-dates{gap:6px}
   }
-  .lc-greet{font-family:'Barlow Condensed',sans-serif;font-weight:500;font-size:11px;
+  .lc-greet{font-family:'Inter',system-ui,sans-serif;font-weight:500;font-size:11px;
     letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-  .lc-time{font-family:'Barlow Condensed',sans-serif;font-weight:700;
-    font-size:clamp(28px,8vw,38px);line-height:1.02;color:var(--ink);font-variant-numeric:tabular-nums}
+  .lc-time{font-family:'Inter',system-ui,sans-serif;font-weight:700;
+    font-size:clamp(26px,7.2vw,34px);letter-spacing:-.015em;line-height:1.02;color:var(--ink);font-variant-numeric:tabular-nums}
   /* Mindtickle's expand control sits just off the top-right of our iframe and
      we cannot restyle or move it. So this is a POINTER, not a button — no
      border, no fill, nothing that invites a tap on the wrong thing. */
@@ -769,6 +842,30 @@
     .hl.has-media{grid-template-columns:minmax(0,1fr) 0;column-gap:0}
     .hl.has-media .hl-media{display:none}
 }
+  /* ── MOBILE SECTION: layout is NOT width-dependent ────────────────────────
+     The iOS app hands the iframe ~408 CSS px, but the Android app hands it a
+     desktop-width viewport (~1080). Width media queries therefore can't be
+     trusted to build the mobile stack — these rules are unconditional so the
+     mobile widget looks the same on both. Physical scale is corrected by
+     fitMobileScale() in the script. ────────────────────────────────────── */
+  /* width media queries still evaluate against the UNZOOMED viewport, so pin
+     anything width-derived here rather than leaving it to a breakpoint */
+  html[data-section="mobile"]{--secpad-x:20px}
+  html[data-section="mobile"][data-mode="full"] .herorow{display:flex;flex-direction:column;
+    align-items:stretch;row-gap:14px;column-gap:0;padding-right:0}
+  html[data-section="mobile"] .hr-bodyR{display:contents}
+  html[data-section="mobile"] .hr-brandline{order:0}
+  html[data-section="mobile"] .vs-infobox{order:1;text-align:right;max-width:none;width:100%}
+  html[data-section="mobile"] .hr-bodyL{order:2;align-self:auto}
+  html[data-section="mobile"] .ue-legend{order:3;justify-content:center}
+  html[data-section="mobile"] .clocks{order:4;margin-top:0;
+    grid-template-columns:repeat(2,minmax(0,1fr))}
+  html[data-section="mobile"] .quote{border-right:2px solid var(--green);border-left:none;
+    padding-right:13px;padding-left:0;text-align:right}
+  html[data-section="mobile"] .hl{grid-template-columns:minmax(0,1fr) 0;column-gap:0}
+  html[data-section="mobile"] .hl-media{display:none}
+  html[data-section="mobile"] .hotlinks{flex-direction:row;align-items:center;
+    justify-content:space-between;padding:8px 10px}
 </style>
 </head>
 <body>
@@ -825,7 +922,10 @@
 
     <div class="lowerthird rise d2">
       <div class="ticker" aria-label="Industry news">
-        <span class="qnews" aria-label="Current News"><span class="qn-kicker">CURRENT</span><span class="qn-word">NEWS</span></span>
+        <span class="qnews" id="qnews" aria-label="Current News">
+          <span class="qn-face qn-normal"><span class="qn-kicker">CURRENT</span><span class="qn-word">NEWS</span></span>
+          <span class="qn-face qn-alertface" aria-hidden="true"><span class="qn-kicker">NEWS</span><span class="qn-word">ALERT</span></span>
+        </span>
         <div class="ticker-win"><div class="ticker-track" id="newsTrack"></div></div>
       </div>
       <div class="pulse" aria-label="Market pulse">
@@ -897,8 +997,24 @@ const SHOW_HL   = !SECTION || SECTION === 'highlights' || IS_MOBILE;
    which state we're in — no bridge to the host app required, which is just as
    well because the widget can't run JS or reach the expand control. */
 const MODE_MIN = 420;
+
+/* Android's fullscreen webview reports a desktop-width viewport (~1080 CSS px)
+   for the same iframe iOS reports at ~408, so everything renders at roughly a
+   third of its intended physical size. Scaling the root back to a 420px
+   reference makes the two platforms match. On iOS this works out to 1 and does
+   nothing. Layout itself never depends on width in this section — see the
+   unconditional mobile block at the end of the stylesheet. */
+const MOBILE_REF = 420;
+function fitMobileScale(){
+  if (!IS_MOBILE) return;
+  const w = window.innerWidth;
+  if (w > 560) document.documentElement.style.zoom = (w / MOBILE_REF).toFixed(3);
+  else document.documentElement.style.removeProperty('zoom');
+}
+
 function syncMode(){
   if (!IS_MOBILE) return;
+  fitMobileScale();
   const m = window.innerHeight >= MODE_MIN ? 'full' : 'card';
   if (document.documentElement.getAttribute('data-mode') !== m)
     document.documentElement.setAttribute('data-mode', m);
@@ -1459,15 +1575,50 @@ const SAMPLE_NEWS = [   /* placeholder until the live endpoint answers */
 const newsTrack = document.getElementById('newsTrack');
 function esc(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function faviconFor(url){ try { return 'https://www.google.com/s2/favicons?domain=' + new URL(url).hostname + '&sz=64'; } catch(e){ return ''; } }
+/* Wrap any mention of Qlik in the headline. esc() runs FIRST and the markup is
+   added after, so a hostile feed can't inject through this. */
+const QLIK_RE = /\bqlik\b/i;
+function markQlik(escapedTitle){
+  return escapedTitle.replace(/\bQlik\b/gi, m => '<span class="qhit">'+m+'</span>');
+}
 function renderNews(list){
   const html = list.map(n => {
     const fav = faviconFor(n.url);
     const img = fav ? '<img class="ticker-fav" src="'+fav+'" alt="" onerror="this.style.display=\'none\'">' : '';
     const tgt = (n.url && n.url.indexOf('http')===0) ? ' target="_blank" rel="noopener noreferrer"' : '';
-    return '<a class="ticker-item" href="'+esc(n.url)+'"'+tgt+'>'+img
-      + '<span class="ti-title">'+esc(n.title)+'</span> <span class="ti-src">'+esc(n.source)+'</span></a>';
+    const hit = QLIK_RE.test(n.title || '');
+    const title = hit ? markQlik(esc(n.title)) : esc(n.title);
+    return '<a class="ticker-item'+(hit ? ' is-qlik' : '')+'" href="'+esc(n.url)+'"'+tgt+'>'+img
+      + '<span class="ti-title">'+title+'</span> <span class="ti-src">'+esc(n.source)+'</span></a>';
   }).join('');
   newsTrack.innerHTML = html + html;   /* duplicate for a seamless loop */
+  watchQlikMentions();
+}
+
+/* The track is a CSS marquee, so nothing fires as items pass. Poll the rects
+   against the visible window instead — cheap at 8fps and exact, where an
+   IntersectionObserver samples late enough to miss short crossings. */
+let qlikWatch = null;
+function watchQlikMentions(){
+  const tab = document.getElementById('qnews');
+  const win = document.querySelector('.ticker-win');
+  if (!tab || !win) return;
+  if (qlikWatch) { clearInterval(qlikWatch); qlikWatch = null; }
+  const hits = newsTrack.querySelectorAll('.ticker-item.is-qlik');
+  if (!hits.length) { tab.classList.remove('alert'); return; }
+  const check = function(){
+    const w = win.getBoundingClientRect();
+    let on = false;
+    for (const el of hits){
+      const r = el.getBoundingClientRect();
+      if (r.right > w.left + 6 && r.left < w.right - 6){ on = true; break; }
+    }
+    tab.classList.toggle('alert', on);
+    const band = tab.closest('.ticker');
+    if (band) band.classList.toggle('alert-on', on);
+  };
+  check();
+  qlikWatch = setInterval(check, 120);
 }
 renderNews(SAMPLE_NEWS);
 if (SHOW_TICK) fetch(NEWS_ENDPOINT)
