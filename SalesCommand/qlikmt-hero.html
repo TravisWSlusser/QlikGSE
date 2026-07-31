@@ -135,6 +135,23 @@
   .hl-dots button:hover{background:var(--muted)}
   .hl-dots button.on{background:var(--sky);transform:scale(1.25)}
 
+  /* ---- section cards (?section=<name>) --------------------------------- */
+  .scard{display:flex;flex-direction:column;align-items:flex-start;gap:12px;
+    width:100%;padding:clamp(20px,3.4%,28px);box-sizing:border-box;
+    border:1px solid var(--line);border-radius:14px;
+    background:rgba(255,255,255,.03);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+  [data-theme="light"] .scard{background:rgba(255,255,255,.5);border-color:rgba(15,40,70,.12)}
+  .scard-kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--sky)}
+  .scard-kicker::before{content:"";width:6px;height:6px;border-radius:50%;
+    background:var(--sky);flex:0 0 auto}
+  .scard-title{margin:0;font-weight:700;letter-spacing:-.015em;line-height:1.06;
+    font-size:clamp(24px,2.4vw,32px);color:var(--ink);text-wrap:balance}
+  .scard-rule{height:1px;width:100%;background:var(--line);border:0;margin:0}
+  .scard-blurb{margin:0;font-weight:400;color:#BCCFE2;max-width:62ch;
+    font-size:clamp(13px,1.15vw,16px);line-height:1.55}
+  [data-theme="light"] .scard-blurb{color:#42566c}
+
   /* ---- upcoming events strip ---- */
   .hr-bodyL{display:flex;flex-direction:column;gap:12px;align-self:stretch}
   .hl{flex:1 1 auto}
@@ -782,11 +799,18 @@
 
   html[data-section="highlights"] .herorow{display:grid;padding-top:0}
 
+  /* ?section=sparks — the section card on its own. Not listed in the mobile
+     view on purpose: on mobile Mindtickle shows the hardcoded white twin, so
+     this must stay hidden there. */
+  html[data-section="sparks"] .scard{display:flex}
+  html[data-section="sparks"] .wrap{padding-block:0}
+
 
   /* ---- ?section=mobile : one widget, two states -------------------------
      data-mode is set from the viewport height. Collapsed inside a Mindtickle
      card it shows the launch card; once expanded it becomes the whole page. */
   html[data-section="mobile"][data-mode="card"] .launch{display:flex}
+  html[data-section="mobile"][data-mode="card"] body{background:transparent}
   html[data-section="mobile"][data-mode="full"] .topline,
   html[data-section="mobile"][data-mode="full"] .hotlinks{display:flex}
   html[data-section="mobile"] .hl-links{display:none}
@@ -866,6 +890,47 @@
   html[data-section="mobile"] .hl-media{display:none}
   html[data-section="mobile"] .hotlinks{flex-direction:row;align-items:center;
     justify-content:space-between;padding:8px 10px}
+  /* ── MOBILE CARD STATE: light, to sit flush in the app ───────────────────
+     Collapsed, the widget sits on Mindtickle's white app background, so the
+     card renders light regardless of the stored theme. On expand it crosses
+     to the normal palette — dark unless the learner has toggled light — and
+     crosses back on close. Driven purely by data-mode, so the fade is a CSS
+     transition rather than anything scripted. ──────────────────────────── */
+  html[data-section="mobile"] body,
+  html[data-section="mobile"] .launch,
+  html[data-section="mobile"] .lc-kicker,
+  html[data-section="mobile"] .lc-greet,
+  html[data-section="mobile"] .lc-time,
+  html[data-section="mobile"] .lc-date,
+  html[data-section="mobile"] .lc-cta,
+  html[data-section="mobile"] .lc-teaser,
+  html[data-section="mobile"] .lc-teaser em,
+  html[data-section="mobile"] .lc-date-chip{
+    transition:background-color .5s ease, background-image .5s ease,
+               color .5s ease, border-color .5s ease, box-shadow .5s ease}
+
+  html[data-section="mobile"][data-mode="card"] body{background:#eef3f9}
+  html[data-section="mobile"][data-mode="card"] .launch{
+    background:linear-gradient(135deg,rgba(14,158,153,.12),rgba(255,255,255,.92) 55%);
+    border-color:rgba(15,40,70,.14);
+    box-shadow:0 1px 3px rgba(15,40,70,.08),inset 0 1px 0 rgba(255,255,255,.9)}
+  html[data-section="mobile"][data-mode="card"] .lc-kicker{color:#0E9E99}
+  html[data-section="mobile"][data-mode="card"] .lc-time{color:#0E2742}
+  html[data-section="mobile"][data-mode="card"] .lc-greet,
+  html[data-section="mobile"][data-mode="card"] .lc-date,
+  html[data-section="mobile"][data-mode="card"] .lc-teaser em{color:#5C7185}
+  html[data-section="mobile"][data-mode="card"] .lc-teaser{border-top-color:rgba(15,40,70,.12)}
+  html[data-section="mobile"][data-mode="card"] .lc-cta{color:#0E9E99}
+  html[data-section="mobile"][data-mode="card"] .lc-date-chip{
+    color:#5C7185;border-color:rgba(15,40,70,.16);background:rgba(15,40,70,.03)}
+  html[data-section="mobile"][data-mode="card"] .lc-date-chip i{background:rgba(15,40,70,.22)}
+  html[data-section="mobile"][data-mode="card"] .lc-date-chip.soon{
+    color:#0E2742;border-color:var(--uec,#0E9E99);background:rgba(15,40,70,.05)}
+  html[data-section="mobile"][data-mode="card"] .lc-date-chip.soon i{background:var(--uec,#0E9E99)}
+
+  @media (prefers-reduced-motion:reduce){
+    html[data-section="mobile"] body,html[data-section="mobile"] .launch{transition:none}
+  }
 </style>
 </head>
 <body>
@@ -973,6 +1038,16 @@
 
     </div>
 
+    <!-- SECTION CARD — ?section=sparks. Sits in the left slot of a Mindtickle
+         row with MT's own widgets alongside. Theme-aware because it rides in
+         our iframe; the hardcoded white twin is only used on mobile. -->
+    <section class="scard rise d2" aria-label="Enablement Sparks">
+      <span class="scard-kicker">On Demand</span>
+      <h2 class="scard-title">Enablement Sparks</h2>
+      <hr class="scard-rule">
+      <p class="scard-blurb">Missed a live Enablement Sparks session? The whole thing&rsquo;s here, broken into modules you can take a piece at a time.</p>
+    </section>
+
     <div class="divider rise d4" aria-hidden="true"></div>
 
 
@@ -997,6 +1072,7 @@ const SHOW_HL   = !SECTION || SECTION === 'highlights' || IS_MOBILE;
    which state we're in — no bridge to the host app required, which is just as
    well because the widget can't run JS or reach the expand control. */
 const MODE_MIN = 420;
+var onModeChange = null;   /* set by the theme block once it initialises */
 
 /* Android's fullscreen webview reports a desktop-width viewport (~1080 CSS px)
    for the same iframe iOS reports at ~408, so everything renders at roughly a
@@ -1016,8 +1092,10 @@ function syncMode(){
   if (!IS_MOBILE) return;
   fitMobileScale();
   const m = window.innerHeight >= MODE_MIN ? 'full' : 'card';
-  if (document.documentElement.getAttribute('data-mode') !== m)
+  if (document.documentElement.getAttribute('data-mode') !== m){
     document.documentElement.setAttribute('data-mode', m);
+    if (onModeChange) onModeChange();   /* card -> light, full -> user's choice */
+  }
 }
 if (IS_MOBILE){
   syncMode();
@@ -1482,8 +1560,15 @@ function repaintMasked(){
     el.style.willChange='opacity'; void el.offsetHeight; el.style.willChange='';
   });
 }
+function effectiveTheme(m){
+  /* collapsed mobile card always renders light — Mindtickle's app page is white
+     and a navy block reads as a foreign object sitting on it */
+  if (IS_MOBILE && document.documentElement.getAttribute('data-mode') === 'card') return 'light';
+  return m;
+}
 function paintTheme(m){
-  if(m==='light') document.documentElement.setAttribute('data-theme','light');
+  const eff = effectiveTheme(m);
+  if(eff==='light') document.documentElement.setAttribute('data-theme','light');
   else document.documentElement.removeAttribute('data-theme');
   requestAnimationFrame(repaintMasked);
   if(tBtn){
@@ -1497,6 +1582,8 @@ function applyTheme(m){
   theme = m; paintTheme(theme);
 }
 paintTheme(theme);
+onModeChange = function(){ paintTheme(theme); };
+onModeChange();
 
 if(tBtn) tBtn.addEventListener('click', ()=>{
   const next = (theme==='dark') ? 'light' : 'dark';
