@@ -136,8 +136,8 @@
   .hl-dots button.on{background:var(--sky);transform:scale(1.25)}
 
   /* ---- section cards (?section=<name>) --------------------------------- */
-  .scard{display:flex;flex-direction:column;align-items:flex-start;gap:12px;
-    width:100%;padding:clamp(20px,3.4%,28px);box-sizing:border-box;
+  .scard{display:flex;flex-direction:column;align-items:flex-start;gap:10px;
+    width:100%;padding:16px 18px;box-sizing:border-box;
     border:1px solid var(--line);border-radius:14px;
     background:rgba(255,255,255,.03);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
   [data-theme="light"] .scard{background:rgba(255,255,255,.5);border-color:rgba(15,40,70,.12)}
@@ -802,8 +802,10 @@
   /* ?section=sparks — the section card on its own. Not listed in the mobile
      view on purpose: on mobile Mindtickle shows the hardcoded white twin, so
      this must stay hidden there. */
-  html[data-section="sparks"] .scard{display:flex}
-  html[data-section="sparks"] .wrap{padding-block:0}
+  html[data-section="sparks"] .scard{display:flex;justify-content:center;height:100%}
+  html[data-section="sparks"] .wrap{padding-block:0;height:100%}
+  html[data-section="sparks"] body{min-height:100%;height:100%}
+  html[data-section="sparks"]{height:100%}
 
 
   /* ---- ?section=mobile : one widget, two states -------------------------
@@ -909,11 +911,11 @@
     transition:background-color .5s ease, background-image .5s ease,
                color .5s ease, border-color .5s ease, box-shadow .5s ease}
 
-  html[data-section="mobile"][data-mode="card"] body{background:#eef3f9}
+  html[data-section="mobile"][data-mode="card"] body{background:#ffffff}
+  /* same frame language as the hardcoded section cards below it */
   html[data-section="mobile"][data-mode="card"] .launch{
-    background:linear-gradient(135deg,rgba(14,158,153,.12),rgba(255,255,255,.92) 55%);
-    border-color:rgba(15,40,70,.14);
-    box-shadow:0 1px 3px rgba(15,40,70,.08),inset 0 1px 0 rgba(255,255,255,.9)}
+    background:#ffffff;border-color:rgba(15,40,70,.18);border-radius:16px;
+    box-shadow:0 1px 3px rgba(15,40,70,.07)}
   html[data-section="mobile"][data-mode="card"] .lc-kicker{color:#0E9E99}
   html[data-section="mobile"][data-mode="card"] .lc-time{color:#0E2742}
   html[data-section="mobile"][data-mode="card"] .lc-greet,
