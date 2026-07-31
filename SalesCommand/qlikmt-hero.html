@@ -797,13 +797,17 @@
 
   html[data-section="ticker"] .lowerthird{display:block;margin-top:0}
 
-  html[data-section="highlights"] .herorow{display:grid;padding-top:0}
+  /* the wrap already pads the bottom; the herorow adding its own doubled it */
+  html[data-section="highlights"] .herorow{display:grid;padding-top:0;padding-bottom:0}
 
   /* ?section=sparks — the section card on its own. Not listed in the mobile
      view on purpose: on mobile Mindtickle shows the hardcoded white twin, so
      this must stay hidden there. */
-  html[data-section="sparks"] .scard{display:flex;justify-content:center;height:100%}
-  html[data-section="sparks"] .wrap{padding-block:0;height:100%}
+  /* The frame hugs its copy; the WRAP fills the iframe so the widget still
+     matches the height of the Mindtickle widget beside it. */
+  html[data-section="sparks"] .scard{display:flex;height:auto}
+  html[data-section="sparks"] .wrap{height:100%;display:flex;
+    flex-direction:column;justify-content:center}
   html[data-section="sparks"] body{min-height:100%;height:100%}
   html[data-section="sparks"]{height:100%}
 
