@@ -136,7 +136,8 @@
   .hl-dots button.on{background:var(--sky);transform:scale(1.25)}
 
   /* ---- section cards (?section=<name>) --------------------------------- */
-  .scard{display:flex;flex-direction:column;align-items:flex-start;gap:10px;
+  /* hidden unless a ?section= in SECTION_CARDS switches it on */
+  .scard{display:none;flex-direction:column;align-items:flex-start;gap:10px;
     width:100%;padding:16px 18px;box-sizing:border-box;
     border:1px solid var(--line);border-radius:14px;
     background:rgba(255,255,255,.03);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
@@ -800,16 +801,15 @@
   /* the wrap already pads the bottom; the herorow adding its own doubled it */
   html[data-section="highlights"] .herorow{display:grid;padding-top:0;padding-bottom:0}
 
-  /* ?section=sparks — the section card on its own. Not listed in the mobile
-     view on purpose: on mobile Mindtickle shows the hardcoded white twin, so
-     this must stay hidden there. */
-  /* The frame hugs its copy; the WRAP fills the iframe so the widget still
+  /* Section cards. data-card is set by the script for any ?section= listed in
+     SECTION_CARDS, so adding a section needs no new CSS. Deliberately absent
+     from the mobile view — there Mindtickle shows the hardcoded white twin.
+     The frame hugs its copy; the WRAP fills the iframe so the widget still
      matches the height of the Mindtickle widget beside it. */
-  html[data-section="sparks"] .scard{display:flex;height:auto}
-  html[data-section="sparks"] .wrap{height:100%;display:flex;
-    flex-direction:column;justify-content:center}
-  html[data-section="sparks"] body{min-height:100%;height:100%}
-  html[data-section="sparks"]{height:100%}
+  html[data-card] .scard{display:flex;height:auto}
+  html[data-card] .wrap{height:100%;display:flex;flex-direction:column;justify-content:center}
+  html[data-card] body{min-height:100%;height:100%}
+  html[data-card]{height:100%}
 
 
   /* ---- ?section=mobile : one widget, two states -------------------------
@@ -1047,11 +1047,11 @@
     <!-- SECTION CARD — ?section=sparks. Sits in the left slot of a Mindtickle
          row with MT's own widgets alongside. Theme-aware because it rides in
          our iframe; the hardcoded white twin is only used on mobile. -->
-    <section class="scard rise d2" aria-label="Enablement Sparks">
-      <span class="scard-kicker">On Demand</span>
-      <h2 class="scard-title">Enablement Sparks</h2>
+    <section class="scard rise d2" id="scard">
+      <span class="scard-kicker" id="scardKicker"></span>
+      <h2 class="scard-title" id="scardTitle"></h2>
       <hr class="scard-rule">
-      <p class="scard-blurb">Missed a live Enablement Sparks session? The whole thing&rsquo;s here, broken into modules you can take a piece at a time.</p>
+      <p class="scard-blurb" id="scardBlurb"></p>
     </section>
 
     <div class="divider rise d4" aria-hidden="true"></div>
@@ -1069,6 +1069,27 @@ function sfBrandFallback(img){ var p=img.closest('.sf-brand'); if(p) p.classList
 const SECTION   = document.documentElement.getAttribute('data-section') || '';
 const IS_MOBILE = SECTION === 'mobile';
 const SHOW_TOP  = !SECTION || SECTION === 'topbar'     || IS_MOBILE;
+/* ---- SECTION CARDS ---------------------------------------------------------
+   One entry per ?section=. Each is paired with a hardcoded light twin used on
+   mobile — keep the copy in both in sync. */
+const SECTION_CARDS = {
+  sparks: { kicker:'On Demand',
+            title:'Enablement Sparks',
+            blurb:'Missed a live Enablement Sparks session? The whole thing\u2019s here, broken into modules you can take a piece at a time.' },
+  certs:  { kicker:'Required Training',
+            title:'Quarterly Certifications',
+            blurb:'Each quarter your enablement team develops a core curriculum to ensure your edge stays sharp and you are fluent in both Qlik products and the Qlik Sales Methodology.' }
+};
+(function(){
+  const card = SECTION_CARDS[SECTION];
+  if (!card) return;
+  document.documentElement.setAttribute('data-card', SECTION);
+  document.getElementById('scardKicker').textContent = card.kicker;
+  document.getElementById('scardTitle').textContent  = card.title;
+  document.getElementById('scardBlurb').textContent  = card.blurb;
+  document.getElementById('scard').setAttribute('aria-label', card.title);
+})();
+
 const SHOW_TICK = !SECTION || SECTION === 'ticker'     || IS_MOBILE;
 const SHOW_HL   = !SECTION || SECTION === 'highlights' || IS_MOBILE;
 
