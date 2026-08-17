@@ -135,6 +135,46 @@
   .hl-dots button:hover{background:var(--muted)}
   .hl-dots button.on{background:var(--sky);transform:scale(1.25)}
 
+  /* ---- speed dial (?section=hubs) -------------------------------------- */
+  .sd{display:none;flex-direction:column;gap:14px;width:100%}
+  .sd-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .sd-kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--sky)}
+  .sd-kicker::before{content:"";width:6px;height:6px;border-radius:50%;
+    background:var(--sky);flex:0 0 auto}
+  .sd-note{font-size:12px;color:var(--muted)}
+  .sd-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+  .sd-tile{display:flex;align-items:center;gap:11px;min-width:0;text-decoration:none;
+    border:1px solid var(--line);border-radius:13px;padding:12px 13px;
+    background:rgba(255,255,255,.03);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+    transition:transform .18s ease,background .18s ease,border-color .18s ease}
+  .sd-tile:hover{transform:translateY(-2px);background:rgba(16,207,201,.09);
+    border-color:rgba(16,207,201,.4)}
+  [data-theme="light"] .sd-tile{background:rgba(255,255,255,.55);border-color:rgba(15,40,70,.12)}
+  [data-theme="light"] .sd-tile:hover{background:#fff;border-color:rgba(0,166,81,.35)}
+  .sd-ico{flex:0 0 auto;width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+    background:rgba(16,207,201,.12);border:1px solid rgba(16,207,201,.28)}
+  [data-theme="light"] .sd-ico{background:rgba(0,166,81,.10);border-color:rgba(0,166,81,.28)}
+  .sd-ico svg{width:17px;height:17px;fill:none;stroke:var(--sky);stroke-width:1.7;
+    stroke-linecap:round;stroke-linejoin:round}
+  [data-theme="light"] .sd-ico svg{stroke:#068a45}
+  .sd-txt{min-width:0;display:flex;flex-direction:column;gap:2px}
+  .sd-name{font-size:13.5px;font-weight:600;color:var(--ink);line-height:1.2;
+    overflow-wrap:break-word;word-break:normal}
+  .sd-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sd-arrow{margin-left:auto;flex:0 0 auto;color:var(--muted);font-size:13px;transition:color .18s}
+  .sd-tile:hover .sd-arrow{color:var(--sky)}
+  @media (max-width:1100px){.sd-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media (max-width:820px){.sd-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:560px){
+    .sd-tile{padding:11px 12px;gap:10px}
+    .sd-ico{width:30px;height:30px;border-radius:9px}
+    .sd-ico svg{width:15px;height:15px}
+    .sd-name{font-size:12.5px}
+    .sd-arrow{display:none}
+  }
+  @media (max-width:420px){.sd-sub{display:none}}
+
   /* ---- section cards (?section=<name>) --------------------------------- */
   /* hidden unless a ?section= in SECTION_CARDS switches it on */
   .scard{display:none;flex-direction:column;align-items:flex-start;gap:10px;
@@ -798,6 +838,8 @@
 
   html[data-section="ticker"] .lowerthird{display:block;margin-top:0}
 
+  html[data-section="hubs"] .sd{display:flex}
+
   /* the wrap already pads the bottom; the herorow adding its own doubled it */
   html[data-section="highlights"] .herorow{display:grid;padding-top:0;padding-bottom:0}
 
@@ -1054,6 +1096,16 @@
       <p class="scard-blurb" id="scardBlurb"></p>
     </section>
 
+    <!-- SPEED DIAL — ?section=hubs. Eight Sales Essentials hubs. Icons are
+         inline SVG so there are no asset requests. -->
+    <section class="sd rise d2" aria-label="Sales Essentials hubs">
+      <div class="sd-head">
+        <span class="sd-kicker">Sales Essentials</span>
+        <span class="sd-note">Everything sellers reach for most</span>
+      </div>
+      <nav class="sd-grid" id="sdGrid"></nav>
+    </section>
+
     <div class="divider rise d4" aria-hidden="true"></div>
 
 
@@ -1072,6 +1124,49 @@ const SHOW_TOP  = !SECTION || SECTION === 'topbar'     || IS_MOBILE;
 /* ---- SECTION CARDS ---------------------------------------------------------
    One entry per ?section=. Each is paired with a hardcoded light twin used on
    mobile — keep the copy in both in sync. */
+/* ---- SPEED DIAL -------------------------------------------------------------
+   Sales Essentials hubs. Edit here; the grid rebuilds itself. `sub` is the
+   one-word hint under the name and drops out below 420px. */
+const HUBS = [
+  { name:'Customer-Facing Presentations', sub:'Decks',        icon:'deck',
+    url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338997666731515' },
+  { name:'Sales Plays',                   sub:'Motions',      icon:'target',
+    url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338813285128574' },
+  { name:'Industry Briefs',               sub:'Verticals',    icon:'building',
+    url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338878598829563' },
+  { name:'Customer Proof',                sub:'Case studies', icon:'star',
+    url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338930071328251' },
+  { name:'Competitive Intelligence',      sub:'Battlecards',  icon:'shield',
+    url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338841319882659' },
+  { name:'Use Cases & Solutions',         sub:'Positioning',  icon:'grid',
+    url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338915173161342' },
+  { name:'Pricing & Packaging',           sub:'Commercial',   icon:'tag',
+    url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630339952776862078' },
+  { name:'Channels & Alliances',          sub:'Partners',     icon:'nodes',
+    url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/631493373726819883' }
+];
+const HUB_ICONS = {
+  deck:'<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>',
+  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3.4"/><path d="M12 4v2M12 18v2M4 12h2M18 12h2"/>',
+  building:'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/>',
+  star:'<path d="M12 3.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8-5.2-2.75L6.8 19.6l1-5.8-4.2-4.1 5.8-.85z"/>',
+  shield:'<path d="M12 3.2l7 2.8v5.4c0 4.3-2.9 7.6-7 9.4-4.1-1.8-7-5.1-7-9.4V6z"/><path d="M9.2 12.2l2 2 3.6-3.9"/>',
+  grid:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/>',
+  tag:'<path d="M4 11.4V4.6A.6.6 0 014.6 4h6.8a1 1 0 01.7.3l8 8a1 1 0 010 1.4l-6.4 6.4a1 1 0 01-1.4 0l-8-8a1 1 0 01-.3-.7z"/><circle cx="8.2" cy="8.2" r="1.5"/>',
+  nodes:'<circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M8.4 7.4l2.2 8.2M15.6 7.4l-2.2 8.2M8.6 6h6.8"/>'
+};
+(function(){
+  const g = document.getElementById('sdGrid');
+  if (!g) return;
+  g.innerHTML = HUBS.map(function(h){
+    return '<a class="sd-tile" href="'+h.url+'" target="_top">'
+         + '<span class="sd-ico"><svg viewBox="0 0 24 24" aria-hidden="true">'+(HUB_ICONS[h.icon]||'')+'</svg></span>'
+         + '<span class="sd-txt"><span class="sd-name">'+h.name+'</span>'
+         + '<span class="sd-sub">'+h.sub+'</span></span>'
+         + '<span class="sd-arrow" aria-hidden="true">&#8599;</span></a>';
+  }).join('');
+})();
+
 const SECTION_CARDS = {
   sparks: { kicker:'On Demand',
             title:'Enablement Sparks',
