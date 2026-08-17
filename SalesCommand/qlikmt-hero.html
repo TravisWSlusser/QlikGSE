@@ -785,6 +785,10 @@
   @media (max-width:640px){ html[data-section]{--secpad-x:20px} }
   html[data-section] body{background:var(--navy-1);padding-inline:0;min-height:0}
   html[data-section][data-theme="light"] body{background:#eef3f9}
+  /* phone-width surfaces sit on Mindtickle's white app background */
+  @media (max-width:500px){
+    html[data-section][data-theme="light"] body{background:#ffffff}
+  }
   html[data-section] .wrap{margin:0;max-width:none;
     padding:clamp(14px,1.6vw,20px) var(--secpad-x);border-radius:0;
     background:transparent;border:none;box-shadow:none;
@@ -917,6 +921,7 @@
     transition:background-color .5s ease, background-image .5s ease,
                color .5s ease, border-color .5s ease, box-shadow .5s ease}
 
+  html[data-section="mobile"] body,
   html[data-section="mobile"][data-mode="card"] body{background:#ffffff}
   /* same frame language as the hardcoded section cards below it */
   html[data-section="mobile"][data-mode="card"] .launch{
@@ -1152,17 +1157,15 @@ if (IS_MOBILE){
      image   optional URL — shows in the reserved media panel on the right.
              Omit and the panel collapses so the text uses the full width.     */
 const HIGHLIGHTS = [
-  { kicker:'This Week',
-    title:'Accelerate your pipeline with <span class="ac">AI</span>.',
-    body:'Find what you need, jump straight in, and let the connected workflow carry the deal forward — everything that helps you win, in one place.' },
   { kicker:'New Release',
-    title:'Deal Guides are <span class="ac">live</span>.',
-    body:'Every open opportunity now carries a guided next-best-action built from the methodology your team already runs.',
-    cta:{ label:'Open Deal Guides', href:'#' } },
-  { kicker:'Stellar-Seller',
-    title:'Issue #1 is on the <span class="ac">shelf</span>.',
-    body:'The D.O.R.C.S. are loose and the only thing standing between them and your quota is a very confident hologram.',
-    cta:{ label:'Read the issue', href:'https://deeplinks.mindtickle.com/8lIR3uOka3b' } },
+    title:'Deal <span class="ac">Guides</span>.',
+    body:'Bring opportunity context, call insights, next best actions and relevant resources together in one place.' },
+  { kicker:'Q3 Certification',
+    title:'Built to <span class="ac">Win</span>.',
+    body:'Q1 gave you the message. Q2 gave you the story. Q3 teaches you to use both to build and win strategic proposals from the very first interaction.' },
+  { kicker:'Now Live',
+    title:'New Hubs <span class="ac">structure</span>.',
+    body:'Find what you need faster — critical content organized around how sellers work.' },
 ];
 const HL_MS = 9000;
 
@@ -1576,8 +1579,12 @@ const SUN_ICON='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path 
 const MOON_ICON='<svg viewBox="0 0 24 24"><path d="M20.5 13.5A8 8 0 1110.5 3.5a6.3 6.3 0 0010 10z"/></svg>';
 const tBtn = document.getElementById('themeToggle');
 const THEME_KEY = 'qlikTheme';
-let theme = 'dark';
-try { theme = localStorage.getItem(THEME_KEY) || 'dark'; } catch(e){}
+/* Default follows the surface, not a fixed value: Mindtickle's phone app is
+   white, so anything rendering at phone width starts light; desktop starts
+   dark. An explicit toggle is stored and always wins over both. */
+const NARROW = window.innerWidth < 500;
+let theme = NARROW ? 'light' : 'dark';
+try { theme = localStorage.getItem(THEME_KEY) || theme; } catch(e){}
 
 let themeChan = null;
 try { themeChan = new BroadcastChannel('qlik-theme'); } catch(e){}
