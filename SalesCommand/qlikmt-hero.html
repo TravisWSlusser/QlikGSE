@@ -166,14 +166,23 @@
   .sd-tile:hover .sd-arrow{color:var(--sky)}
   @media (max-width:1100px){.sd-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
   @media (max-width:820px){.sd-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-  @media (max-width:560px){
-    .sd-tile{padding:11px 12px;gap:10px}
+  .sd-short{display:none}
+  /* Phone: a real speed dial — icon over a short label, four across, so all
+     eight fit inside Mindtickle's ~200px window without being cut off. */
+  @media (max-width:640px){
+    .sd{gap:10px}
+    .sd-note{display:none}
+    .sd-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+    .sd-tile{flex-direction:column;align-items:center;text-align:center;
+      gap:6px;padding:9px 5px;border-radius:12px}
     .sd-ico{width:30px;height:30px;border-radius:9px}
-    .sd-ico svg{width:15px;height:15px}
-    .sd-name{font-size:12.5px}
-    .sd-arrow{display:none}
+    .sd-ico svg{width:16px;height:16px}
+    .sd-txt{align-items:center;gap:0;width:100%}
+    .sd-name,.sd-sub,.sd-arrow{display:none}
+    .sd-short{display:block;font-size:10.5px;font-weight:600;line-height:1.15;
+      color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+    .sd-tile:hover{transform:none}
   }
-  @media (max-width:420px){.sd-sub{display:none}}
 
   /* ---- section cards (?section=<name>) --------------------------------- */
   /* hidden unless a ?section= in SECTION_CARDS switches it on */
@@ -1128,21 +1137,21 @@ const SHOW_TOP  = !SECTION || SECTION === 'topbar'     || IS_MOBILE;
    Sales Essentials hubs. Edit here; the grid rebuilds itself. `sub` is the
    one-word hint under the name and drops out below 420px. */
 const HUBS = [
-  { name:'Customer-Facing Presentations', sub:'Decks',        icon:'deck',
+  { name:'Customer-Facing Presentations', short:'Decks', sub:'Decks',        icon:'deck',
     url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338997666731515' },
-  { name:'Sales Plays',                   sub:'Motions',      icon:'target',
+  { name:'Sales Plays', short:'Plays',                   sub:'Motions',      icon:'target',
     url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338813285128574' },
-  { name:'Industry Briefs',               sub:'Verticals',    icon:'building',
+  { name:'Industry Briefs', short:'Industry',               sub:'Verticals',    icon:'building',
     url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338878598829563' },
-  { name:'Customer Proof',                sub:'Case studies', icon:'star',
+  { name:'Customer Proof', short:'Proof',                sub:'Case studies', icon:'star',
     url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338930071328251' },
-  { name:'Competitive Intelligence',      sub:'Battlecards',  icon:'shield',
+  { name:'Competitive Intelligence', short:'Compete',      sub:'Battlecards',  icon:'shield',
     url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338841319882659' },
-  { name:'Use Cases & Solutions',         sub:'Positioning',  icon:'grid',
+  { name:'Use Cases & Solutions', short:'Use Cases',         sub:'Positioning',  icon:'grid',
     url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630338915173161342' },
-  { name:'Pricing & Packaging',           sub:'Commercial',   icon:'tag',
+  { name:'Pricing & Packaging', short:'Pricing',           sub:'Commercial',   icon:'tag',
     url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/630339952776862078' },
-  { name:'Channels & Alliances',          sub:'Partners',     icon:'nodes',
+  { name:'Channels & Alliances', short:'Partners',          sub:'Partners',     icon:'nodes',
     url:'https://qlik.mindtickle.com/new/ui/learner/assets/hub/631493373726819883' }
 ];
 const HUB_ICONS = {
@@ -1162,6 +1171,7 @@ const HUB_ICONS = {
     return '<a class="sd-tile" href="'+h.url+'" target="_top">'
          + '<span class="sd-ico"><svg viewBox="0 0 24 24" aria-hidden="true">'+(HUB_ICONS[h.icon]||'')+'</svg></span>'
          + '<span class="sd-txt"><span class="sd-name">'+h.name+'</span>'
+         + '<span class="sd-short">'+(h.short||h.name)+'</span>'
          + '<span class="sd-sub">'+h.sub+'</span></span>'
          + '<span class="sd-arrow" aria-hidden="true">&#8599;</span></a>';
   }).join('');
