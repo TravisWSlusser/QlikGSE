@@ -738,7 +738,7 @@
     70%{box-shadow:0 0 0 6px rgba(16,207,201,0)}100%{box-shadow:0 0 0 0 rgba(16,207,201,0)}}
   @media (prefers-reduced-motion:reduce){.lc-date-chip.soon i{animation:none}}
   /* on a narrow handset the label costs a whole chip, so it goes first */
-  @media (max-width:400px){
+  @media (max-width:470px){
     .lc-teaser em{display:none}
     .lc-teaser{gap:0}
     .lc-date-chip{padding:3px 7px;gap:5px;letter-spacing:.05em}
@@ -1202,26 +1202,48 @@ if (IS_MOBILE){
    table and the Enablement Manager control app land; at that point this array
    is replaced by a fetch and nothing else here changes.
    date = YYYY-MM-DD. category must exist in CATEGORIES.                     */
-const CATEGORIES = {
+let CATEGORIES = {
   review:   { label:'Business Review', color:'var(--cat-review)'   },
   training: { label:'Training',        color:'var(--cat-training)' },
   deadline: { label:'Deadline',        color:'var(--cat-deadline)' },
   event:    { label:'Live Event',      color:'var(--cat-event)'    },
   content:  { label:'Content Drop',    color:'var(--cat-content)'  }
 };
-const KEY_DATES = [
-  { date:'2026-06-05', category:'event',    month:'JUN', day:'5',  title:'Enablement Office Hours',   detail:'Open Q&A with the Enablement team — drop in with questions on tools, content, or live deals.' },
-  { date:'2026-06-10', category:'training', month:'JUN', day:'10', title:'Copilot Deep Dive',         detail:'Hands-on session on using Copilot across the selling motion. Recording posts to the Assets hub after.' },
-  { date:'2026-06-13', category:'review',   month:'JUN', day:'13', title:'Q2 Business Review',        detail:'Regional pipeline review and Q2 commit walk-through. Materials drop in the Assets hub the day before.' },
-  { date:'2026-06-17', category:'training', month:'JUN', day:'17', title:'Story Selling Office Hours',detail:'Live coaching on Act 1/2/3 structure with the enablement team. Bring a live deal to work through.' },
-  { date:'2026-06-18', category:'content',  month:'JUN', day:'18', title:'Messaging Guides v2',       detail:'Refreshed positioning, narratives, and competitive plays publish to the 2026 Messaging Guides hub.' },
-  { date:'2026-06-23', category:'training', month:'JUN', day:'23', title:'AI Toolkit Launch',         detail:'Walkthrough of the latest Copilot and Notetaker workflows, plus the refreshed Deal Guides.' },
-  { date:'2026-06-25', category:'event',    month:'JUN', day:'25', title:'Partner Co-Sell Webinar',   detail:'Channel & Alliances session on co-selling motions and partner enablement.' },
-  { date:'2026-06-30', category:'deadline', month:'JUN', day:'30', title:'Quarter Close',             detail:'End-of-quarter deadlines, deal-desk cutoffs, and the submission checklist.' },
-  { date:'2026-07-08', category:'event',    month:'JUL', day:'8',  title:'SKO 2026 Recap Live',       detail:'Live recap of SKO themes with the on-demand content links.' },
-  { date:'2026-07-15', category:'content',  month:'JUL', day:'15', title:'New Deal Guides Drop',      detail:'Updated Deal Guides land in the AI Selling Toolkit hub.' }
+let KEY_DATES = [
+  { date:'2026-08-18', category:'event', month:'AUG', day:'18',
+    title:'Side-Qlik AI Upgrade',
+    detail:'Redesigned Mindtickle navigation, a new AI assistant with Learn Mode, Qlik Notetaker, and Deal Guides.' },
+  { date:'2026-08-20', category:'event', month:'AUG', day:'20',
+    title:'Move to Cloud Update',
+    detail:'Where the Qlik Talend Cloud motion stands, the Precog to Stitch shift, and what Sales, BDRs, SEs and CSMs do next.' },
+  { date:'2026-08-27', category:'event', month:'AUG', day:'27',
+    title:'Competitive Compass',
+    detail:'Compete and win in Open Lakehouse — the landscape, the players, and the Replicate Source messaging that separates Qlik.' }
 ];
 const UE_SHOW = 3;
+
+/* ---- shared events source --------------------------------------------------
+   KEY_DATES and CATEGORIES above are the offline fallback. The live values come
+   from data/events.json so the calendar in qlikmt-hero2.html and these chips
+   never drift apart. Swap EVENTS_URL for /api/command/events when the Neon
+   table lands — nothing else here changes. */
+const EVENTS_URL = 'data/events.json';
+(function(){
+  fetch(EVENTS_URL, { cache:'no-store' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if (!d || !Array.isArray(d.events) || !d.events.length) return;
+      KEY_DATES.length = 0;
+      d.events.forEach(function(e){ KEY_DATES.push(e); });
+      if (d.categories){
+        Object.keys(d.categories).forEach(function(k){
+          CATEGORIES[k] = { label:d.categories[k].label, color:d.categories[k].color };
+        });
+      }
+      document.dispatchEvent(new CustomEvent('events:loaded'));
+    })
+    .catch(function(){ /* fallback array already in place */ });
+})();
 
 /* launch-card date chips — defined here because they read KEY_DATES */
 if (IS_MOBILE){
@@ -1246,6 +1268,7 @@ if (IS_MOBILE){
     });
   }
   lcBuildDates();
+  document.addEventListener('events:loaded', lcBuildDates);
 }   /* how many chips sit in the row */
 
 if (SHOW_HL){
@@ -1271,12 +1294,15 @@ if (SHOW_HL){
      the most recent past ones so the strip never looks broken while KEY_DATES
      is still placeholder data. Slots only go dim when KEY_DATES itself holds
      fewer than UE_SHOW events — then they get the out-of-hours clock styling. */
-  const today = new Date(); today.setHours(0,0,0,0);
-  const sorted = KEY_DATES.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
-  const ahead  = sorted.filter(function(d){ return new Date(d.date+'T00:00:00') >= today; });
-  const behind = sorted.filter(function(d){ return new Date(d.date+'T00:00:00') <  today; });
-  const list   = ahead.concat(behind.slice(-(UE_SHOW - ahead.length)).reverse().reverse())
-                      .slice(0, UE_SHOW);
+  let list = [];
+  function buildList(){
+    const today = new Date(); today.setHours(0,0,0,0);
+    const sorted = KEY_DATES.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+    const ahead  = sorted.filter(function(d){ return new Date(d.date+'T00:00:00') >= today; });
+    const behind = sorted.filter(function(d){ return new Date(d.date+'T00:00:00') <  today; });
+    list = ahead.concat(behind.slice(-(UE_SHOW - ahead.length))).slice(0, UE_SHOW);
+  }
+  buildList();
 
   function collapsed(){
     ueRow.className='ue-row';

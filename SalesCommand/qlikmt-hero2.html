@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Qlik Sales Enablement — Home</title>
+<!-- ===========================================================================
+  SECTIONED VIEWS — one file, several Mindtickle widgets. Never fork this file.
+    (no param)        the whole page
+    ?section=calendar the key-dates calendar on its own
+  =========================================================================== -->
+<script>
+(function(){var s=new URLSearchParams(location.search).get('section');
+  if(s)document.documentElement.setAttribute('data-section',s);})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;800;900&family=Barlow+Condensed:ital,wght@0,500;0,600;0,900;1,900&family=Inter:wght@400;500;600&family=Share+Tech+Mono&family=Playfair+Display:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
@@ -1148,6 +1157,18 @@
 [data-theme="light"] .provider-icon{fill:#2b3a49}
 [data-theme="light"] .hq-bannercard{border-color:rgba(15,40,70,.18)}
 
+
+  /* ── ?section=calendar — the calendar alone, for its own MT widget ────── */
+  html[data-section="calendar"] body{background:var(--navy-1);min-height:0;padding:0}
+  html[data-section="calendar"] body > *{display:none}
+  html[data-section="calendar"] .wrap{display:block;margin:0;max-width:none;
+    padding:clamp(14px,1.6vw,20px) 36px;background:transparent;border:none;
+    border-radius:0;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+  html[data-section="calendar"] .calsec{display:block;margin:0}
+  html[data-section="calendar"] .contrail{display:none}
+  @media (max-width:640px){
+    html[data-section="calendar"] .wrap{padding:12px 20px}
+  }
 </style>
 </head>
 <body>
@@ -1343,7 +1364,7 @@
   </div>
 <script>
 function sfBrandFallback(img){ var p=img.closest('.sf-brand'); if(p) p.classList.add('fb'); }
-const KEY_DATES = [   /* EDIT HERE (sample) — editing app + Neon getEvents will replace this. date=YYYY-MM-DD; category must exist in CATEGORIES. */
+let KEY_DATES = [   /* EDIT HERE (sample) — editing app + Neon getEvents will replace this. date=YYYY-MM-DD; category must exist in CATEGORIES. */
   { date:'2026-06-05', category:'event',    month:'JUN', day:'5',  year:'2026', title:'Enablement Office Hours', detail:'Open Q&A with the Enablement team — drop in with questions on tools, content, or live deals.' },
   { date:'2026-06-10', category:'training', month:'JUN', day:'10', year:'2026', title:'Copilot Deep Dive', detail:'Hands-on session on using Copilot across the selling motion. Recording posts to the Assets hub after.' },
   { date:'2026-06-13', category:'review',   month:'JUN', day:'13', year:'2026', title:'Q2 Business Review', detail:'Regional pipeline review and Q2 commit walk-through. Materials drop in the Assets hub the day before.' },
@@ -1367,13 +1388,37 @@ kdModal.querySelectorAll('[data-close]').forEach(el => el.addEventListener('clic
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeKd(); });
 
 /* ---- key dates calendar (bottom): plots the same KEY_DATES, reuses the openKd modal ---- */
-const CATEGORIES = {
+let CATEGORIES = {
   review:   { label:'Business Review', color:'var(--cat-review)' },
   training: { label:'Training',        color:'var(--cat-training)' },
   deadline: { label:'Deadline',        color:'var(--cat-deadline)' },
   event:    { label:'Live Event',      color:'var(--cat-event)' },
   content:  { label:'Content Drop',     color:'var(--cat-content)' }
 };
+/* ---- shared events source --------------------------------------------------
+   KEY_DATES below is the offline fallback. Live values come from
+   data/events.json, the same file the key-date chips in qlikmt-hero.html read,
+   so the two can never drift. Swap for /api/command/events when Neon lands. */
+const EVENTS_URL = 'data/events.json';
+(function(){
+  fetch(EVENTS_URL, { cache:'no-store' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if (!d || !Array.isArray(d.events) || !d.events.length) return;
+      KEY_DATES.length = 0;
+      d.events.forEach(function(e){ KEY_DATES.push(e); });
+      if (d.categories){
+        Object.keys(d.categories).forEach(function(k){
+          CATEGORIES[k] = { label:d.categories[k].label, color:d.categories[k].color };
+        });
+      }
+      if (typeof renderCal === 'function') renderCal();
+      if (typeof renderCalList === 'function') renderCalList();
+      document.dispatchEvent(new CustomEvent('events:loaded'));
+    })
+    .catch(function(){});
+})();
+
 const CAL_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 function calIso(d){ var m=d.getMonth()+1, day=d.getDate(); return d.getFullYear()+'-'+(m<10?'0'+m:m)+'-'+(day<10?'0'+day:day); }
 function calCatColor(k){ return (CATEGORIES[k]||{}).color || 'var(--muted)'; }

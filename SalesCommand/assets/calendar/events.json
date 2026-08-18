@@ -1,0 +1,57 @@
+{
+  "_comment": [
+    "Single source of truth for calendar events. Read by the key-date chips in",
+    "qlikmt-hero.html and by the calendar in qlikmt-hero2.html, so a date only",
+    "ever gets edited here.",
+    "",
+    "date     YYYY-MM-DD",
+    "category must be a key in `categories` below",
+    "month    3-letter, uppercase — shown on the chip",
+    "day      no leading zero",
+    "title    short; the chip has limited width",
+    "detail   one or two sentences",
+    "full     optional long-form copy. Nothing renders it yet.",
+    "",
+    "This becomes a Neon table behind /api/command/events. When it does, `title`,",
+    "`detail` and `full` should be jsonb shaped {\"en\": \"...\"} so other languages",
+    "are an added key rather than a migration."
+  ],
+
+  "categories": {
+    "review":   { "label": "Business Review", "color": "#FF6B35" },
+    "training": { "label": "Training",        "color": "#10CFC9" },
+    "deadline": { "label": "Deadline",        "color": "#FF6B6B" },
+    "event":    { "label": "Live Event",      "color": "#00A651" },
+    "content":  { "label": "Content Drop",    "color": "#9B59FF" }
+  },
+
+  "events": [
+    {
+      "date": "2026-08-18",
+      "category": "event",
+      "month": "AUG",
+      "day": "18",
+      "title": "Side-Qlik AI Upgrade",
+      "detail": "Redesigned Mindtickle navigation, a new AI assistant with Learn Mode, Qlik Notetaker, and Deal Guides.",
+      "full": "At SKO we told you who you are: you're Stellar-Seller. And Side-Qlik is the AI companion at your side. On August 18th, Side-Qlik is getting a serious upgrade. Your Mindtickle navigation is redesigned, cutting your hunt for content. Your new AI assistant answers in the flow of your day, and it comes with Learn Mode — so when you need to go deeper, it doesn't just hand you the answer, it walks you through it, building the knowledge you'll carry into every call. Qlik Notetaker now captures, transcribes, and summarizes your calls on demand, so the hours you lose to recaps and follow-up go straight back into your selling time. And here's the major upgrade — everything Notetaker hears feeds straight into Mindtickle Deal Guides, your newest AI tool, pulling the scattered story of opportunities into one place with recommended next best actions and relevant sales, marketing, and customer references at your fingertips. You walk into your next conversation knowing exactly where you stand and what to do next. Join us on August 18th. The sellers who pick these tools up are working smarter, closing faster, and winning more. Come level up."
+    },
+    {
+      "date": "2026-08-20",
+      "category": "event",
+      "month": "AUG",
+      "day": "20",
+      "title": "Move to Cloud Update",
+      "detail": "Where the Qlik Talend Cloud motion stands, the Precog to Stitch shift, and what Sales, BDRs, SEs and CSMs do next.",
+      "full": "This session brings the field up to speed on the Move to Cloud Program and the initiatives driving the Qlik Talend Cloud motion. We'll open with a product marketing view of the latest QTC connectivity milestone — the shift from Precog to Stitch, which now supports the full range of use cases including Replication, pipelines, and OLH — covering what's releasing, who it affects, and why it matters to both customers and Qlik. From there, we'll go deeper into the technical detail of the Move to Cloud program itself. Attendees will leave knowing the specific actions expected of Sales, BDRs, SEs, and CSMs, and what we want customers to do next."
+    },
+    {
+      "date": "2026-08-27",
+      "category": "event",
+      "month": "AUG",
+      "day": "27",
+      "title": "Competitive Compass",
+      "detail": "Compete and win in Open Lakehouse — the landscape, the players, and the Replicate Source messaging that separates Qlik.",
+      "full": "This session equips sellers to compete and win in the Open Lakehouse market. We'll map the competitive landscape — who the players are, how they position, and where the real battlegrounds sit — so you can recognize the competitive dynamics at play in your deals. We'll also cover the Replicate Source for Open Lakehouse messaging, a significant differentiator over our competitors and a key part of how we separate Qlik from the field. Attendees will leave with a clear view of the market, the competitive talk tracks that matter, and the positioning to use in live opportunities."
+    }
+  ]
+}
