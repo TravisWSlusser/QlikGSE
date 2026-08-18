@@ -1,0 +1,326 @@
+[
+  {
+    "prompt": "Q1 certification delivered the message and Q2 delivered the story. What does Q3 add on top of those two?",
+    "option_a": "A refreshed discovery methodology for early-stage deals",
+    "option_b": "A competitive battlecard library for named rivals",
+    "option_c": "The conversion layer that turns message and story into something a buyer can approve",
+    "option_d": "A pricing and packaging model for enterprise agreements",
+    "correct": "c",
+    "explanation": "Q3 exists to convert two quarters of value language and buying-influence work into a proposal that closes revenue. Without Q1 and Q2 as raw material, the Q3 framework has nothing to build on."
+  },
+  {
+    "prompt": "Which three ideas make up Qlik's value language established in the Q1 messaging work?",
+    "option_a": "Trust + Context, Cost Optimization, Freedom",
+    "option_b": "Speed, Scale, Security",
+    "option_c": "Governance, Integration, Automation",
+    "option_d": "Insight, Innovation, Impact",
+    "correct": "a",
+    "explanation": "These three pillars are the outcome vocabulary every story, tier, and objection response anchors back to. Each proposal tier declares which pillar it primarily serves."
+  },
+  {
+    "prompt": "What should a seller have open and ready before starting the first certification activity?",
+    "option_a": "The latest competitive win/loss report",
+    "option_b": "A completed pricing quote for the opportunity",
+    "option_c": "The manager's coaching guide",
+    "option_d": "Their Blue Sheet for the deal they plan to use",
+    "correct": "d",
+    "explanation": "Every activity connects back to the Blue Sheet, so sellers who arrive with one finish faster and produce stronger output. Sellers without one are expected to create it first."
+  },
+  {
+    "prompt": "How is the Built to Win certification structured?",
+    "option_a": "Six modules, two activities, multiple deals, ninety minutes",
+    "option_b": "Four steps, four activities, one deal, about sixty minutes",
+    "option_c": "Three phases, three activities, one hypothetical scenario",
+    "option_d": "Eight lessons with a single capstone assessment",
+    "correct": "b",
+    "explanation": "The single-deal design is deliberate: each activity builds on the last so the seller finishes with one connected work product rather than four disconnected exercises."
+  },
+  {
+    "prompt": "What kind of opportunity must a seller use for the certification activities?",
+    "option_a": "A closed-won deal from the previous fiscal year",
+    "option_b": "A standardized practice scenario provided by enablement",
+    "option_c": "A live deal from their own active pipeline",
+    "option_d": "Any deal owned by someone on their team",
+    "correct": "c",
+    "explanation": "The activities are designed to produce usable work product, not training artifacts. A certification completed on a hypothetical deal produces nothing a manager can coach in a deal review."
+  },
+  {
+    "prompt": "The first activity asks sellers to document each stakeholder's outcomes, mode, and personal stakes. What is this deliverable called?",
+    "option_a": "Buying Influence Outcome Map",
+    "option_b": "Stakeholder Alignment Matrix",
+    "option_c": "Account Coverage Plan",
+    "option_d": "Decision Authority Chart",
+    "correct": "a",
+    "explanation": "The map is the foundation every later step cross-checks against, which is why the grading engine compares Steps 2, 3, and 4 back to it."
+  },
+  {
+    "prompt": "Which set correctly names the four Buying Influence roles?",
+    "option_a": "Sponsor, Champion, Blocker, Influencer",
+    "option_b": "Economic, Technical, User, Coach",
+    "option_c": "Executive, Procurement, IT, End User",
+    "option_d": "Decision Maker, Evaluator, Approver, Advocate",
+    "correct": "b",
+    "explanation": "These four roles carry through the entire framework \u2014 every story, tier, and objection response traces to one of them. Roles are functions in the decision, not job titles."
+  },
+  {
+    "prompt": "Which Buying Influence gives final approval on the spend and needs their priorities reflected in every proposal tier?",
+    "option_a": "The Coach",
+    "option_b": "The Technical Buying Influence",
+    "option_c": "The User Buying Influence",
+    "option_d": "The Economic Buying Influence",
+    "correct": "d",
+    "explanation": "This role holds budget authority and judges the proposal on business outcomes, ROI visibility, and risk. Working around them is one of the most common causes of late-stage price pressure."
+  },
+  {
+    "prompt": "What does a Coach most need from you to be effective inside the account?",
+    "option_a": "A short, credible, jargon-free story they can retell without you in the room",
+    "option_b": "Detailed architecture diagrams and integration specifications",
+    "option_c": "A discount schedule they can share with procurement",
+    "option_d": "Full access to the executive sponsor's calendar",
+    "correct": "a",
+    "explanation": "The Coach carries the internal case into rooms you will never enter. If they cannot retell the story in three sentences, your value does not survive the handoff."
+  },
+  {
+    "prompt": "What does the Technical Buying Influence primarily evaluate in a proposal?",
+    "option_a": "Board-level return on investment and payback period",
+    "option_b": "Day-to-day time savings for individual analysts",
+    "option_c": "Architecture fit, integration evidence, and proof of performance",
+    "option_d": "Contract terms and renewal flexibility",
+    "correct": "c",
+    "explanation": "This role judges whether the solution actually works at scale, so capability claims must be backed by evidence rather than positioning language."
+  },
+  {
+    "prompt": "What does the User Buying Influence most need to see in the proposal?",
+    "option_a": "Governance controls and audit trail coverage",
+    "option_b": "Themselves in the outcome \u2014 concrete relief from daily manual effort",
+    "option_c": "A phased implementation roadmap with milestone dates",
+    "option_d": "Competitive differentiation against alternative vendors",
+    "correct": "b",
+    "explanation": "This role lives with the decision every day. Abstract business outcomes do not move them; a specific change to their workload does."
+  },
+  {
+    "prompt": "Which of these is a correctly written Personal Win for a Buying Influence?",
+    "option_a": "Reduce month-end close from fourteen days to three days",
+    "option_b": "Consolidate three legacy tools onto one platform",
+    "option_c": "Improve data governance ahead of an audit",
+    "option_d": "Earn the credibility to be considered for the COO role",
+    "correct": "d",
+    "explanation": "A Personal Win is what the individual gains \u2014 career, credibility, relief, recognition. If it could appear in a company press release, it is a business result, not a personal one."
+  },
+  {
+    "prompt": "How many of the four Buying Influence entries must be fully completed to pass the first activity?",
+    "option_a": "Two, with the Economic Buying Influence strongly recommended",
+    "option_b": "All four, no exceptions",
+    "option_c": "One, as long as it is the Coach",
+    "option_d": "Three, with the Coach optional",
+    "correct": "a",
+    "explanation": "Two complete entries meets the bar, but a map without the person who approves the spend leaves the weakest link in the deal undocumented."
+  },
+  {
+    "prompt": "The \"gap if they do nothing\" field must describe what?",
+    "option_a": "Which product capabilities are missing from the current environment",
+    "option_b": "What the Buying Influence personally and organizationally loses or risks",
+    "option_c": "How the competitor would position against your solution",
+    "option_d": "The revenue opportunity forfeited by your own territory",
+    "correct": "b",
+    "explanation": "Consequence is what makes inaction feel expensive. A gap written in terms of missing features describes your product instead of their risk, and buyers do not act on that."
+  },
+  {
+    "prompt": "You assign a Buying Influence a mode in the outcome map. What has to support that assignment?",
+    "option_a": "Their seniority level within the organization",
+    "option_b": "The stage the opportunity sits in within the CRM",
+    "option_c": "A specific observation from a real interaction with them",
+    "option_d": "The deal size relative to your quarterly quota",
+    "correct": "c",
+    "explanation": "Mode is a read on urgency and motivation drawn from evidence. Without a named observation behind it, the assignment is a guess that weakens every downstream prediction."
+  },
+  {
+    "prompt": "Sales cohort sellers write their value story using which structure?",
+    "option_a": "Problem, Agitate, Solve",
+    "option_b": "Before, After, Bridge",
+    "option_c": "Feature, Advantage, Benefit",
+    "option_d": "Situation, Disruption, Resolution",
+    "correct": "d",
+    "explanation": "The three acts move a buyer from their current reality through the cost of staying there to the outcome they gain. Renewals cohorts use a different framework suited to existing-customer conversations."
+  },
+  {
+    "prompt": "How must the three acts appear inside a submitted Sales cohort value story?",
+    "option_a": "Explicitly labeled in brackets within the text",
+    "option_b": "Separated into three distinct submission fields",
+    "option_c": "Implied through paragraph breaks only",
+    "option_d": "Summarized in a header before the story begins",
+    "correct": "a",
+    "explanation": "The bracketed labels let the review confirm all three acts are present and distinct. Merged or unlabeled acts fail on structure regardless of how good the writing is."
+  },
+  {
+    "prompt": "What is the maximum length of the Buying Influence story submission?",
+    "option_a": "100 words",
+    "option_b": "200 words",
+    "option_c": "350 words",
+    "option_d": "500 words",
+    "correct": "b",
+    "explanation": "The limit forces the story into something a seller can actually say out loud in a meeting, and something a Coach can retell later."
+  },
+  {
+    "prompt": "The final act of a Buying Influence story must end by describing what?",
+    "option_a": "The capabilities the platform delivers at scale",
+    "option_b": "The implementation timeline and required resources",
+    "option_c": "What changed for the buyer, in their own outcome terms",
+    "option_d": "How the solution compares against the incumbent vendor",
+    "correct": "c",
+    "explanation": "Ending on product capability is the single most common failure in this activity, and it reappears later as scope-based proposal tiers. The story should close on the buyer's changed reality."
+  },
+  {
+    "prompt": "Beyond structure and word count, what specific evidence must the value story include?",
+    "option_a": "A pricing comparison against the nearest competitor",
+    "option_b": "A quote pulled directly from analyst research",
+    "option_c": "A screenshot of the current reporting environment",
+    "option_d": "A named customer proof point with a specific outcome",
+    "correct": "d",
+    "explanation": "A proof point with a real metric attached makes the resolution credible. Generic claims of success give the buyer nothing to carry into an internal conversation."
+  },
+  {
+    "prompt": "In the three-tier proposal activity, the tiers must be renamed using what kind of language?",
+    "option_a": "The buyer's own outcome language from discovery conversations",
+    "option_b": "Standard product edition names from the price book",
+    "option_c": "Internal deal-desk terminology for approval routing",
+    "option_d": "Industry analyst category names for the solution space",
+    "correct": "a",
+    "explanation": "Tier names drawn from what the buying team actually said make the proposal recognizably theirs. Product-edition names hand the conversation straight to procurement."
+  },
+  {
+    "prompt": "What must be true of the highest tier in the three-tier proposal structure?",
+    "option_a": "It includes optional add-ons the buyer can remove later",
+    "option_b": "It achieves every documented outcome with nothing compromised or deferred",
+    "option_c": "It carries the longest implementation timeline of the three",
+    "option_d": "It is presented only after the buyer rejects the middle option",
+    "correct": "b",
+    "explanation": "The top tier is the recommended path precisely because its compromised-outcomes field is empty. Anything deferred there belongs in a lower tier instead."
+  },
+  {
+    "prompt": "How should the lowest of the three proposal tiers be positioned to the buyer?",
+    "option_a": "As the safest choice for risk-averse buying committees",
+    "option_b": "As the option most customers in their segment select",
+    "option_c": "As a starting point, never as the recommendation",
+    "option_d": "As a temporary bridge until budget frees up next fiscal year",
+    "correct": "c",
+    "explanation": "This tier delivers minimum viable outcomes with the greatest customer effort and risk. Naming what it leaves undone is what creates the pull toward something bigger."
+  },
+  {
+    "prompt": "In the middle proposal tier, what must every named compromise trace back to?",
+    "option_a": "A capability gap in the current product roadmap",
+    "option_b": "A discount threshold approved by the deal desk",
+    "option_c": "A phase boundary in the standard implementation plan",
+    "option_d": "A specific outcome documented in the first activity",
+    "correct": "d",
+    "explanation": "Compromises are only credible when they map to something the buyer told you mattered. A tradeoff described in scope terms is a feature list, not a strategic choice."
+  },
+  {
+    "prompt": "What is explicitly prohibited in the three-tier proposal architecture activity?",
+    "option_a": "Pricing, SKUs, and license details",
+    "option_b": "References to named competitors",
+    "option_c": "Mentions of implementation timelines",
+    "option_d": "Any reference to the Coach's role in the deal",
+    "correct": "a",
+    "explanation": "This is a strategy exercise about outcomes and tradeoffs. Introducing numbers collapses the conversation into the price comparison the framework is designed to prevent."
+  },
+  {
+    "prompt": "Your prediction of which tier the buyer will choose must be grounded in what?",
+    "option_a": "Historical close rates for similar-sized opportunities",
+    "option_b": "Mode and Personal Win data documented in the first activity",
+    "option_c": "Guidance from your manager's pipeline forecast",
+    "option_d": "The buyer's stated budget range from procurement",
+    "correct": "b",
+    "explanation": "A prediction without evidence from the outcome map is optimism wearing a forecast label. The mode and the personal stakes are what actually predict behavior."
+  },
+  {
+    "prompt": "What is the required length range for the price objection response?",
+    "option_a": "25 to 50 words",
+    "option_b": "50 to 75 words",
+    "option_c": "75 to 150 words",
+    "option_d": "200 to 300 words",
+    "correct": "c",
+    "explanation": "The range keeps the response short enough to deliver live under pressure while long enough to name a consequence and land a question."
+  },
+  {
+    "prompt": "A price objection response must close with what?",
+    "option_a": "A restatement of the total value delivered",
+    "option_b": "An offer to revisit the proposal scope together",
+    "option_c": "A confirmation that the buyer understood your points",
+    "option_d": "A question that returns the buyer to their own stated outcome",
+    "correct": "d",
+    "explanation": "Process questions like \"does that make sense?\" hand control back with no anchor. An outcome question puts the tradeoff decision where it belongs \u2014 with the buyer."
+  },
+  {
+    "prompt": "Which phrase is prohibited in a price conversation under this framework?",
+    "option_a": "\"Let me see what I can do.\"",
+    "option_b": "\"What specifically are you comparing us against?\"",
+    "option_c": "\"Let's be clear on what changes at each tier.\"",
+    "option_d": "\"Which option best achieves the outcomes you told us matter?\"",
+    "correct": "a",
+    "explanation": "Signaling flexibility before anyone asks tells the buyer the price was never real. Value surrendered that way cannot be recovered later in the cycle."
+  },
+  {
+    "prompt": "A buyer says a competitor is thirty percent cheaper. What is the strongest opening move?",
+    "option_a": "Acknowledge the gap and outline where you have room to move",
+    "option_b": "Note that a gap that large between equivalent outcomes deserves scrutiny, then return to their timeline and outcome",
+    "option_c": "List the additional features included at your price point",
+    "option_d": "Ask for time to review the numbers with your manager",
+    "correct": "b",
+    "explanation": "Questioning whether the two options actually deliver the same outcome reframes the comparison without conceding anything. Feature lists and delays both concede the frame."
+  },
+  {
+    "prompt": "What has to happen before the next module unlocks for a seller?",
+    "option_a": "The seller must log the deal activity in the CRM",
+    "option_b": "A peer must review and endorse the submission",
+    "option_c": "Both the automated review and the manager review must pass",
+    "option_d": "The automated review alone must return a passing score",
+    "correct": "c",
+    "explanation": "The two-stage gate is what makes the work product useful \u2014 a manager who has read the submission walks into the next deal review with real context."
+  },
+  {
+    "prompt": "The automated first-stage review of each submission checks for which of the following?",
+    "option_a": "Whether the opportunity exists and is accurately staged in the CRM",
+    "option_b": "Whether the predicted tier matches historical outcomes for the segment",
+    "option_c": "Whether the seller's manager has approved the deal selection",
+    "option_d": "Completeness, language quality, and methodology alignment",
+    "correct": "d",
+    "explanation": "The first stage does not evaluate strategic judgment or verify the deal against any system. Assessing strategic quality is the manager's job in stage two."
+  },
+  {
+    "prompt": "If a manager has time for only one pre-launch preparation task, which one matters most?",
+    "option_a": "Pull the Salesforce baseline for each seller's deal before they start",
+    "option_b": "Complete all four seller modules personally",
+    "option_c": "Book standalone debrief meetings with every seller",
+    "option_d": "Review the activity specifications in detail",
+    "correct": "a",
+    "explanation": "Everything else can be recovered later. A before-snapshot of stage, size, close date, and discount depth cannot be reconstructed after the fact, and without it nothing is measurable."
+  },
+  {
+    "prompt": "A seller presents a single-option proposal on the deal they certified with. What does this signal?",
+    "option_a": "The buyer explicitly requested a simplified format",
+    "option_b": "The three-tier structure was not applied, so the work product went unused",
+    "option_c": "The deal is too small to justify tiered options",
+    "option_d": "The seller is appropriately adapting the framework to context",
+    "correct": "b",
+    "explanation": "One option hands control of the conversation to the buying team and the competitor. The fix is reopening the seller's tier submission together, not rebuilding from scratch."
+  },
+  {
+    "prompt": "A seller reports that their buyer \"only cares about price.\" What does this almost always indicate?",
+    "option_a": "The opportunity is genuinely commoditized and should be requalified",
+    "option_b": "The proposal needs a more aggressive discount to stay competitive",
+    "option_c": "Value was not built at the right level or with the right people",
+    "option_d": "The buyer's procurement team has taken over the evaluation",
+    "correct": "c",
+    "explanation": "Price pressure is a symptom of something that did not happen earlier in the cycle. The diagnostic question is whether anyone has had a real outcome conversation with the person approving the spend."
+  },
+  {
+    "prompt": "What is the highest-leverage action a manager can take within two weeks of a seller completing the certification?",
+    "option_a": "Send team-wide recognition of everyone who completed on time",
+    "option_b": "Schedule a group debrief covering all four activities",
+    "option_c": "Add a certification completion field to the pipeline report",
+    "option_d": "Hold one deal-specific coaching conversation grounded in the seller's actual submission",
+    "correct": "d",
+    "explanation": "Generic check-ins about how the training went change nothing. The transition from understanding the framework to using it under pressure happens when someone asks the right question about a real deal."
+  }
+]
