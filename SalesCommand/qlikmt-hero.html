@@ -139,6 +139,33 @@
   .hl-dots button.on{background:var(--sky);transform:scale(1.25)}
 
 
+  /* ---- site footer — rides under the glossary widget ------------------- */
+  .sitefoot{max-width:1120px;margin:16px auto 0;padding:0 12px;text-align:center;display:flex;flex-direction:column;gap:6px}
+  .sitefoot a{color:inherit;text-decoration:none;border-bottom:1px solid rgba(144,166,189,.25)}
+  .sitefoot a:hover{color:var(--sky);border-bottom-color:rgba(16,207,201,.5)}
+  .sf-sep{opacity:.4;margin:0 7px}
+  .sf-cred{font-size:11px;color:var(--muted)}
+  .sf-cred strong{color:#b6c5d6;font-weight:600}
+  .sf-u{white-space:nowrap}
+  .sf-logo{height:13px;width:auto;display:inline-block;vertical-align:-2px;margin:0 4px;opacity:.92}
+  .sf-logo-light{display:none}
+  [data-theme="light"] .sf-logo-dark{display:none}
+  [data-theme="light"] .sf-logo-light{display:inline-block}
+  .sf-logo-fallback{display:none;font-weight:600;color:#b6c5d6}
+  .sf-brand.fb .sf-logo{display:none}
+  .sf-brand.fb .sf-logo-fallback{display:inline}
+  [data-theme="light"] .sf-logo-fallback{color:#2b3a49}
+  .sf-tools{font-size:10px;color:rgba(144,166,189,.62)}
+  .sf-legal{font-size:9.5px;line-height:1.55;color:rgba(144,166,189,.46);max-width:840px;margin:3px auto 0}
+  [data-theme="light"] .sf-cred{color:#5a6b7d}
+  [data-theme="light"] .sf-cred strong{color:#2b3a49}
+  [data-theme="light"] .sf-tools{color:rgba(90,107,125,.8)}
+  [data-theme="light"] .sf-legal{color:rgba(90,107,125,.7)}
+  [data-theme="light"] .sitefoot a{border-bottom-color:rgba(90,107,125,.3)}
+  .sf-wrap{padding:26px 12px 34px}
+  .sf-wrap{display:none;padding:22px 12px 6px;margin-top:6px;border-top:1px solid var(--line)}
+  @media (max-width:640px){ .sf-wrap{padding:16px 8px 4px} }
+
   /* ---- glossary (?section=glossary) ------------------------------------ */
   .gl{display:none;flex-direction:column;gap:12px;width:100%}
   .gl-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -868,6 +895,7 @@
   html[data-section="ticker"] .lowerthird{display:block;margin-top:0}
 
   html[data-section="glossary"] .gl{display:flex}
+  html[data-section="glossary"] .sf-wrap{display:block}
 
 
   /* the wrap already pads the bottom; the herorow adding its own doubled it */
@@ -1131,13 +1159,19 @@
          scraped from qlik.com; the overlap gives some terms a link out. -->
     <section class="gl rise d2" aria-label="Glossary">
       <div class="gl-head">
-        <span class="gl-kicker">Glossary</span>
+        <span class="gl-kicker">AI Glossary</span>
         <span class="gl-note" id="glNote">Loading&hellip;</span>
         <input class="gl-search" id="glSearch" type="search" placeholder="Search terms" aria-label="Search glossary">
       </div>
       <div class="gl-panel" id="glPanel" tabindex="0"></div>
       <nav class="gl-az" id="glAZ" aria-label="Jump to letter"></nav>
     </section>
+
+  <div class="sf-wrap" id="sfWrap"><footer class="sitefoot">
+    <div class="sf-cred"><span class="sf-u sf-brand">A <img class="sf-logo sf-logo-dark" src="assets/images/logos/Sales_Enablement_Logos/Typemark_Qlik-Sales-Enablement_2cReverse.svg" alt="Qlik Sales Enablement" onerror="sfBrandFallback(this)"><img class="sf-logo sf-logo-light" src="assets/images/logos/Sales_Enablement_Logos/Typemark_Qlik-Sales-Enablement_Color.svg" alt="Qlik Sales Enablement" onerror="sfBrandFallback(this)"><span class="sf-logo-fallback">Qlik Sales Enablement</span> initiative&nbsp;&middot;</span> <span class="sf-u">Designed &amp; developed by <strong>Travis Slusser</strong>,</span> <span class="sf-u">Senior Learning Strategist&nbsp;&middot;</span> <span class="sf-u"><a href="mailto:Travis.Slusser@Qlik.com">Travis.Slusser@Qlik.com</a></span></div>
+    <div class="sf-tools">Built on Vercel &amp; embedded in Mindtickle<span class="sf-sep">&middot;</span>Market data by Finnhub<span class="sf-sep">&middot;</span>News via GNews<span class="sf-sep">&middot;</span>On-this-day facts via Wikipedia</div>
+    <div class="sf-legal">&copy; 2026 Qlik. All rights reserved. For internal Qlik use only. Provided for informational and enablement purposes and does not constitute financial, investment, or legal advice. Third-party market and news data are supplied &ldquo;as is,&rdquo; may be delayed, and are not guaranteed for accuracy or completeness. All trademarks are the property of their respective owners.</div>
+  </footer></div>
 
     <div class="divider rise d4" aria-hidden="true"></div>
 
@@ -1163,6 +1197,8 @@ const SHOW_TOP  = !SECTION || SECTION === 'topbar'     || IS_MOBILE;
    list, qlik_glossary_index.json adds the qlik.com link and a fuller definition
    for the ~89 that overlap. Terms without a link simply don't show one.
    full_content is deliberately unused — it's run-together scraped page text. */
+function sfBrandFallback(img){ var p=img.closest('.sf-brand'); if(p) p.classList.add('fb'); }
+
 const GL_BASE = 'assets/glossary/';
 (function(){
   const panel = document.getElementById('glPanel');
