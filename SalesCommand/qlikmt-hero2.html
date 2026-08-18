@@ -1257,17 +1257,17 @@
   </div>
 <script>
 function sfBrandFallback(img){ var p=img.closest('.sf-brand'); if(p) p.classList.add('fb'); }
-let KEY_DATES = [   /* EDIT HERE (sample) — editing app + Neon getEvents will replace this. date=YYYY-MM-DD; category must exist in CATEGORIES. */
-  { date:'2026-06-05', category:'event',    month:'JUN', day:'5',  year:'2026', title:'Enablement Office Hours', detail:'Open Q&A with the Enablement team — drop in with questions on tools, content, or live deals.' },
-  { date:'2026-06-10', category:'training', month:'JUN', day:'10', year:'2026', title:'Copilot Deep Dive', detail:'Hands-on session on using Copilot across the selling motion. Recording posts to the Assets hub after.' },
-  { date:'2026-06-13', category:'review',   month:'JUN', day:'13', year:'2026', title:'Q2 Business Review', detail:'Regional pipeline review and Q2 commit walk-through. Materials drop in the Assets hub the day before.' },
-  { date:'2026-06-17', category:'training', month:'JUN', day:'17', year:'2026', title:'Story Selling Office Hours', detail:'Live coaching on Act 1/2/3 structure with the enablement team. Bring a live deal to work through.' },
-  { date:'2026-06-18', category:'content',  month:'JUN', day:'18', year:'2026', title:'Messaging Guides v2', detail:'Refreshed positioning, narratives, and competitive plays publish to the 2026 Messaging Guides hub.' },
-  { date:'2026-06-23', category:'training', month:'JUN', day:'23', year:'2026', title:'AI Toolkit Launch', detail:'Walkthrough of the latest Copilot and Notetaker workflows, plus the refreshed Deal Guides.' },
-  { date:'2026-06-25', category:'event',    month:'JUN', day:'25', year:'2026', title:'Partner Co-Sell Webinar', detail:'Channel & Alliances session on co-selling motions and partner enablement.' },
-  { date:'2026-06-30', category:'deadline', month:'JUN', day:'30', year:'2026', title:'Quarter Close', detail:'End-of-quarter deadlines, deal-desk cutoffs, and the submission checklist.' },
-  { date:'2026-07-08', category:'event',    month:'JUL', day:'8',  year:'2026', title:'SKO 2026 Recap Live', detail:'Live recap of SKO themes with the on-demand content links.' },
-  { date:'2026-07-15', category:'content',  month:'JUL', day:'15', year:'2026', title:'New Deal Guides Drop', detail:'Updated Deal Guides land in the AI Selling Toolkit hub.' },
+let KEY_DATES = [   /* OFFLINE FALLBACK ONLY — the live values come from data/events.json.
+                       Keep these in step with that file so a failed fetch still shows the truth. */
+  { date:'2026-08-18', category:'event', month:'AUG', day:'18', year:'2026',
+    title:'Side-Qlik AI Upgrade',
+    detail:'Redesigned Mindtickle navigation, a new AI assistant with Learn Mode, Qlik Notetaker, and Deal Guides.' },
+  { date:'2026-08-20', category:'event', month:'AUG', day:'20', year:'2026',
+    title:'Move to Cloud Update',
+    detail:'Where the Qlik Talend Cloud motion stands, the Precog to Stitch shift, and what Sales, BDRs, SEs and CSMs do next.' },
+  { date:'2026-08-27', category:'event', month:'AUG', day:'27', year:'2026',
+    title:'Competitive Compass',
+    detail:'Compete and win in Open Lakehouse — the landscape, the players, and the Replicate Source messaging that separates Qlik.' }
 ];
 const kdModal = document.getElementById('kdModal');
 function openKd(d){
