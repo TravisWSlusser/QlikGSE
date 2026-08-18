@@ -450,7 +450,7 @@
               <div class="tut-pow">
                 <canvas class="pow-ico" id="powCoin" width="120" height="120"></canvas>
                 <div class="pow-name">METHODOLOGY COIN</div>
-                <div class="pow-desc">Pop a <b>coin</b> to answer a Korn Ferry methodology question. Bank <b>3</b> coins to trigger Methodology Madness.</div>
+                <div class="pow-desc">Pop a <b>coin</b> to answer a Qlik Sales Methodology question. Bank <b>3</b> coins to trigger Methodology Madness.</div>
               </div>
               <div class="tut-pow">
                 <canvas class="pow-ico" id="powMadness" width="120" height="120"></canvas>
@@ -1022,7 +1022,7 @@ async function answerQuestion(key, el){
      let it expire -> 0
    Faster = bigger swing in whichever direction. Counters reset each playthrough.
    NOTE: questions are TEST placeholders — swap COIN_Q (or wire an endpoint) for
-   Coach Kent's real Korn Ferry methodology content.
+   Coach Kent's real Qlik Sales Methodology content.
    ============================================================================ */
 const COIN_TIME_MS = 10000;
 const COIN_MAX = 300;                  // max points at full clock (tunable)
@@ -1030,7 +1030,7 @@ const COIN_MAX = 300;                  // max points at full clock (tunable)
 const COINS_TO_TRIGGER = 3;            // banked coins that fire Methodology Madness
 const BANK_ON_CORRECT_ONLY = true;     // wrong/timeout banks no coin
 const COIN_CATEGORIES = ['term','green_sheet','blue_sheet'];
-const CAT_LABEL = { term:'KORN FERRY TERM', green_sheet:'GREEN SHEET', blue_sheet:'BLUE SHEET' };
+const CAT_LABEL = { term:'METHODOLOGY TERM', green_sheet:'GREEN SHEET', blue_sheet:'BLUE SHEET' };
 const ROULETTE_MS = 2200;              // category spin (floor; masks the fetch)
 const READ_SECONDS_MAX = 5;            // free read before the clock
 let coinsCollected = 0;                // pooled, in-memory, resets each playthrough
