@@ -19,7 +19,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>REC ROOM</title>
-  <meta name="build" content="2026-07-18-1200">
+  <meta name="build" content="2026-07-16-2230">
   <script>
     (function(){var s=new URLSearchParams(location.search).get('section');
       if(s)document.documentElement.setAttribute('data-section',s);})();
@@ -489,7 +489,7 @@
       <div class="launchcard" id="launchCard">
         <div class="lc-title">SIDE-QLIK BLITZ</div>
         <div class="lc-sub">This game plays best in your browser, in landscape. Tap below to launch &mdash; sign in with your trigram and go.</div>
-        <button onclick="openInNewTab()">&#9654;&nbsp; PLAY IN BROWSER</button>
+        <button onclick="launchGame()">&#9654;&nbsp; PLAY IN BROWSER</button>
         <div class="lc-note">Opens in a new tab &middot; rotate to landscape</div>
       </div>
       <div class="ph-online">
@@ -561,7 +561,7 @@
 </div>
 
 <script>
-console.log('[REC Room build] 2026-07-18-1200');
+console.log('[REC Room build] 2026-07-16-2230');
 /* ============================================================
    TEMP CONFIG  —  replace the value below with your real
    MT_SESSION_REF before go-live, then delete this comment block.
@@ -864,7 +864,7 @@ window.addEventListener('message', e => {
 // Preload the game behind the frosted sign-in so its start screen ghosts through (desktop/tablet only).
 const LAUNCHED = new URLSearchParams(location.search).get('launched') === '1';
 const IS_TOUCH_SMALL = window.matchMedia('(pointer: coarse)').matches && Math.min(screen.width, window.innerWidth) < 1024;
-function openInNewTab(){
+function launchGame(){
   window.open(location.pathname + '?section=play', '_blank');
 }
 if (SHOW_GAME){
@@ -916,8 +916,14 @@ const TERR_FRAC = {
 };
 function territoryPoint(key) {
   const f = TERR_FRAC[key] || TERR_FRAC.nam;
-  if (!fxCanvas.width) sizeCanvas();
-  const W = fxCanvas.width, H = fxCanvas.height;
+  // Measure the LIVE box every call. The canvas can be laid out late (iframe
+  // still sizing, map image loading) — a one-time cached size collapses every
+  // burst toward the origin (top-left). Re-sync backing store if it drifted.
+  const r = fxCanvas.getBoundingClientRect();
+  const W = r.width || fxCanvas.width, H = r.height || fxCanvas.height;
+  if (W && (fxCanvas.width !== Math.round(W) || fxCanvas.height !== Math.round(H))) {
+    fxCanvas.width = Math.round(W); fxCanvas.height = Math.round(H);
+  }
   let drawnW, drawnH, offX, offY;
   if (W / H > MAP_IMG_ASPECT) { drawnH = H; drawnW = H * MAP_IMG_ASPECT; offX = (W - drawnW) / 2; offY = 0; }
   else { drawnW = W; drawnH = W / MAP_IMG_ASPECT; offX = 0; offY = (H - drawnH) / 2; }
