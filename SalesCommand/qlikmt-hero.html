@@ -139,6 +139,62 @@
   .hl-dots button.on{background:var(--sky);transform:scale(1.25)}
 
 
+  /* ---- glossary (?section=glossary) ------------------------------------ */
+  .gl{display:none;flex-direction:column;gap:12px;width:100%}
+  .gl-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .gl-kicker{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;
+    letter-spacing:.2em;text-transform:uppercase;color:var(--sky);flex:0 0 auto}
+  .gl-kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sky)}
+  .gl-note{font-size:12px;color:var(--muted);flex:1 1 auto;min-width:0}
+  .gl-search{flex:0 0 auto;width:min(260px,42vw);font:inherit;font-size:13px;
+    color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line);
+    border-radius:9px;padding:7px 11px;outline:none}
+  .gl-search::placeholder{color:var(--muted)}
+  .gl-search:focus{border-color:rgba(16,207,201,.55);background:rgba(16,207,201,.07)}
+  [data-theme="light"] .gl-search{background:#fff;border-color:rgba(15,40,70,.16)}
+
+  /* fixed height so the widget never resizes as people browse */
+  .gl-panel{height:var(--gl-h,250px);overflow-y:auto;overscroll-behavior:contain;
+    border:1px solid var(--line);border-radius:13px;padding:13px;
+    background:rgba(255,255,255,.03)}
+  [data-theme="light"] .gl-panel{background:rgba(255,255,255,.5);border-color:rgba(15,40,70,.12)}
+  .gl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}
+  .gl-term{display:block;width:100%;text-align:left;font:inherit;font-size:13px;color:var(--ink);
+    background:transparent;border:1px solid transparent;border-radius:8px;padding:7px 9px;
+    cursor:pointer;transition:background .15s,border-color .15s}
+  .gl-term:hover{background:rgba(16,207,201,.10);border-color:rgba(16,207,201,.35)}
+  .gl-term .lk{color:var(--sky);font-size:10px;margin-left:5px;vertical-align:1px}
+  .gl-empty{font-size:13px;color:var(--muted);margin:0;padding:6px 2px}
+
+  .gl-back{font:inherit;font-size:12px;color:var(--sky);background:none;border:0;
+    padding:0 0 8px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+  .gl-back:hover{text-decoration:underline}
+  .gl-t{margin:0 0 4px;font-size:clamp(18px,2vw,23px);font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+  .gl-d{margin:0;font-size:13.5px;line-height:1.6;color:#BCCFE2;max-width:70ch}
+  [data-theme="light"] .gl-d{color:#42566c}
+  .gl-more{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:13px;
+    color:var(--sky);text-decoration:none;border-bottom:1px solid rgba(16,207,201,.4)}
+  .gl-more:hover{border-bottom-color:var(--sky)}
+
+  .gl-az{display:flex;flex-wrap:wrap;gap:5px}
+  .gl-ltr{font:inherit;font-size:12px;font-weight:600;min-width:27px;height:27px;
+    color:var(--ink);background:rgba(255,255,255,.04);border:1px solid var(--line);
+    border-radius:7px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+  .gl-ltr:hover:not(:disabled){background:rgba(16,207,201,.14);border-color:rgba(16,207,201,.45)}
+  .gl-ltr.on{background:var(--sky);border-color:var(--sky);color:#04222b}
+  .gl-ltr:disabled{opacity:.3;cursor:default}
+  [data-theme="light"] .gl-ltr{background:#fff;border-color:rgba(15,40,70,.14)}
+  [data-theme="light"] .gl-ltr.on{background:#068a45;border-color:#068a45;color:#fff}
+
+  @media (max-width:640px){
+    .gl-head{gap:8px}
+    .gl-note{display:none}
+    .gl-search{width:100%;order:3}
+    .gl-panel{--gl-h:200px;padding:11px}
+    .gl-grid{grid-template-columns:1fr}
+    .gl-ltr{min-width:24px;height:24px;font-size:11px}
+  }
+
   /* ---- section cards (?section=<name>) --------------------------------- */
   /* hidden unless a ?section= in SECTION_CARDS switches it on */
   .scard{display:none;flex-direction:column;align-items:flex-start;gap:10px;
@@ -811,6 +867,8 @@
 
   html[data-section="ticker"] .lowerthird{display:block;margin-top:0}
 
+  html[data-section="glossary"] .gl{display:flex}
+
 
   /* the wrap already pads the bottom; the herorow adding its own doubled it */
   html[data-section="highlights"] .herorow{display:grid;padding-top:0;padding-bottom:0}
@@ -1069,6 +1127,18 @@
     </section>
 
 
+    <!-- GLOSSARY — ?section=glossary. Merges the 124-term master with the 98
+         scraped from qlik.com; the overlap gives some terms a link out. -->
+    <section class="gl rise d2" aria-label="Glossary">
+      <div class="gl-head">
+        <span class="gl-kicker">Glossary</span>
+        <span class="gl-note" id="glNote">Loading&hellip;</span>
+        <input class="gl-search" id="glSearch" type="search" placeholder="Search terms" aria-label="Search glossary">
+      </div>
+      <div class="gl-panel" id="glPanel" tabindex="0"></div>
+      <nav class="gl-az" id="glAZ" aria-label="Jump to letter"></nav>
+    </section>
+
     <div class="divider rise d4" aria-hidden="true"></div>
 
 
@@ -1087,6 +1157,112 @@ const SHOW_TOP  = !SECTION || SECTION === 'topbar'     || IS_MOBILE;
 /* ---- SECTION CARDS ---------------------------------------------------------
    One entry per ?section=. Each is paired with a hardcoded light twin used on
    mobile — keep the copy in both in sync. */
+
+/* ---- GLOSSARY --------------------------------------------------------------
+   Two sources merged at load: glossary_terms_master.json is the definitive term
+   list, qlik_glossary_index.json adds the qlik.com link and a fuller definition
+   for the ~89 that overlap. Terms without a link simply don't show one.
+   full_content is deliberately unused — it's run-together scraped page text. */
+const GL_BASE = 'assets/glossary/';
+(function(){
+  const panel = document.getElementById('glPanel');
+  if (!panel) return;
+  const azHost = document.getElementById('glAZ');
+  const note   = document.getElementById('glNote');
+  const search = document.getElementById('glSearch');
+  const AZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  let TERMS = [], byLetter = {}, letter = null;
+
+  const esc = function(t){ const d=document.createElement('div'); d.textContent=t==null?'':t; return d.innerHTML; };
+
+  function merge(master, index){
+    const map = new Map();
+    (master||[]).forEach(function(t){
+      if (t.active === false) return;
+      map.set(t.term.toLowerCase(), { term:t.term, letter:(t.letter||t.term[0]).toUpperCase(),
+                                      definition:t.definition||'', url:t.url||null });
+    });
+    (index||[]).forEach(function(t){
+      const k = t.term.toLowerCase(), ex = map.get(k);
+      if (ex){ ex.url = ex.url || t.url || null;
+               if ((t.short_definition||'').length > (ex.definition||'').length) ex.definition = t.short_definition; }
+      else map.set(k, { term:t.term, letter:(t.letter||t.term[0]).toUpperCase(),
+                        definition:t.short_definition||'', url:t.url||null });
+    });
+    return [...map.values()].sort(function(a,b){ return a.term.localeCompare(b.term); });
+  }
+
+  function showTerms(list, heading){
+    if (!list.length){ panel.innerHTML = '<p class="gl-empty">No terms found.</p>'; return; }
+    panel.innerHTML = '<div class="gl-grid">' + list.map(function(t,i){
+      return '<button class="gl-term" type="button" data-i="'+t._i+'">'+esc(t.term)
+           + (t.url ? '<span class="lk" aria-label="has a full guide">&#8599;</span>' : '')+'</button>';
+    }).join('') + '</div>';
+    panel.scrollTop = 0;
+  }
+
+  function showTerm(t){
+    panel.innerHTML =
+      '<button class="gl-back" type="button" id="glBack">&#8592; '
+        + (letter ? esc(letter) : 'Results') + '</button>'
+      + '<h3 class="gl-t">'+esc(t.term)+'</h3>'
+      + '<p class="gl-d">'+esc(t.definition || 'No definition recorded yet.')+'</p>'
+      + (t.url ? '<a class="gl-more" href="'+esc(t.url)+'" target="_blank" rel="noopener noreferrer">Read the full guide on qlik.com &#8599;</a>' : '');
+    panel.scrollTop = 0;
+    const back = document.getElementById('glBack');
+    if (back) back.addEventListener('click', function(){
+      if (letter) selectLetter(letter); else runSearch(search.value);
+    });
+  }
+
+  function selectLetter(L){
+    letter = L;
+    search.value = '';
+    [...azHost.children].forEach(function(b){ b.classList.toggle('on', b.textContent === L); });
+    showTerms(byLetter[L] || []);
+  }
+
+  function runSearch(q){
+    q = (q||'').trim().toLowerCase();
+    if (!q){ if (letter) selectLetter(letter); return; }
+    letter = null;
+    [...azHost.children].forEach(function(b){ b.classList.remove('on'); });
+    showTerms(TERMS.filter(function(t){
+      return t.term.toLowerCase().indexOf(q) > -1 || (t.definition||'').toLowerCase().indexOf(q) > -1;
+    }));
+  }
+
+  panel.addEventListener('click', function(e){
+    const b = e.target.closest('.gl-term');
+    if (b) showTerm(TERMS[+b.dataset.i]);
+  });
+  search.addEventListener('input', function(){ runSearch(search.value); });
+
+  Promise.all([
+    fetch(GL_BASE+'glossary_terms_master.json').then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; }),
+    fetch(GL_BASE+'qlik_glossary_index.json').then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; })
+  ]).then(function(res){
+    TERMS = merge(res[0], res[1]);
+    TERMS.forEach(function(t,i){ t._i = i; });
+    byLetter = {};
+    TERMS.forEach(function(t){ (byLetter[t.letter] = byLetter[t.letter] || []).push(t); });
+
+    azHost.innerHTML = AZ.map(function(L){
+      const n = (byLetter[L]||[]).length;
+      return '<button class="gl-ltr" type="button"'+(n?'':' disabled')
+           + ' aria-label="'+L+(n?', '+n+' terms':', no terms')+'">'+L+'</button>';
+    }).join('');
+    [...azHost.children].forEach(function(b){
+      if (!b.disabled) b.addEventListener('click', function(){ selectLetter(b.textContent); });
+    });
+
+    note.textContent = TERMS.length + ' terms';
+    search.placeholder = 'Search ' + TERMS.length + ' terms';
+    const first = AZ.find(function(L){ return (byLetter[L]||[]).length; });
+    if (first) selectLetter(first);
+    else panel.innerHTML = '<p class="gl-empty">Glossary unavailable.</p>';
+  });
+})();
 
 const SECTION_CARDS = {
   hubs:   { kicker:'Sales Essentials',
