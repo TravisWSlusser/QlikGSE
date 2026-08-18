@@ -1203,7 +1203,6 @@ if (IS_MOBILE){
    is replaced by a fetch and nothing else here changes.
    date = YYYY-MM-DD. category must exist in CATEGORIES.                     */
 let CATEGORIES = {
-  review:   { label:'Business Review', color:'var(--cat-review)'   },
   training: { label:'Training',        color:'var(--cat-training)' },
   deadline: { label:'Deadline',        color:'var(--cat-deadline)' },
   event:    { label:'Live Event',      color:'var(--cat-event)'    },
@@ -1227,7 +1226,7 @@ const UE_SHOW = 3;
    from data/events.json so the calendar in qlikmt-hero2.html and these chips
    never drift apart. Swap EVENTS_URL for /api/command/events when the Neon
    table lands — nothing else here changes. */
-const EVENTS_URL = 'data/events.json';
+const EVENTS_URL = 'assets/calendar/events.json';
 (function(){
   fetch(EVENTS_URL, { cache:'no-store' })
     .then(function(r){ return r.ok ? r.json() : null; })

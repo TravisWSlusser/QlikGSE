@@ -17,10 +17,6 @@
     "are an added key rather than a migration."
   ],
   "categories": {
-    "review": {
-      "label": "Business Review",
-      "color": "#FF6B35"
-    },
     "training": {
       "label": "Training",
       "color": "#10CFC9"

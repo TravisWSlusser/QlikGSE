@@ -1073,7 +1073,7 @@
 .hq-foot{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:34px clamp(22px,4vw,46px) 15px;background:linear-gradient(180deg,transparent,rgba(5,8,12,.5) 26%,rgba(4,6,10,.9));pointer-events:none}
 .hq-foot .sitefoot{pointer-events:auto;margin:0 auto;max-width:1040px}
   .sf-wrap{padding:26px 12px 34px}
-  html[data-section] .sf-wrap{display:none}   /* widgets never show the footer */
+  html[data-section="calendar"] .sf-wrap{display:block;padding:18px 12px 24px}
 .hq-foot .sitefoot a{pointer-events:auto}
 .hq-foot .sf-cred,[data-theme="light"] .hq-foot .sf-cred{color:rgba(212,224,236,.82)}
 .hq-foot .sf-cred strong,[data-theme="light"] .hq-foot .sf-cred strong{color:#e6eef7}
@@ -1162,6 +1162,10 @@
 
   /* ── ?section=calendar — the calendar alone, for its own MT widget ────── */
   html[data-section="calendar"] body{background:var(--navy-1);min-height:0;padding:0}
+  html[data-section="calendar"][data-theme="light"] body{background:#eef3f9}
+  @media (max-width:500px){
+    html[data-section="calendar"][data-theme="light"] body{background:#ffffff}
+  }
   html[data-section="calendar"] body > *{display:none}
   html[data-section="calendar"] .wrap{display:block;margin:0;max-width:none;
     padding:clamp(14px,1.6vw,20px) 36px;background:transparent;border:none;
@@ -1282,7 +1286,6 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeKd(); });
 
 /* ---- key dates calendar (bottom): plots the same KEY_DATES, reuses the openKd modal ---- */
 let CATEGORIES = {
-  review:   { label:'Business Review', color:'var(--cat-review)' },
   training: { label:'Training',        color:'var(--cat-training)' },
   deadline: { label:'Deadline',        color:'var(--cat-deadline)' },
   event:    { label:'Live Event',      color:'var(--cat-event)' },
@@ -1292,7 +1295,7 @@ let CATEGORIES = {
    KEY_DATES below is the offline fallback. Live values come from
    data/events.json, the same file the key-date chips in qlikmt-hero.html read,
    so the two can never drift. Swap for /api/command/events when Neon lands. */
-const EVENTS_URL = 'data/events.json';
+const EVENTS_URL = 'assets/calendar/events.json';
 (function(){
   fetch(EVENTS_URL, { cache:'no-store' })
     .then(function(r){ return r.ok ? r.json() : null; })
@@ -1791,10 +1794,22 @@ setInterval(renderToday, 10*60*1000);   // re-evaluate the 4x/day slot while the
     if(m==='light') document.documentElement.setAttribute('data-theme','light');
     else document.documentElement.removeAttribute('data-theme');
   }
-  var theme='dark';
-  try{ theme=localStorage.getItem(KEY)||'dark'; }catch(e){}
+  /* Default follows the surface — phone width starts light, desktop dark — and
+     an explicit toggle always wins. Three channels because in the Mindtickle
+     embed any one of them can be blocked by storage partitioning: the storage
+     event, a BroadcastChannel, and a slow poll. */
+  var theme = window.innerWidth < 500 ? 'light' : 'dark';
+  try{ theme = localStorage.getItem(KEY) || theme; }catch(e){}
   apply(theme);
-  window.addEventListener('storage',function(e){ if(e.key===KEY){ apply(e.newValue||'dark'); } });
+
+  var chan=null; try{ chan=new BroadcastChannel('qlik-theme'); }catch(e){}
+  function sync(m){ m=(m==='light')?'light':'dark'; if(m!==theme){ theme=m; apply(theme); } }
+  window.addEventListener('storage',function(e){ if(e.key===KEY) sync(e.newValue); });
+  if(chan) chan.onmessage=function(e){ sync(e.data); };
+  setInterval(function(){
+    var v=null; try{ v=localStorage.getItem(KEY); }catch(e){ return; }
+    if(v) sync(v);
+  },1500);
 })();
 
 </script>
