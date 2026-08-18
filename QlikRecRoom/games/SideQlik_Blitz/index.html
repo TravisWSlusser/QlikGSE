@@ -6,7 +6,7 @@
 <title>SIDE-QLIK BLITZ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Press+Start+2P&family=Nabla&family=Rubik+Glitch&family=Rubik+Wet+Paint&family=Rubik+Puddles&family=Rubik+Maze&family=Rubik+Beastly&family=Major+Mono+Display&family=VT323&display=swap" rel="stylesheet">
 <style>
   :root{
     --deep:#19426C; --green:#009845; --sky:#10CFC9; --ocean:#006580;
@@ -1670,8 +1670,15 @@ function makeQuestionCell(){
   return { color:-1, id:null, power:'question', base:'grin',
     naturalAfraid:false, playerAfraid:false, frame:0, fc:0, pop:0 };
 }
+// "Methodology Madness" coin: each M coin wears a randomly assigned unstable/glitch
+// display font for its whole life (locked at spawn, so it never flickers). Cosmetic only.
+const COIN_FONTS = [
+  "'Rubik Glitch'", "'Rubik Wet Paint'", "'Rubik Puddles'", "'Rubik Maze'",
+  "'Rubik Beastly'", "'Nabla'", "'Major Mono Display'", "'VT323'", "'Press Start 2P'"
+];
+function pickCoinFont(){ return COIN_FONTS[(Math.random()*COIN_FONTS.length)|0]; }
 function makeCoinCell(){
-  return { color:-2, id:null, power:'coin', base:'grin',
+  return { color:-2, id:null, power:'coin', base:'grin', coinFont:pickCoinFont(),
     naturalAfraid:false, playerAfraid:false, frame:0, fc:0, pop:0 };
 }
 const COIN_SHARE = 0.80;   // of the specials that spawn, how many are Methodology Tokens vs Brain Freeze
@@ -1780,7 +1787,7 @@ function dropFloaters(){
    FALLING (floater) + POP particle bookkeeping
    ============================================================================ */
 let falling = [];   // {x,y,vy,id}
-function spawnFalling(r,c,cell){ falling.push({ x:cellX(r,c), y:cellY(r), vy:60+Math.random()*40, id:cell.id, emotion:'scared', frame:cell.frame, power:cell.power||null }); spawnPopFx(cellX(r,c), cellY(r), cell); }
+function spawnFalling(r,c,cell){ falling.push({ x:cellX(r,c), y:cellY(r), vy:60+Math.random()*40, id:cell.id, emotion:'scared', frame:cell.frame, power:cell.power||null, coinFont:cell.coinFont }); spawnPopFx(cellX(r,c), cellY(r), cell); }
 
 /* ---- pop particle FX ----
    One system, three moods keyed off game state:
@@ -2300,7 +2307,7 @@ function drawBrainFreeze(x,y,d){
   const fr=bfFrame(), sc=fr%BF_COLS, sr=Math.floor(fr/BF_COLS);
   ctx.drawImage(brainFreeze.img, sc*BF_CELL, sr*BF_CELL, BF_CELL, BF_CELL, x-d/2, y-d/2, d, d);
 }
-function drawCoinOrb(x,y,d){
+function drawCoinOrb(x,y,d,font){
   const r=d/2*0.94, t=performance.now()/1000;
   const sx=Math.abs(Math.cos(t*3.2));            // horizontal squash fakes a 3D spin
   ctx.save();
@@ -2310,10 +2317,13 @@ function drawCoinOrb(x,y,d){
   ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
   ctx.lineWidth=2.5; ctx.strokeStyle='#7a5a08'; ctx.stroke();
   ctx.restore();
-  if (sx>0.45){                                  // KF faces us only when the coin isn't edge-on
+  if (sx>0.45){                                  // M faces us only when the coin isn't edge-on
     ctx.fillStyle=`rgba(110,72,8,${Math.min(1,(sx-0.45)/0.3)})`;
-    ctx.font="700 15px 'Press Start 2P'"; ctx.textAlign='center'; ctx.textBaseline='middle';
-    ctx.fillText('KF', x, y+1); ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+    const cf = font || "'Press Start 2P'";
+    // slab/mono faces read small; bump size a touch for the ornate ones
+    const big = /Nabla|Beastly|Wet Paint|Puddles|Maze/.test(cf);
+    ctx.font = "700 " + (big?22:18) + "px " + cf; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('M', x, y+1); ctx.textBaseline='alphabetic'; ctx.textAlign='left';
   }
 }
 function drawBubbles(){
@@ -2323,7 +2333,7 @@ function drawBubbles(){
       const x=cellX(r,c), y=cellY(r);
       if (y < GRID_Y0-R || y > H+R) continue;
       if (cell.power==='question'){ drawBrainFreeze(x,y,D*0.98); continue; }
-      if (cell.power==='coin'){ drawCoinOrb(x,y,D*0.98); continue; }
+      if (cell.power==='coin'){ drawCoinOrb(x,y,D*0.98,cell.coinFont); continue; }
       if (madnessActive() && cell.color>=0){ drawDorcGlitch(cell, x, y, D*0.98); }
       else {
         const emo = (isFrozen() || isAfraid(cell)) ? 'scared' : cell.base;
@@ -2333,7 +2343,7 @@ function drawBubbles(){
   }
   for (const f of falling){
     if (f.power==='question') drawBrainFreeze(f.x, f.y, D*0.98);
-    else if (f.power==='coin') drawCoinOrb(f.x, f.y, D*0.98);
+    else if (f.power==='coin') drawCoinOrb(f.x, f.y, D*0.98, f.coinFont);
     else drawSprite(f.id, f.emotion, f.frame, f.x, f.y, D*0.98);
   }
   drawSparks();
@@ -2980,7 +2990,7 @@ fitStage(); setTimeout(fitStage,300); setTimeout(fitStage,1200); setTimeout(fitS
     coinc.fillStyle=g; coinc.beginPath(); coinc.arc(0,0,r,0,Math.PI*2); coinc.fill();
     coinc.restore();
     if (sx>0.35){ coinc.fillStyle='#7a5a08'; coinc.font="bold 24px 'Inter',sans-serif";
-      coinc.textAlign='center'; coinc.textBaseline='middle'; coinc.fillText('KF',x,y); }
+      coinc.textAlign='center'; coinc.textBaseline='middle'; coinc.fillText('M',x,y); }
   }
   function drawMadnessIcon(){
     if (!madc) return;
