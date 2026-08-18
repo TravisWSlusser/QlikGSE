@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Qlik Sales Enablement — Home</title>
+<title>Qlik Sales Enablement — Mission Control</title>
 <!-- ===========================================================================
   SECTIONED VIEWS — one file, four Mindtickle widgets. Never fork this file.
     (no param)          full standalone page, everything renders
@@ -241,6 +241,10 @@
     .scard-title{font-size:clamp(19px,5.4vw,24px)}
     .scard-blurb{font-size:13px;line-height:1.45}
   }
+  .scard-cta{display:inline-flex;align-items:center;gap:6px;margin-top:2px;font-size:13px;
+    color:var(--sky);text-decoration:none;border-bottom:1px solid rgba(16,207,201,.4)}
+  .scard-cta:hover{border-bottom-color:var(--sky)}
+  [data-theme="light"] .scard-cta{color:#068a45;border-bottom-color:rgba(6,138,69,.4)}
   .scard-blurb{margin:0;font-weight:400;color:#BCCFE2;max-width:62ch;
     font-size:clamp(13px,1.15vw,16px);line-height:1.55}
   [data-theme="light"] .scard-blurb{color:#42566c}
@@ -1046,12 +1050,12 @@
   <div class="wrap">
     <!-- LAUNCH CARD — only rendered by ?section=mobile while the widget is
          collapsed. Mindtickle's expand control then acts as the launch button
-         and the same document re-renders as the full Command Center. -->
+         and the same document re-renders as the full Mission Control page. -->
     <div class="launch" id="launch">
       <div class="lc-top">
         <img class="lc-logo" src="assets/images/logos/qlik-sales-enablement.svg" alt="Qlik Sales Enablement"
              onerror="this.style.display='none'">
-        <span class="lc-kicker">Command Center</span>
+        <span class="lc-kicker">Mission Control</span>
       </div>
       <div class="lc-mid">
         <span class="lc-greet" id="lcGreet">Welcome</span>
@@ -1081,11 +1085,10 @@
       </span>
       </div>
       <span class="hl-links">
-      <!-- Top-level Mindtickle destinations. target="_top" breaks out of the embedded widget iframe. Rooms = internal REC Room, link TBD. -->
-      <a href="https://qlik.mindtickle.com/new/ui/learner/home" target="_top">Home</a>
+      <!-- Top-level Mindtickle destinations. target="_top" breaks out of the embedded widget iframe.  -->
       <a href="https://qlik.mindtickle.com/new/ui/learner/assets" target="_top">Assets</a>
       <a href="https://qlik.mindtickle.com/new/ui/learner/training/programs" target="_top">Training</a>
-      <a href="#">Rooms</a>
+      <a href="https://qlik.mindtickle.com/new/ui/learner/dsr/rooms" target="_top">Rooms</a>
       <a href="https://qlik.mindtickle.com/new/ui/callai/recordings" target="_top">Notetaker</a>
       </span>
       <button id="themeToggle" class="themetoggle" type="button"></button>
@@ -1112,7 +1115,7 @@
           <img class="logo logo-light" src="assets/images/logos/Sales_Enablement_Logos/Typemark_Qlik-Sales-Enablement_Color.svg" alt="Qlik Sales Enablement" onerror="brandFallback()">
           <span class="logo-fallback"><b>Qlik</b> Sales Enablement</span>
         </span>
-        <span class="eyebrow">Command Center</span>
+        <span class="eyebrow">Mission Control</span>
       </div>
 
       <div class="hr-bodyL rise d3">
@@ -1152,6 +1155,7 @@
       <h2 class="scard-title" id="scardTitle"></h2>
       <hr class="scard-rule">
       <p class="scard-blurb" id="scardBlurb"></p>
+      <a class="scard-cta" id="scardCta" hidden>&nbsp;</a>
     </section>
 
 
@@ -1303,7 +1307,8 @@ const GL_BASE = 'assets/glossary/';
 const SECTION_CARDS = {
   hubs:   { kicker:'Sales Essentials',
             title:'Hubs',
-            blurb:'Decks, plays, battlecards, pricing and proof \u2014 every hub in one place, so finding the right asset stops being the hard part.' },
+            blurb:'Quickly find the right asset for the deal: customer-facing presentations, sales plays, battlecards, pricing, customer proof and more \u2014 all your core sales content in one place.',
+            cta:{ label:'Overview page here', href:'https://deeplinks.mindtickle.com/egJ5KkSP84b' } },
   certs:  { kicker:'Required Training',
             title:'Quarterly Certifications',
             blurb:'Each quarter we build a core curriculum to keep your edge sharp on Qlik products and the Qlik Sales Methodology.' }
@@ -1315,6 +1320,13 @@ const SECTION_CARDS = {
   document.getElementById('scardKicker').textContent = card.kicker;
   document.getElementById('scardTitle').textContent  = card.title;
   document.getElementById('scardBlurb').textContent  = card.blurb;
+  const cta = document.getElementById('scardCta');
+  if (card.cta){
+    cta.textContent = card.cta.label + ' \u2197';
+    cta.href = card.cta.href;
+    cta.target = '_top';
+    cta.hidden = false;
+  }
   document.getElementById('scard').setAttribute('aria-label', card.title);
 })();
 
@@ -1378,13 +1390,15 @@ if (IS_MOBILE){
 const HIGHLIGHTS = [
   { kicker:'New Release', date:'August 14, 2026',
     title:'Deal <span class="ac">Guides</span>.',
-    body:'Bring opportunity context, call insights, next best actions and relevant resources together in one place.' },
+    body:'Bring opportunity context, call insights, next best actions and relevant resources together in one place. Create one now in Rooms &mdash; \u2018Deals &amp; Contacts\u2019.' },
   { kicker:'Q3 Certification', date:'August 14, 2026',
     title:'Built to <span class="ac">Win</span>.',
-    body:'Q1 gave you the message. Q2 gave you the story. Q3 teaches you to use both to build and win strategic proposals from the very first interaction.' },
+    body:'Q1 gave you the message. Q2 gave you the story. Q3 teaches you to use both to build and win strategic proposals from the very first interaction.',
+    cta:{ label:'Get started here', href:'https://deeplinks.mindtickle.com/cVEDWXR7D3b' } },
   { kicker:'Now Live', date:'August 14, 2026',
     title:'New Hubs <span class="ac">structure</span>.',
-    body:'Find what you need faster — critical content organized around how sellers work.' },
+    body:'Your starting point for trusted sales content: from preparing for customer conversations to positioning Qlik, proving value and progressing opportunities.',
+    cta:{ label:'Explore here', href:'https://deeplinks.mindtickle.com/egJ5KkSP84b' } },
 ];
 const HL_MS = 9000;
 
@@ -1419,16 +1433,22 @@ let CATEGORIES = {
   event:    { label:'Live Event',      color:'var(--cat-event)'    },
   content:  { label:'Content Drop',    color:'var(--cat-content)'  }
 };
-let KEY_DATES = [
-  { date:'2026-08-18', category:'event', month:'AUG', day:'18',
+let KEY_DATES = [   /* OFFLINE FALLBACK ONLY — live values come from assets/calendar/events.json */
+  { date:'2026-08-17', category:'training', month:'AUG', day:'17', year:'2026', pin:true,
+    title:'Q3 Certification opens',
+    detail:'Built to Win goes live. Q1 gave you the message, Q2 the story; Q3 turns both into strategic proposals.' },
+  { date:'2026-08-18', category:'event', month:'AUG', day:'18', year:'2026',
     title:'Side-Qlik AI Upgrade',
     detail:'Redesigned Mindtickle navigation, a new AI assistant with Learn Mode, Qlik Notetaker, and Deal Guides.' },
-  { date:'2026-08-20', category:'event', month:'AUG', day:'20',
+  { date:'2026-08-20', category:'event', month:'AUG', day:'20', year:'2026',
     title:'Move to Cloud Update',
     detail:'Where the Qlik Talend Cloud motion stands, the Precog to Stitch shift, and what Sales, BDRs, SEs and CSMs do next.' },
-  { date:'2026-08-27', category:'event', month:'AUG', day:'27',
+  { date:'2026-08-27', category:'event', month:'AUG', day:'27', year:'2026',
     title:'Competitive Compass',
-    detail:'Compete and win in Open Lakehouse — the landscape, the players, and the Replicate Source messaging that separates Qlik.' }
+    detail:'Compete and win in Open Lakehouse — the landscape, the players, and the Replicate Source messaging that separates Qlik.' },
+  { date:'2026-09-14', category:'deadline', month:'SEP', day:'14', year:'2026', pin:true,
+    title:'Q3 Certification due',
+    detail:'Final day to complete the Built to Win Q3 certification.' }
 ];
 const UE_SHOW = 3;
 
@@ -1464,9 +1484,12 @@ if (IS_MOBILE){
     if(!lcDates || typeof KEY_DATES === 'undefined') return;
     const today = new Date(); today.setHours(0,0,0,0);
     const sorted = KEY_DATES.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
-    const ahead  = sorted.filter(function(d){ return new Date(d.date+'T00:00:00') >= today; });
-    const behind = sorted.filter(function(d){ return new Date(d.date+'T00:00:00') <  today; });
-    const list = ahead.concat(behind.slice(-(3 - ahead.length))).slice(0, 3);
+    const pinned = sorted.filter(function(d){ return d.pin; }).slice(0,3);
+    const rest   = sorted.filter(function(d){ return !d.pin; });
+    const ahead  = rest.filter(function(d){ return new Date(d.date+'T00:00:00') >= today; });
+    const behind = rest.filter(function(d){ return new Date(d.date+'T00:00:00') <  today; });
+    const list = pinned.concat(ahead, behind.slice(-1)).slice(0,3)
+                       .sort(function(a,b){ return a.date < b.date ? -1 : 1; });
     lcDates.innerHTML = '';
     list.forEach(function(d){
       const c = document.createElement('span');
@@ -1508,9 +1531,16 @@ if (SHOW_HL){
   function buildList(){
     const today = new Date(); today.setHours(0,0,0,0);
     const sorted = KEY_DATES.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
-    const ahead  = sorted.filter(function(d){ return new Date(d.date+'T00:00:00') >= today; });
-    const behind = sorted.filter(function(d){ return new Date(d.date+'T00:00:00') <  today; });
-    list = ahead.concat(behind.slice(-(UE_SHOW - ahead.length))).slice(0, UE_SHOW);
+    /* Anything flagged pin:true in events.json claims a slot first, so a date
+       worth shouting about isn't pushed out by whatever happens to be sooner.
+       The rest fill up with the next upcoming, then the most recent past. */
+    const pinned = sorted.filter(function(d){ return d.pin; }).slice(0, UE_SHOW);
+    const rest   = sorted.filter(function(d){ return !d.pin; });
+    const ahead  = rest.filter(function(d){ return new Date(d.date+'T00:00:00') >= today; });
+    const behind = rest.filter(function(d){ return new Date(d.date+'T00:00:00') <  today; });
+    const fill   = ahead.concat(behind.slice(-Math.max(0, UE_SHOW - pinned.length - ahead.length)));
+    list = pinned.concat(fill).slice(0, UE_SHOW)
+                 .sort(function(a,b){ return a.date < b.date ? -1 : 1; });
   }
   buildList();
 
@@ -1564,6 +1594,8 @@ if (SHOW_HL){
     rollTitles();
   }
   collapsed();
+  /* events.json lands after first paint, so rebuild the chips when it does */
+  document.addEventListener('events:loaded', function(){ buildList(); collapsed(); rollTitles(); });
 
   /* Only the ACTIVE item crawls. A collapsed chip that is too narrow simply
      truncates — several labels sliding at once is noise, not information. */
