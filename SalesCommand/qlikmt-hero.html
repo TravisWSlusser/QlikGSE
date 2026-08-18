@@ -20,7 +20,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   /* Content lives in the DESTINATIONS array at the bottom.
      Mindtickle deep-links go in each "href". Layout never needs editing. */
@@ -123,6 +123,9 @@
   .hl-title{font-family:'Inter',system-ui,sans-serif;font-weight:600;line-height:1.04;
     font-size:clamp(30px,4.2vw,50px);letter-spacing:-.01em;margin:.22em 0 .3em;text-wrap:balance}
   .hl-title .ac{color:var(--green)}
+  .hl-date{display:block;font-weight:300;font-size:12px;letter-spacing:.04em;
+    color:var(--muted);margin:-2px 0 9px}
+  [data-theme="light"] .hl-date{color:#6c8098}
   .hl-body{font-size:clamp(14px,1.4vw,16px);line-height:1.55;color:#bccfe2;max-width:560px}
   [data-theme="light"] .hl-body{color:#42566c}
   .hl-ctas{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;margin-top:14px}
@@ -150,6 +153,11 @@
   .scard-title{margin:0;font-weight:700;letter-spacing:-.015em;line-height:1.06;
     font-size:clamp(24px,2.4vw,32px);color:var(--ink);text-wrap:balance}
   .scard-rule{height:1px;width:100%;background:var(--line);border:0;margin:0}
+  @media (max-width:640px){
+    .scard{padding:13px 15px;gap:8px}
+    .scard-title{font-size:clamp(19px,5.4vw,24px)}
+    .scard-blurb{font-size:13px;line-height:1.45}
+  }
   .scard-blurb{margin:0;font-weight:400;color:#BCCFE2;max-width:62ch;
     font-size:clamp(13px,1.15vw,16px);line-height:1.55}
   [data-theme="light"] .scard-blurb{color:#42566c}
@@ -1157,13 +1165,13 @@ if (IS_MOBILE){
      image   optional URL — shows in the reserved media panel on the right.
              Omit and the panel collapses so the text uses the full width.     */
 const HIGHLIGHTS = [
-  { kicker:'New Release',
+  { kicker:'New Release', date:'August 14, 2026',
     title:'Deal <span class="ac">Guides</span>.',
     body:'Bring opportunity context, call insights, next best actions and relevant resources together in one place.' },
-  { kicker:'Q3 Certification',
+  { kicker:'Q3 Certification', date:'August 14, 2026',
     title:'Built to <span class="ac">Win</span>.',
     body:'Q1 gave you the message. Q2 gave you the story. Q3 teaches you to use both to build and win strategic proposals from the very first interaction.' },
-  { kicker:'Now Live',
+  { kicker:'Now Live', date:'August 14, 2026',
     title:'New Hubs <span class="ac">structure</span>.',
     body:'Find what you need faster — critical content organized around how sellers work.' },
 ];
@@ -1370,6 +1378,7 @@ if (SHOW_HL){
     d.className = 'hl-item' + (i===0 ? ' on' : '');
     d.innerHTML = '<span class="hl-kicker">'+h.kicker+'</span>'
       + '<h1 class="hl-title">'+h.title+'</h1>'
+      + (h.date ? '<span class="hl-date">Added '+h.date+'</span>' : '')
       + '<p class="hl-body">'+h.body+'</p>'
       + (function(){
           if(!h.cta) return '';
