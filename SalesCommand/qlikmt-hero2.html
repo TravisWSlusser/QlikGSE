@@ -1072,6 +1072,8 @@
 /* persistent footnote overlay — pinned to the stage bottom, stays through the slide */
 .hq-foot{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:34px clamp(22px,4vw,46px) 15px;background:linear-gradient(180deg,transparent,rgba(5,8,12,.5) 26%,rgba(4,6,10,.9));pointer-events:none}
 .hq-foot .sitefoot{pointer-events:auto;margin:0 auto;max-width:1040px}
+  .sf-wrap{padding:26px 12px 34px}
+  html[data-section] .sf-wrap{display:none}   /* widgets never show the footer */
 .hq-foot .sitefoot a{pointer-events:auto}
 .hq-foot .sf-cred,[data-theme="light"] .hq-foot .sf-cred{color:rgba(212,224,236,.82)}
 .hq-foot .sf-cred strong,[data-theme="light"] .hq-foot .sf-cred strong{color:#e6eef7}
@@ -1225,134 +1227,25 @@
       </div>
     </section>
   </div>
-<div class="hq">
-  <div class="hq-top">
-    <div class="hq-left"><div class="hq-badge"><div class="d"></div><span>Live</span></div><div class="hq-brand"><div class="t">Stellar-Seller <span>HQ</span></div><div class="s">Global Sales Enablement</div></div></div>
-    <div class="hq-tabs" role="tablist"><button class="hq-tab active" data-target="ai" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.7 4.8 4.8 1.7-4.8 1.7L12 16l-1.7-4.8L5.5 9.5l4.8-1.7z"/><path d="M18.6 13.6l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></svg>AI-HQ</button><button class="hq-tab" data-target="rec" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="8.5" width="19" height="10" rx="5"/><path d="M7 11.8v3.4M5.3 13.5h3.4"/><circle cx="15.8" cy="12.6" r="1.1"/><circle cx="18.2" cy="14.8" r="1.1"/></svg>REC Room</button></div>
-    <div class="hq-right"><div class="hq-tz" id="hqTz">...</div><div class="hq-vbar"></div><div class="hq-dt"><div class="tm" id="hqTime">--:-- --</div><div class="dd" id="hqDate">--- --, ----</div></div></div>
+  <!-- =====================================================================
+    Stellar-Seller HQ is archived in archive/stellar-seller-hq.html and is not
+    ready to show. Its script is still in this file and expects these nodes, so
+    they stay here as an empty, hidden host. Nothing renders. Delete this block
+    at the same time as that script, and not before.
+    ===================================================================== -->
+  <div id="hqStub" hidden aria-hidden="true" style="display:none">
+    <div id="sideQlik"></div><div id="welcomeMsg"></div><div id="tipsContainer"></div>
+    <div id="progressBar"></div><div id="dots"></div>
+    <div id="mobileText"></div><img id="mobileIcon" alt=""><div id="mobileSub"></div>
+    <div id="hqTz"></div><div id="hqTime"></div><div id="hqDate"></div>
+    <div id="hqNewsTrack"></div><div id="sbProviders"></div><div id="sbUpdated"></div>
+    <div id="hq-ai"></div><div id="hq-rec"></div><iframe id="hqRecFrame" title=""></iframe>
   </div>
-  <div class="hqt-band"><div class="hqt"><span class="hqt-q"><span class="hqt-k">CURRENT</span><span class="hqt-w">NEWS</span></span><div class="hqt-win"><div class="hqt-track" id="hqNewsTrack"></div></div></div></div>
-  <div class="sb-band"><div class="sb-bar"><span class="sb-label">AI Status</span><div class="sb-providers" id="sbProviders"></div><span class="sb-updated" id="sbUpdated"></span></div></div>
-  <div class="hq-stage">
-    <section class="hq-panel active" id="hq-ai" role="tabpanel">
-      <div class="hq-bannercard">
-<div class="banner">
-  <div class="bg"></div>
-  <div class="overlay"></div>
-
-  <!-- TOP NAV -->
-  <div class="panel-nav">
-    <button class="panel-nav-btn" id="btn-comic" onclick="openPanel('comic')">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
-      Comic Issues
-    </button>
-    <button class="panel-nav-btn" id="btn-academy" onclick="openPanel('academy')">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
-      Academy
-    </button>
-  </div>
-
-  <img class="side-qlik" id="sideQlik"
-    src="assets/images/ai_hq/SideQlik1.png"
-    alt="Side-Qlik">
-
-  <div class="content" id="mainContent">
-    <div class="welcome-msg active" id="welcomeMsg">
-      <div class="welcome-tag"><span>Welcome Home</span></div>
-      <div class="welcome-title">Hey <span>Stellar-Seller</span></div>
-      <div class="welcome-body">
-        Thanks for stopping by. This is your one-stop-shop for all your AI tools and training needs. Have you used AI in a unique way to help you close a deal? Let us know using the form below.
-      </div>
-    </div>
-    <div id="tipsContainer"></div>
-  </div>
-
-  <div class="progress-bar" id="progressBar"></div>
-  <div class="dots" id="dots"></div>
-
-  <!-- ── COMIC PANEL ── -->
-  <div class="panel-overlay" id="panel-comic">
-    <button class="panel-close" onclick="closePanel()" title="Close">✕</button>
-    <div class="panel-content">
-      <div class="panel-visual">
-        <img class="panel-cover" src="assets/images/ai_hq/Comic_Cover_01.png" alt="Stellar-Seller and the Side-Qlik — Issue #1 cover">
-      </div>
-      <div class="panel-text">
-        <div class="panel-tag"><span class="panel-tag-dot"></span>Classified · Field Intelligence</div>
-        <div class="panel-title">Our Latest <span class="accent">Adventure</span></div>
-        <p class="panel-body">
-          D.O.R.C.S. never sleeps — and neither does the mission. The Stellar-Seller Comic Series drops you into the field alongside Side-Qlik, where every deal is a battle and every buyer is a new challenge. Each issue is built on real selling scenarios, powered by the Qlik AI tools you already have. Read up — the next deal depends on it.
-        </p>
-        <div class="panel-actions">
-          <a class="action-btn primary" href="https://deeplinks.mindtickle.com/8lIR3uOka3b" target="_blank" rel="noopener noreferrer">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/></svg>
-            Issue #1
-          </a>
-          <button class="action-btn coming-soon" disabled>
-            Issue #2 — Coming Soon
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── ACADEMY PANEL ── -->
-  <div class="panel-overlay" id="panel-academy">
-    <button class="panel-close" onclick="closePanel()" title="Close">✕</button>
-    <div class="panel-content">
-      <div class="panel-visual">
-        <div class="panel-emblem">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 1 8.2l11 5.2 9-4.26V15"/><path d="M5 10.4V15c0 1.7 3.1 3.2 7 3.2s7-1.5 7-3.2v-4.6"/><path d="M21 9v4.4"/></svg>
-        </div>
-      </div>
-      <div class="panel-text">
-        <div class="panel-tag"><span class="panel-tag-dot"></span>Training Grounds · Active</div>
-        <div class="panel-title">Stellar-Seller <span class="accent">Academy</span></div>
-        <p class="panel-body">
-          Step onto the training grounds and master the latest AI trends, terminology, and how to put Qlik's AI tools to work in your sales process — and become a true Stellar-Seller.
-        </p>
-        <div class="panel-actions">
-          <a class="action-btn primary" href="#" target="_blank" rel="noopener noreferrer">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
-            Lesson 1 — Your AI Origin Story
-          </a>
-          <button class="action-btn coming-soon" disabled>
-            Lesson 2 — Coming Soon
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- MOBILE BLOCK -->
-<div class="mobile-block" style="display:none; position:fixed; inset:0;
-  z-index:9999; align-items:center; justify-content:center;
-  flex-direction:column; gap:16px; padding:24px; text-align:center;
-  backdrop-filter: blur(12px) brightness(0.35);
-  -webkit-backdrop-filter: blur(12px) brightness(0.35);
-  background: rgba(13, 42, 71, 0.6);">
-  <img id="mobileIcon"
-    src="assets/images/ai_hq/icons/BadFX2.png"
-    class="mobile-icon"
-    onerror="this.style.display='none'"
-    style="width:70px; height:70px;">
-  <p id="mobileText" class="mobile-text"></p>
-  <p id="mobileSub" class="mobile-sub">This widget is optimized<br>for larger screens.</p>
-</div>
-      </div>
-      <div class="hq-bedrock" aria-hidden="true"></div>
-    </section>
-    <section class="hq-panel" id="hq-rec" role="tabpanel">
-      <div class="hq-reccard"><div class="hq-recmid"><div class="rk">Q-Cade Arcade</div><div class="rt">REC Room</div><div class="rn">Loading the live REC Room&hellip;</div></div><iframe id="hqRecFrame" class="hq-recframe" data-src="https://qlik-gse.vercel.app/QlikRecRoom/" title="Q-Cade REC Room" allow="fullscreen" allowfullscreen loading="lazy" scrolling="no"></iframe></div>
-    </section>
-    <div class="hq-foot">  <footer class="sitefoot">
+  <div class="sf-wrap"><footer class="sitefoot">
     <div class="sf-cred"><span class="sf-u sf-brand">A <img class="sf-logo sf-logo-dark" src="assets/images/logos/Sales_Enablement_Logos/Typemark_Qlik-Sales-Enablement_2cReverse.svg" alt="Qlik Sales Enablement" onerror="sfBrandFallback(this)"><img class="sf-logo sf-logo-light" src="assets/images/logos/Sales_Enablement_Logos/Typemark_Qlik-Sales-Enablement_Color.svg" alt="Qlik Sales Enablement" onerror="sfBrandFallback(this)"><span class="sf-logo-fallback">Qlik Sales Enablement</span> initiative&nbsp;&middot;</span> <span class="sf-u">Designed &amp; developed by <strong>Travis Slusser</strong>,</span> <span class="sf-u">Senior Learning Strategist&nbsp;&middot;</span> <span class="sf-u"><a href="mailto:Travis.Slusser@Qlik.com">Travis.Slusser@Qlik.com</a></span></div>
     <div class="sf-tools">Built on Vercel &amp; embedded in Mindtickle<span class="sf-sep">&middot;</span>Market data by Finnhub<span class="sf-sep">&middot;</span>News via GNews<span class="sf-sep">&middot;</span>On-this-day facts via Wikipedia</div>
     <div class="sf-legal">&copy; 2026 Qlik. All rights reserved. For internal Qlik use only. Provided for informational and enablement purposes and does not constitute financial, investment, or legal advice. Third-party market and news data are supplied &ldquo;as is,&rdquo; may be delayed, and are not guaranteed for accuracy or completeness. All trademarks are the property of their respective owners.</div>
   </footer></div>
-  </div>
-</div>
   <div class="kd-modal" id="kdModal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="kd-back" data-close></div>
     <div class="kd-panel">
