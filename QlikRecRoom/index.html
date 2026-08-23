@@ -404,6 +404,10 @@
       border: none; cursor: pointer;
     }
     .mcard-logo { width: 132px; height: auto; display: block; }
+    /* An author rule beats the UA stylesheet, so display:block above would
+       override [hidden] and show the badge on every card, not just the
+       banner. Put it back. */
+    .mcard [hidden] { display: none !important; }
 
     /* A POINTER at Mindtickle's expand control, not a button. No border, no
        fill, nothing that invites a tap on the wrong thing. Same reasoning as
