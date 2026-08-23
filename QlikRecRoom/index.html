@@ -97,6 +97,59 @@
     html[data-section]::-webkit-scrollbar,
     html[data-section] body::-webkit-scrollbar { width: 0; height: 0; display: none; }
     html[data-section] .content{padding:10px 24px 18px}
+
+    /* ---- ?section=cartridges : the game shelf ----------------------------
+       Its own widget so Mindtickle can show it on mobile and the game frame
+       on desktop, rather than the page trying to guess which it is. Four
+       slots: Blitz is live, the rest are locked until their game ships.
+       Sized so the whole row reads inside the 200px mobile crop, and scales
+       up on desktop where it sits beside the cabinet. */
+    html[data-section="cartridges"] .header,
+    html[data-section="cartridges"] .game-frame,
+    html[data-section="cartridges"] .scoreboard,
+    html[data-section="cartridges"] .content > .section-label { display: none !important; }
+    .cart-shelf { display: none; }
+    html[data-section="cartridges"] .cart-shelf { display: block; }
+
+    .cart-head {
+      font-family:'Share Tech Mono',monospace; font-size:.72rem; letter-spacing:.2em;
+      text-transform:uppercase; color:var(--cyan); opacity:.85; margin-bottom:10px;
+    }
+    /* Capped so the squares stay cartridge-sized on a wide desktop slot
+       instead of inflating to 260px of mostly empty tile. Narrower than the
+       cap on mobile, where the row just fills the width. */
+    .cart-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; max-width:660px; }
+    .cart {
+      position:relative; aspect-ratio:1/1; border:1px solid rgba(16,207,201,.3);
+      background:linear-gradient(160deg,rgba(14,26,46,.96),rgba(8,14,26,.96));
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:6px; padding:8px; text-align:center; cursor:pointer; overflow:hidden;
+      transition:border-color .16s, transform .12s, box-shadow .16s;
+    }
+    .cart:hover { border-color:var(--cyan); transform:translateY(-2px);
+      box-shadow:0 0 18px rgba(16,207,201,.28); }
+    .cart:active { transform:translateY(0); }
+    .cart-name {
+      font-family:'Share Tech Mono',monospace; font-size:.62rem; letter-spacing:.08em;
+      line-height:1.25; text-transform:uppercase; color:#dbe8f6;
+    }
+    .cart-tag { font-size:.55rem; letter-spacing:.06em; color:var(--cyan); opacity:.8; }
+    .cart-play {
+      font-family:'Share Tech Mono',monospace; font-size:.58rem; letter-spacing:.1em;
+      text-transform:uppercase; color:#04121a; background:var(--cyan);
+      padding:4px 9px; margin-top:2px;
+    }
+    /* Locked slots: present, obviously not yet playable, no false affordance. */
+    .cart.locked {
+      cursor:default; border-color:rgba(120,150,185,.18);
+      background:linear-gradient(160deg,rgba(10,16,28,.96),rgba(6,10,18,.96));
+    }
+    .cart.locked:hover { border-color:rgba(120,150,185,.18); transform:none; box-shadow:none; }
+    .cart-q {
+      font-family:'Share Tech Mono',monospace; font-size:1.5rem; color:#41597a;
+    }
+    .cart-soon { font-size:.5rem; letter-spacing:.14em; text-transform:uppercase; color:#3a4f6b; }
+
     html[data-section="banner"] .content > .section-label,
     html[data-section="banner"] .game-frame,
     html[data-section="banner"] .scoreboard{display:none}
@@ -588,6 +641,13 @@
       </div>
     </div>
 
+    <!-- Cartridge shelf. Its own widget (?section=cartridges) so Mindtickle
+         can swap it in for mobile while desktop keeps the cabinet. -->
+    <div class="cart-shelf" id="cartShelf">
+      <div class="cart-head">Select a cartridge</div>
+      <div class="cart-row" id="cartRow"></div>
+    </div>
+
     <div class="section-label">Program Interface</div>
     <div class="game-frame">
       <div class="corner tl"></div><div class="corner tr"></div>
@@ -1051,15 +1111,60 @@ const MOBILE_CARDS = {
   banner: {
     logo: true, title: 'REC Room', sub: 'Rank. Elevate. Compete.', cta: false
   },
+  /* No launch button in the collapsed card. The REC Room is built to hold
+     more than one game, so the choice of cartridge belongs on the expanded
+     surface, not baked into a 200px crop that can only ever offer one.
+     Collapsed shows what this is; expanding is how you pick what to play. */
   game: {
-    title: 'Program Interface', sub: 'Side-Qlik Blitz plays in your browser, in landscape.',
-    btn: '▶︎  Launch Program Interface', cta: false
+    title: 'Program Interface', sub: 'Arcade cabinet — select a cartridge to play.',
+    cta: true
   },
   scoreboard: {
     title: 'REC Room Scoreboard', sub: 'Territory standings, the live map and recent scores.',
     cta: true
   }
 };
+
+/* ---- CARTRIDGE SHELF ----------------------------------------------------
+   The REC Room holds more than one game. Blitz is the first cartridge; the
+   other three slots are real games in development, shown locked rather than
+   hidden so the shelf reads as an arcade with more coming rather than a
+   one-game page. When a game ships, give it a name and drop `locked`.
+
+   Launching goes through openInNewTab(), so the session key travels with it
+   exactly as the old launch button did. */
+const CARTRIDGES = [
+  { id:'blitz', name:'Side-Qlik Blitz', tag:'Bubble shooter' },
+  { locked:true },
+  { locked:true },
+  { locked:true }
+];
+
+function paintCartridges(){
+  const row = document.getElementById('cartRow');
+  if (!row) return;
+  row.innerHTML = '';
+  CARTRIDGES.forEach(function(c){
+    const el = document.createElement('div');
+    if (c.locked){
+      el.className = 'cart locked';
+      el.innerHTML = '<div class="cart-q">?</div><div class="cart-soon">Coming soon</div>';
+      el.setAttribute('aria-disabled','true');
+    } else {
+      el.className = 'cart';
+      el.setAttribute('role','button');
+      el.setAttribute('tabindex','0');
+      el.innerHTML = '<div class="cart-name">' + c.name + '</div>' +
+                     '<div class="cart-tag">' + c.tag + '</div>' +
+                     '<div class="cart-play">Play</div>';
+      el.addEventListener('click', openInNewTab);
+      el.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openInNewTab(); }
+      });
+    }
+    row.appendChild(el);
+  });
+}
 
 function paintMobileCard(){
   const c = MOBILE_CARDS[SECTION];
@@ -1089,6 +1194,8 @@ function openInNewTab(){
   if (SESSION_KEY) q.set('k', SESSION_KEY);
   window.open(location.pathname + '?' + q.toString(), '_blank');
 }
+if (SECTION === 'cartridges') paintCartridges();
+
 if (IS_TOUCH_SMALL && MOBILE_CARDS[SECTION] && !LAUNCHED){
   paintMobileCard();
   syncMode();
