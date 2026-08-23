@@ -1015,7 +1015,7 @@ window.addEventListener('message', e => {
 });
 // Preload the game behind the frosted sign-in so its start screen ghosts through (desktop/tablet only).
 const LAUNCHED = new URLSearchParams(location.search).get('launched') === '1';
-const IS_TOUCH_SMALL = window.matchMedia('(pointer: coarse)').matches && Math.min(screen.width, window.innerWidth) < 1024;
+const IS_TOUCH_SMALL = true;
 /* ---- MOBILE CARD -------------------------------------------------------
    Mindtickle's app hands the iframe whatever height we declare and crops the
    view to ~200px, with its own expand control top-right that cannot be moved
