@@ -371,6 +371,25 @@
     .btn-back { background: #233247; color: #cdd9ea; }
     .btn-continue { background: var(--emea); color: #2a1003; font-weight: bold; }
 
+    /* ---- DORC DETECTED — the score could not be validated -----------------
+       Same modal chassis, louder: thicker frame, a pulse, and the warning
+       glyph. Fires when a write is rejected, and on entry when there is no
+       session key at all so nobody grinds a run that was never going to
+       count. In-universe on purpose — a rejected score is a blocker, and
+       blockers are DORCs. */
+    #dorcModal .modal { border-width: 2px; animation: dorcPulse 1.4s ease-in-out infinite; }
+    #dorcModal h3 { color: var(--emea); font-size: 1.05rem; }
+    #dorcModal .dorc-line {
+      font-family:'Share Tech Mono',monospace; font-size: 1.05rem; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--emea); margin-bottom: 14px;
+    }
+    #dorcModal .dorc-sub { font-size: 1rem; color: #b9c8dc; margin-bottom: 20px; }
+    @keyframes dorcPulse {
+      0%,100% { box-shadow: 0 0 30px rgba(255,107,53,.28); }
+      50%     { box-shadow: 0 0 52px rgba(255,107,53,.60); }
+    }
+    @media (prefers-reduced-motion: reduce) { #dorcModal .modal { animation: none; } }
+
     /* ============ MOBILE / PORTRAIT ============ */
     @media (max-width: 1023px) {
       .widget { min-width: 0; }
@@ -453,6 +472,18 @@
     <div class="modal-btns">
       <button class="btn-back" id="mmBack">Back</button>
       <button class="btn-continue" id="mmContinue">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ DORC DETECTED (score not validated) ============ -->
+<div class="modal-back" id="dorcModal">
+  <div class="modal">
+    <h3>&#9888; DORC Detected</h3>
+    <div class="dorc-line" id="dorcLine">Score not validated</div>
+    <p class="dorc-sub" id="dorcSub"></p>
+    <div class="modal-btns">
+      <button class="btn-continue" id="dorcOk">Understood</button>
     </div>
   </div>
 </div>
@@ -563,12 +594,19 @@
 <script>
 console.log('[REC Room build] 2026-07-18-1500');
 /* ============================================================
-   TEMP CONFIG  —  replace the value below with your real
-   MT_SESSION_REF before go-live, then delete this comment block.
-   (Until it matches Vercel, the territory-relocate write won't
-   persist; everything else works without it.)
+   SESSION KEY  —  supplied by the Mindtickle embed, never committed.
+   The iframe src carries ?k=<MT_SESSION_REF>. Mindtickle admin is not
+   public, so the key stays out of this repo.
+
+   Loaded any other way — the bare Vercel URL, a shared link, a local
+   copy — there is no key, every write is rejected by the API, and the
+   room says so out loud instead of losing the run in a console warning.
+   Playing for points means playing from Mindtickle. That is the point.
+
+   Both writes are behind this gate: logScore AND updateIdentity.
    ============================================================ */
-const SESSION_KEY = "eOkos0aXU6rs3gfwmXcUZkcD";
+const SESSION_KEY = new URLSearchParams(location.search).get('k') || '';
+const CAN_SCORE = SESSION_KEY.length > 0;
 // Deployed SIDE-QLIK BLITZ game (its own Vercel project). Verify this matches your deploy.
 const GAME_URL = "games/SideQlik_Blitz/";   // same-origin under QlikGSE — no separate deployment
 const SECTION = document.documentElement.getAttribute('data-section') || '';
@@ -750,9 +788,43 @@ async function confirmRelocate() {
       body: JSON.stringify({ key: SESSION_KEY, trigram: tri, territory: chosenTerr, country_code: selectedCountry.c })
     });
     const d = await res.json();
-    if (!d.ok) console.warn('Relocate not saved (session key likely not set yet):', d);
+    if (!d.ok) {
+      console.warn('Relocate not saved:', d);
+      dorcAlert('Territory not moved',
+        'The move could not be saved, so this trigram still sits in its old territory. Points from this session will bank there.');
+    }
   } catch (err) { console.warn('Relocate call failed:', err); }
   enterRoom({ trigram: tri, country_code: selectedCountry.c, territory: chosenTerr });
+}
+
+/* ---- DORC DETECTED -------------------------------------------------------
+   One place for "that write did not land". Called on entry when there is no
+   session key, and again if the API rejects a score. Never blocks play — the
+   room, the board and the game all still work — it just refuses to let a run
+   disappear quietly. */
+const dorcModal = document.getElementById('dorcModal');
+const dorcLine  = document.getElementById('dorcLine');
+const dorcSub   = document.getElementById('dorcSub');
+const dorcOk    = document.getElementById('dorcOk');
+let dorcShownThisSession = false;
+
+function dorcAlert(line, sub, opts) {
+  const once = opts && opts.once;
+  if (once && dorcShownThisSession) return;
+  if (once) dorcShownThisSession = true;
+  dorcLine.textContent = line;
+  dorcSub.textContent = sub;
+  dorcModal.classList.add('open');
+}
+if (dorcOk) dorcOk.addEventListener('click', () => dorcModal.classList.remove('open'));
+
+function warnIfUnscored() {
+  if (CAN_SCORE) return;
+  dorcAlert(
+    'Score not validated',
+    'This room only banks points when it is opened from Mindtickle. You can play and the board still updates for everyone else, but nothing from this session will count toward your territory.',
+    { once: true }
+  );
 }
 
 function silentCountrySync(tri, terr, code) {
@@ -771,6 +843,9 @@ document.getElementById('mmContinue').addEventListener('click', confirmRelocate)
 function enterRoom(player) {
   currentPlayer = player;
   loginGate.classList.remove('open');
+  // Tell them before the run, not after it. Ten minutes of play followed by
+  // "that did not count" is a worse experience than knowing going in.
+  warnIfUnscored();
   launchGame();
 }
 
@@ -852,8 +927,19 @@ async function submitScore(r) {
       // getRecentScores refresh (as a new/changed entry), not from this write.
     } else {
       console.warn('logScore rejected:', data);
+      // A rejected write used to be a console warning nobody would ever read,
+      // so a run could vanish with the player none the wiser. Say it out loud.
+      dorcAlert(
+        'Score not validated',
+        res.status === 401
+          ? 'This session is not authorised to bank points. Open the REC Room from Mindtickle and your runs will count.'
+          : 'The scoreboard refused that run. Nothing was saved. Your next game will try again.'
+      );
     }
-  } catch (e) { console.warn('logScore failed:', e); }
+  } catch (e) {
+    console.warn('logScore failed:', e);
+    dorcAlert('Score not validated', 'The scoreboard could not be reached, so this run was not saved.');
+  }
 }
 window.addEventListener('message', e => {
   if (!gameFrame || e.source !== gameFrame.contentWindow) return;   // only trust our own game iframe
@@ -865,7 +951,12 @@ window.addEventListener('message', e => {
 const LAUNCHED = new URLSearchParams(location.search).get('launched') === '1';
 const IS_TOUCH_SMALL = window.matchMedia('(pointer: coarse)').matches && Math.min(screen.width, window.innerWidth) < 1024;
 function openInNewTab(){
-  window.open(location.pathname + '?section=play', '_blank');
+  // Carry the session key through. Without it the new tab looks identical and
+  // silently scores nothing, which is the exact trap the DORC alert exists to
+  // close — a full-screen run that was never going to count.
+  const q = new URLSearchParams({ section: 'play' });
+  if (SESSION_KEY) q.set('k', SESSION_KEY);
+  window.open(location.pathname + '?' + q.toString(), '_blank');
 }
 if (SHOW_GAME){
   if (SECTION === 'game' && IS_TOUCH_SMALL && !LAUNCHED){
