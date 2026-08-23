@@ -82,6 +82,20 @@
 
     /* ---- widget sections: ?section=banner|game|scoreboard (no param = full page) ---- */
     html[data-section] .widget{min-width:0;min-height:0}
+
+    /* ---- embedded widgets: no scroll chrome ------------------------------
+       Every sectioned view runs inside a Mindtickle iframe at a hand-measured
+       height. html/body carry min-height:100vh, which inside an iframe means
+       "exactly as tall as the frame" — so a single pixel of anything tips the
+       document over and scrolling="auto" paints a grey bar down the side.
+
+       Drop the floor for sectioned views and hide the bar. scrolling stays
+       "auto" in the widget because the expanded mobile view needs to scroll;
+       this only removes the chrome, never the ability. */
+    html[data-section], html[data-section] body { min-height: 0; }
+    html[data-section] { scrollbar-width: none; -ms-overflow-style: none; }
+    html[data-section]::-webkit-scrollbar,
+    html[data-section] body::-webkit-scrollbar { width: 0; height: 0; display: none; }
     html[data-section] .content{padding:10px 24px 18px}
     html[data-section="banner"] .content > .section-label,
     html[data-section="banner"] .game-frame,
