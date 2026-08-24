@@ -269,13 +269,35 @@ html[data-frame="1"] body{background:transparent}
    a single floating chip brings it back. */
 #viewPlay.on{position:fixed;inset:0;z-index:40;background:#06101f}
 #gameFrame{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#06101f}
-.exit{
+.exit,.fsbtn{
   position:absolute;z-index:42;
-  top:calc(var(--safe-t) + 8px); left:calc(var(--safe-l) + 8px);
+  top:calc(var(--safe-t) + 8px);
   padding:8px 12px;background:rgba(6,16,31,.72);border:1px solid var(--line);
   color:var(--cyan);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
   -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
 }
+.exit { left:calc(var(--safe-l) + 8px); }
+.fsbtn{ right:calc(var(--safe-r) + 8px); display:flex;align-items:center;gap:6px; }
+.fsbtn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.fsbtn[hidden]{display:none}
+
+/* The escape hatch, shown only where the platform genuinely cannot go
+   fullscreen on its own — see the FS module for which platforms those are. */
+.playtip{
+  position:absolute;z-index:43;left:0;right:0;bottom:0;display:none;
+  align-items:center;gap:10px;
+  padding:12px calc(var(--safe-r) + 14px) calc(var(--safe-b) + 12px) calc(var(--safe-l) + 14px);
+  background:rgba(6,16,31,.95);border-top:1px solid var(--warn);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+}
+#viewPlay.on.show-tip .playtip{display:flex}
+.playtip .txt{flex:1;min-width:0;font-size:.58rem;line-height:1.55;color:var(--ink);letter-spacing:.04em}
+.playtip .txt b{color:var(--warn);font-weight:normal}
+.playtip .go{
+  flex:0 0 auto;padding:9px 12px;background:var(--warn);color:#160600;
+  font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:bold;
+}
+.playtip .x{flex:0 0 auto;padding:6px 8px;color:var(--muted);font-size:.8rem;line-height:1}
 .rotate{
   position:absolute;inset:0;z-index:41;display:none;
   flex-direction:column;align-items:center;justify-content:center;gap:12px;
@@ -440,6 +462,15 @@ html[data-view="play"] .tabs{display:none}
     <iframe id="gameFrame" title="Side-Qlik Blitz" allow="autoplay; fullscreen"
             referrerpolicy="no-referrer"></iframe>
     <button class="exit" id="exitPlay">&#10005;&nbsp; Room</button>
+    <button class="fsbtn" id="fsBtn" hidden aria-label="Toggle full screen">
+      <svg viewBox="0 0 24 24" aria-hidden="true" id="fsIcon"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      <span id="fsLabel">Full screen</span>
+    </button>
+    <div class="playtip" id="playTip">
+      <div class="txt" id="playTipText"></div>
+      <button class="go" id="playTipGo"></button>
+      <button class="x" id="playTipX" aria-label="Dismiss">&#10005;</button>
+    </div>
     <div class="rotate">
       <div class="ico">&#128241;</div>
       <p>Turn your phone sideways</p>
@@ -532,8 +563,28 @@ var CAN_SCORE = KEY.length > 0;
 if (FRAMED) {
   document.getElementById('breakout').addEventListener('click', function () {
     // Carry the key through or the new tab looks identical and banks nothing.
-    var u = location.pathname + (KEY ? '?k=' + encodeURIComponent(KEY) : '');
-    window.open(u, '_blank', 'noopener');
+    var abs = location.protocol + '//' + location.host + location.pathname +
+              (KEY ? '?k=' + encodeURIComponent(KEY) : '');
+
+    // window.open from inside the Mindtickle app does NOT reach Safari — it
+    // opens the app's own in-app browser, which pins the orientation so the
+    // game cannot go landscape however the phone is held. x-safari-https: is
+    // the one scheme that escapes to the real browser on iOS. If the host app
+    // refuses it nothing happens, so fall back to window.open — but only while
+    // we are still on screen, since a successful jump backgrounds this page and
+    // the timer would otherwise fire on return and open a second copy.
+    var ios = /iPad|iPhone|iPod/.test(navigator.userAgent || '');
+    if (ios && /^https:/.test(abs)) {
+      var jumped = false;
+      var onHide = function () { jumped = true; };
+      document.addEventListener('visibilitychange', onHide, { once: true });
+      setTimeout(function () {
+        document.removeEventListener('visibilitychange', onHide);
+        if (!jumped && !document.hidden) window.open(abs, '_blank', 'noopener');
+      }, 1200);
+      try { location.href = 'x-safari-' + abs; return; } catch (e) { /* fall through */ }
+    }
+    window.open(abs, '_blank', 'noopener');
   });
   return;
 }
@@ -609,7 +660,15 @@ function go(v) {
   document.querySelectorAll('.tab').forEach(function (b) {
     b.setAttribute('aria-selected', b.dataset.go === v ? 'true' : 'false');
   });
-  if (v === 'play')  startGame();
+  if (v === 'play') {
+    startGame();
+    // Straight out of the tap that got us here — requestFullscreen is only
+    // granted inside a user gesture, so this cannot be deferred or awaited.
+    if (TOUCH) enterPlayScreen();
+  } else {
+    if (FS.active()) { FS.unlock(); FS.exit(); }
+    VIEW_EL.play.classList.remove('show-tip');
+  }
   if (v === 'board') loadBoard();
   var sc = VIEW_EL[v].querySelector('.scroll');
   if (sc) sc.scrollTop = 0;
@@ -803,7 +862,159 @@ function startGame() {
   frame.src = GAME_URL;
 }
 
-$('exitPlay').addEventListener('click', function () { go('badge'); });
+/* ---------------------------------------------------------------------
+   FULL SCREEN + ORIENTATION
+
+   What each platform actually permits, which is not the same as what we
+   would like it to permit:
+
+   - Android Chrome — requestFullscreen() works from a user gesture, and
+     screen.orientation.lock('landscape') works *once fullscreen*. Both, so
+     the game genuinely fills the phone sideways with no further taps.
+   - iPadOS Safari — fullscreen yes, orientation lock no.
+   - Desktop — fullscreen yes; orientation is meaningless.
+   - **iPhone Safari — NEITHER.** There is no Fullscreen API on iPhone (only
+     <video> can go fullscreen) and no screen.orientation.lock. No amount of
+     JavaScript changes that.
+   - **Mindtickle's in-app browser — the app itself pins the orientation.**
+     This is the one Travis hit: launch from the widget, land in an in-app
+     browser, and the page cannot rotate however the phone is held. The page
+     has no API to unpin it. The only ways out are real Safari or an
+     installed copy, which is what .playtip offers rather than a full-screen
+     button that would silently do nothing.
+
+   So: attempt everything, and where the platform refuses, say what will
+   actually work instead of failing quietly.
+   --------------------------------------------------------------------- */
+var TOUCH = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ||
+            ('ontouchstart' in window);
+var IOS   = /iPad|iPhone|iPod/.test(navigator.userAgent || '') ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+var STANDALONE = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+                 window.navigator.standalone === true;
+
+var FS = {
+  supported: function () {
+    var e = document.documentElement;
+    return !!(e.requestFullscreen || e.webkitRequestFullscreen ||
+              e.webkitRequestFullScreen || e.msRequestFullscreen);
+  },
+  active: function () {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+              document.webkitCurrentFullScreenElement || document.msFullscreenElement);
+  },
+  // Fullscreen the play view, not the iframe: the exit and rotate controls
+  // live in it and have to stay reachable.
+  enter: function () {
+    var e = VIEW_EL.play;
+    var fn = e.requestFullscreen || e.webkitRequestFullscreen ||
+             e.webkitRequestFullScreen || e.msRequestFullscreen;
+    if (!fn) return Promise.reject(new Error('unsupported'));
+    var out;
+    try { out = fn.call(e); } catch (err) { return Promise.reject(err); }
+    return Promise.resolve(out);
+  },
+  exit: function () {
+    if (!FS.active()) return Promise.resolve();
+    var fn = document.exitFullscreen || document.webkitExitFullscreen ||
+             document.webkitCancelFullScreen || document.msExitFullscreen;
+    if (!fn) return Promise.resolve();
+    try { return Promise.resolve(fn.call(document)); } catch (e) { return Promise.resolve(); }
+  },
+  // Rejects on every platform that does not support it, and on Android when
+  // not fullscreen — which is why enter() runs first and this never throws out.
+  lock: function () {
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        return Promise.resolve(screen.orientation.lock('landscape')).catch(function () {});
+      }
+    } catch (e) {}
+    return Promise.resolve();
+  },
+  unlock: function () {
+    try { if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }
+    catch (e) {}
+  }
+};
+
+/* Mobile goes fullscreen by itself; desktop gets the button (index.html has
+   its own). Must be called straight out of the tap that opened Play —
+   requestFullscreen is only granted inside a user gesture. */
+function enterPlayScreen() {
+  if (!FS.supported()) { offerEscape(); return; }
+  FS.enter().then(function () { return FS.lock(); }).catch(function () { offerEscape(); });
+}
+
+/* The honest fallback. Only shown when fullscreen is genuinely unavailable,
+   and never in a copy already installed to the home screen — that one is
+   already chrome-free and free to rotate. */
+var TIP_STORE = 'recroom.tip';
+var tipDismissed = read(TIP_STORE) === '1';
+function dismissTip() {
+  tipDismissed = true; store(TIP_STORE, '1');
+  VIEW_EL.play.classList.remove('show-tip');
+}
+function offerEscape() {
+  if (tipDismissed || STANDALONE || !TOUCH) return;
+  var t = $('playTipText'), g = $('playTipGo');
+  if (IOS) {
+    // Deliberately does not claim "you are in an in-app browser". On iOS the
+    // in-app browser is indistinguishable from Safari to JavaScript —
+    // SFSafariViewController sends the same user-agent — and this tip fires in
+    // both, because iPhone Safari has no Fullscreen API either way. So the
+    // wording is conditional and true in both places.
+    t.innerHTML = '<b>Stuck in portrait, or want full screen?</b> ' +
+                  'Open in Safari, then Share &rarr; Add to Home Screen.';
+    g.textContent = 'Open in Safari';
+    g.onclick = openInSafari;
+  } else {
+    t.innerHTML = '<b>For full screen,</b> add the REC Room to your home screen ' +
+                  'from your browser menu, then launch it from there.';
+    g.textContent = 'Got it';
+    g.onclick = dismissTip;
+  }
+  VIEW_EL.play.classList.add('show-tip');
+}
+$('playTipX').addEventListener('click', dismissTip);
+
+/* x-safari-https: is the one scheme that reliably escapes an iOS in-app
+   browser into real Safari. If the host app refuses it nothing happens, so
+   fall back to a plain new window — but only if we are still on screen,
+   because a successful jump backgrounds us and the timer would otherwise
+   fire on return and open a second copy. */
+function openInSafari() {
+  var url = location.href;
+  var jumped = false;
+  var onHide = function () { jumped = true; };
+  document.addEventListener('visibilitychange', onHide, { once: true });
+  setTimeout(function () {
+    document.removeEventListener('visibilitychange', onHide);
+    if (!jumped && !document.hidden) window.open(url, '_blank', 'noopener');
+  }, 1200);
+  try { location.href = 'x-safari-' + url; } catch (e) {}
+}
+
+$('fsBtn').addEventListener('click', function () {
+  if (FS.active()) { FS.unlock(); FS.exit(); }
+  else enterPlayScreen();
+});
+
+/* Keep the button honest about what it will do next, and let the OS-level
+   exit (swipe, Esc) put the label back without us being told directly. */
+function syncFsBtn() {
+  var b = $('fsBtn');
+  b.hidden = !FS.supported() || TOUCH;   // mobile is automatic; no button needed
+  $('fsLabel').textContent = FS.active() ? 'Exit' : 'Full screen';
+  $('fsIcon').innerHTML = FS.active()
+    ? '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'
+    : '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>';
+}
+['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange'].forEach(function (ev) {
+  document.addEventListener(ev, syncFsBtn);
+});
+syncFsBtn();
+
+$('exitPlay').addEventListener('click', function () { FS.unlock(); FS.exit(); go('badge'); });
 $('rotOk').addEventListener('click', function () { VIEW_EL.play.classList.add('rot-ok'); });
 
 function sendInit() {

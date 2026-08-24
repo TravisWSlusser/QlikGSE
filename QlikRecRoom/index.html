@@ -198,6 +198,30 @@
     .game-frame svg.diag { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.12; pointer-events: none; }
     .game-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; z-index: 6; background: #06101f; }
     .game-frame.playing .ph-online, .game-frame.playing .ph-offline { display: none; }
+
+    /* ---- full-screen control -------------------------------------------
+       Desktop only, and only once the game is actually running — before that
+       it would fullscreen an empty frame. Sits above the iframe (z-index 6)
+       and fades back until hovered so it never competes with the game. */
+    .fs-btn {
+      position: absolute; z-index: 8; top: 12px; right: 12px;
+      display: flex; align-items: center; gap: 7px; padding: 7px 11px;
+      background: rgba(6,16,31,0.74); border: 1px solid rgba(16,207,201,0.35);
+      color: var(--cyan); cursor: pointer; opacity: 0.35;
+      font-family: 'Share Tech Mono', monospace; font-size: 0.55rem;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      transition: opacity 0.18s ease, border-color 0.18s ease;
+      -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    }
+    .game-frame:hover .fs-btn { opacity: 0.9; }
+    .fs-btn:hover { opacity: 1; border-color: var(--cyan); }
+    .fs-btn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+    .fs-btn[hidden] { display: none; }
+    /* In full screen the frame is the viewport, so drop the 16:9 letterbox. */
+    .game-frame:fullscreen { aspect-ratio: auto; width: 100%; height: 100%; margin: 0; border: 0; }
+    .game-frame:-webkit-full-screen { aspect-ratio: auto; width: 100%; height: 100%; margin: 0; border: 0; }
+    .game-frame:fullscreen .corner, .game-frame:fullscreen svg.diag { display: none; }
+    @media (max-width: 1023px) { .fs-btn { display: none; } }
     .placeholder-text {
       font-family: 'Share Tech Mono', monospace; font-size: 1.3rem; letter-spacing: 0.32em;
       color: rgba(255,255,255,0.92); background: rgba(8,18,34,0.55);
@@ -704,6 +728,10 @@
       <svg style="position:absolute;bottom:14px;left:14px;width:18px;height:18px" viewBox="0 0 18 18"><polygon points="0,18 0,0 18,18" fill="#10CFC9" opacity="0.55"/></svg>
       <svg style="position:absolute;bottom:14px;right:14px;width:18px;height:18px" viewBox="0 0 18 18"><polygon points="18,18 0,18 18,0" fill="#10CFC9" opacity="0.55"/></svg>
       <iframe id="gameFrame" title="SIDE-QLIK BLITZ" allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>
+      <button class="fs-btn" id="fsBtn" hidden aria-label="Toggle full screen" title="Full screen">
+        <svg viewBox="0 0 24 24" aria-hidden="true" id="fsIcon"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        <span id="fsLabel">Full screen</span>
+      </button>
       <div class="launchcard" id="launchCard">
         <div class="lc-title">SIDE-QLIK BLITZ</div>
         <div class="lc-sub">This game plays best in your browser, in landscape. Tap below to launch &mdash; sign in with your trigram and go.</div>
@@ -1267,6 +1295,57 @@ if (SHOW_GAME){
     gameFrame.src = GAME_URL;                                      // play/launched views bypass the desktop gate
   }
 }
+
+/* ---- FULL SCREEN (desktop) ----------------------------------------------
+   Fullscreens .game-frame, not the iframe, so the frame's own chrome comes
+   along and the CSS above can drop the 16:9 letterbox for the real viewport.
+
+   Desktop only on purpose. On a phone this button would be a lie: iPhone
+   Safari has no Fullscreen API at all (only <video> can go fullscreen), so
+   it would sit there doing nothing. The phone path is mobile.html, which
+   goes fullscreen automatically where the platform allows it and offers
+   Add to Home Screen where it does not. */
+(function () {
+  const fsBtn = document.getElementById('fsBtn');
+  if (!fsBtn) return;
+
+  const frameEl = document.querySelector('.game-frame');
+  const canFs = !!(frameEl.requestFullscreen || frameEl.webkitRequestFullscreen ||
+                   frameEl.msRequestFullscreen);
+  const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement ||
+                        document.msFullscreenElement);
+
+  // Only worth offering once the game is actually in the frame — before that
+  // it would fullscreen an empty box.
+  const armed = () => canFs && !!gameFrame.getAttribute('src') &&
+                      window.matchMedia('(min-width: 1024px)').matches;
+
+  function sync() {
+    fsBtn.hidden = !armed();
+    document.getElementById('fsLabel').textContent = isFs() ? 'Exit' : 'Full screen';
+    document.getElementById('fsIcon').innerHTML = isFs()
+      ? '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'
+      : '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>';
+  }
+
+  fsBtn.addEventListener('click', () => {
+    if (isFs()) {
+      (document.exitFullscreen || document.webkitExitFullscreen ||
+       document.msExitFullscreen).call(document);
+    } else {
+      const fn = frameEl.requestFullscreen || frameEl.webkitRequestFullscreen ||
+                 frameEl.msRequestFullscreen;
+      try { fn.call(frameEl); } catch (e) { console.warn('fullscreen refused:', e); }
+    }
+  });
+
+  ['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange']
+    .forEach(ev => document.addEventListener(ev, sync));
+  window.addEventListener('resize', sync);
+  // The frame gets its src later (sign-in, launch view), so re-check for it.
+  new MutationObserver(sync).observe(gameFrame, { attributes: true, attributeFilter: ['src'] });
+  sync();
+})();
 
 /* Play mode had no reachable sign-in. The only thing that opens the gate is
    #playBtn, which lives inside .ph-online — and that is display:none under

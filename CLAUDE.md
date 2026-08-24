@@ -147,6 +147,31 @@ devtools) and was deliberately not added.
   check the commit before hunting branches.
 - `[hidden]` loses to any author `display` rule. `.mcard [hidden]{display:none
   !important}` exists for that reason.
+- **Full screen and orientation cannot be forced on an iPhone.** Checked against
+  the platforms, not assumed:
+
+  | | Fullscreen API | `screen.orientation.lock` |
+  |---|---|---|
+  | Android Chrome | yes, from a gesture | yes, **only while fullscreen** |
+  | iPadOS Safari | yes | no |
+  | Desktop | yes | n/a |
+  | **iPhone Safari** | **no** — only `<video>` | **no** |
+
+  So `mobile.html` fullscreens *and* locks landscape automatically on Android,
+  and on iPhone offers the only two things that actually work: **Open in Safari**
+  and **Add to Home Screen** (standalone has no browser chrome and rotates
+  freely). A fullscreen button on an iPhone would be a button that does nothing.
+- **`window.open` from inside the Mindtickle app does not reach Safari.** It
+  opens the app's own in-app browser, which inherits the host app's orientation
+  — so the game is pinned to portrait however the phone is held. This is an
+  iOS-level behaviour, not something the page can override. The escape is the
+  `x-safari-https://` scheme, which the widget button now tries first (falling
+  back to `window.open`, guarded on `visibilitychange` so a successful jump does
+  not also open a second copy on return).
+- **In-app browser vs real Safari is not detectable on iOS.**
+  `SFSafariViewController` sends the same user-agent as Safari. Do not write
+  copy that asserts which one the player is in — `mobile.html`'s play-view tip
+  is worded to be true in both.
 - **A syntax error in one `lib/` file takes down its whole namespace.** The
   routers `import` every action statically, so a parse failure in, say,
   `lib/recroom/logScore.js` means `/api/recroom/*` — leaderboard, lookup,
