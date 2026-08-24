@@ -17,7 +17,7 @@ corrections below were verified against this repo and the live deployment on
   `SalesCommand/`.
 - *7 + 4 flat serverless functions* → **three routers over a lib layer**:
   `api/blitz.js` → `lib/blitz/*`, `api/command.js` → `lib/command/*`,
-  `api/recroom.js` → `lib/recroom/*`, plus `api/lookupTrigram.js`,
+  `api/recroom.js` → `lib/recroom/*`, plus
   `api/status.js`. `vercel.json` rewrites `/api/<ns>/:action` to `?action=`.
   This is a workaround for Vercel's function-count limit — keep it.
 - *Two question types* → **three, in three tables**: `questions` (knowledge,
@@ -113,9 +113,9 @@ lives in the Mindtickle widget URL (admin is not public). Loaded without a key
 the page still plays but cannot score, and says so via the orange **DORC
 DETECTED** alert rather than failing silently.
 
-`logScore` accepts `MT_SESSION_REF` (desktop) or `MT_SESSION_REF_MOBILE`
-(mobile). **Each may hold a comma-separated list**, which is what makes rotation
-safe — there is no way to change Vercel and the Mindtickle widget at the same
+`logScore` and `updateIdentity` accept `MT_SESSION_REF` (desktop) or
+`MT_SESSION_REF_MOBILE` (mobile). **Each may hold a comma-separated list**,
+which is what makes rotation safe — there is no way to change Vercel and the Mindtickle widget at the same
 instant, because homepage custom-HTML widgets are *not* in Mindtickle's API
 (checked against their docs). Rotate with an overlap:
 
@@ -147,6 +147,19 @@ devtools) and was deliberately not added.
   check the commit before hunting branches.
 - `[hidden]` loses to any author `display` rule. `.mcard [hidden]{display:none
   !important}` exists for that reason.
+- **A syntax error in one `lib/` file takes down its whole namespace.** The
+  routers `import` every action statically, so a parse failure in, say,
+  `lib/recroom/logScore.js` means `/api/recroom/*` — leaderboard, lookup,
+  everything — returns `FUNCTION_INVOCATION_FAILED`, not just scoring. This
+  happened on 2026-08-24 (a merge duplicated a `.filter()` line, the first copy
+  ending in `;`) and it was live. **Parse-check before pushing:**
+  `for f in api/*.js lib/*/*.js; do node --check "$f"; done`, and the same for
+  inline `<script>` blocks. Vercel does not fail the build on this.
+- **`api/lookupTrigram.js` was deleted 2026-08-24** — a pre-router orphan with
+  nothing in the repo calling it (the pages use `/api/recroom/lookupTrigram`),
+  and it had been 500ing on its roster-prefill path. If some hand-edited
+  Mindtickle widget turns out to call `/api/lookupTrigram`, it now 404s; restore
+  it from history or add a `vercel.json` rewrite to the recroom action.
 
 ## Open work
 
@@ -166,13 +179,13 @@ devtools) and was deliberately not added.
     build step and no shared JS file, so it is duplicated on purpose. If one
     changes, change both.
   - Identity lives in `localStorage['recroom.id']`, the key in `recroom.k`.
-  - **Territory cannot be changed from a phone.** `updateIdentity` gates on
-    `MT_SESSION_REF` only — it does not accept `MT_SESSION_REF_MOBILE` and is not
-    comma-list aware, unlike `logScore`. So on a trigram/territory mismatch the
-    mobile page adopts the *stored* territory and says where the points will
-    land, rather than showing a relocate flow that would 401. Worth fixing in
-    `updateIdentity` (accept both keys, split on commas) — then mobile can
-    relocate too.
+  - **On a trigram/territory mismatch the phone adopts the *stored* territory**
+    and says where the points will land, rather than offering a relocate flow.
+    `updateIdentity`'s key gate has since been brought in line with `logScore`
+    (both vars, comma-list aware), so a mobile relocate is now *possible* — but
+    the page still does not offer one, because `logScore`'s upsert never
+    rewrites `territory` and a half-move is worse than no move. If you add it,
+    call `updateIdentity` first and only then enter the room.
   - The rotate-to-landscape prompt is **dismissible**. A hard gate strands
     anyone playing with orientation lock on, because the phone reports portrait
     however they hold it.
