@@ -310,78 +310,40 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
 /* Lives here rather than in its own install.html on purpose: manifest.json
    has no start_url, so Add to Home Screen captures whatever URL is open. A
    separate tutorial page would install THE TUTORIAL. It has to be this page. */
-/* Step 1: pick the phone. Big targets, because this is the first thing a
-   sales rep sees on a launch day and a wrong tap sends them into
-   instructions that do not exist on their device. */
+/* Step 1: welcome + platform. No branding here on purpose — its only job is
+   to get the app onto the phone, and a logo just competes with that. */
+.welcome{text-align:center;padding:26px 4px 22px}
+.welcome h1{font-family:'VT323',monospace;font-size:2.9rem;line-height:1;color:#fff;letter-spacing:.03em}
+.welcome p{margin-top:10px;font-size:.72rem;line-height:1.8;letter-spacing:.05em;color:var(--muted)}
+.welcome p b{color:var(--cyan);font-weight:normal}
+
 .pick{
-  display:flex;align-items:center;gap:14px;width:100%;margin-bottom:10px;
-  padding:18px 16px;background:var(--panel);border:1px solid var(--cyan);
-  text-align:left;
+  display:flex;align-items:center;gap:16px;width:100%;margin-bottom:12px;
+  padding:20px 18px;background:var(--panel);border:1px solid var(--cyan);text-align:left;
 }
 .pick:active{transform:translateY(1px)}
-.pick .gl{font-size:1.5rem;line-height:1;color:var(--cyan);flex:0 0 auto;width:26px;text-align:center}
-.pick .lb{flex:1;min-width:0;font-size:.92rem;letter-spacing:.1em;text-transform:uppercase;color:#fff}
-.pick .lb small{
-  display:block;margin-top:3px;font-size:.5rem;letter-spacing:.16em;
-  color:var(--cyan);text-transform:uppercase;
-}
-.pick .ar{flex:0 0 auto;color:var(--cyan);font-size:1.1rem}
+.pick .plat{flex:0 0 auto;width:30px;height:30px;color:var(--cyan)}
+.pick .plat svg{width:100%;height:100%;display:block}
+.pick .lb{flex:1;min-width:0;font-size:1rem;letter-spacing:.12em;text-transform:uppercase;color:#fff}
+.pick .lb small{display:block;margin-top:3px;font-size:.5rem;letter-spacing:.16em;color:var(--cyan);text-transform:uppercase}
+.pick .ar{flex:0 0 auto;color:var(--cyan);font-size:1.2rem}
 
-.back{
-  display:block;margin-bottom:12px;padding:8px 0;color:var(--muted);
-  font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
-}
+.back{display:block;margin-bottom:14px;padding:8px 0;color:var(--muted);
+      font-size:.58rem;letter-spacing:.14em;text-transform:uppercase}
+.shead{font-family:'VT323',monospace;font-size:1.9rem;color:#fff;margin-bottom:14px;letter-spacing:.04em}
 
-/* The iPhone blocker: you cannot install from an in-app browser, so step 1
-   gets its own weight rather than reading like one bullet among five. */
-.step.gate{border-bottom:0;background:rgba(255,107,53,.07);
-           box-shadow:inset 0 0 0 1px rgba(255,107,53,.35);padding:14px;margin-bottom:8px}
-.step.gate .n{border-color:var(--warn);color:var(--warn)}
-.step.gate .tx b{color:var(--warn)}
-a.safari{
-  display:block;margin:10px 0 8px;padding:13px;background:var(--warn);color:#160600;
-  font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;font-weight:bold;
-  text-align:center;text-decoration:none;
-}
-
-.why{
-  display:flex;gap:12px;align-items:center;padding:13px 14px;margin-bottom:16px;
-  border:1px solid var(--cyan);background:rgba(16,207,201,.07);
-}
-.why .big{font-family:'VT323',monospace;font-size:2.2rem;line-height:1;color:var(--cyan);flex:0 0 auto}
-.why .tx{font-size:.62rem;line-height:1.6;letter-spacing:.04em;color:var(--ink)}
-
-.step{display:flex;gap:12px;padding:15px 0;border-bottom:1px solid rgba(53,67,93,.35)}
-.step:last-of-type{border-bottom:0}
-.step .n{
-  flex:0 0 auto;width:24px;height:24px;border:1px solid var(--cyan);color:var(--cyan);
-  font-family:'VT323',monospace;font-size:1.05rem;line-height:22px;text-align:center;
-}
-.step .tx{flex:1;min-width:0;font-size:.68rem;line-height:1.65;letter-spacing:.03em}
-.step .tx b{color:var(--cyan);font-weight:normal}
-.step .tx small{display:block;margin-top:4px;font-size:.58rem;color:var(--muted);line-height:1.55}
-
-/* Mock browser chrome so they recognise the real control on sight. */
-.mock{margin:10px 0 2px;border:1px solid var(--dim);background:#0b1424;padding:8px 10px;
-      display:flex;align-items:center;gap:8px}
-.mock .url{flex:1;height:16px;background:#16233a;border-radius:8px}
-.mock svg{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:var(--muted);
-          stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.mock svg.hit{stroke:var(--cyan)}
-.mock .ring{outline:2px solid var(--cyan);outline-offset:3px;border-radius:3px}
-
-.done{
-  text-align:center;padding:26px 16px;border:1px solid var(--ok);
-  background:rgba(74,222,128,.07);margin-bottom:14px;
-}
-.done .tick{font-family:'VT323',monospace;font-size:3rem;line-height:1;color:var(--ok)}
-.done h2{font-family:'VT323',monospace;font-size:1.7rem;color:#fff;font-weight:normal;margin:4px 0 6px}
-.done p{font-size:.64rem;line-height:1.7;color:var(--muted);letter-spacing:.04em}
-
-.skip{
-  display:block;width:100%;padding:14px;margin-top:10px;color:var(--muted);
-  font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--dim);
-}
+/* One instruction per card, each with the real screenshot under it. */
+.istep{background:var(--panel);border:1px solid var(--line);padding:14px;margin-bottom:12px}
+.istep .hd{display:flex;align-items:center;gap:10px;font-size:.82rem;letter-spacing:.06em;color:var(--ink)}
+.istep .hd b{color:var(--cyan);font-weight:normal}
+.istep .n{flex:0 0 auto;width:26px;height:26px;background:var(--cyan);color:#04121a;
+          font-family:'VT323',monospace;font-size:1.15rem;line-height:26px;text-align:center}
+.istep p{margin-top:8px;font-size:.64rem;line-height:1.7;letter-spacing:.03em;color:var(--muted)}
+.istep p b{color:var(--cyan);font-weight:normal}
+.istep img{width:100%;height:auto;margin-top:11px;border:1px solid var(--dim);display:block}
+.fin{padding:15px 14px;border:1px solid var(--ok);background:rgba(74,222,128,.07);
+     font-size:.68rem;line-height:1.7;letter-spacing:.03em;color:var(--ink)}
+.fin b{color:var(--ok);font-weight:normal}
 
 /* ------------------------------- tab bar ------------------------------- */
 .tabs{
@@ -562,124 +524,120 @@ html[data-locked="1"] .tabs{display:none}
     </div>
   </section>
 
-  <!-- ------------------------------ INSTALL ---------------------------- -->
+  <!-- ------------------------------ INSTALL ----------------------------
+       Deliberately carries no REC Room branding or scoreboard. This is the
+       first thing a rep sees and its only job is to get the app onto their
+       phone; anything else is noise competing with the instruction.
+
+       There is NO 'open in Safari' step. Tested on a real iPhone: Add to Home
+       Screen is reachable from inside Mindtickle's own browser, so sending
+       people to Safari first was an invented obstacle. The screenshots below
+       are that exact flow, taken on the device.                             -->
   <section class="view" id="viewInstall">
     <div class="scroll">
-      <div class="hero">
-        <img src="assets/images/misc/RecRoom_Logo1.png" alt="">
-        <h1>PUT IT ON<br>YOUR PHONE</h1>
-        <div class="sub">30 seconds &middot; no app store</div>
-      </div>
 
-      <!-- already done -->
       <div class="done" id="installDone" hidden>
         <div class="tick">&#10003;</div>
         <h2>You&rsquo;re all set</h2>
-        <p>The REC Room is installed and running full screen.<br>Launch it from your home screen from now on.</p>
+        <p>Launch the REC Room from your home screen from now on.</p>
       </div>
 
       <div id="installBody">
 
-        <!-- STEP 1 — which phone? Asked, not assumed: the detected answer is
-             only marked as a hint, because a wrong guess sends someone down
-             instructions that do not exist on their device. -->
+        <!-- STEP 1 -->
         <div id="chooseStep">
-          <div class="why">
-            <div class="big">2&times;</div>
-            <div class="tx">Installed, the game runs <b>full screen with no address bar</b>
-                 &mdash; about double the play area.</div>
+          <div class="welcome">
+            <h1>Welcome</h1>
+            <p>Let&rsquo;s put <b>Side-Qlik Blitz</b> on your phone.<br>
+               What are you playing on?</p>
           </div>
-          <div class="eyebrow">Step 1 &mdash; which phone are you on?</div>
+
           <button class="pick" id="pickIos">
-            <span class="gl">&#63743;</span>
-            <span class="lb">iPhone<small id="hintIos" hidden>Detected</small></span>
+            <span class="plat">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" stroke="none" d="M17.05 12.04c-.02-2.4 1.96-3.55 2.05-3.61-1.12-1.64-2.86-1.86-3.48-1.89-1.48-.15-2.89.87-3.64.87-.75 0-1.91-.85-3.14-.83-1.61.02-3.1.94-3.93 2.38-1.68 2.91-.43 7.22 1.2 9.58.8 1.16 1.75 2.46 3 2.41 1.21-.05 1.66-.78 3.12-.78 1.46 0 1.87.78 3.14.75 1.3-.02 2.12-1.18 2.91-2.34.92-1.34 1.3-2.64 1.32-2.71-.03-.01-2.53-.97-2.55-3.83zM14.9 4.6c.66-.8 1.11-1.92.99-3.03-.95.04-2.11.63-2.79 1.43-.61.71-1.15 1.85-1.01 2.94 1.06.08 2.14-.54 2.81-1.34z"/></svg>
+            </span>
+            <span class="lb">iOS<small id="hintIos" hidden>Detected</small></span>
             <span class="ar">&rarr;</span>
           </button>
+
           <button class="pick" id="pickAndroid">
-            <span class="gl">&#9654;</span>
+            <span class="plat">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor" stroke="none">
+                <path d="M7.2 9.6a5 5 0 019.6 0z"/>
+                <rect x="7" y="11" width="10" height="7.6" rx="1.6"/>
+                <rect x="3.6" y="11" width="2.2" height="6" rx="1.1"/>
+                <rect x="18.2" y="11" width="2.2" height="6" rx="1.1"/>
+                <path stroke="currentColor" stroke-width="1.3" stroke-linecap="round" fill="none" d="M8.6 6.4L7.3 4.6M15.4 6.4l1.3-1.8"/>
+                <circle cx="9.9" cy="7.9" r=".62" fill="#0a1020"/>
+                <circle cx="14.1" cy="7.9" r=".62" fill="#0a1020"/>
+              </svg>
+            </span>
             <span class="lb">Android<small id="hintAndroid" hidden>Detected</small></span>
             <span class="ar">&rarr;</span>
           </button>
         </div>
 
-        <!-- STEP 2 — the steps for whichever they picked -->
+        <!-- STEP 2 -->
         <div id="stepsStep" hidden>
-          <button class="back" id="pickBack">&larr; Not my phone</button>
-
+          <button class="back" id="pickBack">&larr; Wrong phone</button>
           <button class="btn" id="installNow" hidden>&#8681;&nbsp; Install the REC Room</button>
 
-          <div class="panel" id="stepsIos" hidden>
-            <div class="eyebrow">iPhone &middot; Safari</div>
-            <div class="step gate">
-              <div class="n">1</div>
-              <div class="tx"><b>Open this page in Safari.</b>
-                <small>You are almost certainly inside Mindtickle&rsquo;s own browser right now,
-                       and iPhone can only install from Safari. This step is not optional.</small>
-                <a class="safari" href="x-safari-https://qlik-gse.vercel.app/QlikRecRoom/mobile.html" id="safariJump">Open in Safari</a>
-                <small>If that does nothing, tap the <b>compass</b> or <b>&#8943;</b> icon in the
-                       corner of this window and choose <b>Open in Safari</b>.</small>
-              </div>
+          <div id="stepsIos" hidden>
+            <div class="shead">Four taps</div>
+
+            <div class="istep">
+              <div class="hd"><span class="n">1</span>Tap <b>Share</b></div>
+              <p>Bottom of this window &mdash; the square with an arrow coming out of it.
+                 It sits to the left of refresh.</p>
+              <img src="assets/images/install/ios-1-share.jpg" alt="Share, refresh and Safari icons" loading="lazy">
             </div>
-            <div class="step">
-              <div class="n">2</div>
-              <div class="tx">Tap <b>Share</b> &mdash; the square with an arrow coming out of the top.
-                <div class="mock">
-                  <svg viewBox="0 0 24 24" class="hit"><path d="M12 15V3M12 3L8 7M12 3l4 4"/><path d="M5 12v7a1 1 0 001 1h12a1 1 0 001-1v-7"/></svg>
-                  <div class="url"></div>
-                  <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                </div>
-              </div>
+
+            <div class="istep">
+              <div class="hd"><span class="n">2</span>Tap <b>View More</b></div>
+              <p>The chevron on the right of the top row.</p>
+              <img src="assets/images/install/ios-2-viewmore.jpg" alt="View More in the share sheet" loading="lazy">
             </div>
-            <div class="step">
-              <div class="n">3</div>
-              <div class="tx">Scroll down and tap <b>Add to Home Screen</b>.</div>
+
+            <div class="istep">
+              <div class="hd"><span class="n">3</span>Tap <b>Add to Home Screen</b></div>
+              <p>Scroll down the list to find it.</p>
+              <img src="assets/images/install/ios-3-addhome.jpg" alt="Add to Home Screen in the list" loading="lazy">
             </div>
-            <div class="step">
-              <div class="n">4</div>
-              <div class="tx">Tap <b>Add</b>, top right.</div>
+
+            <div class="istep">
+              <div class="hd"><span class="n">4</span>Tap <b>Add</b></div>
+              <p><b>Open as Web App</b> is already on &mdash; leave it alone. Just tap Add, top right.</p>
+              <img src="assets/images/install/ios-4-save.png" alt="Add to Home Screen dialog with Open as Web App enabled" loading="lazy">
             </div>
-            <div class="step">
-              <div class="n">5</div>
-              <div class="tx">Open the REC Room from your <b>new home screen icon</b>.
-                <small>That copy is the one that scores.</small></div>
-            </div>
+
+            <div class="fin">Now open <b>REC Room</b> from your home screen.
+                 That copy runs full screen and banks your points.</div>
           </div>
 
-          <div class="panel" id="stepsAndroid" hidden>
-            <div class="eyebrow">Android &middot; Chrome</div>
-            <div class="step">
-              <div class="n">1</div>
-              <div class="tx">Tap the <b>&#8942; menu</b>, top right of Chrome.
-                <div class="mock">
-                  <div class="url"></div>
-                  <svg viewBox="0 0 24 24" class="hit"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-                </div>
-              </div>
+          <div id="stepsAndroid" hidden>
+            <div class="shead">Three taps</div>
+            <div class="istep">
+              <div class="hd"><span class="n">1</span>Tap the <b>&#8942; menu</b></div>
+              <p>Top right of Chrome.</p>
             </div>
-            <div class="step">
-              <div class="n">2</div>
-              <div class="tx">Tap <b>Install app</b>, or <b>Add to Home screen</b>.
-                <small>Chrome shows one or the other depending on its version.</small></div>
+            <div class="istep">
+              <div class="hd"><span class="n">2</span>Tap <b>Install app</b></div>
+              <p>Some versions of Chrome call it <b>Add to Home screen</b>. Same thing.
+                 On Samsung Internet: Menu &rarr; Add page to &rarr; Home screen.</p>
             </div>
-            <div class="step">
-              <div class="n">3</div>
-              <div class="tx">Confirm with <b>Install</b> or <b>Add</b>.</div>
+            <div class="istep">
+              <div class="hd"><span class="n">3</span>Confirm with <b>Install</b></div>
             </div>
-            <div class="step">
-              <div class="n">4</div>
-              <div class="tx">Open the REC Room from your <b>new icon</b>.
-                <small>Samsung Internet: Menu &rarr; Add page to &rarr; Home screen.</small></div>
-            </div>
+            <div class="fin">Now open <b>REC Room</b> from your home screen.
+                 That copy runs full screen and banks your points.</div>
           </div>
         </div>
 
         <div class="tip" id="installDesktopNote" hidden>
           <span>&#128187;</span>
-          <span>You&rsquo;re on a computer. This one is for phones &mdash; open
-                <b>the REC Room link on your phone</b> to install it there.</span>
+          <span>You&rsquo;re on a computer. Open the REC Room link <b>on your phone</b> to install it there.</span>
         </div>
       </div>
-      <div class="foot">Qlik Global Sales Enablement</div>
     </div>
   </section>
 
@@ -1005,13 +963,6 @@ $('pickIos').addEventListener('click', function () { setPlatform('ios'); });
 $('pickAndroid').addEventListener('click', function () { setPlatform('android'); });
 $('pickBack').addEventListener('click', function () { setPlatform(''); });
 
-/* The Safari jump carries the key, so an install made from Safari lands with
-   a scoring session. Built at runtime because the key is not in the markup. */
-(function () {
-  var a = $('safariJump');
-  if (a) a.setAttribute('href', 'x-safari-' + location.protocol + '//' + location.host +
-                        location.pathname + (KEY ? '?k=' + encodeURIComponent(KEY) : ''));
-})();
 
 $('installNow').addEventListener('click', function () {
   if (!deferredPrompt) return;
@@ -1039,7 +990,9 @@ function paintInstall() {
 
   $('stepsIos').hidden     = plat !== 'ios';
   $('stepsAndroid').hidden = plat !== 'android';
-  $('installDesktopNote').hidden = TOUCH;
+  // Was gated on TOUCH alone and still appeared on an iPhone. Require every
+  // phone signal to be absent before telling someone they are on a computer.
+  $('installDesktopNote').hidden = TOUCH || IOS || ANDROID;
   // One tap beats four steps. Show it whenever Chrome offers it.
   $('installNow').hidden = !deferredPrompt || !plat;
 }
