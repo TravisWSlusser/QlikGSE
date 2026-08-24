@@ -206,8 +206,8 @@
     .fs-btn {
       position: absolute; z-index: 8; top: 12px; right: 12px;
       display: flex; align-items: center; gap: 7px; padding: 7px 11px;
-      background: rgba(6,16,31,0.74); border: 1px solid rgba(16,207,201,0.35);
-      color: var(--cyan); cursor: pointer; opacity: 0.35;
+      background: rgba(6,16,31,0.82); border: 1px solid rgba(16,207,201,0.55);
+      color: var(--cyan); cursor: pointer; opacity: 0.7;
       font-family: 'Share Tech Mono', monospace; font-size: 0.55rem;
       letter-spacing: 0.14em; text-transform: uppercase;
       transition: opacity 0.18s ease, border-color 0.18s ease;
@@ -1310,19 +1310,37 @@ if (SHOW_GAME){
   if (!fsBtn) return;
 
   const frameEl = document.querySelector('.game-frame');
-  const canFs = !!(frameEl.requestFullscreen || frameEl.webkitRequestFullscreen ||
+
+  // Framed = running as a Mindtickle Custom HTML widget, which is the normal
+  // way this page is seen (GitHub -> Vercel -> widget iframe -> browser).
+  const FRAMED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+
+  // Testing for the METHOD is not enough, and this is what made the button
+  // dead on the desktop room: inside the Mindtickle iframe requestFullscreen
+  // exists but Permissions Policy blocks it, because the host iframe does not
+  // carry allow="fullscreen" — and that attribute is on Mindtickle's side of
+  // the boundary, so we cannot add it. document.fullscreenEnabled is the flag
+  // that actually reports permission, and it is false in there.
+  const FS_OK = (document.fullscreenEnabled !== false &&
+                 document.webkitFullscreenEnabled !== false) &&
+                !!(frameEl.requestFullscreen || frameEl.webkitRequestFullscreen ||
                    frameEl.msRequestFullscreen);
+
   const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement ||
                         document.msFullscreenElement);
 
-  // Only worth offering once the game is actually in the frame — before that
-  // it would fullscreen an empty box.
-  const armed = () => canFs && !!gameFrame.getAttribute('src') &&
-                      window.matchMedia('(min-width: 1024px)').matches;
+  // Show it once the game is really in the frame — and also when fullscreen is
+  // blocked but we are framed, because then it has somewhere useful to go.
+  const armed = () => !!gameFrame.getAttribute('src') &&
+                      window.matchMedia('(min-width: 1024px)').matches &&
+                      (FS_OK || FRAMED);
 
   function sync() {
     fsBtn.hidden = !armed();
-    document.getElementById('fsLabel').textContent = isFs() ? 'Exit' : 'Full screen';
+    document.getElementById('fsLabel').textContent =
+      isFs() ? 'Exit' : (FS_OK ? 'Full screen' : 'Full screen ↗');
+    fsBtn.title = FS_OK ? 'Full screen'
+                        : 'Mindtickle blocks full screen in the widget — opens the game in its own tab';
     document.getElementById('fsIcon').innerHTML = isFs()
       ? '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'
       : '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>';
@@ -1330,13 +1348,26 @@ if (SHOW_GAME){
 
   fsBtn.addEventListener('click', () => {
     if (isFs()) {
-      (document.exitFullscreen || document.webkitExitFullscreen ||
-       document.msExitFullscreen).call(document);
-    } else {
-      const fn = frameEl.requestFullscreen || frameEl.webkitRequestFullscreen ||
-                 frameEl.msRequestFullscreen;
-      try { fn.call(frameEl); } catch (e) { console.warn('fullscreen refused:', e); }
+      const off = document.exitFullscreen || document.webkitExitFullscreen ||
+                  document.msExitFullscreen;
+      if (off) Promise.resolve(off.call(document)).catch(() => {});
+      return;
     }
+    // Blocked in the widget: hand them the thing that does work. openInNewTab
+    // opens ?section=play at top level, carrying the session key, where the
+    // game already covers the viewport and this button genuinely fullscreens.
+    if (!FS_OK) { openInNewTab(); return; }
+
+    const fn = frameEl.requestFullscreen || frameEl.webkitRequestFullscreen ||
+               frameEl.msRequestFullscreen;
+    // requestFullscreen returns a PROMISE. try/catch only catches a synchronous
+    // throw, so a rejection here used to vanish and the button just sat there.
+    let p;
+    try { p = fn.call(frameEl); } catch (e) { p = Promise.reject(e); }
+    Promise.resolve(p).catch((e) => {
+      console.warn('fullscreen refused:', e);
+      if (FRAMED) openInNewTab();          // last resort, still gets them there
+    });
   });
 
   ['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange']

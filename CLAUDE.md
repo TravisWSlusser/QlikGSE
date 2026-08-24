@@ -147,6 +147,19 @@ devtools) and was deliberately not added.
   check the commit before hunting branches.
 - `[hidden]` loses to any author `display` rule. `.mcard [hidden]{display:none
   !important}` exists for that reason.
+- **Full screen is blocked inside the Mindtickle widget, and the feature test
+  that catches it is `document.fullscreenEnabled` — not the method.** Inside the
+  widget iframe `element.requestFullscreen` *exists*, so a `!!(...)` test passes
+  and you ship a button that does nothing. Permissions Policy blocks the call
+  because the host iframe has no `allow="fullscreen"`, and that attribute is on
+  Mindtickle's side of the boundary — it cannot be added from here. Two things
+  follow, and both cost a round trip to discover:
+  1. Test `document.fullscreenEnabled`, which reports *permission*, not presence.
+  2. **`requestFullscreen()` returns a Promise.** `try/catch` only catches a
+     synchronous throw, so a rejection vanishes and the button sits there dead.
+     Always `.catch()` it.
+  The desktop button now falls back to `openInNewTab()` when blocked — the room
+  at top level *can* go fullscreen — and labels itself `Full screen ↗` to say so.
 - **Full screen and orientation cannot be forced on an iPhone.** Checked against
   the platforms, not assumed:
 
@@ -157,10 +170,23 @@ devtools) and was deliberately not added.
   | Desktop | yes | n/a |
   | **iPhone Safari** | **no** — only `<video>` | **no** |
 
-  So `mobile.html` fullscreens *and* locks landscape automatically on Android,
-  and on iPhone offers the only two things that actually work: **Open in Safari**
-  and **Add to Home Screen** (standalone has no browser chrome and rotates
-  freely). A fullscreen button on an iPhone would be a button that does nothing.
+  So `mobile.html` fullscreens *and* locks landscape automatically on Android.
+  On iPhone there is nothing to call, and the answer is **Add to Home Screen** —
+  standalone has no browser chrome at all. That is worth real screen, because
+  **the game frame is 7:4 and a landscape phone is much wider than that, so it
+  fits to HEIGHT**: every pixel of address bar costs 1.75 pixels of game width.
+  Measured on an iPhone landscape viewport (844×390):
+
+  | | usable height | game size | play area |
+  |---|---|---|---|
+  | Safari, bars showing | 280 | 490×280 | 137k px |
+  | Safari, bars collapsed | 340 | 595×340 | 202k px |
+  | **Installed (standalone)** | **390** | **683×390** | **266k px** |
+
+  Installing is close to **double** the play area. The Play view keeps a
+  **Full screen button on iPhone too** — it cannot call an API, so it opens the
+  Add-to-Home-Screen walkthrough. A *missing* button reads as "not possible",
+  which is worse than a button that explains the one route that works.
 - **`window.open` from inside the Mindtickle app does not reach Safari.** It
   opens the app's own in-app browser, which inherits the host app's orientation
   — so the game is pinned to portrait however the phone is held. This is an

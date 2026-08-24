@@ -268,6 +268,13 @@ html[data-frame="1"] body{background:transparent}
    between seeing the bottom rows and not, so the tab bar goes away here and
    a single floating chip brings it back. */
 #viewPlay.on{position:fixed;inset:0;z-index:40;background:#06101f}
+/* iOS only collapses its address bar on a page that can actually scroll. The
+   play view is position:fixed, so it tracks the visual viewport and GROWS when
+   the bars go — but the document has to be taller than the viewport for that
+   gesture to exist at all, and .room is exactly 100svh. This spacer creates
+   the headroom. Nothing moves visually if the bars never collapse, so it is a
+   free shot at ~60px, which on a 7:4 frame is ~105px of game width. */
+html[data-view="play"] body{min-height:calc(100svh + 90px)}
 #gameFrame{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#06101f}
 .exit,.fsbtn{
   position:absolute;z-index:42;
@@ -895,6 +902,11 @@ var STANDALONE = (window.matchMedia && window.matchMedia('(display-mode: standal
 
 var FS = {
   supported: function () {
+    // fullscreenEnabled, not just the method: inside an iframe without
+    // allow="fullscreen" the method exists but Permissions Policy blocks the
+    // call. Testing only for the method is what left a dead button on the
+    // desktop room inside the Mindtickle widget.
+    if (document.fullscreenEnabled === false || document.webkitFullscreenEnabled === false) return false;
     var e = document.documentElement;
     return !!(e.requestFullscreen || e.webkitRequestFullscreen ||
               e.webkitRequestFullScreen || e.msRequestFullscreen);
@@ -906,13 +918,18 @@ var FS = {
   // Fullscreen the play view, not the iframe: the exit and rotate controls
   // live in it and have to stay reachable.
   enter: function () {
-    var e = VIEW_EL.play;
+    // Try the play view first so the exit/rotate controls come along. If
+    // WebKit refuses the container — it is fussier about what may go
+    // fullscreen than Chrome is — fall back to the iframe itself, which
+    // still gets the player the screen even though the overlay controls go
+    // with it (the OS gesture and Esc still leave).
+    return FS._req(VIEW_EL.play).catch(function () { return FS._req(frame); });
+  },
+  _req: function (e) {
     var fn = e.requestFullscreen || e.webkitRequestFullscreen ||
              e.webkitRequestFullScreen || e.msRequestFullscreen;
     if (!fn) return Promise.reject(new Error('unsupported'));
-    var out;
-    try { out = fn.call(e); } catch (err) { return Promise.reject(err); }
-    return Promise.resolve(out);
+    try { return Promise.resolve(fn.call(e)); } catch (err) { return Promise.reject(err); }
   },
   exit: function () {
     if (!FS.active()) return Promise.resolve();
@@ -941,8 +958,18 @@ var FS = {
    its own). Must be called straight out of the tap that opened Play —
    requestFullscreen is only granted inside a user gesture. */
 function enterPlayScreen() {
-  if (!FS.supported()) { offerEscape(); return; }
-  FS.enter().then(function () { return FS.lock(); }).catch(function () { offerEscape(); });
+  // Nudge iOS into collapsing its chrome. Programmatic scroll is not a
+  // guaranteed trigger — the collapse is really gesture-driven — but the
+  // play view is fixed, so this costs nothing when it does not take.
+  setTimeout(function () { try { window.scrollTo(0, 1); } catch (e) {} }, 60);
+  if (!FS.supported()) { offerEscape(); return; }   // iPhone: nothing to call
+  FS.enter()
+    // Both of these resolve a tick or two later, by which time the player may
+    // already have left Play — locking the whole room to landscape behind
+    // them. Re-check before applying.
+    .then(function () { if (view === 'play') return FS.lock(); })
+    .catch(function () { /* refused — the Full screen button is right there */ })
+    .then(function () { if (view !== 'play') { FS.unlock(); FS.exit(); } syncFsBtn(); });
 }
 
 /* The honest fallback. Only shown when fullscreen is genuinely unavailable,
@@ -958,15 +985,15 @@ function offerEscape() {
   if (tipDismissed || STANDALONE || !TOUCH) return;
   var t = $('playTipText'), g = $('playTipGo');
   if (IOS) {
-    // Deliberately does not claim "you are in an in-app browser". On iOS the
-    // in-app browser is indistinguishable from Safari to JavaScript —
-    // SFSafariViewController sends the same user-agent — and this tip fires in
-    // both, because iPhone Safari has no Fullscreen API either way. So the
-    // wording is conditional and true in both places.
-    t.innerHTML = '<b>Stuck in portrait, or want full screen?</b> ' +
-                  'Open in Safari, then Share &rarr; Add to Home Screen.';
-    g.textContent = 'Open in Safari';
-    g.onclick = openInSafari;
+    // Leads with the space, because that is the complaint. Deliberately does
+    // not claim which browser they are in: on iOS an in-app browser is
+    // indistinguishable from Safari to JavaScript (SFSafariViewController
+    // sends the same user-agent) and this fires in both, since iPhone Safari
+    // has no Fullscreen API either way.
+    t.innerHTML = '<b>Address bar eating the game?</b> ' +
+                  'Add to Home Screen and it runs with no bars &mdash; about double the play area.';
+    g.textContent = 'Show me';
+    g.onclick = howToFullScreen;
   } else {
     t.innerHTML = '<b>For full screen,</b> add the REC Room to your home screen ' +
                   'from your browser menu, then launch it from there.';
@@ -977,33 +1004,54 @@ function offerEscape() {
 }
 $('playTipX').addEventListener('click', dismissTip);
 
-/* x-safari-https: is the one scheme that reliably escapes an iOS in-app
-   browser into real Safari. If the host app refuses it nothing happens, so
-   fall back to a plain new window — but only if we are still on screen,
-   because a successful jump backgrounds us and the timer would otherwise
-   fire on return and open a second copy. */
-function openInSafari() {
-  var url = location.href;
-  var jumped = false;
-  var onHide = function () { jumped = true; };
-  document.addEventListener('visibilitychange', onHide, { once: true });
-  setTimeout(function () {
-    document.removeEventListener('visibilitychange', onHide);
-    if (!jumped && !document.hidden) window.open(url, '_blank', 'noopener');
-  }, 1200);
-  try { location.href = 'x-safari-' + url; } catch (e) {}
-}
+/* No in-page "Open in Safari" button on purpose. x-safari-https: is the right
+   escape from an in-app browser, and the Mindtickle widget button already
+   takes it — but that button KNOWS it is framed inside the app. In the room
+   we cannot tell Safari from an in-app browser, and firing an unhandled
+   scheme at real Safari raises "the address is invalid", which is a worse
+   experience than the one it was meant to fix. iOS puts its own open-in-
+   Safari control in the corner of every in-app browser anyway. */
 
 $('fsBtn').addEventListener('click', function () {
-  if (FS.active()) { FS.unlock(); FS.exit(); }
-  else enterPlayScreen();
+  if (FS.active()) { FS.unlock(); FS.exit(); return; }
+  if (FS.supported()) { enterPlayScreen(); return; }
+  howToFullScreen();      // iPhone: the button still exists, and still helps
 });
+
+/* iPhone Safari has no Fullscreen API, so there is nothing for a full-screen
+   button to call — but leaving the button out entirely was worse. The one
+   thing that genuinely removes the chrome on iPhone is Add to Home Screen,
+   and it is worth real screen: the game frame is 7:4, so on a short wide
+   landscape phone it fits to HEIGHT, and every pixel of address bar costs
+   1.75 pixels of game width. Bars showing gives ~490x280. Installed gives
+   ~683x390 — near enough double the play area. So the button explains that
+   rather than pretending it cannot help. */
+function howToFullScreen() {
+  dorcAlert(
+    'Full screen on iPhone',
+    'Safari has no full-screen mode, but the REC Room installs as an app and ' +
+    'runs with no address bar at all &mdash; close to <b>double</b> the play area.<br><br>' +
+    '1. Tap <b>Share</b> (the box with the arrow)<br>' +
+    '2. <b>Add to Home Screen</b><br>' +
+    '3. Launch the REC Room from the new icon<br><br>' +
+    'Do it from this page so your session comes with it and runs keep scoring. ' +
+    'If you opened this from inside another app, use that app&rsquo;s ' +
+    '<b>Open in Safari</b> control first.'
+  );
+}
 
 /* Keep the button honest about what it will do next, and let the OS-level
    exit (swipe, Esc) put the label back without us being told directly. */
 function syncFsBtn() {
   var b = $('fsBtn');
-  b.hidden = !FS.supported() || TOUCH;   // mobile is automatic; no button needed
+  // Always present in Play. Hiding it on touch was wrong three times over:
+  // the automatic attempt can be refused, leaving no way back in; iPad's
+  // Safari supports fullscreen properly; and on iPhone — where there is no
+  // API to call — the button still has the only answer that works, which is
+  // Add to Home Screen. A missing button reads as "not possible".
+  b.hidden = false;
+  // Standalone is already chrome-free, so there is nothing left to offer.
+  if (STANDALONE && !FS.supported()) b.hidden = true;
   $('fsLabel').textContent = FS.active() ? 'Exit' : 'Full screen';
   $('fsIcon').innerHTML = FS.active()
     ? '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'
