@@ -2,7 +2,7 @@
   "name": "REC Room",
   "short_name": "REC Room",
   "description": "Rank. Elevate. Compete. — Qlik Sales Enablement",
-  "start_url": "./mobile.html",
+  "_comment_start_url": "Deliberately absent. Per spec a missing start_url defaults to the URL the app was installed FROM, which is how the ?k= session key survives installation. Declaring './mobile.html' stripped the key, so an installed copy launched straight into practice mode and banked nothing — on iPhone that mattered doubly, because Add to Home Screen is the only way to get true full screen there. Do not add it back without carrying the key some other way.",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

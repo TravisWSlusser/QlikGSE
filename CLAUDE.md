@@ -214,12 +214,17 @@ devtools) and was deliberately not added.
   - The rotate-to-landscape prompt is **dismissible**. A hard gate strands
     anyone playing with orientation lock on, because the phone reports portrait
     however they hold it.
-  - **iOS home-screen installs land in practice mode.** `start_url` carries no
-    `?k=`, and iOS gives a standalone app its own storage container, so the
-    stashed key is not there. The page says so loudly instead of banking
-    nothing silently. Android/Chrome shares storage, so it works there. The real
-    fix is a `start_url` that carries the key, which needs the manifest served
-    with it — deliberately not built on launch day.
+  - **`manifest.json` has no `start_url`, on purpose.** Per spec a missing
+    `start_url` defaults to the URL the app was installed *from*, which is how
+    the `?k=` session key survives Add to Home Screen. It used to declare
+    `./mobile.html`, which stripped the key — so an installed copy launched
+    straight into practice mode and banked nothing. That mattered doubly on
+    iPhone, where Add to Home Screen is the *only* route to true full screen, so
+    "install it for full screen" and "your points stop counting" were the same
+    instruction. Do not add `start_url` back without carrying the key another
+    way. (iOS also gives a standalone app its own storage container, so the
+    `localStorage` stash does not cross over — the install URL is the only
+    reliable carrier. **Needs a device test.**)
   - Validated headlessly (JS parse, id/tag/CSS-brace checks, and a DOM shim that
     runs boot, sign-in, mismatch, no-key and board render against the live API).
     **Not yet rendered in a browser** — screenshot it on a real phone before
