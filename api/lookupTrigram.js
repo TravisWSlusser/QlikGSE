@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       if (seed.length) {
         return res.status(200).json({
           exists: false, prefill: true,
-      mt_user_id: roster[0].mt_user_id || null,
+          mt_user_id: seed[0].mt_user_id || null,
           territory: seed[0].territory, country_code: seed[0].country_code
         });
       }
