@@ -369,6 +369,14 @@
       display: none; align-items: center; justify-content: center; padding: 24px;
     }
     .login-gate.open { display: flex; }
+
+    /* iOS raises the keyboard over roughly half a landscape viewport, and this
+       gate is fixed and vertically centred with no scroll — so tapping TRIGRAM
+       can bury SIGN IN with no way to reach it. On a short viewport, start at
+       the top and allow scrolling so every field and the button stay reachable. */
+    @media (max-height: 520px) {
+      .login-gate { align-items: flex-start; overflow-y: auto; padding: 12px 24px 28px; }
+    }
     .login-gate .scan { position: absolute; inset: 0; pointer-events: none;
       background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.10) 2px, rgba(0,0,0,0.10) 4px); }
     .login-panel {

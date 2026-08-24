@@ -49,6 +49,40 @@
   body[data-view="one"] .sec.on{display:flex;height:100vh}
   body[data-view="all"] .sec.diag{display:none}
 
+  /* =====================================================
+     SECTION: notice  (?s=notice) — slim Blue Sheet heads-up banner
+     Budget: 150px desktop / 240px mobile
+     ===================================================== */
+  #sec-note{align-items:center;padding:clamp(10px,1.4vw,16px) clamp(14px,2.6vw,36px)}
+  .note-banner{display:flex;align-items:center;gap:clamp(14px,2vw,22px);width:100%;
+    background:linear-gradient(90deg,rgba(16,207,201,.10),rgba(255,255,255,.03) 45%);
+    border:1px solid rgba(16,207,201,.4);border-left:5px solid var(--sky);
+    border-radius:var(--radius);padding:clamp(12px,1.6vw,18px) clamp(16px,2.2vw,26px)}
+  .note-icon{flex:0 0 auto;width:44px;height:44px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--sky);
+    border:2px solid var(--sky);background:rgba(16,207,201,.12)}
+  .note-body{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .note-title{font-family:var(--font-display);font-weight:800;font-size:clamp(19px,1.9vw,25px);
+    text-transform:uppercase;letter-spacing:.02em}
+  .note-text{font-size:clamp(13px,1.05vw,14.5px);line-height:1.5;color:var(--muted)}
+  .note-text b{color:var(--ink)}
+  .note-text a{color:var(--sky)}
+  @media (prefers-reduced-motion:no-preference){
+    .note-icon{animation:notepulse 2.4s ease-in-out infinite}
+    @keyframes notepulse{0%,100%{box-shadow:0 0 0 0 rgba(16,207,201,.35)}50%{box-shadow:0 0 0 9px rgba(16,207,201,0)}}
+  }
+  @media (max-width:600px){
+    .note-banner{align-items:flex-start}
+    .note-icon{width:36px;height:36px;font-size:19px}
+  }
+  @media (max-width:420px){
+    .note-icon{display:none}
+    .note-title{font-size:17px}
+    .note-text{font-size:12.5px;line-height:1.45}
+    .note-banner{padding:12px 14px;border-left-width:4px}
+  }
+
   /* ===== DIAGNOSTIC: canary (?s=canary) — height-mechanism test readout ===== */
   .diag{align-items:center;justify-content:center;text-align:center;flex-direction:column;gap:10px}
   .diag .dims{font-family:var(--font-display);font-weight:900;font-size:clamp(56px,14vw,120px);line-height:1;color:var(--sky)}
@@ -438,6 +472,18 @@
   </div>
 </section>
 
+<!-- ============ SECTION: notice (?s=notice) — Blue Sheet heads-up banner ============ -->
+<section class="sec" id="sec-note" data-s="notice" aria-label="Before you start — Blue Sheet requirement">
+  <div class="note-banner">
+    <div class="note-icon" aria-hidden="true">!</div>
+    <div class="note-body">
+      <p class="eyebrow">Before you start Step 1</p>
+      <h2 class="note-title">Your opportunity needs a Blue Sheet</h2>
+      <p class="note-text">Opportunities appear in the Qlik Training Center only after they have a <b>completed Blue&nbsp;Sheet</b>. Just added one? The Training Center syncs every <b>four hours</b> — your opportunity will appear after the next sync. Still missing after that? Email <a href="mailto:GlobalSalesEnablement@qlik.com" target="_top">GlobalSalesEnablement@qlik.com</a>.</p>
+    </div>
+  </div>
+</section>
+
 <!-- ============ DIAGNOSTIC: canary — remove after height mechanism is confirmed ============ -->
 <section class="sec diag" data-s="canary" aria-label="Widget height diagnostic">
   <p class="dims" id="dims">—</p>
@@ -530,7 +576,7 @@ const FAQ = [
   { q: "Why did my module progress disappear?",
     a: "Always exit a module using <b>Save &amp; Exit</b>. Closing the browser tab or window directly can discard your progress and you may need to restart the module." },
   { q: "My opportunity isn't listed in Step 1 — what do I do?",
-    a: "If your deal doesn't appear in the opportunity list, email <a href=\"mailto:GlobalSalesEnablement@qlik.com\" target=\"_top\">GlobalSalesEnablement@qlik.com</a> and we'll investigate." },
+    a: "First, confirm your opportunity has a <b>completed Blue Sheet</b> — that's been the cause every time so far. If you just created the Blue Sheet, the Training Center syncs every <b>four hours</b>, so check back after the next sync. Still missing after that? Email <a href=\"mailto:GlobalSalesEnablement@qlik.com\" target=\"_top\">GlobalSalesEnablement@qlik.com</a> and we'll investigate." },
   { q: "Which opportunity should I choose?",
     a: "A viable, early-to-mid-stage deal with a completed Blue Sheet — ideally one where you haven't yet had proposal conversations. You'll use the same opportunity for all four steps." },
   { q: "What happens if the AI flags issues with my submission?",
