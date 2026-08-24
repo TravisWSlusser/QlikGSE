@@ -1445,6 +1445,29 @@ const cv = document.getElementById('game');
 const ctx = cv.getContext('2d');
 const W = 1280, H = 720;
 
+/* ---- MOBILE RENDER BUDGET -------------------------------------------------
+   W and H above are the LOGICAL coordinate system and every draw call in this
+   file uses them. They are not the canvas backing store, which is what the GPU
+   actually fills. On a landscape phone the frame is displayed at roughly
+   683x390, so a 1280x720 backing store was doing 3.5x more pixel work than the
+   screen could ever show.
+
+   Shrinking the backing store and scaling the context once leaves every
+   coordinate in the game untouched. Input is safe too: frameToInternal maps
+   through cv.getBoundingClientRect(), which reports CSS size, not backing size.
+
+   0.7 still oversamples a phone (896 backing across ~683 displayed), so it
+   costs no visible sharpness while halving the fill cost. Desktop is untouched. */
+const LOWFX = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ||
+              ('ontouchstart' in window && Math.min(screen.width, screen.height) <= 820);
+const RES = LOWFX ? 0.7 : 1;
+if (RES !== 1){
+  cv.width  = Math.round(W * RES);
+  cv.height = Math.round(H * RES);
+  ctx.scale(RES, RES);                 // set once; nothing in this file resets the transform
+  ctx.imageSmoothingQuality = 'low';   // the sprite sheets downscale 256 -> ~64 every frame
+}
+
 /* ---- board geometry (hex) ---- */
 const HUD_H     = 108;                 // bottom HUD bar height (CSS #freezeVid bottom must match)
 const HUD_Y     = H - HUD_H;           // top edge of the bottom bar (~612)
@@ -1600,7 +1623,11 @@ function drawSprite(id, emotion, frame, x, y, d){
   }
   const sc = frame % SHEET_COLS, sr = Math.floor(frame / SHEET_COLS);
   // frozen look: a blue outer glow that fades in/out — the sprite's own colors stay untouched
-  const glow = freezeAmt > 0.001;
+  // ctx.shadowBlur is a per-draw software blur and this runs once per bubble
+  // on the board — 60-80 blurred draws a frame during a freeze, which is where
+  // the worst stalls were. The frost video overlay and the scared faces already
+  // carry the freeze read, so phones drop the per-sprite glow.
+  const glow = freezeAmt > 0.001 && !LOWFX;
   if (glow){ ctx.save(); ctx.shadowColor=`rgba(150,215,255,${(0.85*freezeAmt).toFixed(3)})`; ctx.shadowBlur=18*freezeAmt; }
   if (s && s.ok){
     ctx.drawImage(s.img, sc*CELL, sr*CELL, CELL, CELL, x - d/2, y - d/2, d, d);
@@ -2122,7 +2149,13 @@ function startGame(){
   seedGrid(4);
   runStart = performance.now();
   state='play';
-  document.getElementById('start').style.display='none';
+  // 13MB autoplay/loop webm. display:none is not a reliable stop for video
+  // decoding, and a phone quietly decoding it behind the game costs frames and
+  // battery for something nobody can see.
+  const startEl = document.getElementById('start');
+  const startVid = startEl && startEl.querySelector('video');
+  if (startVid){ try { startVid.pause(); } catch(e){} }
+  startEl.style.display='none';
   document.getElementById('over').style.display='none';
   document.getElementById('pause').style.display='none';
   document.getElementById('quiz').style.display='none';
@@ -2263,19 +2296,29 @@ function previewPath(){
 /* ============================================================================
    RENDER
    ============================================================================ */
-function drawBackground(){
-  // galaxy gradient
-  const g=ctx.createLinearGradient(0,0,0,H);
+/* The galaxy, the 140 stars and the ground band never move, but they were
+   being rebuilt every frame: two gradients plus 140 fillRects plus 140
+   globalAlpha writes, ~282 operations for a still picture. Painted once into
+   an offscreen canvas and blitted after that. Pixel-identical output. */
+let bgCache = null;
+function buildBackground(){
+  const off = document.createElement('canvas');
+  off.width = W; off.height = H;
+  const b = off.getContext('2d');
+  const g = b.createLinearGradient(0,0,0,H);
   g.addColorStop(0,'#1a1240'); g.addColorStop(0.45,'#241a52'); g.addColorStop(0.7,'#13213f'); g.addColorStop(1,'#0a1322');
-  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  // stars
-  ctx.fillStyle='rgba(255,255,255,.7)';
-  for (const s of stars){ ctx.globalAlpha=s.a; ctx.fillRect(s.x,s.y,s.r,s.r); }
-  ctx.globalAlpha=1;
-  // moon ground band
-  const mg=ctx.createLinearGradient(0,H-150,0,H);
+  b.fillStyle=g; b.fillRect(0,0,W,H);
+  b.fillStyle='rgba(255,255,255,.7)';
+  for (const s of stars){ b.globalAlpha=s.a; b.fillRect(s.x,s.y,s.r,s.r); }
+  b.globalAlpha=1;
+  const mg=b.createLinearGradient(0,H-150,0,H);
   mg.addColorStop(0,'rgba(40,46,66,0)'); mg.addColorStop(1,'rgba(28,32,48,.95)');
-  ctx.fillStyle=mg; ctx.fillRect(0,H-150,W,150);
+  b.fillStyle=mg; b.fillRect(0,H-150,W,150);
+  bgCache = off;
+}
+function drawBackground(){
+  if (!bgCache) buildBackground();
+  ctx.drawImage(bgCache, 0, 0, W, H);
 }
 const stars=[]; for (let i=0;i<140;i++) stars.push({x:Math.random()*W,y:Math.random()*H*0.8,r:Math.random()<.2?2:1,a:.3+Math.random()*.7});
 
