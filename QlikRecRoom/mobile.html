@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>REC Room</title>
+
+<!-- ===========================================================================
+  MOBILE ENTRY — the whole page is one button.
+
+  Why this exists as its own file rather than another ?section= of index.html:
+  the Mindtickle app crops every widget to ~200px and adds an expand control
+  we cannot move or restyle, so anything with layout in it gets cut in half.
+  A page that IS a button has nothing to crop.
+
+  It also carries the web app manifest, so a player can add it to their home
+  screen and get a standalone icon with no Safari chrome — which on a landscape
+  phone is real screen back for the game.
+
+  The key arrives as ?k= from the Mindtickle button and is passed straight
+  through to the game. It is also stashed so an installed copy (which launches
+  without the query string) still scores. Where iOS gives a standalone app its
+  own storage container that stash will be empty — in that case the game says
+  so out loud rather than silently banking nothing.
+  =========================================================================== -->
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/icons/recroom-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="REC Room">
+<meta name="theme-color" content="#10CFC9">
+
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  :root{ --cyan:#10CFC9; --bg:#0a1020; --ink:#dbe8f6; }
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(120% 90% at 50% 25%, #16243f 0%, var(--bg) 60%, #05080f 100%);
+    color:var(--ink); font-family:'Share Tech Mono',monospace;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px calc(24px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
+    -webkit-text-size-adjust:100%;
+  }
+  /* Mindtickle applies word-break to widget content; put it back. */
+  body,button{word-break:normal;overflow-wrap:normal}
+
+  .wrap{ width:100%; max-width:520px; text-align:center; }
+  .badge{ width:132px; height:auto; margin:0 auto 14px; display:block;
+          filter:drop-shadow(0 0 22px rgba(16,207,201,.35)); }
+  h1{ font-family:'VT323',monospace; font-size:2.6rem; line-height:1;
+      letter-spacing:.04em; color:#fff; margin-bottom:4px; }
+  .sub{ font-size:.72rem; letter-spacing:.24em; text-transform:uppercase;
+        color:var(--cyan); opacity:.85; margin-bottom:22px; }
+
+  .launch{
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    width:100%; padding:20px 22px; border:0; cursor:pointer;
+    background:var(--cyan); color:#04121a;
+    font-family:'Share Tech Mono',monospace; font-size:1rem;
+    letter-spacing:.14em; text-transform:uppercase; font-weight:bold;
+    box-shadow:0 0 26px rgba(16,207,201,.42);
+  }
+  .launch:active{ transform:translateY(1px); }
+
+  .note{ font-size:.68rem; line-height:1.5; letter-spacing:.06em;
+         color:#7f93b8; margin-top:16px; }
+  .warn{ display:none; margin-top:16px; padding:12px 14px;
+         border:1px solid rgba(255,107,53,.5); color:#FF6B35;
+         font-size:.68rem; line-height:1.5; letter-spacing:.05em; }
+  .warn.show{ display:block; }
+  .tip{ margin-top:20px; font-size:.62rem; letter-spacing:.1em; color:#4d6285; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="badge" src="assets/images/misc/RecRoom_Logo1.png" alt="">
+    <h1>REC ROOM</h1>
+    <div class="sub">Rank &middot; Elevate &middot; Compete</div>
+
+    <button class="launch" id="go">&#9654;&nbsp; Launch the REC Room</button>
+
+    <div class="note">Opens in your browser. Turn your phone sideways to play.</div>
+
+    <div class="warn" id="warn">
+      <b>Scores will not be saved.</b><br>
+      Open the REC Room from Mindtickle to play for points.
+    </div>
+
+    <div class="tip" id="tip">Tip: Share &rarr; Add to Home Screen to keep it one tap away.</div>
+  </div>
+
+<script>
+(function(){
+  var STORE = 'recroom.k';
+
+  /* The key comes from the Mindtickle button as ?k=. Remember it so an
+     installed copy launching from the home screen (no query string) can still
+     score. iOS may give a standalone app its own storage container, in which
+     case this comes back empty and we say so rather than failing silently. */
+  var url = new URLSearchParams(location.search);
+  var key = url.get('k') || '';
+  if (key) { try { localStorage.setItem(STORE, key); } catch (e) {} }
+  else     { try { key = localStorage.getItem(STORE) || ''; } catch (e) {} }
+
+  if (!key) document.getElementById('warn').classList.add('show');
+
+  document.getElementById('go').addEventListener('click', function(){
+    var q = new URLSearchParams({ section: 'play' });
+    if (key) q.set('k', key);
+    location.href = 'index.html?' + q.toString();
+  });
+
+  /* The add-to-home-screen tip is noise once they have already done it. */
+  var standalone = window.matchMedia('(display-mode: standalone)').matches ||
+                   window.navigator.standalone === true;
+  if (standalone) document.getElementById('tip').style.display = 'none';
+})();
+</script>
+</body>
+</html>
