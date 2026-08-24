@@ -321,6 +321,57 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
 @media (prefers-reduced-motion:reduce){ .rotate .ico{animation:none} }
 .rotate .btn.ghost{width:auto;padding:11px 18px;font-size:.6rem;margin-top:4px}
 
+/* ------------------------------- install ------------------------------- */
+/* Lives here rather than in its own install.html on purpose: manifest.json
+   has no start_url, so Add to Home Screen captures whatever URL is open. A
+   separate tutorial page would install THE TUTORIAL. It has to be this page. */
+.seg{display:flex;margin-bottom:18px;border:1px solid var(--dim)}
+.seg button{
+  flex:1;padding:13px 8px;font-size:.62rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);
+}
+.seg button+button{border-left:1px solid var(--dim)}
+.seg button[aria-pressed="true"]{background:var(--cyan);color:#04121a;font-weight:bold}
+
+.why{
+  display:flex;gap:12px;align-items:center;padding:13px 14px;margin-bottom:16px;
+  border:1px solid var(--cyan);background:rgba(16,207,201,.07);
+}
+.why .big{font-family:'VT323',monospace;font-size:2.2rem;line-height:1;color:var(--cyan);flex:0 0 auto}
+.why .tx{font-size:.62rem;line-height:1.6;letter-spacing:.04em;color:var(--ink)}
+
+.step{display:flex;gap:12px;padding:15px 0;border-bottom:1px solid rgba(53,67,93,.35)}
+.step:last-of-type{border-bottom:0}
+.step .n{
+  flex:0 0 auto;width:24px;height:24px;border:1px solid var(--cyan);color:var(--cyan);
+  font-family:'VT323',monospace;font-size:1.05rem;line-height:22px;text-align:center;
+}
+.step .tx{flex:1;min-width:0;font-size:.68rem;line-height:1.65;letter-spacing:.03em}
+.step .tx b{color:var(--cyan);font-weight:normal}
+.step .tx small{display:block;margin-top:4px;font-size:.58rem;color:var(--muted);line-height:1.55}
+
+/* Mock browser chrome so they recognise the real control on sight. */
+.mock{margin:10px 0 2px;border:1px solid var(--dim);background:#0b1424;padding:8px 10px;
+      display:flex;align-items:center;gap:8px}
+.mock .url{flex:1;height:16px;background:#16233a;border-radius:8px}
+.mock svg{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:var(--muted);
+          stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.mock svg.hit{stroke:var(--cyan)}
+.mock .ring{outline:2px solid var(--cyan);outline-offset:3px;border-radius:3px}
+
+.done{
+  text-align:center;padding:26px 16px;border:1px solid var(--ok);
+  background:rgba(74,222,128,.07);margin-bottom:14px;
+}
+.done .tick{font-family:'VT323',monospace;font-size:3rem;line-height:1;color:var(--ok)}
+.done h2{font-family:'VT323',monospace;font-size:1.7rem;color:#fff;font-weight:normal;margin:4px 0 6px}
+.done p{font-size:.64rem;line-height:1.7;color:var(--muted);letter-spacing:.04em}
+
+.skip{
+  display:block;width:100%;padding:14px;margin-top:10px;color:var(--muted);
+  font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--dim);
+}
+
 /* ------------------------------- tab bar ------------------------------- */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
@@ -420,11 +471,11 @@ html[data-view="play"] .tabs{display:none}
 
         <button class="btn" id="playNow">&#9654;&nbsp; Play Side-Qlik Blitz</button>
 
-        <div class="tip" id="a2hs">
+        <button class="tip" id="a2hs" style="width:100%;text-align:left;cursor:pointer">
           <span>&#128241;</span>
-          <span>Keep it one tap away: <b>Share &rarr; Add to Home Screen</b>. It opens
-                full screen with no browser bars &mdash; more board, less chrome.</span>
-        </div>
+          <span>Playing on this phone a lot? <b>Put it on your home screen</b> &mdash;
+                no address bar, about double the play area. <b>Show me &rarr;</b></span>
+        </button>
 
         <button class="btn ghost" id="signOut">Not you? Switch trigram</button>
         <div class="foot">Qlik Global Sales Enablement</div>
@@ -503,6 +554,110 @@ html[data-view="play"] .tabs{display:none}
     </div>
   </section>
 
+  <!-- ------------------------------ INSTALL ---------------------------- -->
+  <section class="view" id="viewInstall">
+    <div class="scroll">
+      <div class="hero">
+        <img src="assets/images/misc/RecRoom_Logo1.png" alt="">
+        <h1>PUT IT ON<br>YOUR PHONE</h1>
+        <div class="sub">30 seconds &middot; no app store</div>
+      </div>
+
+      <!-- already done -->
+      <div class="done" id="installDone" hidden>
+        <div class="tick">&#10003;</div>
+        <h2>You&rsquo;re all set</h2>
+        <p>The REC Room is installed and running full screen.<br>Launch it from your home screen from now on.</p>
+      </div>
+
+      <div id="installBody">
+        <div class="why">
+          <div class="big">2&times;</div>
+          <div class="tx">Installed, the game runs with <b>no address bar</b> &mdash;
+               about double the play area, and it rotates freely.</div>
+        </div>
+
+        <div class="seg" role="group" aria-label="Choose your phone">
+          <button id="segIos" aria-pressed="false">&#63743;&nbsp; iPhone</button>
+          <button id="segAndroid" aria-pressed="false">&#9654;&nbsp; Android</button>
+        </div>
+
+        <!-- one-tap, where Chrome offers it -->
+        <button class="btn" id="installNow" hidden>&#8681;&nbsp; Install the REC Room</button>
+
+        <div class="panel" id="stepsIos" hidden>
+          <div class="eyebrow">iPhone &middot; Safari</div>
+          <div class="step">
+            <div class="n">1</div>
+            <div class="tx">Make sure you&rsquo;re in <b>Safari</b>.
+              <small>If you opened this from inside another app, use that app&rsquo;s
+                     &ldquo;Open in Safari&rdquo; first &mdash; the steps below only exist in Safari.</small></div>
+          </div>
+          <div class="step">
+            <div class="n">2</div>
+            <div class="tx">Tap the <b>Share</b> button &mdash; the square with an arrow coming out of it.
+              <small>Bottom of the screen in portrait, top-right in landscape.</small>
+              <div class="mock">
+                <svg viewBox="0 0 24 24" class="hit"><path d="M12 15V3M12 3L8 7M12 3l4 4"/><path d="M5 12v7a1 1 0 001 1h12a1 1 0 001-1v-7"/></svg>
+                <div class="url"></div>
+                <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">3</div>
+            <div class="tx">Scroll down the share sheet and tap <b>Add to Home Screen</b>.</div>
+          </div>
+          <div class="step">
+            <div class="n">4</div>
+            <div class="tx">Tap <b>Add</b>, top right.</div>
+          </div>
+          <div class="step">
+            <div class="n">5</div>
+            <div class="tx">Open the REC Room from your <b>new home screen icon</b>.
+              <small>That copy is the one that scores &mdash; it carries your session with it.</small></div>
+          </div>
+        </div>
+
+        <div class="panel" id="stepsAndroid" hidden>
+          <div class="eyebrow">Android &middot; Chrome</div>
+          <div class="step">
+            <div class="n">1</div>
+            <div class="tx">Tap the <b>&#8942; menu</b>, top right of Chrome.
+              <div class="mock">
+                <div class="url"></div>
+                <svg viewBox="0 0 24 24" class="hit"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </div>
+            </div>
+          </div>
+          <div class="step">
+            <div class="n">2</div>
+            <div class="tx">Tap <b>Install app</b>, or <b>Add to Home screen</b>.
+              <small>Chrome shows one or the other depending on its version &mdash; they do the same thing.</small></div>
+          </div>
+          <div class="step">
+            <div class="n">3</div>
+            <div class="tx">Confirm with <b>Install</b> or <b>Add</b>.</div>
+          </div>
+          <div class="step">
+            <div class="n">4</div>
+            <div class="tx">Open the REC Room from your <b>new icon</b>.
+              <small>On Samsung Internet it&rsquo;s Menu &rarr; Add page to &rarr; Home screen.</small></div>
+          </div>
+        </div>
+
+        <div class="tip" id="installDesktopNote" hidden>
+          <span>&#128187;</span>
+          <span>You&rsquo;re on a computer. This one is for phones &mdash; open
+                <b>the REC Room link on your phone</b>, then follow the steps above.</span>
+        </div>
+
+        <button class="skip" id="installSkip">Skip &mdash; play in the browser</button>
+      </div>
+      <div class="foot">Qlik Global Sales Enablement</div>
+    </div>
+  </section>
+
   <!-- ----------------------------- tab bar ----------------------------- -->
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" data-go="badge" aria-selected="true">
@@ -567,6 +722,18 @@ if (KEY) store(K_STORE, KEY);
 else     KEY = read(K_STORE) || '';
 var CAN_SCORE = KEY.length > 0;
 
+/* Point the manifest at the keyed endpoint BEFORE anyone can install, so
+   start_url launches with the session key. Without this an installed copy on
+   iOS comes up with no key at all and every run returns "score not validated":
+   iOS gives a standalone app its own storage container (so the stash above is
+   empty there) and, tested on a real iPhone, it does not inherit the install
+   URL's query string either. The static manifest.json stays as the fallback
+   for a keyless visit. */
+if (KEY) {
+  var mlink = document.querySelector('link[rel="manifest"]');
+  if (mlink) mlink.setAttribute('href', '/api/recroom/manifest?k=' + encodeURIComponent(KEY));
+}
+
 if (FRAMED) {
   document.getElementById('breakout').addEventListener('click', function () {
     // Carry the key through or the new tab looks identical and banks nothing.
@@ -612,6 +779,17 @@ var MEDAL = [
 const COUNTRIES = [{"n": "Afghanistan", "c": "af"}, {"n": "Albania", "c": "al"}, {"n": "Algeria", "c": "dz"}, {"n": "American Samoa", "c": "as"}, {"n": "Andorra", "c": "ad"}, {"n": "Angola", "c": "ao"}, {"n": "Anguilla", "c": "ai"}, {"n": "Antarctica", "c": "aq"}, {"n": "Antigua and Barbuda", "c": "ag"}, {"n": "Argentina", "c": "ar"}, {"n": "Armenia", "c": "am"}, {"n": "Aruba", "c": "aw"}, {"n": "Australia", "c": "au"}, {"n": "Austria", "c": "at"}, {"n": "Azerbaijan", "c": "az"}, {"n": "Bahamas", "c": "bs"}, {"n": "Bahrain", "c": "bh"}, {"n": "Bangladesh", "c": "bd"}, {"n": "Barbados", "c": "bb"}, {"n": "Belarus", "c": "by"}, {"n": "Belgium", "c": "be"}, {"n": "Belize", "c": "bz"}, {"n": "Benin", "c": "bj"}, {"n": "Bermuda", "c": "bm"}, {"n": "Bhutan", "c": "bt"}, {"n": "Bolivia", "c": "bo"}, {"n": "Bonaire, Sint Eustatius and Saba", "c": "bq"}, {"n": "Bosnia and Herzegovina", "c": "ba"}, {"n": "Botswana", "c": "bw"}, {"n": "Bouvet Island", "c": "bv"}, {"n": "Brazil", "c": "br"}, {"n": "British Indian Ocean Territory", "c": "io"}, {"n": "Brunei Darussalam", "c": "bn"}, {"n": "Bulgaria", "c": "bg"}, {"n": "Burkina Faso", "c": "bf"}, {"n": "Burundi", "c": "bi"}, {"n": "Cabo Verde", "c": "cv"}, {"n": "Cambodia", "c": "kh"}, {"n": "Cameroon", "c": "cm"}, {"n": "Canada", "c": "ca"}, {"n": "Cayman Islands", "c": "ky"}, {"n": "Central African Republic", "c": "cf"}, {"n": "Chad", "c": "td"}, {"n": "Chile", "c": "cl"}, {"n": "China", "c": "cn"}, {"n": "Christmas Island", "c": "cx"}, {"n": "Cocos (Keeling) Islands", "c": "cc"}, {"n": "Colombia", "c": "co"}, {"n": "Comoros", "c": "km"}, {"n": "Congo", "c": "cg"}, {"n": "Congo, The Democratic Republic of the", "c": "cd"}, {"n": "Cook Islands", "c": "ck"}, {"n": "Costa Rica", "c": "cr"}, {"n": "Croatia", "c": "hr"}, {"n": "Cuba", "c": "cu"}, {"n": "Curaçao", "c": "cw"}, {"n": "Cyprus", "c": "cy"}, {"n": "Czechia", "c": "cz"}, {"n": "Côte d'Ivoire", "c": "ci"}, {"n": "Denmark", "c": "dk"}, {"n": "Djibouti", "c": "dj"}, {"n": "Dominica", "c": "dm"}, {"n": "Dominican Republic", "c": "do"}, {"n": "Ecuador", "c": "ec"}, {"n": "Egypt", "c": "eg"}, {"n": "El Salvador", "c": "sv"}, {"n": "Equatorial Guinea", "c": "gq"}, {"n": "Eritrea", "c": "er"}, {"n": "Estonia", "c": "ee"}, {"n": "Eswatini", "c": "sz"}, {"n": "Ethiopia", "c": "et"}, {"n": "Falkland Islands (Malvinas)", "c": "fk"}, {"n": "Faroe Islands", "c": "fo"}, {"n": "Fiji", "c": "fj"}, {"n": "Finland", "c": "fi"}, {"n": "France", "c": "fr"}, {"n": "French Guiana", "c": "gf"}, {"n": "French Polynesia", "c": "pf"}, {"n": "French Southern Territories", "c": "tf"}, {"n": "Gabon", "c": "ga"}, {"n": "Gambia", "c": "gm"}, {"n": "Georgia", "c": "ge"}, {"n": "Germany", "c": "de"}, {"n": "Ghana", "c": "gh"}, {"n": "Gibraltar", "c": "gi"}, {"n": "Greece", "c": "gr"}, {"n": "Greenland", "c": "gl"}, {"n": "Grenada", "c": "gd"}, {"n": "Guadeloupe", "c": "gp"}, {"n": "Guam", "c": "gu"}, {"n": "Guatemala", "c": "gt"}, {"n": "Guernsey", "c": "gg"}, {"n": "Guinea", "c": "gn"}, {"n": "Guinea-Bissau", "c": "gw"}, {"n": "Guyana", "c": "gy"}, {"n": "Haiti", "c": "ht"}, {"n": "Heard Island and McDonald Islands", "c": "hm"}, {"n": "Holy See (Vatican City State)", "c": "va"}, {"n": "Honduras", "c": "hn"}, {"n": "Hong Kong", "c": "hk"}, {"n": "Hungary", "c": "hu"}, {"n": "Iceland", "c": "is"}, {"n": "India", "c": "in"}, {"n": "Indonesia", "c": "id"}, {"n": "Iran", "c": "ir"}, {"n": "Iraq", "c": "iq"}, {"n": "Ireland", "c": "ie"}, {"n": "Isle of Man", "c": "im"}, {"n": "Israel", "c": "il"}, {"n": "Italy", "c": "it"}, {"n": "Jamaica", "c": "jm"}, {"n": "Japan", "c": "jp"}, {"n": "Jersey", "c": "je"}, {"n": "Jordan", "c": "jo"}, {"n": "Kazakhstan", "c": "kz"}, {"n": "Kenya", "c": "ke"}, {"n": "Kiribati", "c": "ki"}, {"n": "Kuwait", "c": "kw"}, {"n": "Kyrgyzstan", "c": "kg"}, {"n": "Laos", "c": "la"}, {"n": "Latvia", "c": "lv"}, {"n": "Lebanon", "c": "lb"}, {"n": "Lesotho", "c": "ls"}, {"n": "Liberia", "c": "lr"}, {"n": "Libya", "c": "ly"}, {"n": "Liechtenstein", "c": "li"}, {"n": "Lithuania", "c": "lt"}, {"n": "Luxembourg", "c": "lu"}, {"n": "Macao", "c": "mo"}, {"n": "Madagascar", "c": "mg"}, {"n": "Malawi", "c": "mw"}, {"n": "Malaysia", "c": "my"}, {"n": "Maldives", "c": "mv"}, {"n": "Mali", "c": "ml"}, {"n": "Malta", "c": "mt"}, {"n": "Marshall Islands", "c": "mh"}, {"n": "Martinique", "c": "mq"}, {"n": "Mauritania", "c": "mr"}, {"n": "Mauritius", "c": "mu"}, {"n": "Mayotte", "c": "yt"}, {"n": "Mexico", "c": "mx"}, {"n": "Micronesia, Federated States of", "c": "fm"}, {"n": "Moldova", "c": "md"}, {"n": "Monaco", "c": "mc"}, {"n": "Mongolia", "c": "mn"}, {"n": "Montenegro", "c": "me"}, {"n": "Montserrat", "c": "ms"}, {"n": "Morocco", "c": "ma"}, {"n": "Mozambique", "c": "mz"}, {"n": "Myanmar", "c": "mm"}, {"n": "Namibia", "c": "na"}, {"n": "Nauru", "c": "nr"}, {"n": "Nepal", "c": "np"}, {"n": "Netherlands", "c": "nl"}, {"n": "New Caledonia", "c": "nc"}, {"n": "New Zealand", "c": "nz"}, {"n": "Nicaragua", "c": "ni"}, {"n": "Niger", "c": "ne"}, {"n": "Nigeria", "c": "ng"}, {"n": "Niue", "c": "nu"}, {"n": "Norfolk Island", "c": "nf"}, {"n": "North Korea", "c": "kp"}, {"n": "North Macedonia", "c": "mk"}, {"n": "Northern Mariana Islands", "c": "mp"}, {"n": "Norway", "c": "no"}, {"n": "Oman", "c": "om"}, {"n": "Pakistan", "c": "pk"}, {"n": "Palau", "c": "pw"}, {"n": "Palestine, State of", "c": "ps"}, {"n": "Panama", "c": "pa"}, {"n": "Papua New Guinea", "c": "pg"}, {"n": "Paraguay", "c": "py"}, {"n": "Peru", "c": "pe"}, {"n": "Philippines", "c": "ph"}, {"n": "Pitcairn", "c": "pn"}, {"n": "Poland", "c": "pl"}, {"n": "Portugal", "c": "pt"}, {"n": "Puerto Rico", "c": "pr"}, {"n": "Qatar", "c": "qa"}, {"n": "Romania", "c": "ro"}, {"n": "Russian Federation", "c": "ru"}, {"n": "Rwanda", "c": "rw"}, {"n": "Réunion", "c": "re"}, {"n": "Saint Barthélemy", "c": "bl"}, {"n": "Saint Helena, Ascension and Tristan da Cunha", "c": "sh"}, {"n": "Saint Kitts and Nevis", "c": "kn"}, {"n": "Saint Lucia", "c": "lc"}, {"n": "Saint Martin (French part)", "c": "mf"}, {"n": "Saint Pierre and Miquelon", "c": "pm"}, {"n": "Saint Vincent and the Grenadines", "c": "vc"}, {"n": "Samoa", "c": "ws"}, {"n": "San Marino", "c": "sm"}, {"n": "Sao Tome and Principe", "c": "st"}, {"n": "Saudi Arabia", "c": "sa"}, {"n": "Senegal", "c": "sn"}, {"n": "Serbia", "c": "rs"}, {"n": "Seychelles", "c": "sc"}, {"n": "Sierra Leone", "c": "sl"}, {"n": "Singapore", "c": "sg"}, {"n": "Sint Maarten (Dutch part)", "c": "sx"}, {"n": "Slovakia", "c": "sk"}, {"n": "Slovenia", "c": "si"}, {"n": "Solomon Islands", "c": "sb"}, {"n": "Somalia", "c": "so"}, {"n": "South Africa", "c": "za"}, {"n": "South Georgia and the South Sandwich Islands", "c": "gs"}, {"n": "South Korea", "c": "kr"}, {"n": "South Sudan", "c": "ss"}, {"n": "Spain", "c": "es"}, {"n": "Sri Lanka", "c": "lk"}, {"n": "Sudan", "c": "sd"}, {"n": "Suriname", "c": "sr"}, {"n": "Svalbard and Jan Mayen", "c": "sj"}, {"n": "Sweden", "c": "se"}, {"n": "Switzerland", "c": "ch"}, {"n": "Syria", "c": "sy"}, {"n": "Taiwan", "c": "tw"}, {"n": "Tajikistan", "c": "tj"}, {"n": "Tanzania", "c": "tz"}, {"n": "Thailand", "c": "th"}, {"n": "Timor-Leste", "c": "tl"}, {"n": "Togo", "c": "tg"}, {"n": "Tokelau", "c": "tk"}, {"n": "Tonga", "c": "to"}, {"n": "Trinidad and Tobago", "c": "tt"}, {"n": "Tunisia", "c": "tn"}, {"n": "Turkmenistan", "c": "tm"}, {"n": "Turks and Caicos Islands", "c": "tc"}, {"n": "Tuvalu", "c": "tv"}, {"n": "Türkiye", "c": "tr"}, {"n": "Uganda", "c": "ug"}, {"n": "Ukraine", "c": "ua"}, {"n": "United Arab Emirates", "c": "ae"}, {"n": "United Kingdom", "c": "gb"}, {"n": "United States", "c": "us"}, {"n": "United States Minor Outlying Islands", "c": "um"}, {"n": "Uruguay", "c": "uy"}, {"n": "Uzbekistan", "c": "uz"}, {"n": "Vanuatu", "c": "vu"}, {"n": "Venezuela", "c": "ve"}, {"n": "Vietnam", "c": "vn"}, {"n": "Virgin Islands, British", "c": "vg"}, {"n": "Virgin Islands, U.S.", "c": "vi"}, {"n": "Wallis and Futuna", "c": "wf"}, {"n": "Western Sahara", "c": "eh"}, {"n": "Yemen", "c": "ye"}, {"n": "Zambia", "c": "zm"}, {"n": "Zimbabwe", "c": "zw"}, {"n": "Åland Islands", "c": "ax"}];
 var CNAME = {}; COUNTRIES.forEach(function (c) { CNAME[c.c] = c.n; });
 
+/* Device facts. Declared up here because both the install screen and the
+   full-screen code read them, and the install screen runs first — left further
+   down the file they hoist as undefined and every iPhone falls through to the
+   Android instructions. */
+var TOUCH = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ||
+            ('ontouchstart' in window);
+var IOS   = /iPad|iPhone|iPod/.test(navigator.userAgent || '') ||
+            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+var STANDALONE = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+                 window.navigator.standalone === true;
+
 var $ = function (id) { return document.getElementById(id); };
 var num = function (v) { var n = Number(v); return Number.isFinite(n) ? n : 0; };
 var fmt = function (v) { return num(v).toLocaleString('en-US'); };
@@ -649,7 +827,8 @@ $('dorcOk').addEventListener('click', function () { dorc.classList.remove('open'
    Three views, one tab bar, no page loads. data-view on <html> is what the
    CSS reads to hide the tab bar during play.
    ====================================================================== */
-var VIEW_EL = { badge: $('viewBadge'), play: $('viewPlay'), board: $('viewBoard') };
+var VIEW_EL = { badge: $('viewBadge'), play: $('viewPlay'), board: $('viewBoard'),
+                install: $('viewInstall') };
 var view = null;
 
 function go(v) {
@@ -676,7 +855,8 @@ function go(v) {
     if (FS.active()) { FS.unlock(); FS.exit(); }
     VIEW_EL.play.classList.remove('show-tip');
   }
-  if (v === 'board') loadBoard();
+  if (v === 'board')   loadBoard();
+  if (v === 'install') paintInstall();
   var sc = VIEW_EL[v].querySelector('.scroll');
   if (sc) sc.scrollTop = 0;
 }
@@ -749,7 +929,92 @@ $('signOut').addEventListener('click', function () {
   var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
                    window.navigator.standalone === true;
   if (standalone) $('a2hs').hidden = true;
+  $('a2hs').addEventListener('click', function () { go('install'); });
 })();
+
+/* ======================================================================
+   6b. INSTALL — the mobile front door
+
+   Add to Home Screen is not a nicety on a phone, it is the difference between
+   a playable game and a cramped one: installed, the room runs with no browser
+   chrome at all, which is close to double the play area and rotates freely.
+   So this is a real screen with real steps, not a one-line hint.
+
+   iOS and Android need completely different instructions and only one of them
+   can be automated — Chrome fires beforeinstallprompt, which we capture and
+   turn into a genuine one-tap install. Safari has no equivalent; iPhone users
+   have to be walked through the share sheet.
+   ====================================================================== */
+var ANDROID  = /Android/i.test(navigator.userAgent || '');
+var deferredPrompt = null;
+var installChoice = read('recroom.plat') || (IOS ? 'ios' : (ANDROID ? 'android' : ''));
+
+/* Chrome offers this only when the app is actually installable. Capturing the
+   event means we can show one button instead of four steps. */
+window.addEventListener('beforeinstallprompt', function (e) {
+  e.preventDefault();
+  deferredPrompt = e;
+  paintInstall();
+});
+window.addEventListener('appinstalled', function () {
+  deferredPrompt = null;
+  STANDALONE = true;                 // not launched standalone yet, but installed
+  paintInstall();
+});
+
+function setPlatform(p) {
+  installChoice = p;
+  store('recroom.plat', p);
+  paintInstall();
+}
+$('segIos').addEventListener('click', function () { setPlatform('ios'); });
+$('segAndroid').addEventListener('click', function () { setPlatform('android'); });
+
+$('installNow').addEventListener('click', function () {
+  if (!deferredPrompt) return;
+  var p = deferredPrompt;
+  deferredPrompt = null;
+  p.prompt();
+  // userChoice is informational — appinstalled is what actually confirms it.
+  if (p.userChoice && p.userChoice.then) p.userChoice.then(function () { paintInstall(); });
+});
+
+$('installSkip').addEventListener('click', function () {
+  store('recroom.skipinstall', '1');
+  go('badge');
+});
+
+function paintInstall() {
+  var installed = STANDALONE;
+  $('installDone').hidden = !installed;
+  $('installBody').hidden = installed;
+  if (installed) return;
+
+  var plat = installChoice || (TOUCH ? 'android' : '');
+  $('segIos').setAttribute('aria-pressed', plat === 'ios' ? 'true' : 'false');
+  $('segAndroid').setAttribute('aria-pressed', plat === 'android' ? 'true' : 'false');
+  $('stepsIos').hidden     = plat !== 'ios';
+  $('stepsAndroid').hidden = plat !== 'android';
+  // Neither auto-selected: they are on a desktop, so say so rather than
+  // walking them through a phone gesture they cannot perform.
+  $('installDesktopNote').hidden = TOUCH;
+  // One tap beats four steps. Show it whenever Chrome offers it — desktop
+  // Chrome installs PWAs too, and the offer is never wrong when it arrives.
+  $('installNow').hidden = !deferredPrompt;
+}
+
+/* The state Travis hit: an installed copy that launches with no key. Nothing
+   in the app can mint one, so say plainly how to repair it rather than letting
+   every run die at the scoreboard. */
+function warnKeylessInstall() {
+  if (!STANDALONE || CAN_SCORE) return;
+  dorcAlert(
+    'This copy cannot score',
+    'It was installed before the session key travelled with it, so runs will ' +
+    'not be saved.<br><br>Fix it once: <b>delete this icon</b>, open the REC Room ' +
+    'from Mindtickle again, and re-install from that page.'
+  );
+}
 
 /* ======================================================================
    7. SIGN-IN
@@ -893,13 +1158,6 @@ function startGame() {
    So: attempt everything, and where the platform refuses, say what will
    actually work instead of failing quietly.
    --------------------------------------------------------------------- */
-var TOUCH = (window.matchMedia && window.matchMedia('(pointer:coarse)').matches) ||
-            ('ontouchstart' in window);
-var IOS   = /iPad|iPhone|iPod/.test(navigator.userAgent || '') ||
-            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-var STANDALONE = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-                 window.navigator.standalone === true;
-
 var FS = {
   supported: function () {
     // fullscreenEnabled, not just the method: inside an iframe without
@@ -993,7 +1251,7 @@ function offerEscape() {
     t.innerHTML = '<b>Address bar eating the game?</b> ' +
                   'Add to Home Screen and it runs with no bars &mdash; about double the play area.';
     g.textContent = 'Show me';
-    g.onclick = howToFullScreen;
+    g.onclick = function () { go('install'); };
   } else {
     t.innerHTML = '<b>For full screen,</b> add the REC Room to your home screen ' +
                   'from your browser menu, then launch it from there.';
@@ -1015,30 +1273,8 @@ $('playTipX').addEventListener('click', dismissTip);
 $('fsBtn').addEventListener('click', function () {
   if (FS.active()) { FS.unlock(); FS.exit(); return; }
   if (FS.supported()) { enterPlayScreen(); return; }
-  howToFullScreen();      // iPhone: the button still exists, and still helps
+  go('install');          // iPhone: the button still exists, and still helps
 });
-
-/* iPhone Safari has no Fullscreen API, so there is nothing for a full-screen
-   button to call — but leaving the button out entirely was worse. The one
-   thing that genuinely removes the chrome on iPhone is Add to Home Screen,
-   and it is worth real screen: the game frame is 7:4, so on a short wide
-   landscape phone it fits to HEIGHT, and every pixel of address bar costs
-   1.75 pixels of game width. Bars showing gives ~490x280. Installed gives
-   ~683x390 — near enough double the play area. So the button explains that
-   rather than pretending it cannot help. */
-function howToFullScreen() {
-  dorcAlert(
-    'Full screen on iPhone',
-    'Safari has no full-screen mode, but the REC Room installs as an app and ' +
-    'runs with no address bar at all &mdash; close to <b>double</b> the play area.<br><br>' +
-    '1. Tap <b>Share</b> (the box with the arrow)<br>' +
-    '2. <b>Add to Home Screen</b><br>' +
-    '3. Launch the REC Room from the new icon<br><br>' +
-    'Do it from this page so your session comes with it and runs keep scoring. ' +
-    'If you opened this from inside another app, use that app&rsquo;s ' +
-    '<b>Open in Safari</b> control first.'
-  );
-}
 
 /* Keep the button honest about what it will do next, and let the OS-level
    exit (swipe, Esc) put the label back without us being told directly. */
@@ -1275,13 +1511,23 @@ document.addEventListener('visibilitychange', function () {
    10. BOOT
    ====================================================================== */
 paintBadge();
-go(qs.get('view') === 'play' && me ? 'play' : 'badge');
+paintInstall();
+
+/* Where a phone lands. Installed is so much better than in-browser — no
+   chrome, near double the play area — that an uninstalled phone is shown the
+   Install screen first. Skippable, remembered, and never shown on desktop or
+   to a copy that is already installed. */
+var wantsInstall = TOUCH && !STANDALONE && read('recroom.skipinstall') !== '1' &&
+                   qs.get('view') !== 'play';
+go(qs.get('view') === 'play' && me ? 'play' : (wantsInstall ? 'install' : 'badge'));
 if (me) loadBoard();
 
 /* Say it out loud on arrival, once, when this session cannot bank points.
    The alternative is a player finishing a fifteen-minute run and finding out
    at the end — which is exactly how this went wrong before. */
-if (!CAN_SCORE) {
+if (STANDALONE && !CAN_SCORE) {
+  warnKeylessInstall();
+} else if (!CAN_SCORE) {
   dorcAlert('Practice mode',
     'This session has no scoring key, so runs will <b>not</b> be saved.<br><br>' +
     'Open the REC Room from the Mindtickle button and your points will count.');

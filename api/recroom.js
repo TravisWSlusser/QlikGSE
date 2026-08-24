@@ -7,6 +7,7 @@ import getLeaderboard from '../lib/recroom/getLeaderboard.js';
 import getRecentScores from '../lib/recroom/getRecentScores.js';
 import getTerritoryHigh from '../lib/recroom/getTerritoryHigh.js';
 import logScore from '../lib/recroom/logScore.js';
+import manifest from '../lib/recroom/manifest.js';
 import lookupTrigram from '../lib/recroom/lookupTrigram.js';
 import trend from '../lib/recroom/trend.js';
 import updateIdentity from '../lib/recroom/updateIdentity.js';
@@ -18,6 +19,7 @@ const HANDLERS = {
   getRecentScores,
   getTerritoryHigh,
   logScore,
+  manifest,
   lookupTrigram,
   trend,
   updateIdentity
