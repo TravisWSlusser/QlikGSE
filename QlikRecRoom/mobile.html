@@ -305,33 +305,44 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
   font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;font-weight:bold;
 }
 .playtip .x{flex:0 0 auto;padding:6px 8px;color:var(--muted);font-size:.8rem;line-height:1}
-.rotate{
-  position:absolute;inset:0;z-index:41;display:none;
-  flex-direction:column;align-items:center;justify-content:center;gap:12px;
-  background:rgba(6,16,31,.94);text-align:center;padding:32px;
-}
-.rotate .ico{font-size:2.6rem;color:var(--cyan);animation:tip 2.4s ease-in-out infinite}
-@keyframes tip{0%,60%,100%{transform:rotate(0)}30%{transform:rotate(90deg)}}
-.rotate p{font-size:.72rem;letter-spacing:.1em;color:var(--ink);line-height:1.7}
-.rotate small{font-size:.58rem;color:var(--muted);letter-spacing:.08em;line-height:1.6}
-/* Dismissible on purpose. If the player has orientation lock on, the phone
-   reports portrait however they hold it — a hard gate would leave them
-   staring at a rotate prompt with no way into the game. */
-@media (orientation:portrait){ #viewPlay.on:not(.rot-ok) .rotate{display:flex} }
-@media (prefers-reduced-motion:reduce){ .rotate .ico{animation:none} }
-.rotate .btn.ghost{width:auto;padding:11px 18px;font-size:.6rem;margin-top:4px}
 
 /* ------------------------------- install ------------------------------- */
 /* Lives here rather than in its own install.html on purpose: manifest.json
    has no start_url, so Add to Home Screen captures whatever URL is open. A
    separate tutorial page would install THE TUTORIAL. It has to be this page. */
-.seg{display:flex;margin-bottom:18px;border:1px solid var(--dim)}
-.seg button{
-  flex:1;padding:13px 8px;font-size:.62rem;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--muted);
+/* Step 1: pick the phone. Big targets, because this is the first thing a
+   sales rep sees on a launch day and a wrong tap sends them into
+   instructions that do not exist on their device. */
+.pick{
+  display:flex;align-items:center;gap:14px;width:100%;margin-bottom:10px;
+  padding:18px 16px;background:var(--panel);border:1px solid var(--cyan);
+  text-align:left;
 }
-.seg button+button{border-left:1px solid var(--dim)}
-.seg button[aria-pressed="true"]{background:var(--cyan);color:#04121a;font-weight:bold}
+.pick:active{transform:translateY(1px)}
+.pick .gl{font-size:1.5rem;line-height:1;color:var(--cyan);flex:0 0 auto;width:26px;text-align:center}
+.pick .lb{flex:1;min-width:0;font-size:.92rem;letter-spacing:.1em;text-transform:uppercase;color:#fff}
+.pick .lb small{
+  display:block;margin-top:3px;font-size:.5rem;letter-spacing:.16em;
+  color:var(--cyan);text-transform:uppercase;
+}
+.pick .ar{flex:0 0 auto;color:var(--cyan);font-size:1.1rem}
+
+.back{
+  display:block;margin-bottom:12px;padding:8px 0;color:var(--muted);
+  font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
+}
+
+/* The iPhone blocker: you cannot install from an in-app browser, so step 1
+   gets its own weight rather than reading like one bullet among five. */
+.step.gate{border-bottom:0;background:rgba(255,107,53,.07);
+           box-shadow:inset 0 0 0 1px rgba(255,107,53,.35);padding:14px;margin-bottom:8px}
+.step.gate .n{border-color:var(--warn);color:var(--warn)}
+.step.gate .tx b{color:var(--warn)}
+a.safari{
+  display:block;margin:10px 0 8px;padding:13px;background:var(--warn);color:#160600;
+  font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;font-weight:bold;
+  text-align:center;text-decoration:none;
+}
 
 .why{
   display:flex;gap:12px;align-items:center;padding:13px 14px;margin-bottom:16px;
@@ -380,6 +391,9 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
 }
 html[data-view="play"] .tabs{display:none}
+/* A phone that has not installed gets the install screen and nothing else —
+   no tab bar, no browser play. Travis: do not offer them to play in browser. */
+html[data-locked="1"] .tabs{display:none}
 .tab{
   position:relative;flex:1;height:var(--tabh);display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:3px;
@@ -428,8 +442,8 @@ html[data-view="play"] .tabs{display:none}
   <img class="card-logo" src="assets/images/misc/RecRoom_Logo1.png" alt="">
   <div class="card-title">REC ROOM</div>
   <div class="card-sub">Rank &middot; Elevate &middot; Compete</div>
-  <button class="card-btn" id="breakout">&#9654;&nbsp; Open the REC Room</button>
-  <div class="card-note">Opens in your browser</div>
+  <button class="card-btn" id="breakout">&#8681;&nbsp; Install the Mobile REC Room</button>
+  <div class="card-note">Takes about 30 seconds</div>
 </div>
 
 <!-- ============================== the room =============================== -->
@@ -529,12 +543,6 @@ html[data-view="play"] .tabs{display:none}
       <button class="go" id="playTipGo"></button>
       <button class="x" id="playTipX" aria-label="Dismiss">&#10005;</button>
     </div>
-    <div class="rotate">
-      <div class="ico">&#128241;</div>
-      <p>Turn your phone sideways</p>
-      <small>Side-Qlik Blitz needs the width.<br>Nothing has started &mdash; your run is safe.</small>
-      <button class="btn ghost" id="rotOk">Play in portrait anyway</button>
-    </div>
   </section>
 
   <!-- ------------------------------ BOARD ------------------------------ -->
@@ -571,88 +579,105 @@ html[data-view="play"] .tabs{display:none}
       </div>
 
       <div id="installBody">
-        <div class="why">
-          <div class="big">2&times;</div>
-          <div class="tx">Installed, the game runs with <b>no address bar</b> &mdash;
-               about double the play area, and it rotates freely.</div>
-        </div>
 
-        <div class="seg" role="group" aria-label="Choose your phone">
-          <button id="segIos" aria-pressed="false">&#63743;&nbsp; iPhone</button>
-          <button id="segAndroid" aria-pressed="false">&#9654;&nbsp; Android</button>
-        </div>
-
-        <!-- one-tap, where Chrome offers it -->
-        <button class="btn" id="installNow" hidden>&#8681;&nbsp; Install the REC Room</button>
-
-        <div class="panel" id="stepsIos" hidden>
-          <div class="eyebrow">iPhone &middot; Safari</div>
-          <div class="step">
-            <div class="n">1</div>
-            <div class="tx">Make sure you&rsquo;re in <b>Safari</b>.
-              <small>If you opened this from inside another app, use that app&rsquo;s
-                     &ldquo;Open in Safari&rdquo; first &mdash; the steps below only exist in Safari.</small></div>
+        <!-- STEP 1 — which phone? Asked, not assumed: the detected answer is
+             only marked as a hint, because a wrong guess sends someone down
+             instructions that do not exist on their device. -->
+        <div id="chooseStep">
+          <div class="why">
+            <div class="big">2&times;</div>
+            <div class="tx">Installed, the game runs <b>full screen with no address bar</b>
+                 &mdash; about double the play area.</div>
           </div>
-          <div class="step">
-            <div class="n">2</div>
-            <div class="tx">Tap the <b>Share</b> button &mdash; the square with an arrow coming out of it.
-              <small>Bottom of the screen in portrait, top-right in landscape.</small>
-              <div class="mock">
-                <svg viewBox="0 0 24 24" class="hit"><path d="M12 15V3M12 3L8 7M12 3l4 4"/><path d="M5 12v7a1 1 0 001 1h12a1 1 0 001-1v-7"/></svg>
-                <div class="url"></div>
-                <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          <div class="eyebrow">Step 1 &mdash; which phone are you on?</div>
+          <button class="pick" id="pickIos">
+            <span class="gl">&#63743;</span>
+            <span class="lb">iPhone<small id="hintIos" hidden>Detected</small></span>
+            <span class="ar">&rarr;</span>
+          </button>
+          <button class="pick" id="pickAndroid">
+            <span class="gl">&#9654;</span>
+            <span class="lb">Android<small id="hintAndroid" hidden>Detected</small></span>
+            <span class="ar">&rarr;</span>
+          </button>
+        </div>
+
+        <!-- STEP 2 — the steps for whichever they picked -->
+        <div id="stepsStep" hidden>
+          <button class="back" id="pickBack">&larr; Not my phone</button>
+
+          <button class="btn" id="installNow" hidden>&#8681;&nbsp; Install the REC Room</button>
+
+          <div class="panel" id="stepsIos" hidden>
+            <div class="eyebrow">iPhone &middot; Safari</div>
+            <div class="step gate">
+              <div class="n">1</div>
+              <div class="tx"><b>Open this page in Safari.</b>
+                <small>You are almost certainly inside Mindtickle&rsquo;s own browser right now,
+                       and iPhone can only install from Safari. This step is not optional.</small>
+                <a class="safari" href="x-safari-https://qlik-gse.vercel.app/QlikRecRoom/mobile.html" id="safariJump">Open in Safari</a>
+                <small>If that does nothing, tap the <b>compass</b> or <b>&#8943;</b> icon in the
+                       corner of this window and choose <b>Open in Safari</b>.</small>
               </div>
             </div>
-          </div>
-          <div class="step">
-            <div class="n">3</div>
-            <div class="tx">Scroll down the share sheet and tap <b>Add to Home Screen</b>.</div>
-          </div>
-          <div class="step">
-            <div class="n">4</div>
-            <div class="tx">Tap <b>Add</b>, top right.</div>
-          </div>
-          <div class="step">
-            <div class="n">5</div>
-            <div class="tx">Open the REC Room from your <b>new home screen icon</b>.
-              <small>That copy is the one that scores &mdash; it carries your session with it.</small></div>
-          </div>
-        </div>
-
-        <div class="panel" id="stepsAndroid" hidden>
-          <div class="eyebrow">Android &middot; Chrome</div>
-          <div class="step">
-            <div class="n">1</div>
-            <div class="tx">Tap the <b>&#8942; menu</b>, top right of Chrome.
-              <div class="mock">
-                <div class="url"></div>
-                <svg viewBox="0 0 24 24" class="hit"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            <div class="step">
+              <div class="n">2</div>
+              <div class="tx">Tap <b>Share</b> &mdash; the square with an arrow coming out of the top.
+                <div class="mock">
+                  <svg viewBox="0 0 24 24" class="hit"><path d="M12 15V3M12 3L8 7M12 3l4 4"/><path d="M5 12v7a1 1 0 001 1h12a1 1 0 001-1v-7"/></svg>
+                  <div class="url"></div>
+                  <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                </div>
               </div>
             </div>
+            <div class="step">
+              <div class="n">3</div>
+              <div class="tx">Scroll down and tap <b>Add to Home Screen</b>.</div>
+            </div>
+            <div class="step">
+              <div class="n">4</div>
+              <div class="tx">Tap <b>Add</b>, top right.</div>
+            </div>
+            <div class="step">
+              <div class="n">5</div>
+              <div class="tx">Open the REC Room from your <b>new home screen icon</b>.
+                <small>That copy is the one that scores.</small></div>
+            </div>
           </div>
-          <div class="step">
-            <div class="n">2</div>
-            <div class="tx">Tap <b>Install app</b>, or <b>Add to Home screen</b>.
-              <small>Chrome shows one or the other depending on its version &mdash; they do the same thing.</small></div>
-          </div>
-          <div class="step">
-            <div class="n">3</div>
-            <div class="tx">Confirm with <b>Install</b> or <b>Add</b>.</div>
-          </div>
-          <div class="step">
-            <div class="n">4</div>
-            <div class="tx">Open the REC Room from your <b>new icon</b>.
-              <small>On Samsung Internet it&rsquo;s Menu &rarr; Add page to &rarr; Home screen.</small></div>
+
+          <div class="panel" id="stepsAndroid" hidden>
+            <div class="eyebrow">Android &middot; Chrome</div>
+            <div class="step">
+              <div class="n">1</div>
+              <div class="tx">Tap the <b>&#8942; menu</b>, top right of Chrome.
+                <div class="mock">
+                  <div class="url"></div>
+                  <svg viewBox="0 0 24 24" class="hit"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <div class="n">2</div>
+              <div class="tx">Tap <b>Install app</b>, or <b>Add to Home screen</b>.
+                <small>Chrome shows one or the other depending on its version.</small></div>
+            </div>
+            <div class="step">
+              <div class="n">3</div>
+              <div class="tx">Confirm with <b>Install</b> or <b>Add</b>.</div>
+            </div>
+            <div class="step">
+              <div class="n">4</div>
+              <div class="tx">Open the REC Room from your <b>new icon</b>.
+                <small>Samsung Internet: Menu &rarr; Add page to &rarr; Home screen.</small></div>
+            </div>
           </div>
         </div>
 
         <div class="tip" id="installDesktopNote" hidden>
           <span>&#128187;</span>
           <span>You&rsquo;re on a computer. This one is for phones &mdash; open
-                <b>the REC Room link on your phone</b>, then follow the steps above.</span>
+                <b>the REC Room link on your phone</b> to install it there.</span>
         </div>
-
-        <button class="skip" id="installSkip">Skip &mdash; play in the browser</button>
       </div>
       <div class="foot">Qlik Global Sales Enablement</div>
     </div>
@@ -831,7 +856,14 @@ var VIEW_EL = { badge: $('viewBadge'), play: $('viewPlay'), board: $('viewBoard'
                 install: $('viewInstall') };
 var view = null;
 
+/* A phone that has not installed is locked to the install screen. Travis:
+ do not offer them to play in browser. Only a real install (or a desktop)
+ opens the rest of the room. */
+var LOCKED = TOUCH && !STANDALONE;
+if (LOCKED) document.documentElement.setAttribute('data-locked', '1');
+
 function go(v) {
+  if (LOCKED) v = 'install';
   // Play with no identity is the trap this whole file exists to close: a
   // full run in practice mode that banks nothing. Send them to sign in.
   if (v === 'play' && !me) {
@@ -947,7 +979,9 @@ $('signOut').addEventListener('click', function () {
    ====================================================================== */
 var ANDROID  = /Android/i.test(navigator.userAgent || '');
 var deferredPrompt = null;
-var installChoice = read('recroom.plat') || (IOS ? 'ios' : (ANDROID ? 'android' : ''));
+// Starts empty on purpose — step 1 asks. A remembered answer is honoured so
+// someone returning mid-install is not re-interrogated.
+var installChoice = read('recroom.plat') || '';
 
 /* Chrome offers this only when the app is actually installable. Capturing the
    event means we can show one button instead of four steps. */
@@ -964,11 +998,20 @@ window.addEventListener('appinstalled', function () {
 
 function setPlatform(p) {
   installChoice = p;
-  store('recroom.plat', p);
+  if (p) store('recroom.plat', p); else drop('recroom.plat');
   paintInstall();
 }
-$('segIos').addEventListener('click', function () { setPlatform('ios'); });
-$('segAndroid').addEventListener('click', function () { setPlatform('android'); });
+$('pickIos').addEventListener('click', function () { setPlatform('ios'); });
+$('pickAndroid').addEventListener('click', function () { setPlatform('android'); });
+$('pickBack').addEventListener('click', function () { setPlatform(''); });
+
+/* The Safari jump carries the key, so an install made from Safari lands with
+   a scoring session. Built at runtime because the key is not in the markup. */
+(function () {
+  var a = $('safariJump');
+  if (a) a.setAttribute('href', 'x-safari-' + location.protocol + '//' + location.host +
+                        location.pathname + (KEY ? '?k=' + encodeURIComponent(KEY) : ''));
+})();
 
 $('installNow').addEventListener('click', function () {
   if (!deferredPrompt) return;
@@ -979,28 +1022,26 @@ $('installNow').addEventListener('click', function () {
   if (p.userChoice && p.userChoice.then) p.userChoice.then(function () { paintInstall(); });
 });
 
-$('installSkip').addEventListener('click', function () {
-  store('recroom.skipinstall', '1');
-  go('badge');
-});
-
 function paintInstall() {
   var installed = STANDALONE;
   $('installDone').hidden = !installed;
   $('installBody').hidden = installed;
   if (installed) return;
 
-  var plat = installChoice || (TOUCH ? 'android' : '');
-  $('segIos').setAttribute('aria-pressed', plat === 'ios' ? 'true' : 'false');
-  $('segAndroid').setAttribute('aria-pressed', plat === 'android' ? 'true' : 'false');
+  var plat = installChoice;
+  // Step 1 until they have answered. Detection only decorates the choice —
+  // it never makes it, because a wrong guess walks someone through gestures
+  // that do not exist on their phone.
+  $('chooseStep').hidden = !!plat;
+  $('stepsStep').hidden  = !plat;
+  $('hintIos').hidden     = !IOS;
+  $('hintAndroid').hidden = !ANDROID;
+
   $('stepsIos').hidden     = plat !== 'ios';
   $('stepsAndroid').hidden = plat !== 'android';
-  // Neither auto-selected: they are on a desktop, so say so rather than
-  // walking them through a phone gesture they cannot perform.
   $('installDesktopNote').hidden = TOUCH;
-  // One tap beats four steps. Show it whenever Chrome offers it — desktop
-  // Chrome installs PWAs too, and the offer is never wrong when it arrives.
-  $('installNow').hidden = !deferredPrompt;
+  // One tap beats four steps. Show it whenever Chrome offers it.
+  $('installNow').hidden = !deferredPrompt || !plat;
 }
 
 /* The state Travis hit: an installed copy that launches with no key. Nothing
@@ -1319,7 +1360,7 @@ function syncFsBtn() {
 syncFsBtn();
 
 $('exitPlay').addEventListener('click', function () { FS.unlock(); FS.exit(); go('badge'); });
-$('rotOk').addEventListener('click', function () { VIEW_EL.play.classList.add('rot-ok'); });
+
 
 function sendInit() {
   if (!me || !frame.contentWindow) return;
@@ -1513,13 +1554,9 @@ document.addEventListener('visibilitychange', function () {
 paintBadge();
 paintInstall();
 
-/* Where a phone lands. Installed is so much better than in-browser — no
-   chrome, near double the play area — that an uninstalled phone is shown the
-   Install screen first. Skippable, remembered, and never shown on desktop or
-   to a copy that is already installed. */
-var wantsInstall = TOUCH && !STANDALONE && read('recroom.skipinstall') !== '1' &&
-                   qs.get('view') !== 'play';
-go(qs.get('view') === 'play' && me ? 'play' : (wantsInstall ? 'install' : 'badge'));
+/* An uninstalled phone gets the install screen and only the install screen.
+   Desktop and installed copies get the room. */
+go(LOCKED ? 'install' : (qs.get('view') === 'play' && me ? 'play' : 'badge'));
 if (me) loadBoard();
 
 /* Say it out loud on arrival, once, when this session cannot bank points.
