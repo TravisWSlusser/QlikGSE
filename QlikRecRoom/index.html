@@ -446,6 +446,16 @@
        the card it shows a title, expanded it becomes the real section. */
     .mcard { display: none; }
     html[data-mode="card"] .mcard { display: flex; }
+
+    /* ?section=launch shows the card unconditionally — no data-mode, no
+       touch sniffing, no height threshold. Mindtickle decides this widget is
+       the mobile one by showing it; the page does not need an opinion. */
+    html[data-section="launch"] .mcard { display: flex !important; }
+    html[data-section="launch"] .header,
+    html[data-section="launch"] .content > .section-label,
+    html[data-section="launch"] .game-frame,
+    html[data-section="launch"] .cart-shelf,
+    html[data-section="launch"] .scoreboard { display: none !important; }
     html[data-mode="card"] .header,
     html[data-mode="card"] .content > .section-label,
     html[data-mode="card"] .game-frame,
@@ -1111,13 +1121,21 @@ const MOBILE_CARDS = {
   banner: {
     logo: true, title: 'REC Room', sub: 'Rank. Elevate. Compete.', cta: false
   },
-  /* No launch button in the collapsed card. The REC Room is built to hold
-     more than one game, so the choice of cartridge belongs on the expanded
-     surface, not baked into a 200px crop that can only ever offer one.
-     Collapsed shows what this is; expanding is how you pick what to play. */
   game: {
-    title: 'Program Interface', sub: 'Arcade cabinet — select a cartridge to play.',
-    cta: true
+    title: 'Program Interface', sub: 'Side-Qlik Blitz plays in your browser, in landscape.',
+    btn: '▶︎  Launch Program Interface', cta: false
+  },
+
+  /* ?section=launch — the mobile widget, and the one that has to be certain.
+     Identical to the game card but it does NOT depend on touch detection:
+     it renders the button whatever the device claims to be. Mindtickle shows
+     this widget on mobile and hides the cabinet, so nothing has to be
+     guessed. That matters because the two available signals are both
+     unreliable here — Android reports ~1080 CSS px where iOS reports ~408,
+     and the expand height-jump never fires. */
+  launch: {
+    title: 'Side-Qlik Blitz', sub: 'Plays in your browser, in landscape. Sign in with your trigram and go.',
+    btn: '▶︎  Launch Program Interface', cta: false
   },
   scoreboard: {
     title: 'REC Room Scoreboard', sub: 'Territory standings, the live map and recent scores.',
@@ -1195,6 +1213,11 @@ function openInNewTab(){
   window.open(location.pathname + '?' + q.toString(), '_blank');
 }
 if (SECTION === 'cartridges') paintCartridges();
+
+/* The mobile widget. Unconditional on purpose — no device sniffing, no
+   height threshold, nothing that can be wrong about what it is running on.
+   If Mindtickle rendered this widget, the button should be there. */
+if (SECTION === 'launch') paintMobileCard();
 
 if (IS_TOUCH_SMALL && MOBILE_CARDS[SECTION] && !LAUNCHED){
   paintMobileCard();
