@@ -147,6 +147,18 @@ devtools) and was deliberately not added.
   check the commit before hunting branches.
 - `[hidden]` loses to any author `display` rule. `.mcard [hidden]{display:none
   !important}` exists for that reason.
+- **Full screen paints ONLY the fullscreened element and its descendants.** Any
+  modal that is a *sibling* of it still opens, still runs its JS, and is simply
+  never drawn — so the click reads as "nothing happened", and the modal appears
+  the instant you exit. This bit `?section=game`: `#playBtn` lives inside
+  `.game-frame` so it stayed clickable, while `#loginGate`, `#mismatchModal` and
+  `#dorcModal` are siblings, so signing in from full screen did nothing visible.
+  Both pages now park their overlays inside the fullscreen element on
+  `fullscreenchange` and restore them (parent *and* sibling position) on exit.
+  Safe because each is `position:fixed` with no transformed ancestor, so it
+  still lays out against the viewport and `overflow:hidden` does not clip it.
+  **Anything new that overlays the game must be added to that list** —
+  `OVERLAY_IDS` in `index.html`, `relocateDorc` in `mobile.html`.
 - **Full screen is blocked inside the Mindtickle widget, and the feature test
   that catches it is `document.fullscreenEnabled` — not the method.** Inside the
   widget iframe `element.requestFullscreen` *exists*, so a `!!(...)` test passes

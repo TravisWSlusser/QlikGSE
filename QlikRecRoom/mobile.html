@@ -1042,7 +1042,27 @@ function howToFullScreen() {
 
 /* Keep the button honest about what it will do next, and let the OS-level
    exit (swipe, Esc) put the label back without us being told directly. */
+/* Same trap as the desktop room: full screen paints only the fullscreened
+   element and its descendants, and #dorc is a sibling of #viewPlay. Without
+   this, a rejected score in full screen would raise an alert nobody can see —
+   which is the exact failure DORC DETECTED exists to prevent. Park it inside
+   while full screen is active, put it back after. */
+var dorcHome = null;
+function relocateDorc() {
+  var fsEl = document.fullscreenElement || document.webkitFullscreenElement ||
+             document.webkitCurrentFullScreenElement || document.msFullscreenElement;
+  if (fsEl) {
+    if (dorcHome || fsEl.contains(dorc)) return;
+    dorcHome = { parent: dorc.parentNode, next: dorc.nextSibling };
+    fsEl.appendChild(dorc);
+  } else if (dorcHome) {
+    dorcHome.parent.insertBefore(dorc, dorcHome.next);
+    dorcHome = null;
+  }
+}
+
 function syncFsBtn() {
+  relocateDorc();
   var b = $('fsBtn');
   // Always present in Play. Hiding it on touch was wrong three times over:
   // the automatic attempt can be refused, leaving no way back in; iPad's

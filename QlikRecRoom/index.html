@@ -1335,7 +1335,39 @@ if (SHOW_GAME){
                       window.matchMedia('(min-width: 1024px)').matches &&
                       (FS_OK || FRAMED);
 
+  /* In full screen the browser paints ONLY the fullscreened element and its
+     descendants. loginGate, mismatchModal and dorcModal are all siblings of
+     .game-frame, so "Sign In to Play" (which lives inside the frame, and so
+     stays clickable) opened the gate into a part of the DOM that was not
+     being rendered: it looked like nothing happened, then appeared the moment
+     you exited. Park them inside the fullscreen element while it is active
+     and put them back exactly where they were afterwards.
+
+     Safe to move: each is position:fixed with no transformed ancestor, so it
+     still lays out against the viewport and .game-frame's overflow:hidden
+     does not clip it. */
+  const OVERLAY_IDS = ['loginGate', 'mismatchModal', 'dorcModal'];
+  let parked = [];
+  function relocateOverlays() {
+    const fsEl = document.fullscreenElement || document.webkitFullscreenElement ||
+                 document.msFullscreenElement;
+    if (fsEl) {
+      if (parked.length) return;                       // already parked
+      OVERLAY_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el || fsEl.contains(el)) return;
+        parked.push({ el, parent: el.parentNode, next: el.nextSibling });
+        fsEl.appendChild(el);
+      });
+    } else if (parked.length) {
+      // Reverse order so each goes back against a sibling that is already home.
+      parked.slice().reverse().forEach(h => h.parent.insertBefore(h.el, h.next));
+      parked = [];
+    }
+  }
+
   function sync() {
+    relocateOverlays();
     fsBtn.hidden = !armed();
     document.getElementById('fsLabel').textContent =
       isFs() ? 'Exit' : (FS_OK ? 'Full screen' : 'Full screen ↗');
