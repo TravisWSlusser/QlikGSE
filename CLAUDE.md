@@ -150,13 +150,42 @@ devtools) and was deliberately not added.
 
 ## Open work
 
-- **A mobile mirror site.** Current direction (2026-08-24): a *single* Mindtickle
-  button opens `QlikRecRoom/mobile.html` **outside** the app in the native
-  browser. That page should become the whole REC Room built mobile-first — badge,
-  play, scoreboard — not the desktop page reskinned, with the goal of being saved
-  to the home screen as a web app. `manifest.json` + `assets/icons/recroom-*.png`
-  already exist (`display: standalone`). Today `mobile.html` is only a launcher
-  button; it needs the rest of the room.
+- ~~**A mobile mirror site.**~~ **Built 2026-08-24.** `QlikRecRoom/mobile.html` is
+  now the whole REC Room, mobile-first — badge, play, scoreboard — over the same
+  API and the same game. It is a second front end, not a reskin of `index.html`.
+
+  **One file, two renders.** It checks `window.self !== window.top`:
+  *framed* it is the Mindtickle widget (one card, one button, designed for the
+  ~200px crop) and the button `window.open`s this same URL at top level with the
+  key attached; *unframed* it is the room. That means **the Mindtickle widget URL
+  never has to change** — the existing `mobile.html?k=…` widget keeps working and
+  its button now lands on the full room instead of the desktop page.
+
+  Notes for whoever touches it next:
+  - Country list is a **copy** of the `COUNTRIES` literal in `index.html`. No
+    build step and no shared JS file, so it is duplicated on purpose. If one
+    changes, change both.
+  - Identity lives in `localStorage['recroom.id']`, the key in `recroom.k`.
+  - **Territory cannot be changed from a phone.** `updateIdentity` gates on
+    `MT_SESSION_REF` only — it does not accept `MT_SESSION_REF_MOBILE` and is not
+    comma-list aware, unlike `logScore`. So on a trigram/territory mismatch the
+    mobile page adopts the *stored* territory and says where the points will
+    land, rather than showing a relocate flow that would 401. Worth fixing in
+    `updateIdentity` (accept both keys, split on commas) — then mobile can
+    relocate too.
+  - The rotate-to-landscape prompt is **dismissible**. A hard gate strands
+    anyone playing with orientation lock on, because the phone reports portrait
+    however they hold it.
+  - **iOS home-screen installs land in practice mode.** `start_url` carries no
+    `?k=`, and iOS gives a standalone app its own storage container, so the
+    stashed key is not there. The page says so loudly instead of banking
+    nothing silently. Android/Chrome shares storage, so it works there. The real
+    fix is a `start_url` that carries the key, which needs the manifest served
+    with it — deliberately not built on launch day.
+  - Validated headlessly (JS parse, id/tag/CSS-brace checks, and a DOM shim that
+    runs boot, sign-in, mismatch, no-key and board render against the live API).
+    **Not yet rendered in a browser** — screenshot it on a real phone before
+    trusting the layout.
 - **Real-time map.** Wanted. Deferred because polling keeps Neon awake and burns
   the free tier. The answer is pub/sub (Ably or Pusher free tier): `logScore`
   publishes after the write, the room subscribes. Keep the rotation as filler for

@@ -2,121 +2,1012 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>REC Room</title>
 
 <!-- ===========================================================================
-  MOBILE ENTRY — the whole page is one button.
+  QlikRecRoom/mobile.html — the REC Room, built for a phone.
 
-  Why this exists as its own file rather than another ?section= of index.html:
-  the Mindtickle app crops every widget to ~200px and adds an expand control
-  we cannot move or restyle, so anything with layout in it gets cut in half.
-  A page that IS a button has nothing to crop.
+  This is not index.html reskinned. index.html is a ~1,400-line desktop room
+  that grew a set of ?section= views so Mindtickle could iframe pieces of it.
+  Nothing in that structure survives a 390px viewport intact, and the sections
+  that tried (board-mobile, launch) are widget crops, not a room. So this is a
+  second front end over the same API and the same game.
 
-  It also carries the web app manifest, so a player can add it to their home
-  screen and get a standalone icon with no Safari chrome — which on a landscape
-  phone is real screen back for the game.
+  TWO RENDERS, ONE FILE
+  ---------------------
+  Framed (window.self !== window.top) it is the Mindtickle widget: a single
+  card with a single button, designed for the ~200px the mobile app crops
+  every widget to. The button does window.open(self, '_blank'), which is the
+  same break-out index.html already uses in production (openInNewTab), so the
+  player lands on this exact URL in the phone's native browser with the key
+  carried through.
 
-  The key arrives as ?k= from the Mindtickle button and is passed straight
-  through to the game. It is also stashed so an installed copy (which launches
-  without the query string) still scores. Where iOS gives a standalone app its
-  own storage container that stash will be empty — in that case the game says
-  so out loud rather than silently banking nothing.
+  Unframed it is the whole room: badge, play, scoreboard.
+
+  Keeping both in one file means the Mindtickle widget URL never has to
+  change. Homepage custom-HTML widgets are not in Mindtickle's API and the URL
+  is hand-edited in Page Builder, so "no widget edit required" is worth a
+  branch at the top of a script.
+
+  WHAT IT TALKS TO
+  ----------------
+  Same endpoints as the desktop room, same contracts:
+    GET  /api/recroom/lookupTrigram?trigram=   -> {exists,prefill,territory,country_code,...}
+    GET  /api/recroom/getTerritoryHigh         -> {highs:{NAM,LATAM,EMEA,APAC}}
+    GET  /api/recroom/getLeaderboard           -> {territories,byTerritory,gameMasters}
+    POST /api/recroom/logScore                 -> {ok,player}
+  Same postMessage bridge to the game: BLITZ_READY in, BLITZ_INIT out,
+  BLITZ_RESULT in.
+
+  THE KEY
+  -------
+  Arrives as ?k= on the Mindtickle button and is stashed, because an installed
+  copy launches from the home screen with no query string. Without a key the
+  room still plays and still shows the board — it just cannot bank points,
+  and it says so in orange rather than letting a full run disappear quietly.
+  That trap (a phone playing in practice mode and banking nothing, silently)
+  is the most expensive bug this codebase has had; the status line at the top
+  of the badge view exists to make it impossible to hit again.
   =========================================================================== -->
 
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/icons/recroom-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="REC Room">
 <meta name="theme-color" content="#10CFC9">
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+
 <style>
-  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
-  :root{ --cyan:#10CFC9; --bg:#0a1020; --ink:#dbe8f6; }
-  html,body{height:100%}
-  body{
-    background:
-      radial-gradient(120% 90% at 50% 25%, #16243f 0%, var(--bg) 60%, #05080f 100%);
-    color:var(--ink); font-family:'Share Tech Mono',monospace;
-    display:flex; align-items:center; justify-content:center;
-    padding:24px calc(24px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) calc(24px + env(safe-area-inset-left));
-    -webkit-text-size-adjust:100%;
-  }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --cyan:#10CFC9;
+  --nam:#9B59FF; --latam:#FF2D9B; --emea:#FF6B35; --apac:#10CFC9;
+  --bg:#0a1020; --bg-dark:#10172A; --panel:rgba(16,23,42,.86);
+  --ink:#dbe8f6; --muted:#7f93b8; --dim:#35435D; --warn:#FF6B35; --ok:#4ADE80;
+  --line:rgba(16,207,201,.18);
+  --safe-t:env(safe-area-inset-top); --safe-b:env(safe-area-inset-bottom);
+  --safe-l:env(safe-area-inset-left); --safe-r:env(safe-area-inset-right);
+  --tabh:60px;
+}
+
+html,body{height:100%}
+html{-webkit-text-size-adjust:100%}
+body{
+  /* No background-attachment:fixed — iOS Safari renders it unreliably and
+     repaints it on every address-bar move. */
+  background:radial-gradient(120% 80% at 50% 0%, #16243f 0%, var(--bg) 55%, #05080f 100%) var(--bg);
+  color:var(--ink);
+  font-family:'Share Tech Mono',ui-monospace,monospace;
   /* Mindtickle applies word-break to widget content; put it back. */
-  body,button{word-break:normal;overflow-wrap:normal}
+  word-break:normal; overflow-wrap:normal;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior-y:none;
+}
+button,input,select{font:inherit;color:inherit;word-break:normal}
+button{background:none;border:0;cursor:pointer}
+img{max-width:100%;display:block}
 
-  .wrap{ width:100%; max-width:520px; text-align:center; }
-  .badge{ width:132px; height:auto; margin:0 auto 14px; display:block;
-          filter:drop-shadow(0 0 22px rgba(16,207,201,.35)); }
-  h1{ font-family:'VT323',monospace; font-size:2.6rem; line-height:1;
-      letter-spacing:.04em; color:#fff; margin-bottom:4px; }
-  .sub{ font-size:.72rem; letter-spacing:.24em; text-transform:uppercase;
-        color:var(--cyan); opacity:.85; margin-bottom:22px; }
+/* ============================ FRAMED (widget) ============================
+   The Mindtickle mobile app crops every widget to ~200px and bolts on an
+   expand control that cannot be moved or restyled — and expanding does NOT
+   grow the iframe. So this render declares 200 and designs for 200: one
+   card, one button, nothing below the fold because there is no fold. */
+.framed-only{display:none}
+html[data-frame="1"] .room{display:none}
+html[data-frame="1"] .framed-only{display:flex}
+html[data-frame="1"] body{background:transparent}
 
-  .launch{
-    display:inline-flex; align-items:center; justify-content:center; gap:10px;
-    width:100%; padding:20px 22px; border:0; cursor:pointer;
-    background:var(--cyan); color:#04121a;
-    font-family:'Share Tech Mono',monospace; font-size:1rem;
-    letter-spacing:.14em; text-transform:uppercase; font-weight:bold;
-    box-shadow:0 0 26px rgba(16,207,201,.42);
-  }
-  .launch:active{ transform:translateY(1px); }
+.card{
+  min-height:100vh; min-height:100svh; flex-direction:column; align-items:center;
+  justify-content:center; text-align:center; gap:10px; padding:12px 16px;
+}
+.card-logo{width:64px;filter:drop-shadow(0 0 16px rgba(16,207,201,.4))}
+.card-title{font-family:'VT323',monospace;font-size:1.9rem;line-height:1;color:#fff;letter-spacing:.03em}
+.card-sub{font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);opacity:.85}
+.card-btn{
+  margin-top:2px;padding:12px 20px;background:var(--cyan);color:#04121a;
+  font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:bold;
+  box-shadow:0 0 20px rgba(16,207,201,.4);
+}
+.card-btn:active{transform:translateY(1px)}
+.card-note{font-size:.55rem;letter-spacing:.08em;color:var(--muted)}
 
-  .note{ font-size:.68rem; line-height:1.5; letter-spacing:.06em;
-         color:#7f93b8; margin-top:16px; }
-  .warn{ display:none; margin-top:16px; padding:12px 14px;
-         border:1px solid rgba(255,107,53,.5); color:#FF6B35;
-         font-size:.68rem; line-height:1.5; letter-spacing:.05em; }
-  .warn.show{ display:block; }
-  .tip{ margin-top:20px; font-size:.62rem; letter-spacing:.1em; color:#4d6285; }
+/* ============================== THE ROOM ============================== */
+/* Fixed height, not min-height: the view scrolls INSIDE itself so the tab bar
+   never travels and iOS never rubber-bands the whole document under it. svh
+   (small viewport height) is the one that ignores the collapsing address bar;
+   vh is the fallback for anything older than iOS 15.4. */
+.room{display:flex;flex-direction:column;height:100vh;height:100svh}
+
+/* min-height:0 on both — without it a flex child refuses to shrink below its
+   content and .scroll silently stops scrolling. */
+.view{display:none;flex:1;min-height:0;flex-direction:column}
+.view.on{display:flex}
+
+/* Scrolling views sit above the tab bar and inside the safe area. */
+.scroll{
+  flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:calc(var(--safe-t) + 14px) calc(var(--safe-r) + 16px)
+          calc(var(--safe-b) + var(--tabh) + 20px) calc(var(--safe-l) + 16px);
+}
+
+.eyebrow{
+  font-size:.58rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--cyan);opacity:.8;margin:0 0 8px;
+}
+.panel{
+  background:var(--panel);border:1px solid var(--line);
+  padding:14px;margin-bottom:14px;
+}
+
+/* ------------------------------ status line --------------------------- */
+.status{
+  display:flex;align-items:center;gap:8px;padding:9px 12px;margin-bottom:14px;
+  font-size:.6rem;letter-spacing:.13em;text-transform:uppercase;
+  border:1px solid currentColor;
+}
+.status .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:0 0 auto}
+.status.live{color:var(--ok)}
+.status.dead{color:var(--warn)}
+
+/* ------------------------------ the badge ----------------------------- */
+.hero{text-align:center;margin-bottom:16px}
+.hero img{width:104px;margin:0 auto 8px;filter:drop-shadow(0 0 20px rgba(16,207,201,.32))}
+.hero h1{font-family:'VT323',monospace;font-size:2.4rem;line-height:1;color:#fff;letter-spacing:.04em}
+.hero .sub{font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);opacity:.85;margin-top:2px}
+
+.badge{
+  position:relative;background:var(--panel);border:1px solid var(--cyan);
+  padding:18px 16px 14px;margin-bottom:14px;overflow:hidden;
+}
+.badge::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 40%,rgba(16,207,201,.07) 50%,transparent 60%);
+}
+.badge-top{display:flex;align-items:center;gap:12px}
+.tri{
+  font-family:'VT323',monospace;font-size:3.1rem;line-height:.9;color:#fff;
+  letter-spacing:.05em;text-shadow:0 0 18px rgba(16,207,201,.5);
+}
+.badge-id{flex:1;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{
+  font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;
+  padding:3px 8px;border:1px solid var(--dim);color:var(--muted);
+}
+.chip.terr{border-color:var(--tc,var(--cyan));color:var(--tc,var(--cyan))}
+
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;margin-top:16px;background:var(--line)}
+.stat{background:var(--bg-dark);padding:10px 12px}
+.stat .k{font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font-family:'VT323',monospace;font-size:1.7rem;line-height:1.1;color:#fff}
+.stat .v.cy{color:var(--cyan)}
+
+.rankline{
+  margin-top:14px;padding-top:12px;border-top:1px solid var(--line);
+  font-size:.62rem;letter-spacing:.1em;color:var(--muted);line-height:1.6;
+}
+.rankline b{color:var(--cyan);font-weight:normal}
+
+/* ------------------------------- sign-in ------------------------------ */
+.field{margin-bottom:12px}
+.field label{
+  display:block;font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:5px;
+}
+.field input,.field select{
+  width:100%;padding:13px 12px;background:#0b1424;color:var(--ink);
+  border:1px solid var(--dim);border-radius:0;
+  font-size:16px;              /* 16px or iOS zooms the whole page on focus */
+  -webkit-appearance:none;appearance:none;
+}
+.field select{
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%2310CFC9' stroke-width='1.6'/></svg>");
+  background-repeat:no-repeat;background-position:right 12px center;background-size:12px;
+  padding-right:34px;
+}
+.field input:focus,.field select:focus{outline:0;border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan)}
+.field input#trigram{
+  font-family:'VT323',monospace;font-size:2rem;letter-spacing:.3em;
+  text-align:center;text-transform:uppercase;padding:8px 12px;
+}
+.hint{font-size:.55rem;letter-spacing:.08em;color:var(--muted);margin-top:6px;line-height:1.6}
+.err{font-size:.62rem;color:var(--warn);margin-bottom:10px;min-height:1em;letter-spacing:.05em}
+
+.btn{
+  display:block;width:100%;padding:16px;background:var(--cyan);color:#04121a;
+  font-size:.82rem;letter-spacing:.16em;text-transform:uppercase;font-weight:bold;
+}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.45}
+.btn.ghost{background:none;color:var(--cyan);border:1px solid var(--cyan);font-weight:normal}
+
+/* ------------------------------ scoreboard ---------------------------- */
+.trow{
+  display:flex;align-items:center;gap:10px;padding:11px 0;
+  border-bottom:1px solid rgba(53,67,93,.35);
+}
+.trow:last-child{border-bottom:0}
+.trow .pos{font-family:'VT323',monospace;font-size:1.3rem;color:var(--dim);width:20px;flex:0 0 auto}
+.trow .bar{width:4px;align-self:stretch;background:var(--tc,var(--dim));flex:0 0 auto}
+.trow .nm{flex:1;min-width:0;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase}
+.trow .nm small{display:block;font-size:.52rem;letter-spacing:.1em;color:var(--muted);text-transform:none;margin-top:2px}
+.trow .pts{font-family:'VT323',monospace;font-size:1.5rem;color:#fff;text-align:right}
+.trow .pts small{display:block;font-family:'Share Tech Mono',monospace;font-size:.5rem;color:var(--muted);letter-spacing:.1em}
+.trow.me{background:rgba(16,207,201,.09);box-shadow:inset 0 0 0 1px rgba(16,207,201,.3)}
+
+.gm{display:flex;align-items:center;gap:10px;padding:9px 0}
+.gm img{width:26px;height:26px;flex:0 0 auto;object-fit:contain}
+.gm .nm{flex:1;font-family:'VT323',monospace;font-size:1.5rem;color:#fff;letter-spacing:.06em}
+.gm .nm span{font-family:'Share Tech Mono',monospace;font-size:.52rem;color:var(--muted);letter-spacing:.12em;margin-left:8px}
+.gm .pts{font-family:'VT323',monospace;font-size:1.4rem;color:var(--cyan)}
+
+.terrhead{
+  display:flex;align-items:center;gap:8px;margin:16px 0 4px;
+  font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--tc,var(--cyan));
+}
+.terrhead::after{content:'';flex:1;height:1px;background:var(--tc,var(--dim));opacity:.35}
+.empty{font-size:.62rem;color:var(--muted);letter-spacing:.08em;padding:10px 0;line-height:1.6}
+
+.refresh{
+  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  padding:12px;margin-top:4px;border:1px solid var(--dim);color:var(--muted);
+  font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;
+}
+
+/* --------------------------------- play -------------------------------- */
+/* The game gets the entire viewport. On a phone the difference between
+   "full screen" and "full screen minus a 60px tab bar" is the difference
+   between seeing the bottom rows and not, so the tab bar goes away here and
+   a single floating chip brings it back. */
+#viewPlay.on{position:fixed;inset:0;z-index:40;background:#06101f}
+#gameFrame{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#06101f}
+.exit{
+  position:absolute;z-index:42;
+  top:calc(var(--safe-t) + 8px); left:calc(var(--safe-l) + 8px);
+  padding:8px 12px;background:rgba(6,16,31,.72);border:1px solid var(--line);
+  color:var(--cyan);font-size:.58rem;letter-spacing:.14em;text-transform:uppercase;
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+}
+.rotate{
+  position:absolute;inset:0;z-index:41;display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  background:rgba(6,16,31,.94);text-align:center;padding:32px;
+}
+.rotate .ico{font-size:2.6rem;color:var(--cyan);animation:tip 2.4s ease-in-out infinite}
+@keyframes tip{0%,60%,100%{transform:rotate(0)}30%{transform:rotate(90deg)}}
+.rotate p{font-size:.72rem;letter-spacing:.1em;color:var(--ink);line-height:1.7}
+.rotate small{font-size:.58rem;color:var(--muted);letter-spacing:.08em;line-height:1.6}
+/* Dismissible on purpose. If the player has orientation lock on, the phone
+   reports portrait however they hold it — a hard gate would leave them
+   staring at a rotate prompt with no way into the game. */
+@media (orientation:portrait){ #viewPlay.on:not(.rot-ok) .rotate{display:flex} }
+@media (prefers-reduced-motion:reduce){ .rotate .ico{animation:none} }
+.rotate .btn.ghost{width:auto;padding:11px 18px;font-size:.6rem;margin-top:4px}
+
+/* ------------------------------- tab bar ------------------------------- */
+.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
+  background:rgba(8,14,28,.95);border-top:1px solid var(--line);
+  padding-bottom:var(--safe-b);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+}
+html[data-view="play"] .tabs{display:none}
+.tab{
+  position:relative;flex:1;height:var(--tabh);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;
+  font-size:.55rem;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+}
+.tab svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;
+         stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-selected="true"]{color:var(--cyan)}
+.tab[aria-selected="true"]::before{
+  content:'';position:absolute;top:0;left:50%;margin-left:-17px;
+  width:34px;height:2px;background:var(--cyan);
+}
+
+/* -------------------------------- modal -------------------------------- */
+.modal{
+  position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+  background:rgba(4,8,16,.82);padding:24px;
+}
+.modal.open{display:flex}
+.modal .box{
+  width:100%;max-width:380px;background:var(--bg-dark);border:1px solid var(--warn);
+  padding:20px;text-align:center;
+}
+.modal .box h3{
+  font-family:'VT323',monospace;font-size:1.6rem;color:var(--warn);
+  letter-spacing:.06em;margin-bottom:8px;font-weight:normal;
+}
+.modal .box p{font-size:.68rem;line-height:1.7;color:var(--ink);letter-spacing:.04em;margin-bottom:16px}
+.modal .box .btn{background:var(--warn);color:#160600}
+.modal .box .btn.ghost{background:none;color:var(--muted);border:1px solid var(--dim);margin-top:8px;font-weight:normal}
+
+/* --------------------------------- misc -------------------------------- */
+.tip{
+  display:flex;gap:9px;align-items:flex-start;padding:11px 12px;margin:14px 0;
+  border:1px dashed var(--dim);font-size:.58rem;line-height:1.6;color:var(--muted);letter-spacing:.06em;
+}
+.tip b{color:var(--cyan);font-weight:normal}
+.foot{text-align:center;font-size:.52rem;letter-spacing:.16em;color:var(--dim);
+      text-transform:uppercase;padding:10px 0 2px}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <img class="badge" src="assets/images/misc/RecRoom_Logo1.png" alt="">
-    <h1>REC ROOM</h1>
-    <div class="sub">Rank &middot; Elevate &middot; Compete</div>
 
-    <button class="launch" id="go">&#9654;&nbsp; Launch the REC Room</button>
+<!-- ===================== framed: the Mindtickle button ==================== -->
+<div class="card framed-only">
+  <img class="card-logo" src="assets/images/misc/RecRoom_Logo1.png" alt="">
+  <div class="card-title">REC ROOM</div>
+  <div class="card-sub">Rank &middot; Elevate &middot; Compete</div>
+  <button class="card-btn" id="breakout">&#9654;&nbsp; Open the REC Room</button>
+  <div class="card-note">Opens in your browser</div>
+</div>
 
-    <div class="note">Opens in your browser. Turn your phone sideways to play.</div>
+<!-- ============================== the room =============================== -->
+<div class="room">
 
-    <div class="warn" id="warn">
-      <b>Scores will not be saved.</b><br>
-      Open the REC Room from Mindtickle to play for points.
+  <!-- ------------------------------ BADGE ------------------------------ -->
+  <section class="view" id="viewBadge">
+    <div class="scroll">
+      <div class="hero">
+        <img src="assets/images/misc/RecRoom_Logo1.png" alt="">
+        <h1>REC ROOM</h1>
+        <div class="sub">Rank &middot; Elevate &middot; Compete</div>
+      </div>
+
+      <div class="status live" id="status" hidden>
+        <span class="dot"></span><span id="statusText"></span>
+      </div>
+
+      <!-- signed in -->
+      <div id="badgeCard" hidden>
+        <div class="badge">
+          <div class="badge-top">
+            <div class="tri" id="myTri">---</div>
+            <div class="badge-id">
+              <div class="chips">
+                <span class="chip terr" id="myTerr">--</span>
+                <span class="chip" id="myCountry">--</span>
+              </div>
+            </div>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="k">Lifetime</div><div class="v cy" id="myTotal">0</div></div>
+            <div class="stat"><div class="k">Personal high</div><div class="v" id="myHigh">0</div></div>
+            <div class="stat"><div class="k">Runs</div><div class="v" id="myGames">0</div></div>
+            <div class="stat"><div class="k">Accuracy</div><div class="v" id="myAcc">&ndash;&ndash;</div></div>
+          </div>
+          <div class="rankline" id="myRank">Play a run to take a place on the board.</div>
+        </div>
+
+        <button class="btn" id="playNow">&#9654;&nbsp; Play Side-Qlik Blitz</button>
+
+        <div class="tip" id="a2hs">
+          <span>&#128241;</span>
+          <span>Keep it one tap away: <b>Share &rarr; Add to Home Screen</b>. It opens
+                full screen with no browser bars &mdash; more board, less chrome.</span>
+        </div>
+
+        <button class="btn ghost" id="signOut">Not you? Switch trigram</button>
+        <div class="foot">Qlik Global Sales Enablement</div>
+      </div>
+
+      <!-- sign-in -->
+      <div id="signInCard" hidden>
+        <div class="panel">
+          <div class="eyebrow">Sign in to bank points</div>
+          <div class="err" id="signErr"></div>
+          <div class="field">
+            <label for="trigram">Your trigram</label>
+            <input id="trigram" type="text" inputmode="latin" autocomplete="off"
+                   autocapitalize="characters" autocorrect="off" spellcheck="false"
+                   maxlength="4" placeholder="ABC">
+            <div class="hint">2&ndash;4 letters. It is how the board knows you &mdash;
+                 someone else's trigram donates your points to them.</div>
+          </div>
+          <div class="field">
+            <label for="country">Country</label>
+            <select id="country"><option value="">Select&hellip;</option></select>
+          </div>
+          <div class="field">
+            <label for="territory">Sales territory</label>
+            <select id="territory">
+              <option value="">Select&hellip;</option>
+              <option value="NAM">NAM</option>
+              <option value="LATAM">LATAM</option>
+              <option value="EMEA">EMEA</option>
+              <option value="APAC">APAC</option>
+            </select>
+          </div>
+          <button class="btn" id="enter">Enter the REC Room</button>
+        </div>
+        <div class="foot">Qlik Global Sales Enablement</div>
+      </div>
     </div>
+  </section>
 
-    <div class="tip" id="tip">Tip: Share &rarr; Add to Home Screen to keep it one tap away.</div>
+  <!-- ------------------------------- PLAY ------------------------------ -->
+  <section class="view" id="viewPlay">
+    <iframe id="gameFrame" title="Side-Qlik Blitz" allow="autoplay; fullscreen"
+            referrerpolicy="no-referrer"></iframe>
+    <button class="exit" id="exitPlay">&#10005;&nbsp; Room</button>
+    <div class="rotate">
+      <div class="ico">&#128241;</div>
+      <p>Turn your phone sideways</p>
+      <small>Side-Qlik Blitz needs the width.<br>Nothing has started &mdash; your run is safe.</small>
+      <button class="btn ghost" id="rotOk">Play in portrait anyway</button>
+    </div>
+  </section>
+
+  <!-- ------------------------------ BOARD ------------------------------ -->
+  <section class="view" id="viewBoard">
+    <div class="scroll">
+      <div class="eyebrow">Territory standings</div>
+      <div class="panel" id="terrPanel"><div class="empty">Loading&hellip;</div></div>
+
+      <div class="eyebrow">Game masters &mdash; worldwide top 3</div>
+      <div class="panel" id="gmPanel"><div class="empty">Loading&hellip;</div></div>
+
+      <div class="eyebrow">Top of each territory</div>
+      <div id="byTerr"><div class="empty">Loading&hellip;</div></div>
+
+      <button class="refresh" id="refresh">&#8635;&nbsp; Refresh board</button>
+      <div class="foot" id="boardStamp"></div>
+    </div>
+  </section>
+
+  <!-- ----------------------------- tab bar ----------------------------- -->
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" data-go="badge" aria-selected="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 4v5c0 4.3-2.9 7.7-7 9-4.1-1.3-7-4.7-7-9V7z"/></svg>
+      Badge
+    </button>
+    <button class="tab" role="tab" data-go="play" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l12 8-12 8z"/></svg>
+      Play
+    </button>
+    <button class="tab" role="tab" data-go="board" aria-selected="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      Board
+    </button>
+  </nav>
+</div>
+
+<!-- ---------------------------- DORC DETECTED --------------------------- -->
+<div class="modal" id="dorc">
+  <div class="box">
+    <h3 id="dorcTitle">DORC DETECTED</h3>
+    <p id="dorcBody"></p>
+    <button class="btn" id="dorcOk">Understood</button>
+    <button class="btn ghost" id="dorcAlt" hidden></button>
   </div>
+</div>
 
 <script>
-(function(){
-  var STORE = 'recroom.k';
+(function () {
+'use strict';
 
-  /* The key comes from the Mindtickle button as ?k=. Remember it so an
-     installed copy launching from the home screen (no query string) can still
-     score. iOS may give a standalone app its own storage container, in which
-     case this comes back empty and we say so rather than failing silently. */
-  var url = new URLSearchParams(location.search);
-  var key = url.get('k') || '';
-  if (key) { try { localStorage.setItem(STORE, key); } catch (e) {} }
-  else     { try { key = localStorage.getItem(STORE) || ''; } catch (e) {} }
+/* ======================================================================
+   0. STORAGE HELPERS
+   Every localStorage call is wrapped. Private browsing on iOS throws on
+   write, and a standalone (home-screen) app can get its own empty storage
+   container — neither is a reason for the page to die.
+   ====================================================================== */
+function read(k)      { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function store(k, v)  { try { localStorage.setItem(k, v); }     catch (e) {} }
+function drop(k)      { try { localStorage.removeItem(k); }     catch (e) {} }
 
-  if (!key) document.getElementById('warn').classList.add('show');
+var K_STORE  = 'recroom.k';
+var ID_STORE = 'recroom.id';
 
-  document.getElementById('go').addEventListener('click', function(){
-    var q = new URLSearchParams({ section: 'play' });
-    if (key) q.set('k', key);
-    location.href = 'index.html?' + q.toString();
+/* ======================================================================
+   1. FRAMED OR NOT
+   Framed = the Mindtickle widget, cropped to ~200px. It renders one button
+   and nothing else, and that button breaks out to this same URL at top
+   level. Everything after this branch is the room, which a widget never
+   reaches.
+   ====================================================================== */
+var FRAMED = (function () {
+  try { return window.self !== window.top; } catch (e) { return true; }
+})();
+document.documentElement.setAttribute('data-frame', FRAMED ? '1' : '0');
+
+/* The key rides in on the Mindtickle button as ?k=. Stash it, because an
+   installed copy launches from the home screen with no query string. */
+var qs  = new URLSearchParams(location.search);
+var KEY = qs.get('k') || '';
+if (KEY) store(K_STORE, KEY);
+else     KEY = read(K_STORE) || '';
+var CAN_SCORE = KEY.length > 0;
+
+if (FRAMED) {
+  document.getElementById('breakout').addEventListener('click', function () {
+    // Carry the key through or the new tab looks identical and banks nothing.
+    var u = location.pathname + (KEY ? '?k=' + encodeURIComponent(KEY) : '');
+    window.open(u, '_blank', 'noopener');
   });
+  return;
+}
 
-  /* The add-to-home-screen tip is noise once they have already done it. */
-  var standalone = window.matchMedia('(display-mode: standalone)').matches ||
+/* ======================================================================
+   2. CONSTANTS
+   ====================================================================== */
+var GAME_URL   = 'games/SideQlik_Blitz/';   // same origin, same dir
+var API        = '/api/recroom/';
+var TERRITORIES = ['NAM', 'LATAM', 'EMEA', 'APAC'];
+var TCOL = { NAM: '#9B59FF', LATAM: '#FF2D9B', EMEA: '#FF6B35', APAC: '#10CFC9' };
+var MEDAL = [
+  'assets/images/icons/awards/medal_first.png',
+  'assets/images/icons/awards/medal_second.png',
+  'assets/images/icons/awards/medal_third.png'
+];
+
+const COUNTRIES = [{"n": "Afghanistan", "c": "af"}, {"n": "Albania", "c": "al"}, {"n": "Algeria", "c": "dz"}, {"n": "American Samoa", "c": "as"}, {"n": "Andorra", "c": "ad"}, {"n": "Angola", "c": "ao"}, {"n": "Anguilla", "c": "ai"}, {"n": "Antarctica", "c": "aq"}, {"n": "Antigua and Barbuda", "c": "ag"}, {"n": "Argentina", "c": "ar"}, {"n": "Armenia", "c": "am"}, {"n": "Aruba", "c": "aw"}, {"n": "Australia", "c": "au"}, {"n": "Austria", "c": "at"}, {"n": "Azerbaijan", "c": "az"}, {"n": "Bahamas", "c": "bs"}, {"n": "Bahrain", "c": "bh"}, {"n": "Bangladesh", "c": "bd"}, {"n": "Barbados", "c": "bb"}, {"n": "Belarus", "c": "by"}, {"n": "Belgium", "c": "be"}, {"n": "Belize", "c": "bz"}, {"n": "Benin", "c": "bj"}, {"n": "Bermuda", "c": "bm"}, {"n": "Bhutan", "c": "bt"}, {"n": "Bolivia", "c": "bo"}, {"n": "Bonaire, Sint Eustatius and Saba", "c": "bq"}, {"n": "Bosnia and Herzegovina", "c": "ba"}, {"n": "Botswana", "c": "bw"}, {"n": "Bouvet Island", "c": "bv"}, {"n": "Brazil", "c": "br"}, {"n": "British Indian Ocean Territory", "c": "io"}, {"n": "Brunei Darussalam", "c": "bn"}, {"n": "Bulgaria", "c": "bg"}, {"n": "Burkina Faso", "c": "bf"}, {"n": "Burundi", "c": "bi"}, {"n": "Cabo Verde", "c": "cv"}, {"n": "Cambodia", "c": "kh"}, {"n": "Cameroon", "c": "cm"}, {"n": "Canada", "c": "ca"}, {"n": "Cayman Islands", "c": "ky"}, {"n": "Central African Republic", "c": "cf"}, {"n": "Chad", "c": "td"}, {"n": "Chile", "c": "cl"}, {"n": "China", "c": "cn"}, {"n": "Christmas Island", "c": "cx"}, {"n": "Cocos (Keeling) Islands", "c": "cc"}, {"n": "Colombia", "c": "co"}, {"n": "Comoros", "c": "km"}, {"n": "Congo", "c": "cg"}, {"n": "Congo, The Democratic Republic of the", "c": "cd"}, {"n": "Cook Islands", "c": "ck"}, {"n": "Costa Rica", "c": "cr"}, {"n": "Croatia", "c": "hr"}, {"n": "Cuba", "c": "cu"}, {"n": "Curaçao", "c": "cw"}, {"n": "Cyprus", "c": "cy"}, {"n": "Czechia", "c": "cz"}, {"n": "Côte d'Ivoire", "c": "ci"}, {"n": "Denmark", "c": "dk"}, {"n": "Djibouti", "c": "dj"}, {"n": "Dominica", "c": "dm"}, {"n": "Dominican Republic", "c": "do"}, {"n": "Ecuador", "c": "ec"}, {"n": "Egypt", "c": "eg"}, {"n": "El Salvador", "c": "sv"}, {"n": "Equatorial Guinea", "c": "gq"}, {"n": "Eritrea", "c": "er"}, {"n": "Estonia", "c": "ee"}, {"n": "Eswatini", "c": "sz"}, {"n": "Ethiopia", "c": "et"}, {"n": "Falkland Islands (Malvinas)", "c": "fk"}, {"n": "Faroe Islands", "c": "fo"}, {"n": "Fiji", "c": "fj"}, {"n": "Finland", "c": "fi"}, {"n": "France", "c": "fr"}, {"n": "French Guiana", "c": "gf"}, {"n": "French Polynesia", "c": "pf"}, {"n": "French Southern Territories", "c": "tf"}, {"n": "Gabon", "c": "ga"}, {"n": "Gambia", "c": "gm"}, {"n": "Georgia", "c": "ge"}, {"n": "Germany", "c": "de"}, {"n": "Ghana", "c": "gh"}, {"n": "Gibraltar", "c": "gi"}, {"n": "Greece", "c": "gr"}, {"n": "Greenland", "c": "gl"}, {"n": "Grenada", "c": "gd"}, {"n": "Guadeloupe", "c": "gp"}, {"n": "Guam", "c": "gu"}, {"n": "Guatemala", "c": "gt"}, {"n": "Guernsey", "c": "gg"}, {"n": "Guinea", "c": "gn"}, {"n": "Guinea-Bissau", "c": "gw"}, {"n": "Guyana", "c": "gy"}, {"n": "Haiti", "c": "ht"}, {"n": "Heard Island and McDonald Islands", "c": "hm"}, {"n": "Holy See (Vatican City State)", "c": "va"}, {"n": "Honduras", "c": "hn"}, {"n": "Hong Kong", "c": "hk"}, {"n": "Hungary", "c": "hu"}, {"n": "Iceland", "c": "is"}, {"n": "India", "c": "in"}, {"n": "Indonesia", "c": "id"}, {"n": "Iran", "c": "ir"}, {"n": "Iraq", "c": "iq"}, {"n": "Ireland", "c": "ie"}, {"n": "Isle of Man", "c": "im"}, {"n": "Israel", "c": "il"}, {"n": "Italy", "c": "it"}, {"n": "Jamaica", "c": "jm"}, {"n": "Japan", "c": "jp"}, {"n": "Jersey", "c": "je"}, {"n": "Jordan", "c": "jo"}, {"n": "Kazakhstan", "c": "kz"}, {"n": "Kenya", "c": "ke"}, {"n": "Kiribati", "c": "ki"}, {"n": "Kuwait", "c": "kw"}, {"n": "Kyrgyzstan", "c": "kg"}, {"n": "Laos", "c": "la"}, {"n": "Latvia", "c": "lv"}, {"n": "Lebanon", "c": "lb"}, {"n": "Lesotho", "c": "ls"}, {"n": "Liberia", "c": "lr"}, {"n": "Libya", "c": "ly"}, {"n": "Liechtenstein", "c": "li"}, {"n": "Lithuania", "c": "lt"}, {"n": "Luxembourg", "c": "lu"}, {"n": "Macao", "c": "mo"}, {"n": "Madagascar", "c": "mg"}, {"n": "Malawi", "c": "mw"}, {"n": "Malaysia", "c": "my"}, {"n": "Maldives", "c": "mv"}, {"n": "Mali", "c": "ml"}, {"n": "Malta", "c": "mt"}, {"n": "Marshall Islands", "c": "mh"}, {"n": "Martinique", "c": "mq"}, {"n": "Mauritania", "c": "mr"}, {"n": "Mauritius", "c": "mu"}, {"n": "Mayotte", "c": "yt"}, {"n": "Mexico", "c": "mx"}, {"n": "Micronesia, Federated States of", "c": "fm"}, {"n": "Moldova", "c": "md"}, {"n": "Monaco", "c": "mc"}, {"n": "Mongolia", "c": "mn"}, {"n": "Montenegro", "c": "me"}, {"n": "Montserrat", "c": "ms"}, {"n": "Morocco", "c": "ma"}, {"n": "Mozambique", "c": "mz"}, {"n": "Myanmar", "c": "mm"}, {"n": "Namibia", "c": "na"}, {"n": "Nauru", "c": "nr"}, {"n": "Nepal", "c": "np"}, {"n": "Netherlands", "c": "nl"}, {"n": "New Caledonia", "c": "nc"}, {"n": "New Zealand", "c": "nz"}, {"n": "Nicaragua", "c": "ni"}, {"n": "Niger", "c": "ne"}, {"n": "Nigeria", "c": "ng"}, {"n": "Niue", "c": "nu"}, {"n": "Norfolk Island", "c": "nf"}, {"n": "North Korea", "c": "kp"}, {"n": "North Macedonia", "c": "mk"}, {"n": "Northern Mariana Islands", "c": "mp"}, {"n": "Norway", "c": "no"}, {"n": "Oman", "c": "om"}, {"n": "Pakistan", "c": "pk"}, {"n": "Palau", "c": "pw"}, {"n": "Palestine, State of", "c": "ps"}, {"n": "Panama", "c": "pa"}, {"n": "Papua New Guinea", "c": "pg"}, {"n": "Paraguay", "c": "py"}, {"n": "Peru", "c": "pe"}, {"n": "Philippines", "c": "ph"}, {"n": "Pitcairn", "c": "pn"}, {"n": "Poland", "c": "pl"}, {"n": "Portugal", "c": "pt"}, {"n": "Puerto Rico", "c": "pr"}, {"n": "Qatar", "c": "qa"}, {"n": "Romania", "c": "ro"}, {"n": "Russian Federation", "c": "ru"}, {"n": "Rwanda", "c": "rw"}, {"n": "Réunion", "c": "re"}, {"n": "Saint Barthélemy", "c": "bl"}, {"n": "Saint Helena, Ascension and Tristan da Cunha", "c": "sh"}, {"n": "Saint Kitts and Nevis", "c": "kn"}, {"n": "Saint Lucia", "c": "lc"}, {"n": "Saint Martin (French part)", "c": "mf"}, {"n": "Saint Pierre and Miquelon", "c": "pm"}, {"n": "Saint Vincent and the Grenadines", "c": "vc"}, {"n": "Samoa", "c": "ws"}, {"n": "San Marino", "c": "sm"}, {"n": "Sao Tome and Principe", "c": "st"}, {"n": "Saudi Arabia", "c": "sa"}, {"n": "Senegal", "c": "sn"}, {"n": "Serbia", "c": "rs"}, {"n": "Seychelles", "c": "sc"}, {"n": "Sierra Leone", "c": "sl"}, {"n": "Singapore", "c": "sg"}, {"n": "Sint Maarten (Dutch part)", "c": "sx"}, {"n": "Slovakia", "c": "sk"}, {"n": "Slovenia", "c": "si"}, {"n": "Solomon Islands", "c": "sb"}, {"n": "Somalia", "c": "so"}, {"n": "South Africa", "c": "za"}, {"n": "South Georgia and the South Sandwich Islands", "c": "gs"}, {"n": "South Korea", "c": "kr"}, {"n": "South Sudan", "c": "ss"}, {"n": "Spain", "c": "es"}, {"n": "Sri Lanka", "c": "lk"}, {"n": "Sudan", "c": "sd"}, {"n": "Suriname", "c": "sr"}, {"n": "Svalbard and Jan Mayen", "c": "sj"}, {"n": "Sweden", "c": "se"}, {"n": "Switzerland", "c": "ch"}, {"n": "Syria", "c": "sy"}, {"n": "Taiwan", "c": "tw"}, {"n": "Tajikistan", "c": "tj"}, {"n": "Tanzania", "c": "tz"}, {"n": "Thailand", "c": "th"}, {"n": "Timor-Leste", "c": "tl"}, {"n": "Togo", "c": "tg"}, {"n": "Tokelau", "c": "tk"}, {"n": "Tonga", "c": "to"}, {"n": "Trinidad and Tobago", "c": "tt"}, {"n": "Tunisia", "c": "tn"}, {"n": "Turkmenistan", "c": "tm"}, {"n": "Turks and Caicos Islands", "c": "tc"}, {"n": "Tuvalu", "c": "tv"}, {"n": "Türkiye", "c": "tr"}, {"n": "Uganda", "c": "ug"}, {"n": "Ukraine", "c": "ua"}, {"n": "United Arab Emirates", "c": "ae"}, {"n": "United Kingdom", "c": "gb"}, {"n": "United States", "c": "us"}, {"n": "United States Minor Outlying Islands", "c": "um"}, {"n": "Uruguay", "c": "uy"}, {"n": "Uzbekistan", "c": "uz"}, {"n": "Vanuatu", "c": "vu"}, {"n": "Venezuela", "c": "ve"}, {"n": "Vietnam", "c": "vn"}, {"n": "Virgin Islands, British", "c": "vg"}, {"n": "Virgin Islands, U.S.", "c": "vi"}, {"n": "Wallis and Futuna", "c": "wf"}, {"n": "Western Sahara", "c": "eh"}, {"n": "Yemen", "c": "ye"}, {"n": "Zambia", "c": "zm"}, {"n": "Zimbabwe", "c": "zw"}, {"n": "Åland Islands", "c": "ax"}];
+var CNAME = {}; COUNTRIES.forEach(function (c) { CNAME[c.c] = c.n; });
+
+var $ = function (id) { return document.getElementById(id); };
+var num = function (v) { var n = Number(v); return Number.isFinite(n) ? n : 0; };
+var fmt = function (v) { return num(v).toLocaleString('en-US'); };
+
+/* ======================================================================
+   3. IDENTITY
+   Held in localStorage so an installed copy does not re-ask on every
+   launch. The shape mirrors what the API gives back, and grows as we learn
+   more: lookupTrigram knows total_score and games_played, logScore also
+   returns personal high, attempted and correct. Anything not yet known
+   renders as a dash rather than a fake zero.
+   ====================================================================== */
+var me = null;
+try { me = JSON.parse(read(ID_STORE) || 'null'); } catch (e) { me = null; }
+if (me && !/^[A-Z]{2,4}$/.test(me.trigram || '')) me = null;
+
+function saveMe() { if (me) store(ID_STORE, JSON.stringify(me)); }
+
+/* ======================================================================
+   4. DORC DETECTED — one place for "that did not land"
+   ====================================================================== */
+var dorc = $('dorc');
+function dorcAlert(title, body, altLabel, altFn) {
+  $('dorcTitle').textContent = title;
+  $('dorcBody').innerHTML = body;
+  var alt = $('dorcAlt');
+  if (altLabel) { alt.hidden = false; alt.textContent = altLabel; alt.onclick = function () { dorc.classList.remove('open'); altFn && altFn(); }; }
+  else alt.hidden = true;
+  dorc.classList.add('open');
+}
+$('dorcOk').addEventListener('click', function () { dorc.classList.remove('open'); });
+
+/* ======================================================================
+   5. VIEWS
+   Three views, one tab bar, no page loads. data-view on <html> is what the
+   CSS reads to hide the tab bar during play.
+   ====================================================================== */
+var VIEW_EL = { badge: $('viewBadge'), play: $('viewPlay'), board: $('viewBoard') };
+var view = null;
+
+function go(v) {
+  // Play with no identity is the trap this whole file exists to close: a
+  // full run in practice mode that banks nothing. Send them to sign in.
+  if (v === 'play' && !me) {
+    go('badge');
+    $('signErr').textContent = 'Sign in first — otherwise the run banks nothing.';
+    var t = $('trigram'); if (t) { t.focus(); t.scrollIntoView({ block: 'center' }); }
+    return;
+  }
+  view = v;
+  document.documentElement.setAttribute('data-view', v);
+  Object.keys(VIEW_EL).forEach(function (k) { VIEW_EL[k].classList.toggle('on', k === v); });
+  document.querySelectorAll('.tab').forEach(function (b) {
+    b.setAttribute('aria-selected', b.dataset.go === v ? 'true' : 'false');
+  });
+  if (v === 'play')  startGame();
+  if (v === 'board') loadBoard();
+  var sc = VIEW_EL[v].querySelector('.scroll');
+  if (sc) sc.scrollTop = 0;
+}
+document.querySelectorAll('.tab').forEach(function (b) {
+  b.addEventListener('click', function () { go(b.dataset.go); });
+});
+
+/* ======================================================================
+   6. BADGE
+   ====================================================================== */
+function paintStatus() {
+  var s = $('status');
+  s.hidden = false;
+  s.className = 'status ' + (CAN_SCORE ? 'live' : 'dead');
+  $('statusText').textContent = CAN_SCORE
+    ? 'Scoring live — runs count'
+    : 'Practice mode — runs will not be saved';
+}
+
+function paintBadge() {
+  var signedIn = !!me;
+  $('badgeCard').hidden  = !signedIn;
+  $('signInCard').hidden = signedIn;
+  paintStatus();
+  if (!signedIn) return;
+
+  $('myTri').textContent = me.trigram;
+  var terr = $('myTerr');
+  terr.textContent = me.territory;
+  terr.style.setProperty('--tc', TCOL[me.territory] || '#10CFC9');
+  $('myCountry').textContent = CNAME[me.country_code] || (me.country_code || '').toUpperCase();
+
+  $('myTotal').textContent = fmt(me.total_score);
+  $('myGames').textContent = fmt(me.games_played);
+  $('myHigh').textContent  = me.blitz_personal_high != null ? fmt(me.blitz_personal_high) : '––';
+  $('myAcc').textContent   = (me.attempted > 0)
+    ? Math.round(100 * num(me.correct) / num(me.attempted)) + '%'
+    : '––';
+
+  paintRank();
+}
+
+/* The rank line reads whatever the last board load found. getLeaderboard
+   only returns the top 3 per territory, so "not in the top 3" is the honest
+   answer for most players — say that rather than inventing a position. */
+var board = null;
+function paintRank() {
+  var el = $('myRank');
+  if (!me) return;
+  if (!board) { el.textContent = 'Open the board to see where you sit.'; return; }
+  var gm = (board.gameMasters || []).findIndex(function (p) { return p.trigram === me.trigram; });
+  if (gm > -1) { el.innerHTML = 'You are a <b>GAME MASTER</b> — #' + (gm + 1) + ' worldwide.'; return; }
+  var mine = (board.byTerritory || {})[me.territory] || [];
+  var i = mine.findIndex(function (p) { return p.trigram === me.trigram; });
+  if (i > -1) { el.innerHTML = 'You are <b>#' + (i + 1) + ' in ' + me.territory + '</b>.'; return; }
+  el.innerHTML = num(me.total_score) > 0
+    ? 'Not in the ' + me.territory + ' top 3 yet. <b>Keep climbing.</b>'
+    : 'Play a run to take a place on the board.';
+}
+
+$('playNow').addEventListener('click', function () { go('play'); });
+$('signOut').addEventListener('click', function () {
+  me = null; drop(ID_STORE);
+  gameStarted = false; gameReady = false; $('gameFrame').removeAttribute('src');
+  paintBadge();
+});
+
+/* Hide the add-to-home-screen nudge once they have already done it. */
+(function () {
+  var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
                    window.navigator.standalone === true;
-  if (standalone) document.getElementById('tip').style.display = 'none';
+  if (standalone) $('a2hs').hidden = true;
+})();
+
+/* ======================================================================
+   7. SIGN-IN
+   Native <select> for country on purpose: 249 options in a custom typeahead
+   is a desktop pattern. The phone's own picker is a full-screen wheel with
+   type-to-jump, which is better than anything worth hand-building here.
+   ====================================================================== */
+(function fillCountries() {
+  var sel = $('country');
+  var frag = document.createDocumentFragment();
+  COUNTRIES.forEach(function (c) {
+    var o = document.createElement('option');
+    o.value = c.c; o.textContent = c.n;
+    frag.appendChild(o);
+  });
+  sel.appendChild(frag);
+})();
+
+var triInput = $('trigram'), lookupTimer = null, lastPrefill = '';
+
+triInput.addEventListener('input', function () {
+  triInput.value = triInput.value.toUpperCase().replace(/[^A-Z]/g, '');
+  var t = triInput.value;
+  clearTimeout(lookupTimer);
+  if (!/^[A-Z]{2,4}$/.test(t)) return;
+  lookupTimer = setTimeout(function () { prefill(t); }, 400);
+});
+
+/* Prefill only fills EMPTY boxes. A player who has already picked is never
+   overwritten by the roster — same rule the desktop room follows. */
+function prefill(t) {
+  fetch(API + 'lookupTrigram?trigram=' + encodeURIComponent(t))
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d) return;
+      if (triInput.value !== t) return;             // they kept typing
+      if (d.country_code && !$('country').value)   $('country').value   = d.country_code;
+      if (d.territory    && !$('territory').value) $('territory').value = d.territory;
+      lastPrefill = t;
+    })
+    .catch(function () { /* they can still fill it in by hand */ });
+}
+
+$('enter').addEventListener('click', attemptEnter);
+$('territory').addEventListener('change', function () { $('signErr').textContent = ''; });
+
+function attemptEnter() {
+  var err  = $('signErr');
+  var tri  = triInput.value.trim().toUpperCase();
+  var cc   = $('country').value;
+  var terr = $('territory').value;
+  err.textContent = '';
+
+  if (!/^[A-Z]{2,4}$/.test(tri)) return (err.textContent = 'Trigram must be 2–4 letters.');
+  if (!cc)                       return (err.textContent = 'Pick your country.');
+  if (TERRITORIES.indexOf(terr) < 0) return (err.textContent = 'Pick your sales territory.');
+
+  var btn = $('enter');
+  btn.disabled = true; btn.textContent = 'Checking…';
+
+  fetch(API + 'lookupTrigram?trigram=' + encodeURIComponent(tri))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d.exists) return enterRoom({ trigram: tri, country_code: cc, territory: terr });
+
+      // Known trigram. Territory is owned by the row in the database, not by
+      // this form: logScore's upsert never rewrites territory, and the mobile
+      // key cannot call updateIdentity (that endpoint accepts MT_SESSION_REF
+      // only). So say plainly where the points will land instead of letting
+      // the player believe a selection that will not take effect.
+      if (d.territory && d.territory !== terr) {
+        dorcAlert(
+          'Registered elsewhere',
+          '<b>' + tri + '</b> is registered to <b>' + d.territory + '</b>, but you picked <b>' +
+          terr + '</b>.<br><br>Points from this phone bank to <b>' + d.territory +
+          '</b>. To move the trigram, sign in to the REC Room on a desktop.',
+          null, null
+        );
+      }
+      enterRoom({
+        trigram: tri,
+        country_code: d.country_code || cc,
+        territory: d.territory || terr,
+        total_score: d.total_score,
+        games_played: d.games_played
+      });
+    })
+    .catch(function () { err.textContent = 'Connection problem — try again.'; })
+    .then(function () { btn.disabled = false; btn.textContent = 'Enter the REC Room'; });
+}
+
+function enterRoom(p) {
+  me = {
+    trigram: p.trigram,
+    territory: p.territory,
+    country_code: p.country_code,
+    total_score: num(p.total_score),
+    games_played: num(p.games_played)
+  };
+  saveMe();
+  paintBadge();
+  loadBoard();
+}
+
+/* ======================================================================
+   8. PLAY — the game bridge
+   Identical contract to the desktop room. The iframe is not loaded until
+   the first visit to Play: on a phone that is a real saving in data and
+   battery for someone who only opened the board.
+   ====================================================================== */
+var frame = $('gameFrame');
+var gameStarted = false, gameReady = false;
+
+function startGame() {
+  if (gameStarted) return;
+  gameStarted = true;
+  frame.src = GAME_URL;
+}
+
+$('exitPlay').addEventListener('click', function () { go('badge'); });
+$('rotOk').addEventListener('click', function () { VIEW_EL.play.classList.add('rot-ok'); });
+
+function sendInit() {
+  if (!me || !frame.contentWindow) return;
+  // Clock the territory high at game start — it drives the colour unlocks.
+  fetch(API + 'getTerritoryHigh')
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { return (d && d.highs && d.highs[me.territory]) || 0; })
+    .catch(function () { return 0; })            // non-fatal: game falls back to its 2,500 floor
+    .then(function (high) {
+      if (!frame.contentWindow) return;
+      frame.contentWindow.postMessage({
+        type: 'BLITZ_INIT',
+        trigram: me.trigram,
+        territory: me.territory,
+        country_code: me.country_code,
+        lifetime: num(me.total_score),
+        territoryHigh: high
+      }, '*');
+    });
+}
+
+window.addEventListener('message', function (e) {
+  if (!frame || e.source !== frame.contentWindow) return;   // only our own game
+  var d = e.data || {};
+  if (d.type === 'BLITZ_READY')  { gameReady = true; if (me) sendInit(); }
+  if (d.type === 'BLITZ_RESULT') submitScore(d);
+});
+
+function submitScore(r) {
+  if (!me) return;
+
+  // Identity comes from this session, never from the game payload. Counts are
+  // re-clamped at the trust boundary: correct <= attempted, both >= 0.
+  var pair = function (o) {
+    var a = Math.max(0, Math.round(num(o && o.attempted)));
+    var c = Math.min(a, Math.max(0, Math.round(num(o && o.correct))));
+    return [a, c];
+  };
+  var s = r.stats || {};
+  var q = pair(s.questions), c = pair(s.coins), t = pair(s.terms);
+  var attempted = Math.max(0, Math.round(num(r.attempted)));
+  var correct   = Math.min(attempted, Math.max(0, Math.round(num(r.correct))));
+
+  var payload = {
+    key: KEY,
+    trigram: me.trigram,
+    territory: me.territory,
+    country_code: me.country_code,
+    score: Math.max(0, Math.round(num(r.score))),
+    attempted: attempted,
+    correct: correct,
+    q_attempted: q[0], q_correct: q[1],
+    c_attempted: c[0], c_correct: c[1],
+    t_attempted: t[0], t_correct: t[1],
+    durationSec: Math.max(0, Math.round(num(r.durationSec)))
+  };
+
+  if (!CAN_SCORE) {
+    dorcAlert('Run not banked',
+      'This session has no key, so the scoreboard will not take the run.<br><br>' +
+      'Open the REC Room from Mindtickle and your points will count.');
+    return;
+  }
+
+  fetch(API + 'logScore', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then(function (res) { return res.json().then(function (d) { return { status: res.status, ok: res.ok, d: d }; }); })
+    .then(function (out) {
+      if (out.ok && out.d && out.d.ok) {
+        if (out.d.player) {
+          var p = out.d.player;
+          me.total_score  = num(p.total_score);
+          me.games_played = num(p.games_played);
+          me.blitz_personal_high = num(p.blitz_personal_high);
+          me.attempted = num(p.attempted);
+          me.correct   = num(p.correct);
+          saveMe();
+        }
+        paintBadge();
+        loadBoard(true);
+        return;
+      }
+      // A rejected write used to be a console warning nobody would ever read.
+      var why =
+        out.status === 401 ? 'This session is not authorised to bank points. Open the REC Room from Mindtickle and your runs will count.'
+      : out.status === 429 ? 'Two runs too close together. Give it a few seconds and play again — the next one will save.'
+      :                      'The scoreboard refused that run, so nothing was saved. Your next game will try again.';
+      dorcAlert('Score not validated', why);
+    })
+    .catch(function () {
+      dorcAlert('Score not validated', 'The scoreboard could not be reached, so this run was not saved.');
+    });
+}
+
+/* ======================================================================
+   9. BOARD
+   ====================================================================== */
+var boardLoading = false, boardAt = 0;
+
+function loadBoard(force) {
+  if (boardLoading) return;
+  if (!force && board && Date.now() - boardAt < 20000) { paintBoard(); return; }
+  boardLoading = true;
+  fetch(API + 'getLeaderboard')
+    .then(function (r) { if (!r.ok) throw new Error('board'); return r.json(); })
+    .then(function (d) { board = d; boardAt = Date.now(); paintBoard(); paintRank(); })
+    .catch(function () {
+      if (!board) $('terrPanel').innerHTML = '<div class="empty">Board unavailable right now. Pull the refresh below.</div>';
+    })
+    .then(function () { boardLoading = false; });
+}
+$('refresh').addEventListener('click', function () { loadBoard(true); });
+
+function row(pos, colour, name, sub, points, pointsSub, isMe) {
+  return '<div class="trow' + (isMe ? ' me' : '') + '" style="--tc:' + colour + '">' +
+           '<div class="pos">' + pos + '</div>' +
+           '<div class="bar"></div>' +
+           '<div class="nm">' + name + (sub ? '<small>' + sub + '</small>' : '') + '</div>' +
+           '<div class="pts">' + points + (pointsSub ? '<small>' + pointsSub + '</small>' : '') + '</div>' +
+         '</div>';
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function (ch) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch];
+  });
+}
+
+function paintBoard() {
+  if (!board) return;
+
+  /* --- territory standings, ordered by the API (total_score DESC) --- */
+  var terr = (board.territories || []).slice();
+  // SUM() comes back as a string from Postgres; sort on numbers, not text.
+  terr.sort(function (a, b) { return num(b.total_score) - num(a.total_score); });
+  $('terrPanel').innerHTML = terr.length
+    ? terr.map(function (t, i) {
+        return row(i + 1, TCOL[t.territory] || '#35435D', esc(t.territory),
+                   num(t.attempted) > 0 ? num(t.accuracy) + '% accuracy' : 'no runs yet',
+                   fmt(t.total_score), 'points',
+                   me && me.territory === t.territory);
+      }).join('')
+    : '<div class="empty">No territories on the board yet.</div>';
+
+  /* --- game masters --- */
+  var gms = board.gameMasters || [];
+  var scored = gms.filter(function (p) { return num(p.total_score) > 0; });
+  $('gmPanel').innerHTML = scored.length
+    ? scored.map(function (p, i) {
+        return '<div class="gm">' +
+                 '<img src="' + MEDAL[i] + '" alt="' + (i + 1) + '">' +
+                 '<div class="nm">' + esc(p.trigram) +
+                   '<span>' + esc(p.territory) + '</span></div>' +
+                 '<div class="pts">' + fmt(p.total_score) + '</div>' +
+               '</div>';
+      }).join('')
+    : '<div class="empty">The throne is empty. First run on the board takes it.</div>';
+
+  /* --- top 3 per territory --- */
+  var by = board.byTerritory || {};
+  $('byTerr').innerHTML = TERRITORIES.map(function (T) {
+    var col  = TCOL[T];
+    var list = (by[T] || []).filter(function (p) { return num(p.total_score) > 0; });
+    return '<div class="terrhead" style="--tc:' + col + '">' + T + '</div>' +
+           '<div class="panel">' + (list.length
+             ? list.map(function (p, i) {
+                 return row(i + 1, col, esc(p.trigram),
+                            esc(CNAME[p.country_code] || p.country_code || ''),
+                            fmt(p.total_score),
+                            num(p.accuracy) > 0 ? num(p.accuracy) + '% acc' : '',
+                            me && me.trigram === p.trigram);
+               }).join('')
+             : '<div class="empty">Unclaimed.</div>') +
+           '</div>';
+  }).join('');
+
+  $('boardStamp').textContent = 'Updated ' +
+    new Date(boardAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+/* Coming back to the tab after a while should not show a stale board. */
+document.addEventListener('visibilitychange', function () {
+  if (!document.hidden && view === 'board') loadBoard();
+});
+
+/* ======================================================================
+   10. BOOT
+   ====================================================================== */
+paintBadge();
+go(qs.get('view') === 'play' && me ? 'play' : 'badge');
+if (me) loadBoard();
+
+/* Say it out loud on arrival, once, when this session cannot bank points.
+   The alternative is a player finishing a fifteen-minute run and finding out
+   at the end — which is exactly how this went wrong before. */
+if (!CAN_SCORE) {
+  dorcAlert('Practice mode',
+    'This session has no scoring key, so runs will <b>not</b> be saved.<br><br>' +
+    'Open the REC Room from the Mindtickle button and your points will count.');
+}
+
 })();
 </script>
 </body>
