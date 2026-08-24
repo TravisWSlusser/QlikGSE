@@ -447,6 +447,31 @@
     .mcard { display: none; }
     html[data-mode="card"] .mcard { display: flex; }
 
+    /* ---- ?section=board-mobile : the phone scoreboard --------------------
+       The full board is three columns built around a wide world map, which is
+       the wrong shape for a phone and most of its height. This drops the map
+       and the 48h trend and keeps the two things worth reading on a small
+       screen: who is winning, and who just scored. Reuses the same panels and
+       the same render functions — only the layout changes. */
+    html[data-section="board-mobile"] .header,
+    html[data-section="board-mobile"] .game-frame,
+    html[data-section="board-mobile"] .cart-shelf,
+    html[data-section="board-mobile"] .mcard,
+    html[data-section="board-mobile"] .content > .section-label { display: none !important; }
+    /* Drop the map (wrong shape, most of the height), the 48h trend, and the
+       rotating region top-3. Keep Territory Ranking and Recent Scores — who
+       is winning, and who just scored. */
+    html[data-section="board-mobile"] .map-panel { display: none !important; }
+    html[data-section="board-mobile"] .left-col > .panel:nth-of-type(2),
+    html[data-section="board-mobile"] .right-col > .panel:nth-of-type(1) { display: none !important; }
+    html[data-section="board-mobile"] .sb-grid {
+      display: flex !important; flex-direction: column; gap: 12px; height: auto;
+    }
+    html[data-section="board-mobile"] .left-col,
+    html[data-section="board-mobile"] .right-col { width: 100%; }
+    html[data-section="board-mobile"] .right-col > .panel { flex: 0 0 auto; }
+    html[data-section="board-mobile"] .content { padding: 10px 14px 14px; }
+
     /* ?section=launch shows the card unconditionally — no data-mode, no
        touch sniffing, no height threshold. Mindtickle decides this widget is
        the mobile one by showing it; the page does not need an opinion. */
@@ -770,7 +795,7 @@ if (SECTION){
   if (SECTION !== 'banner'){ var _lv = document.querySelector('.logo-video'); if (_lv) _lv.remove(); }
 }
 const SHOW_GAME  = !SECTION || SECTION === 'game' || SECTION === 'play';
-const SHOW_BOARD = !SECTION || SECTION === 'scoreboard';
+const SHOW_BOARD = !SECTION || SECTION === 'scoreboard' || SECTION === 'board-mobile';
 const gameFrame = document.getElementById('gameFrame');
 let gameReady = false;
 
@@ -1233,6 +1258,20 @@ if (SHOW_GAME){
   } else if (SECTION === 'play' || LAUNCHED || window.matchMedia('(min-width: 1024px)').matches){
     gameFrame.src = GAME_URL;                                      // play/launched views bypass the desktop gate
   }
+}
+
+/* Play mode had no reachable sign-in. The only thing that opens the gate is
+   #playBtn, which lives inside .ph-online — and that is display:none under
+   1023px, with the game frame covering the viewport anyway. So a phone
+   opening this URL got the game in PRACTICE MODE, played a full run, and
+   banked nothing, silently.
+
+   Open the gate on arrival instead. It is position:fixed at z-index 10000,
+   so it sits over the fullscreen frame. No autofocus: on a phone that throws
+   the keyboard up over the form before they have read it. */
+if ((SECTION === 'play' || LAUNCHED) && !currentPlayer && CAN_SCORE){
+  loginErr.textContent = '';
+  loginGate.classList.add('open');
 }
 
 /* --- embed auto-height: report our content height to the hub (hero2) --- */
