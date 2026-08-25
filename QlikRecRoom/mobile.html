@@ -366,36 +366,49 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
 .shelf-wrap{display:none}
 #viewPlay.on:not(.playing) .shelf-wrap{display:block}
 .shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+/* The cartridge art carries its own shape and shadow, so the tile is just a
+   holder — no inner box, or it reads as a picture of a cartridge in a frame
+   rather than a cartridge on a shelf. */
 .cart{
-  display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 6px 12px;
-  background:var(--panel);border:1px solid var(--cyan);
+  display:flex;flex-direction:column;align-items:center;gap:6px;padding:4px 2px 10px;
+  background:none;border:0;
 }
 .cart .art{
   position:relative;width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;
-  background:#0b1424;border:1px solid var(--line);overflow:hidden;
 }
-.cart .art img{width:72%;height:auto}
+.cart .art img{
+  width:100%;height:100%;object-fit:contain;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.55));
+  transition:transform .12s ease;
+}
 .cart .nm{
-  font-size:.55rem;line-height:1.35;letter-spacing:.1em;text-transform:uppercase;
+  font-size:.5rem;line-height:1.35;letter-spacing:.08em;text-transform:uppercase;
   color:#fff;text-align:center;
 }
-.cart:active{transform:translateY(1px)}
+.cart:active .art img{transform:translateY(2px) scale(.97)}
 
-.cart.locked{border-color:var(--dim);opacity:.85}
+/* Locked slots are the same cartridge with the life drained out of it. */
+.cart.locked .art img{filter:grayscale(1) brightness(.28) contrast(.9)}
 .cart.locked .nm{color:var(--dim)}
-.cart.locked .art{background:#080d18}
+.cart.locked:active .art img{transform:none}
 /* The question mark glitches rather than sitting still, so the empty slots
    read as "coming" rather than "broken". */
+/* Sits centred on the drained cartridge. Absolute so it overlays the art
+   rather than pushing it around. */
 .cart.locked .q{
-  font-family:'VT323',monospace;font-size:2.4rem;line-height:1;color:var(--dim);
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-family:'VT323',monospace;font-size:2.6rem;line-height:1;color:var(--dim);
+  text-shadow:0 2px 6px rgba(0,0,0,.8);
   animation:qGlitch 2.6s steps(1,end) infinite;
 }
+/* Every frame has to carry the -50%/-50% centering too — a bare translate()
+   here would replace it and drop the question mark into the corner. */
 @keyframes qGlitch{
-  0%,72%,100%{opacity:.55;transform:translate(0,0);color:var(--dim)}
-  74%{opacity:1;transform:translate(-2px,1px);color:var(--cyan)}
-  76%{opacity:.5;transform:translate(2px,-1px);color:var(--latam)}
-  78%{opacity:1;transform:translate(-1px,0);color:var(--dim)}
-  86%{opacity:.35;transform:translate(1px,1px)}
+  0%,72%,100%{opacity:.55;transform:translate(-50%,-50%);color:var(--dim)}
+  74%{opacity:1;transform:translate(calc(-50% - 2px),calc(-50% + 1px));color:var(--cyan)}
+  76%{opacity:.5;transform:translate(calc(-50% + 2px),calc(-50% - 1px));color:var(--latam)}
+  78%{opacity:1;transform:translate(calc(-50% - 1px),-50%);color:var(--dim)}
+  86%{opacity:.35;transform:translate(calc(-50% + 1px),calc(-50% + 1px))}
 }
 @media (prefers-reduced-motion:reduce){ .cart.locked .q{animation:none;opacity:.55} }
 .shelf-note{margin-top:14px;font-size:.58rem;letter-spacing:.08em;color:var(--dim);text-align:center}
@@ -660,18 +673,19 @@ html[data-down="1"] .tabs{display:none}
       <div class="eyebrow">Choose your cartridge</div>
       <div class="shelf">
         <button class="cart" id="cartBlitz">
-          <span class="art">
-            <img src="assets/images/misc/RecRoom_Logo1.png" alt="">
-          </span>
-          <span class="nm">Side-Qlik<br>Blitz</span>
+          <span class="art"><img src="assets/images/carts/sideqlik-blitz.webp" alt=""></span>
+          <span class="nm">Side-Qlik Blitz</span>
         </button>
-        <button class="cart locked" disabled aria-label="Locked">
-          <span class="art"><span class="q">?</span></span>
-          <span class="nm">Locked</span>
+        <!-- Locked slots reuse the SAME cartridge art, drained of colour. Every
+             game gets this shell, so an unreleased one reads as a cartridge you
+             cannot play yet rather than an empty box. -->
+        <button class="cart locked" disabled aria-label="Locked — coming soon">
+          <span class="art"><img src="assets/images/carts/sideqlik-blitz.webp" alt="" aria-hidden="true"><span class="q">?</span></span>
+          <span class="nm">Coming soon</span>
         </button>
-        <button class="cart locked" disabled aria-label="Locked">
-          <span class="art"><span class="q">?</span></span>
-          <span class="nm">Locked</span>
+        <button class="cart locked" disabled aria-label="Locked — coming soon">
+          <span class="art"><img src="assets/images/carts/sideqlik-blitz.webp" alt="" aria-hidden="true"><span class="q">?</span></span>
+          <span class="nm">Coming soon</span>
         </button>
       </div>
       <div class="shelf-note">Two more cartridges in development.</div>
