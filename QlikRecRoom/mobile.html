@@ -387,30 +387,21 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
 }
 .cart:active .art img{transform:translateY(2px) scale(.97)}
 
-/* Locked slots are the same cartridge with the life drained out of it. */
-.cart.locked .art img{filter:grayscale(1) brightness(.28) contrast(.9)}
+/* No filter: the locked art is already dark and desaturated by design, and
+   draining it again only made it muddy. A slow flicker keeps the slots
+   reading as 'coming' rather than broken. */
+.cart.locked .art img{animation:cartFlicker 4.2s steps(1,end) infinite}
+@keyframes cartFlicker{
+  0%,86%,100%{opacity:.92;filter:none}
+  88%{opacity:1;filter:brightness(1.5) hue-rotate(-18deg)}
+  90%{opacity:.7;filter:brightness(.8)}
+  92%{opacity:1;filter:none}
+}
+@media (prefers-reduced-motion:reduce){.cart.locked .art img{animation:none;opacity:.92}}
 .cart.locked .nm{color:var(--dim)}
 .cart.locked:active .art img{transform:none}
 /* The question mark glitches rather than sitting still, so the empty slots
    read as "coming" rather than "broken". */
-/* Sits centred on the drained cartridge. Absolute so it overlays the art
-   rather than pushing it around. */
-.cart.locked .q{
-  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  font-family:'VT323',monospace;font-size:2.6rem;line-height:1;color:var(--dim);
-  text-shadow:0 2px 6px rgba(0,0,0,.8);
-  animation:qGlitch 2.6s steps(1,end) infinite;
-}
-/* Every frame has to carry the -50%/-50% centering too — a bare translate()
-   here would replace it and drop the question mark into the corner. */
-@keyframes qGlitch{
-  0%,72%,100%{opacity:.55;transform:translate(-50%,-50%);color:var(--dim)}
-  74%{opacity:1;transform:translate(calc(-50% - 2px),calc(-50% + 1px));color:var(--cyan)}
-  76%{opacity:.5;transform:translate(calc(-50% + 2px),calc(-50% - 1px));color:var(--latam)}
-  78%{opacity:1;transform:translate(calc(-50% - 1px),-50%);color:var(--dim)}
-  86%{opacity:.35;transform:translate(calc(-50% + 1px),calc(-50% + 1px))}
-}
-@media (prefers-reduced-motion:reduce){ .cart.locked .q{animation:none;opacity:.55} }
 .shelf-note{margin-top:14px;font-size:.58rem;letter-spacing:.08em;color:var(--dim);text-align:center}
 
 /* The game frame only exists once a cartridge is chosen. */
@@ -676,15 +667,16 @@ html[data-down="1"] .tabs{display:none}
           <span class="art"><img src="assets/images/carts/sideqlik-blitz.webp" alt=""></span>
           <span class="nm">Side-Qlik Blitz</span>
         </button>
-        <!-- Locked slots reuse the SAME cartridge art, drained of colour. Every
-             game gets this shell, so an unreleased one reads as a cartridge you
-             cannot play yet rather than an empty box. -->
+        <!-- Locked slots have their own art: a chained, padlocked cartridge. It
+             is framed identically to the Blitz cart (both fill 86% x 95% of the
+             frame with matching insets), so the three line up on the shelf with
+             no per-tile adjustment. -->
         <button class="cart locked" disabled aria-label="Locked — coming soon">
-          <span class="art"><img src="assets/images/carts/sideqlik-blitz.webp" alt="" aria-hidden="true"><span class="q">?</span></span>
+          <span class="art"><img src="assets/images/carts/locked.webp" alt="" aria-hidden="true"></span>
           <span class="nm">Coming soon</span>
         </button>
         <button class="cart locked" disabled aria-label="Locked — coming soon">
-          <span class="art"><img src="assets/images/carts/sideqlik-blitz.webp" alt="" aria-hidden="true"><span class="q">?</span></span>
+          <span class="art"><img src="assets/images/carts/locked.webp" alt="" aria-hidden="true"></span>
           <span class="nm">Coming soon</span>
         </button>
       </div>

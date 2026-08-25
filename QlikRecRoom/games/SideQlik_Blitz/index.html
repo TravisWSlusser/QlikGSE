@@ -46,11 +46,20 @@
     #audioToggles{
       flex-direction:column;
       top:50%; transform:translateY(-50%);
-      left:calc(env(safe-area-inset-left) + 12px);
+      left:calc(env(safe-area-inset-left) + 16px);
       bottom:auto; gap:10px;
     }
-    #audioToggles button{width:52px;height:52px;border-radius:12px}
-    #audioToggles button svg{width:24px;height:24px}
+    /* 88, not 52. These are STAGE coordinates, and the stage is scaled to fit
+       the phone — about 0.54 on a landscape iPhone (1280x720 fitted into an
+       844x390 frame). So the old 52px rendered at 28 REAL pixels, which is why
+       it felt tiny however big the number looked in the CSS. 88 lands at ~48
+       real pixels, past the 44px touch guideline.
+
+       88 with a 10px gap is also the largest that still fits: five buttons is
+       480px tall, y 120-600, which clears the HUD at y 612. 96px would be 536
+       and would run into it. */
+    #audioToggles button{width:88px;height:88px;border-radius:18px;border-width:2px}
+    #audioToggles button svg{width:42px;height:42px}
   }
   /* Pause and Exit are touch-only. Desktop already has Esc/P for pause and
      the REC Room page around it to leave; on a phone there was neither, and
