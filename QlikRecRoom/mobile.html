@@ -458,6 +458,27 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
 html[data-view="play"] .conn,
 html[data-locked="1"] .conn{display:none}
 
+/* ---- the room is portrait, the way the game is landscape ------------------
+   Turning the phone to play leaves it turned when you come back, so the
+   portrait-built room was rendering into a landscape viewport: squeezed,
+   wide and short. Same trick as the game, mirrored — rotate the room -90°
+   in a landscape viewport so it reads as portrait and the phone naturally
+   gets turned back upright. Turn it back and the query stops matching and
+   nothing is applied at all.
+
+   .tabs is position:fixed, which normally ignores ancestors — but a
+   transformed ancestor becomes its containing block, so the tab bar rotates
+   with the room instead of being left behind at the real screen bottom. */
+@media (orientation:landscape) and (pointer:coarse){
+  html:not([data-playing="1"]) .room{
+    position:fixed; top:50%; left:50%;
+    width:100vh;  width:100svh;
+    height:100vw; height:100svw;
+    transform:translate(-50%,-50%) rotate(-90deg);
+    transform-origin:center center;
+  }
+}
+
 /* ------------------------------- tab bar ------------------------------- */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
@@ -465,7 +486,10 @@ html[data-locked="1"] .conn{display:none}
   padding-bottom:var(--safe-b);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
 }
-html[data-view="play"] .tabs{display:none}
+/* Hidden only while a game is actually RUNNING, not for the whole Play view.
+   Hiding it for the view meant exiting a game dropped you on the cartridge
+   shelf with no tab bar and no way back to the board. */
+html[data-playing="1"] .tabs{display:none}
 /* A phone that has not installed gets the install screen and nothing else —
    no tab bar, no browser play. Travis: do not offer them to play in browser. */
 html[data-locked="1"] .tabs{display:none}
@@ -1089,6 +1113,7 @@ function go(v) {
     // Opens on the cartridge shelf. The game frame is not loaded until a
     // cartridge is tapped, so browsing Play costs no download and no audio.
     VIEW_EL.play.classList.remove('playing');
+    document.documentElement.removeAttribute('data-playing');
   } else {
     if (FS.active()) { FS.unlock(); FS.exit(); }
     VIEW_EL.play.classList.remove('show-tip');
@@ -1096,6 +1121,7 @@ function go(v) {
     // running behind the room, still descending and still playing audio.
     abandonGame();
     VIEW_EL.play.classList.remove('playing');
+    document.documentElement.removeAttribute('data-playing');
   }
   if (v === 'board')   loadBoard();
   if (v === 'install') paintInstall();
@@ -1583,6 +1609,7 @@ $('exitPlay').addEventListener('click', function () { FS.unlock(); FS.exit(); go
 $('cartBlitz').addEventListener('click', function () {
   if (!me) { go('badge'); return; }        // never start a run that cannot score
   VIEW_EL.play.classList.add('playing');
+  document.documentElement.setAttribute('data-playing', '1');
   startGame();
   if (TOUCH) enterPlayScreen();
 });
@@ -1620,7 +1647,8 @@ window.addEventListener('message', function (e) {
   if (d.type === 'BLITZ_READY')  { gameReady = true; if (me) sendInit(); }
   if (d.type === 'BLITZ_EXIT') {                          // the game's own X
     FS.unlock(); FS.exit();
-    VIEW_EL.play.classList.remove('playing');             // back to the shelf
+    VIEW_EL.play.classList.remove('playing');
+    document.documentElement.removeAttribute('data-playing');             // back to the shelf
   }
   if (d.type === 'BLITZ_RESULT') submitScore(d);
 });
@@ -1814,6 +1842,7 @@ function applyDownState(d) {
     abandonGame();
     FS.unlock(); FS.exit();
     VIEW_EL.play.classList.remove('playing');
+    document.documentElement.removeAttribute('data-playing');
   }
 }
 

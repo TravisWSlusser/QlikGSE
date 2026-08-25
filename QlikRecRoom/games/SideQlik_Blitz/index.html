@@ -24,6 +24,24 @@
     pointer-events:none;z-index:0}                /* behind the canvas; composited via drawImage */
   canvas{position:absolute;inset:0;width:1280px;height:720px;display:block;z-index:1}
   #audioToggles{position:absolute;top:12px;left:12px;z-index:15;display:flex;gap:8px}
+  /* ---- touch layout -------------------------------------------------------
+     38px is a fine mouse target and a poor thumb one — the guideline minimum
+     is ~44px and these sit at the very edge of the screen. On touch they grow
+     to 52 and move to the BOTTOM-left, alongside the Brain Blast meter.
+
+     The bottom-left corner is the right home for them because the 16:9 stage
+     letterboxes on a short wide phone, so that corner is dead space rather
+     than playfield — the controls stop covering anything that matters, and
+     they are where a thumb already rests. */
+  @media (pointer:coarse){
+    #audioToggles{
+      top:auto; bottom:calc(env(safe-area-inset-bottom) + 12px);
+      left:calc(env(safe-area-inset-left) + 12px);
+      gap:10px;
+    }
+    #audioToggles button{width:52px;height:52px;border-radius:12px}
+    #audioToggles button svg{width:24px;height:24px}
+  }
   /* Pause and Exit are touch-only. Desktop already has Esc/P for pause and
      the REC Room page around it to leave; on a phone there was neither, and
      the room's floating X sat directly on top of this row. */
