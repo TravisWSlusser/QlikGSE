@@ -5,177 +5,198 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Stellar-Seller Universe</title>
 <script>
-  /* Section BEFORE styles, same as every other widget page — one rule hides all
-     top-level blocks and the per-section rules re-show what that view owns. */
-  (function(){var s=new URLSearchParams(location.search).get('section');
-   if(s)document.documentElement.setAttribute('data-section',s);})();
+  /* Section AND theme before styles, same as the other widget pages, so the
+     first paint is already correct and nothing flashes. */
+  (function(){
+    var q = new URLSearchParams(location.search);
+    var s = q.get('section'); if (s) document.documentElement.setAttribute('data-section', s);
+    var t = q.get('theme');   if (t === 'light') document.documentElement.setAttribute('data-theme','light');
+  })();
 </script>
 
 <!-- ============================================================================
-  SalesCommand/stellar.html — the Stellar-Seller Universe widgets.
+  SalesCommand/stellar.html — Stellar-Seller Universe widgets.
 
-  A new file rather than more sections bolted onto qlikmt-hero.html, which is
-  already 2,000 lines across five sections. This is a distinct area of the site
-  (the home for the comic, the AI Academy and the REC Room), so it gets its own
-  page and its own section list. The section mechanism itself is copied exactly,
-  not reinvented.
+  FRAME CONTRACT — this is why the numbers here look arbitrary and are not.
+  Every Mission Control widget is a separate iframe that Mindtickle sizes
+  independently, so nothing can rely on a shared container. They line up
+  because they all use the SAME fixed inset:
+
+      --secpad-x: 36px   (20px under 640px)
+      .wrap padding: clamp(14px,1.6vw,20px) var(--secpad-x)
+
+  Fixed px, never vw, or two widgets of different widths land their content on
+  different lines. Palette, card treatment and light-theme handling are copied
+  from qlikmt-hero.html for the same reason — these sit inches apart on one
+  page and any drift reads as a mistake.
 
   SECTIONS
-    ?section=banner   Stellar-Seller wordmark + live AI service status
-    ?section=hero     rotating highlight, fed from STELLAR_POSTS in this file
-                      (deliberately NOT the same source as the homepage rotator)
+    ?section=banner   Stellar-Seller wordmark, centred, with Systems Watch
+                      centred beneath it
+    ?section=hero     rotating post in the same card treatment as the homepage
+                      rotator, but WITHOUT the wordmark and fed from
+                      STELLAR_POSTS in this file
 
-  THE 200px RULE DRIVES EVERYTHING HERE
-  Mindtickle's mobile app crops every widget to ~200px and its expand control
-  does NOT grow the iframe — so anything below 200px is simply never seen. Both
-  sections are therefore built to fit inside 200px on a phone and only expand on
-  desktop, rather than being designed for desktop and cropped. Where something
-  cannot fit, it is dropped on mobile rather than shrunk into illegibility.
+  Both are built to fit Mindtickle's ~200px mobile crop, because its expand
+  control does not grow the iframe — anything below 200px is never seen.
   ============================================================================ -->
 
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+/* Palette lifted from qlikmt-hero.html so the two pages cannot drift apart. */
 :root{
-  --navy:#0a0a1f; --navy-2:#12143a; --ink:#e8eefc; --muted:rgba(232,238,252,.55);
-  --teal:#10CFC9; --violet:#9B59FF; --green:#00C46A; --amber:#FFB020; --red:#FF3B4E;
+  --navy-0:#0B1F33; --navy-1:#11304D; --navy-2:#19426C;
+  --green:#00A651; --sky:#10CFC9;
+  --violet:#9B59FF;
+  --ink:#EDF3F9; --muted:#90A6BD;
   --line:rgba(255,255,255,.10);
+  --ok:#00C46A; --warn:#FFB020; --bad:#FF3B4E;
 }
+[data-theme="light"]{
+  --ink:#0E2742; --muted:#5b7088; --line:rgba(15,40,70,.14);
+  --sky:#0E8A84; --green:#00904A;
+}
+
 html,body{height:100%}
 body{
-  background:radial-gradient(120% 120% at 50% 0%,#15173a 0%,var(--navy) 60%,#070712 100%);
-  color:var(--ink); font-family:'Inter',system-ui,sans-serif;
+  background:var(--navy-1); color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
   /* Mindtickle applies word-break to widget content; put it back. */
   word-break:normal; overflow-wrap:normal;
   -webkit-text-size-adjust:100%;
 }
+[data-theme="light"] body{background:#eef3f9}
+@media (max-width:500px){ [data-theme="light"] body{background:#fff} }
 img{max-width:100%;display:block}
 
-/* Embedded widgets: no scroll chrome, no 100vh floor. Same treatment the other
-   widget pages use so Mindtickle does not paint grey scrollbars over them. */
+/* Embedded widgets: no scroll chrome, no viewport floor. */
 html[data-section],html[data-section] body{min-height:0}
 html[data-section]{scrollbar-width:none;-ms-overflow-style:none}
 html[data-section]::-webkit-scrollbar,
 html[data-section] body::-webkit-scrollbar{width:0;height:0;display:none}
 
-/* The hide-all rule. Per-section rules below re-show what each view owns, at
-   matching specificity and ordered after it. */
-html[data-section] .block{display:none}
+/* THE alignment knob. Fixed px so every widget lands on the same line. */
+html[data-section]{--secpad-x:36px}
+@media (max-width:640px){ html[data-section]{--secpad-x:20px} }
+.wrap{margin:0;max-width:none;padding:clamp(14px,1.6vw,20px) var(--secpad-x)}
 
-.wrap{max-width:1600px;margin:0 auto;padding:14px 20px}
+/* Hide every top-level block; per-section rules re-show what that view owns,
+   at matching specificity and ordered after. */
+html[data-section] .wrap > *{display:none}
 
-/* ===================== BANNER: wordmark + AI status ===================== */
-.ssb{display:flex;align-items:center;gap:22px}
-.ssb-mark{flex:0 0 auto;width:clamp(180px,26vw,320px)}
-.ssb-mark img{width:100%;height:auto;filter:drop-shadow(0 0 22px rgba(155,89,255,.35))}
+/* ============ BANNER — wordmark centred, Systems Watch beneath ============ */
+.ssb{text-align:center}
+.ssb-mark{margin:0 auto;width:clamp(220px,34vw,420px)}
+.ssb-mark img{width:100%;height:auto;filter:drop-shadow(0 0 26px rgba(155,89,255,.30))}
+[data-theme="light"] .ssb-mark img{filter:none}
 
-.ssb-right{flex:1;min-width:0}
+.ssb-watch{margin-top:clamp(10px,1.4vw,16px)}
 .ssb-kicker{
-  font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;
-  letter-spacing:4px;text-transform:uppercase;color:var(--violet);margin-bottom:8px;
+  font-size:12px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--sky);display:inline-flex;align-items:center;gap:7px;margin-bottom:9px;
 }
-.svc{display:flex;flex-wrap:wrap;gap:8px}
+.ssb-kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sky)}
+
+/* Centred row that wraps evenly rather than left-packing on the last line. */
+.svc{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 .svc-item{
-  display:flex;align-items:center;gap:8px;padding:8px 12px;
-  border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.03);
-  min-width:0;
+  display:inline-flex;align-items:center;gap:8px;padding:8px 13px;min-width:0;
+  border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
 }
-.svc-dot{
-  width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--muted);
-  box-shadow:0 0 0 0 currentColor;
-}
-.svc-item.ok    .svc-dot{background:var(--green); box-shadow:0 0 10px var(--green)}
-.svc-item.warn  .svc-dot{background:var(--amber); box-shadow:0 0 10px var(--amber); animation:pulseDot 1.4s ease-in-out infinite}
-.svc-item.down  .svc-dot{background:var(--red);   box-shadow:0 0 12px var(--red);   animation:pulseDot .7s ease-in-out infinite}
+[data-theme="light"] .svc-item{background:rgba(255,255,255,.42);border-color:rgba(15,40,70,.12)}
+.svc-dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--muted)}
+.svc-item.ok   .svc-dot{background:var(--ok);  box-shadow:0 0 10px var(--ok)}
+.svc-item.warn .svc-dot{background:var(--warn);box-shadow:0 0 10px var(--warn);animation:pulseDot 1.4s ease-in-out infinite}
+.svc-item.down .svc-dot{background:var(--bad); box-shadow:0 0 12px var(--bad); animation:pulseDot .7s ease-in-out infinite}
 @keyframes pulseDot{0%,100%{opacity:1}50%{opacity:.35}}
 @media (prefers-reduced-motion:reduce){.svc-item .svc-dot{animation:none}}
-
 .svc-name{font-size:13px;font-weight:600;white-space:nowrap}
-.svc-state{
-  font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;
-  letter-spacing:1.6px;text-transform:uppercase;white-space:nowrap;
-}
-.svc-item.ok   .svc-state{color:var(--green)}
-.svc-item.warn .svc-state{color:var(--amber)}
-.svc-item.down .svc-state{color:var(--red)}
+.svc-state{font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.svc-item.ok   .svc-state{color:var(--ok)}
+.svc-item.warn .svc-state{color:var(--warn)}
+.svc-item.down .svc-state{color:var(--bad)}
 .svc-item.unk  .svc-state{color:var(--muted)}
 
-/* ========================= HERO: rotating post ========================= */
-.ssh{display:flex;align-items:center;gap:22px;min-height:0}
-.ssh-art{
-  flex:0 0 auto;width:clamp(120px,18vw,200px);
+/* ========== HERO — the homepage rotator's card, minus the wordmark ========== */
+.ssh{
+  position:relative;min-width:0;
+  border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:clamp(12px,1.6vw,18px);
 }
-.ssh-art img{width:100%;height:auto;filter:drop-shadow(0 0 18px rgba(16,207,201,.28))}
-.ssh-body{flex:1;min-width:0}
+[data-theme="light"] .ssh{background:rgba(255,255,255,.42);border-color:rgba(15,40,70,.12)}
+.ssh-stage{position:relative;min-height:clamp(118px,12vw,164px)}
+.ssh-item{
+  position:absolute;left:0;right:0;top:0;opacity:0;transform:translateY(8px);
+  transition:opacity .5s ease, transform .5s ease;pointer-events:none;
+}
+.ssh-item.on{opacity:1;transform:none;pointer-events:auto}
 .ssh-kicker{
-  font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;
-  letter-spacing:3px;text-transform:uppercase;color:var(--teal);
+  font-size:12px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--sky);display:inline-flex;align-items:center;gap:7px;
 }
+.ssh-kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sky);flex:0 0 auto}
 .ssh-title{
-  font-family:'Barlow Condensed',sans-serif;font-weight:900;line-height:1.02;
-  font-size:clamp(26px,4vw,44px);text-transform:uppercase;letter-spacing:.5px;margin:4px 0 6px;
+  font-weight:600;line-height:1.04;font-size:clamp(30px,4.2vw,50px);
+  letter-spacing:-.01em;margin:.22em 0 .3em;text-wrap:balance;
 }
-.ssh-title .ac{color:var(--teal)}
-.ssh-copy{font-size:13.5px;line-height:1.5;color:var(--muted);max-width:70ch}
-.ssh-dots{display:flex;gap:6px;margin-top:12px}
-.ssh-dots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.22);transition:background .2s}
-.ssh-dots i.on{background:var(--teal)}
-/* Cross-fade rather than slide: a slide inside a 200px crop reads as a glitch. */
-.ssh-fade{transition:opacity .45s ease}
-.ssh-fade.out{opacity:0}
+.ssh-title .ac{color:var(--green)}
+.ssh-body{font-size:clamp(14px,1.4vw,16px);line-height:1.55;color:#bccfe2;max-width:560px}
+[data-theme="light"] .ssh-body{color:#42566c}
+.ssh-dots{display:flex;gap:7px;margin-top:14px}
+.ssh-dots button{
+  width:8px;height:8px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:rgba(255,255,255,.22);transition:background .2s,transform .2s;
+}
+@media (hover:hover){ .ssh-dots button:hover{background:var(--muted)} }
+.ssh-dots button.on{background:var(--sky);transform:scale(1.25)}
 
-/* ======================== SECTION VISIBILITY ========================== */
-html[data-section="banner"] .block.banner{display:block}
-html[data-section="hero"]   .block.hero{display:block}
+/* ========================= SECTION VISIBILITY ========================== */
+html[data-section="banner"] .wrap > .banner{display:block}
+html[data-section="hero"]   .wrap > .hero{display:block}
 
 /* ============================ THE 200px BOX ============================
    Mindtickle's app crops to ~200px and expanding does not grow the iframe, so
-   on a phone this is the entire budget. Both views are rebuilt to fit it —
-   stacked, tightened, and with anything that cannot earn its place removed
-   rather than shrunk until it cannot be read.
-
-   Breakpoint is 700, not 480: widget media queries measure the PAGE, not the
-   iframe, and the iframe runs ~100px narrower than the page it sits in. */
+   on a phone that is the whole budget. Break at 700 rather than 480: widget
+   media queries measure the PAGE, and the iframe runs ~100px narrower. */
 @media (max-width:700px){
-  .wrap{padding:10px 12px}
-
-  /* --- banner: wordmark on top, services as a tight 2x2 --- */
-  .ssb{flex-direction:column;align-items:stretch;gap:8px}
-  .ssb-mark{width:100%;max-width:230px;margin:0 auto}
-  .ssb-kicker{display:none}          /* the wordmark already says what this is */
+  .ssb-mark{width:min(230px,74%)}
+  .ssb-watch{margin-top:9px}
+  .ssb-kicker{display:none}                 /* the wordmark already says this */
   .svc{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .svc-item{padding:6px 8px;gap:6px;border-radius:8px}
+  .svc-item{padding:6px 9px;gap:6px;border-radius:11px;justify-content:center}
   .svc-name{font-size:11.5px}
-  .svc-state{font-size:9.5px;letter-spacing:1.2px}
+  .svc-state{font-size:9.5px;letter-spacing:.08em}
 
-  /* --- hero: art out, copy trimmed to two lines --- */
-  .ssh{gap:12px}
-  .ssh-art{display:none}             /* 200px cannot hold art and words both */
-  .ssh-title{font-size:22px;margin:2px 0 4px}
-  .ssh-copy{
-    font-size:12px;line-height:1.45;
+  .ssh{padding:12px}
+  .ssh-stage{min-height:96px}
+  .ssh-title{font-size:21px;margin:.18em 0 .24em}
+  .ssh-body{
+    font-size:12.5px;line-height:1.45;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   }
-  .ssh-dots{margin-top:8px}
+  .ssh-dots{margin-top:10px}
 }
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<!-- ============================== BANNER ============================== -->
-<div class="block banner">
-  <div class="wrap">
+  <!-- ============================= BANNER ============================= -->
+  <div class="banner">
     <div class="ssb">
       <div class="ssb-mark">
         <img src="assets/images/stellar/stellar-seller-banner.webp"
              alt="Stellar-Seller and the Side-Qlik">
       </div>
-      <div class="ssb-right">
-        <div class="ssb-kicker">Systems Watch</div>
+      <div class="ssb-watch">
+        <span class="ssb-kicker">Systems Watch</span>
         <div class="svc" id="svc" aria-live="polite">
-          <!-- painted by JS; the placeholders keep the box from collapsing to
-               zero height and jumping when the first fetch lands -->
+          <!-- Placeholders hold the box open so it does not jump when the first
+               fetch lands. Replaced wholesale by paintServices(). -->
           <div class="svc-item unk"><span class="svc-dot"></span><span class="svc-name">Claude</span><span class="svc-state">&middot;&middot;&middot;</span></div>
           <div class="svc-item unk"><span class="svc-dot"></span><span class="svc-name">ChatGPT</span><span class="svc-state">&middot;&middot;&middot;</span></div>
           <div class="svc-item unk"><span class="svc-dot"></span><span class="svc-name">Gemini</span><span class="svc-state">&middot;&middot;&middot;</span></div>
@@ -184,79 +205,20 @@ html[data-section="hero"]   .block.hero{display:block}
       </div>
     </div>
   </div>
-</div>
 
-<!-- =============================== HERO =============================== -->
-<div class="block hero">
-  <div class="wrap">
+  <!-- ============================== HERO ============================== -->
+  <div class="hero">
     <div class="ssh">
-      <div class="ssh-art">
-        <img src="assets/images/stellar/stellar-seller-banner.webp" alt="">
-      </div>
-      <div class="ssh-body">
-        <div class="ssh-fade" id="heroFade">
-          <div class="ssh-kicker" id="heroKicker"></div>
-          <div class="ssh-title"  id="heroTitle"></div>
-          <div class="ssh-copy"   id="heroCopy"></div>
-        </div>
-        <div class="ssh-dots" id="heroDots"></div>
-      </div>
+      <div class="ssh-stage" id="sshStage"></div>
+      <div class="ssh-dots"  id="sshDots"></div>
     </div>
   </div>
+
 </div>
 
 <script>
 (function () {
 'use strict';
-
-/* ======================================================================
-   AI SERVICE STATUS
-
-   /api/status already tracks Claude, ChatGPT, Gemini and Mindtickle and
-   caches for five minutes server-side, so polling here is cheap.
-
-   The mapping is the whole point of this widget:
-     operational          -> ONLINE
-     minor / degraded     -> POTENTIAL DORC ACTIVITY
-     major / critical     -> DORC ATTACK
-     anything unreachable -> NO SIGNAL
-
-   "Unreachable" is deliberately its own state rather than being folded into
-   DORC ATTACK. Not being able to see a service is not the same as knowing it
-   is down, and crying DORC ATTACK because our own fetch failed would burn the
-   alert's credibility the first time someone checked and found it fine.
-   ====================================================================== */
-var SERVICES = ['Claude', 'ChatGPT', 'Gemini', 'Mindtickle'];
-
-function classify(raw) {
-  var s = (raw || '').toString().trim().toLowerCase();
-  if (s === 'operational' || s === 'none') return { cls: 'ok',   label: 'Online' };
-  if (s === 'minor' || s === 'degraded' || s === 'partial')
-                                           return { cls: 'warn', label: 'Potential DORC Activity' };
-  if (s === 'major' || s === 'critical' || s === 'down' || s === 'outage')
-                                           return { cls: 'down', label: 'DORC Attack' };
-  return { cls: 'unk', label: 'No Signal' };
-}
-
-function paintServices(list) {
-  var host = document.getElementById('svc');
-  if (!host) return;
-  var by = {};
-  (list || []).forEach(function (s) { if (s && s.name) by[s.name] = s; });
-
-  host.innerHTML = SERVICES.map(function (name) {
-    var rec = by[name];
-    var st  = classify(rec && rec.status);
-    // Anything we did not hear about at all is No Signal, not Online.
-    if (!rec) st = { cls: 'unk', label: 'No Signal' };
-    return '<div class="svc-item ' + st.cls + '" title="' +
-             esc((rec && rec.description) || st.label) + '">' +
-             '<span class="svc-dot"></span>' +
-             '<span class="svc-name">' + esc(name) + '</span>' +
-             '<span class="svc-state">' + esc(st.label) + '</span>' +
-           '</div>';
-  }).join('');
-}
 
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
@@ -264,83 +226,138 @@ function esc(s) {
   });
 }
 
+/* ======================================================================
+   SYSTEMS WATCH
+
+   /api/status covers Claude, ChatGPT, Gemini and Mindtickle and caches for
+   five minutes server-side, so polling here is cheap.
+
+     operational / none          -> ONLINE
+     minor / degraded / partial  -> POTENTIAL DORC ACTIVITY
+     major / critical / outage   -> DORC ATTACK
+     unreachable                 -> NO SIGNAL
+
+   NO SIGNAL is deliberately its own state. Not being able to SEE a service is
+   not the same as knowing it is down, and shouting DORC ATTACK because our own
+   fetch failed would burn the alert the first time someone checked and found
+   it fine.
+   ====================================================================== */
+var SERVICES = ['Claude', 'ChatGPT', 'Gemini', 'Mindtickle'];
+
+function classify(raw) {
+  var s = (raw || '').toString().trim().toLowerCase();
+  if (s === 'operational' || s === 'none') return { cls:'ok',   label:'Online' };
+  if (s === 'minor' || s === 'degraded' || s === 'partial')
+                                           return { cls:'warn', label:'Potential DORC Activity' };
+  if (s === 'major' || s === 'critical' || s === 'down' || s === 'outage')
+                                           return { cls:'down', label:'DORC Attack' };
+  return { cls:'unk', label:'No Signal' };
+}
+
+function paintServices(list) {
+  var host = document.getElementById('svc');
+  if (!host) return;
+  var by = {};
+  (list || []).forEach(function (s) { if (s && s.name) by[s.name] = s; });
+  host.innerHTML = SERVICES.map(function (name) {
+    var rec = by[name];
+    var st  = rec ? classify(rec.status) : { cls:'unk', label:'No Signal' };
+    return '<div class="svc-item ' + st.cls + '" title="' +
+             esc((rec && rec.description) || st.label) + '">' +
+             '<span class="svc-dot"></span>' +
+             '<span class="svc-name">'  + esc(name)     + '</span>' +
+             '<span class="svc-state">' + esc(st.label) + '</span>' +
+           '</div>';
+  }).join('');
+}
+
 function loadStatus() {
-  fetch('/api/status', { cache: 'no-store' })
+  fetch('/api/status', { cache:'no-store' })
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (d) { if (Array.isArray(d)) paintServices(d); })
-    .catch(function () { /* leave the placeholders; No Signal is honest */ });
+    .catch(function () { /* leave the placeholders — No Signal is honest */ });
 }
 
 /* ======================================================================
    HERO ROTATION
 
-   Its own source, deliberately. The homepage rotator reads HIGHLIGHTS in
-   qlikmt-hero.html; this reads STELLAR_POSTS here, so the Stellar-Seller
-   strip can be changed without touching the homepage and vice versa.
+   Its own source on purpose. The homepage rotator reads HIGHLIGHTS in
+   qlikmt-hero.html; this reads STELLAR_POSTS here, so either strip can be
+   changed without touching the other. To add a post, add an object.
 
-   To add a post: add an object. Nothing else to update.
+   No wordmark in this view — the banner widget above it already carries it,
+   and repeating it inside a 200px crop would cost the words their room.
    ====================================================================== */
 var STELLAR_POSTS = [
-  { kicker: 'The Universe',
-    title: 'Stellar-Seller <span class="ac">and the Side-Qlik</span>.',
-    copy:  'Everything AI-knowledge in one place — the comic, the AI Academy, and the REC Room. Start anywhere.' },
-  { kicker: 'Now Playing',
-    title: 'Side-Qlik <span class="ac">Blitz</span>.',
-    copy:  'Clear the board, answer under pressure, and put your territory on the map. Live in the REC Room.' },
-  { kicker: 'AI Academy',
-    title: 'Learn the <span class="ac">tools</span>.',
-    copy:  'Practical AI for sellers — what to use, when to use it, and the prompts that actually move a deal.' }
+  { kicker:'The Universe',
+    title:'Stellar-Seller <span class="ac">and the Side-Qlik</span>.',
+    body:'Everything AI-knowledge in one place — the comic, the AI Academy, and the REC Room. Start anywhere.' },
+  { kicker:'Now Playing',
+    title:'Side-Qlik <span class="ac">Blitz</span>.',
+    body:'Clear the board, answer under pressure, and put your territory on the map. Live in the REC Room.' },
+  { kicker:'AI Academy',
+    title:'Learn the <span class="ac">tools</span>.',
+    body:'Practical AI for sellers — what to use, when to use it, and the prompts that actually move a deal.' }
 ];
 
-var ROTATE_MS = 9000;
-var idx = 0, timer = null;
+var ROTATE_MS = 9000, idx = 0, timer = null, items = [];
 
-function paintHero(i) {
-  var p = STELLAR_POSTS[i]; if (!p) return;
-  document.getElementById('heroKicker').textContent = p.kicker || '';
-  document.getElementById('heroTitle').innerHTML    = p.title  || '';
-  document.getElementById('heroCopy').textContent   = p.copy   || '';
-  var dots = document.getElementById('heroDots');
-  dots.innerHTML = STELLAR_POSTS.map(function (_, n) {
-    return '<i class="' + (n === i ? 'on' : '') + '"></i>';
+function buildHero() {
+  var stage = document.getElementById('sshStage');
+  var dots  = document.getElementById('sshDots');
+  if (!stage || !dots) return;
+
+  stage.innerHTML = STELLAR_POSTS.map(function (p, i) {
+    return '<div class="ssh-item' + (i === 0 ? ' on' : '') + '">' +
+             '<span class="ssh-kicker">' + esc(p.kicker) + '</span>' +
+             '<h1 class="ssh-title">' + p.title + '</h1>' +
+             '<div class="ssh-body">' + esc(p.body) + '</div>' +
+           '</div>';
   }).join('');
+  items = [].slice.call(stage.querySelectorAll('.ssh-item'));
+
+  dots.innerHTML = STELLAR_POSTS.map(function (_, i) {
+    return '<button type="button" class="' + (i === 0 ? 'on' : '') +
+           '" aria-label="Post ' + (i + 1) + '"></button>';
+  }).join('');
+  [].slice.call(dots.querySelectorAll('button')).forEach(function (b, i) {
+    b.addEventListener('click', function () { show(i); restart(); });
+  });
 }
 
-function rotate() {
-  if (STELLAR_POSTS.length < 2) return;
-  var fade = document.getElementById('heroFade');
-  fade.classList.add('out');
-  // Swap at the far end of the fade so the change is never seen mid-transition.
-  setTimeout(function () {
-    idx = (idx + 1) % STELLAR_POSTS.length;
-    paintHero(idx);
-    fade.classList.remove('out');
-  }, 450);
+function show(i) {
+  if (!items.length) return;
+  idx = (i + items.length) % items.length;
+  items.forEach(function (el, n) { el.classList.toggle('on', n === idx); });
+  var dots = document.getElementById('sshDots');
+  [].slice.call(dots.querySelectorAll('button')).forEach(function (b, n) {
+    b.classList.toggle('on', n === idx);
+  });
 }
+function restart() { clearInterval(timer); timer = setInterval(function () { show(idx + 1); }, ROTATE_MS); }
 
 /* ======================================================================
-   BOOT — only the section actually being shown does any work, so four
-   widgets on one page do not each poll the status API.
+   BOOT — only the section on screen does any work, so four widgets on one
+   page do not each poll the status API or run a timer.
    ====================================================================== */
 var SECTION = new URLSearchParams(location.search).get('section') || '';
 
 if (SECTION === 'banner' || SECTION === '') {
   loadStatus();
-  // Server-side cache is 5 minutes; refresh a little slower than that.
-  setInterval(loadStatus, 6 * 60 * 1000);
+  setInterval(loadStatus, 6 * 60 * 1000);      // server cache is 5 min
   document.addEventListener('visibilitychange', function () {
     if (!document.hidden) loadStatus();
   });
 }
 
 if (SECTION === 'hero' || SECTION === '') {
-  paintHero(0);
-  timer = setInterval(rotate, ROTATE_MS);
-  // A rotator ticking in a hidden tab is wasted work and lands the reader on a
-  // random post when they return.
+  buildHero();
+  restart();
+  // A rotator ticking in a hidden tab is wasted work, and lands the reader on
+  // a random post when they come back.
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) { clearInterval(timer); timer = null; }
-    else if (!timer)     { timer = setInterval(rotate, ROTATE_MS); }
+    else if (!timer) restart();
   });
 }
 
