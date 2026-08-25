@@ -11,6 +11,11 @@
     var q = new URLSearchParams(location.search);
     var s = q.get('section'); if (s) document.documentElement.setAttribute('data-section', s);
     var t = q.get('theme');   if (t === 'light') document.documentElement.setAttribute('data-theme','light');
+    // Explicit compact mode. Width cannot be trusted to detect the phone:
+    // Android reports ~1080 CSS px for the same widget iframe that iOS reports
+    // ~408 for, so a max-width rule fires on one and not the other. The mobile
+    // widget asks for compact by name.
+    if (q.get('compact') === '1') document.documentElement.setAttribute('data-compact','1');
   })();
 </script>
 
@@ -159,25 +164,47 @@ html[data-section="banner"] .wrap > .banner{display:block}
 html[data-section="hero"]   .wrap > .hero{display:block}
 
 /* ============================ THE 200px BOX ============================
-   Mindtickle's app crops to ~200px and expanding does not grow the iframe, so
-   on a phone that is the whole budget. Break at 700 rather than 480: widget
-   media queries measure the PAGE, and the iframe runs ~100px narrower. */
+   Mindtickle's app crops every widget to ~200px and its expand control does
+   NOT grow the iframe, so on a phone that is the entire budget.
+
+   TWO TRIGGERS, and the first is the one that matters:
+
+     html[data-compact="1"]   set by ?compact=1 — what the MOBILE widget uses
+     @media (max-width:700px) a genuinely narrow page
+
+   Width alone cannot be trusted here. Android reports ~1080 CSS px for the
+   same widget iframe that iOS reports ~408 for, so a width rule fires on one
+   phone and not the other. The mobile widget therefore asks for compact BY
+   NAME and does not rely on being measured. The media query stays as a
+   courtesy for anyone opening the page directly in a narrow browser.
+
+   Everything below is the same declaration list emitted twice, because CSS
+   cannot OR a selector with a media query. */
+html[data-compact="1"] .ssb-mark{width:min(230px,74%)}
+html[data-compact="1"] .ssb-watch{margin-top:9px}
+html[data-compact="1"] .ssb-kicker{display:none}
+html[data-compact="1"] .svc{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+html[data-compact="1"] .svc-item{padding:6px 9px;gap:6px;border-radius:11px;justify-content:center}
+html[data-compact="1"] .svc-name{font-size:11.5px}
+html[data-compact="1"] .svc-state{font-size:9.5px;letter-spacing:.08em}
+html[data-compact="1"] .ssh{padding:12px}
+html[data-compact="1"] .ssh-stage{min-height:96px}
+html[data-compact="1"] .ssh-title{font-size:21px;margin:.18em 0 .24em}
+html[data-compact="1"] .ssh-body{font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html[data-compact="1"] .ssh-dots{margin-top:10px}
+
 @media (max-width:700px){
   .ssb-mark{width:min(230px,74%)}
   .ssb-watch{margin-top:9px}
-  .ssb-kicker{display:none}                 /* the wordmark already says this */
+  .ssb-kicker{display:none}
   .svc{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .svc-item{padding:6px 9px;gap:6px;border-radius:11px;justify-content:center}
   .svc-name{font-size:11.5px}
   .svc-state{font-size:9.5px;letter-spacing:.08em}
-
   .ssh{padding:12px}
   .ssh-stage{min-height:96px}
   .ssh-title{font-size:21px;margin:.18em 0 .24em}
-  .ssh-body{
-    font-size:12.5px;line-height:1.45;
-    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
-  }
+  .ssh-body{font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .ssh-dots{margin-top:10px}
 }
 </style>
