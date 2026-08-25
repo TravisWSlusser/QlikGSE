@@ -1,0 +1,27 @@
+# Excluded from the DEPLOYMENT, kept in the repo.
+#
+# Everything here is either a source master or genuinely unreferenced. None of
+# it is loaded by any page, but all of it was being uploaded on every build and
+# counted against the Vercel quota. Keeping the files in git means the originals
+# are still here to re-export from at other sizes; this only stops them being
+# shipped to the CDN.
+#
+# Each line was verified unreferenced by grepping every html/js/json/css in the
+# repo for the filename. If you start loading one of these directly, remove its
+# line or the page will 404 in production while working perfectly locally.
+
+# Sprite masters, ~89MB. The game loads assets/sprites/dorcs/<em>01/webp/*.
+QlikRecRoom/games/SideQlik_Blitz/assets/sprites/dorcs/*/pngs/
+
+# GIF masters, ~354MB. Replaced by the .webp siblings, which is what the page
+# now references. Kept so the animations can be re-exported at other sizes.
+SalesCommand/assets/images/brand_misc/tool_gifs/*.gif
+
+# ~69MB of loop videos with no reference anywhere in the codebase.
+SalesCommand/assets/images/brand_misc/dorcs_loop/
+
+# 20MB master. The page uses ai_hq/rock_bottom_web.webp instead.
+SalesCommand/assets/images/ai_hq/rock_bottom.png
+
+# 9.3MB sprite sheet, replaced by brain_freeze_01.webp.
+QlikRecRoom/games/SideQlik_Blitz/assets/sprites/power_ups/brain_freeze_01.png

@@ -1592,7 +1592,7 @@ const BF_COLS=5, BF_FRAMES=75, BF_CELL=500, BF_FPS=18;
 const brainFreeze={img:new Image(), ok:false};
 brainFreeze.img.onload=()=>{ brainFreeze.ok=true; };
 brainFreeze.img.onerror=()=>{ brainFreeze.ok=false; };
-brainFreeze.img.src=ASSET_BASE+'sprites/power_ups/brain_freeze_01.png';
+brainFreeze.img.src=ASSET_BASE+'sprites/power_ups/brain_freeze_01.webp';
 function bfFrame(){ return Math.floor(performance.now()/(1000/BF_FPS)) % BF_FRAMES; }
 startPreload();
 
