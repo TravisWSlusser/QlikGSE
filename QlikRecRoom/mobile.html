@@ -403,6 +403,39 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
 /* The game frame only exists once a cartridge is chosen. */
 #gameFrame{display:none}
 #viewPlay.on.playing #gameFrame{display:block}
+
+/* ---- forced landscape, without asking the OS -------------------------------
+   screen.orientation.lock() does not exist in Safari, so on iPhone there is no
+   way to ask for landscape — and if the player has rotation lock on, turning
+   the phone does nothing either. So we stop asking: in a portrait viewport the
+   GAME FRAME is rotated 90° in CSS. Turn the phone and it reads upright, and
+   the phone's own rotation setting never enters into it.
+
+   Rotating the IFRAME rather than anything inside it is the whole trick. The
+   browser owns hit-testing through a transformed iframe and hands the document
+   inside untransformed local coordinates, so the game's frameToInternal —
+   which maps through cv.getBoundingClientRect() — stays correct with no
+   changes. Rotating inside the game would have meant rewriting that mapping
+   and betting the aim on it.
+
+   Swapped dimensions: the frame is viewport-height wide and viewport-width
+   tall, so after the quarter turn it fills the screen exactly. svh/svw first
+   (they ignore the collapsing address bar) with vh/vw as the older fallback.
+
+   Parent overlays are hidden while rotated — they would sit at 90° to the
+   game. Everything the player needs is inside the iframe and turns with it. */
+@media (orientation:portrait){
+  #viewPlay.on.playing #gameFrame{
+    inset:auto; top:50%; left:50%;
+    width:100vh;  width:100svh;
+    height:100vw; height:100svw;
+    transform:translate(-50%,-50%) rotate(90deg);
+    transform-origin:center center;
+  }
+  #viewPlay.on.playing .exit,
+  #viewPlay.on.playing .fsbtn,
+  #viewPlay.on.playing .playtip{display:none}
+}
 #viewPlay.on:not(.playing) .exit,
 #viewPlay.on:not(.playing) .fsbtn,
 #viewPlay.on:not(.playing) .playtip{display:none}
