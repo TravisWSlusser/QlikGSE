@@ -34,10 +34,20 @@
      than playfield — the controls stop covering anything that matters, and
      they are where a thumb already rests. */
   @media (pointer:coarse){
+    /* A COLUMN down the left margin, not a row along the bottom.
+       Measured, because the first attempt collided: five 52px buttons plus
+       gaps is 300px wide, and along the bottom that runs x 12-312 straight
+       through the Brain Blast pill at x 200-540. Bottom-right is no better —
+       Methodology and the signed-in label live there.
+       The left margin is the one genuinely free strip: the board is centred
+       at BOARD_X0=192, so x 0-192 is dead pillarbox for the full height.
+       A 52px column sits in it with room to spare, clear of the board and
+       clear of the HUD at y 612, and stays under a left thumb in landscape. */
     #audioToggles{
-      top:auto; bottom:calc(env(safe-area-inset-bottom) + 12px);
+      flex-direction:column;
+      top:50%; transform:translateY(-50%);
       left:calc(env(safe-area-inset-left) + 12px);
-      gap:10px;
+      bottom:auto; gap:10px;
     }
     #audioToggles button{width:52px;height:52px;border-radius:12px}
     #audioToggles button svg{width:24px;height:24px}
@@ -1041,8 +1051,22 @@ function blockDims(el){
    cannot fit even at the minimum, wrapping is restored, because an unreadably
    small answer is worse than an untidy one. Reads the CSS size as the starting
    point so restyling .opt does not silently break this. */
-function fitOptOneLine(el){
+function fitOptOneLine(el, tries){
   const MIN = 12;
+  tries = tries || 0;
+
+  // If the element is not laid out yet, scrollWidth and clientWidth are BOTH
+  // zero — and 0 > 0 is false, so the shrink loop never runs, the wrap-restore
+  // check never fires, and nowrap is left on a long answer with no overflow
+  // set. It then spills straight out the side of the card. That is exactly the
+  // bug this guard exists to stop: never measure a box that has no width, and
+  // never leave nowrap behind on one.
+  if (!el.clientWidth){
+    el.style.whiteSpace = '';                       // wrap normally in the meantime
+    if (tries < 10) requestAnimationFrame(() => fitOptOneLine(el, tries + 1));
+    return;
+  }
+
   const base = parseFloat(getComputedStyle(el).fontSize) || 18;
   el.style.whiteSpace = 'nowrap';
   let s = base;
@@ -1052,7 +1076,8 @@ function fitOptOneLine(el){
     el.style.fontSize = s + 'px';
   }
   if (el.scrollWidth > el.clientWidth){      // still too long at MIN
-    el.style.whiteSpace = 'normal';          // let it wrap; readable beats tidy
+    el.style.whiteSpace = '';                // let it wrap; readable beats tidy
+    el.style.fontSize = '';                  // and give the size back too
   }
 }
 
