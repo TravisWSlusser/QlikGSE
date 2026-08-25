@@ -63,9 +63,10 @@ code is gated the same way so four widgets don't each fetch the news.
 
 | File | Sections |
 |---|---|
-| `SalesCommand/qlikmt-hero.html` | topbar, ticker, highlights, glossary, mobile |
+| `SalesCommand/qlikmt-hero.html` | topbar, ticker, highlights, glossary, mobile + card sections: hubs, certs, comic, academy |
 | `SalesCommand/qlikmt-hero2.html` | calendar |
 | `QlikRecRoom/index.html` | banner, game, play, scoreboard, board-mobile, launch, cartridges |
+| `SalesCommand/stellar.html` | banner, hero (+ `?compact=1` for the mobile widget) |
 
 `hubs` and `certs` work through a second mechanism — `SECTION_CARDS` +
 `data-card` — so adding a card section is a data entry, not new CSS.

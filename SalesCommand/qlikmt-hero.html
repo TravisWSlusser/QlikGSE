@@ -1311,7 +1311,19 @@ const SECTION_CARDS = {
             cta:{ label:'Overview page here', href:'https://deeplinks.mindtickle.com/egJ5KkSP84b' } },
   certs:  { kicker:'Required Training',
             title:'Quarterly Certifications',
-            blurb:'Each quarter we build a core curriculum to keep your edge sharp on Qlik products and the Qlik Sales Methodology.' }
+            blurb:'Each quarter we build a core curriculum to keep your edge sharp on Qlik products and the Qlik Sales Methodology.' },
+
+  /* Stellar-Seller Universe. Same card, no new CSS — that is the whole point
+     of this table. Add a `cta:{label,href}` to either when the Mindtickle
+     deeplink exists; without one the button stays hidden, exactly as it does
+     for certs. */
+  comic:  { kicker:'Stellar-Seller Universe',
+            title:'The Comic Rack',
+            blurb:'Every issue of Stellar-Seller and the Side-Qlik in one place. The DORCs, the deals they block, and the field lessons hiding inside them — read straight through or drop into any issue.' },
+
+  academy:{ kicker:'Stellar-Seller Universe',
+            title:'AI Academy',
+            blurb:'Practical AI for sellers: what each tool is actually good for, when to reach for it, and the prompts that move a deal forward rather than just filling a page.' }
 };
 (function(){
   const card = SECTION_CARDS[SECTION];
