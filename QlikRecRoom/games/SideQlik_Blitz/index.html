@@ -24,6 +24,11 @@
     pointer-events:none;z-index:0}                /* behind the canvas; composited via drawImage */
   canvas{position:absolute;inset:0;width:1280px;height:720px;display:block;z-index:1}
   #audioToggles{position:absolute;top:12px;left:12px;z-index:15;display:flex;gap:8px}
+  /* Pause and Exit are touch-only. Desktop already has Esc/P for pause and
+     the REC Room page around it to leave; on a phone there was neither, and
+     the room's floating X sat directly on top of this row. */
+  #pauseBtn,#exitBtn{display:none}
+  @media (pointer:coarse){ #pauseBtn,#exitBtn{display:flex} }
   #audioToggles button{width:38px;height:38px;display:flex;align-items:center;justify-content:center;
     cursor:pointer;background:rgba(10,20,38,.7);border:1px solid rgba(124,92,255,.4);border-radius:9px;
     padding:0;transition:border-color .15s,box-shadow .15s,background .15s}
@@ -383,6 +388,14 @@
     <div id="audioToggles">
       <button id="muteMusic" title="Music on/off" onclick="toggleMusicMute()"></button>
       <button id="muteSfx" title="Sound FX on/off" onclick="toggleSfxMute()"></button>
+      <button id="pauseBtn" title="Pause" onclick="togglePauseMenu()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cfe6ff" stroke-width="2.4" stroke-linecap="round">
+          <path d="M9 5v14M15 5v14"/></svg>
+      </button>
+      <button id="exitBtn" title="Leave the game" onclick="exitToRoom()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff8a8a" stroke-width="2.4" stroke-linecap="round">
+          <path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
       <button id="fsBtn" title="Full screen" onclick="toggleFullscreen()">
         <svg id="fsIcoEnter" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#cfe6ff" stroke-width="2.4" stroke-linecap="round">
           <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
@@ -2205,6 +2218,37 @@ function togglePauseMenu(){
   document.getElementById('pause').style.display = menuOpen ? 'flex' : 'none';
   setMenuMuffle(menuOpen);   // music goes "outside"/muffled on the menu
 }
+/* ---- leaving mid-run --------------------------------------------------
+   A run that is walked away from is VOID: no BLITZ_RESULT is posted, so no
+   points are banked. That is deliberate — before this, tapping the room's X
+   left the game running underneath, still descending, still playing audio,
+   and a player could come back to a board that had moved on without them.
+
+   Called from the game's own X (touch) and from the parent when it leaves the
+   Play view by any route, so there is no way out that leaves a run live. */
+function abandonRun(){
+  if (state !== 'play' && state !== 'fly' && state !== 'pop') return;
+  state = 'start';
+  paused = false; menuOpen = false;
+  stopMusic(); stopVoice(); stopFreezeAudio();
+  resetHazard(); resetCoin(); resetBlast();
+  ball = null; falling = []; sparks = [];
+  ['pause','quiz','over'].forEach(id => { const e=document.getElementById(id); if(e) e.style.display='none'; });
+  const startEl = document.getElementById('start');
+  if (startEl){
+    startEl.style.display = 'flex';
+    const v = startEl.querySelector('video');
+    if (v) v.play().catch(()=>{});      // it was paused when play began
+  }
+}
+
+/* The game's own X. Tells the room to take the player back, and voids the run
+   here too so nothing keeps ticking if the room is slow to respond. */
+function exitToRoom(){
+  abandonRun();
+  try { if (window.parent !== window) window.parent.postMessage({ type:'BLITZ_EXIT' }, '*'); } catch(e){}
+}
+
 let flash = 0;            // brief screen flash on big combos
 
 function startGame(){
@@ -2925,6 +2969,9 @@ window.addEventListener('keydown', e=>{
    ============================================================================ */
 window.addEventListener('message', e=>{
   const d=e.data||{};
+  // The room left the Play view — void whatever was running. Without this the
+  // game kept descending and playing audio behind the room.
+  if (d.type==='BLITZ_ABANDON'){ abandonRun(); return; }
   if (d.type==='BLITZ_INIT'){
     player.trigram=d.trigram||null; player.territory=d.territory||null;
     player.country_code=d.country_code||null; player.lifetime=Number(d.lifetime)||0;

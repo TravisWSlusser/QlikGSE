@@ -284,6 +284,10 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
   -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
 }
 .exit { left:calc(var(--safe-l) + 8px); }
+/* The game draws its own controls top-left. This floating X landed straight
+   on top of them, hiding full screen, audio and pause. On touch the game now
+   carries its own X (which posts BLITZ_EXIT), so this one is desktop-only. */
+@media (pointer:coarse){ .exit{display:none} }
 .fsbtn{ right:calc(var(--safe-r) + 8px); display:flex;align-items:center;gap:6px; }
 .fsbtn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .fsbtn[hidden]{display:none}
@@ -920,6 +924,9 @@ function go(v) {
   } else {
     if (FS.active()) { FS.unlock(); FS.exit(); }
     VIEW_EL.play.classList.remove('show-tip');
+    // Leaving Play abandons the run — no points. Without this the game kept
+    // running behind the room, still descending and still playing audio.
+    abandonGame();
   }
   if (v === 'board')   loadBoard();
   if (v === 'install') paintInstall();
@@ -1391,6 +1398,12 @@ syncFsBtn();
 $('exitPlay').addEventListener('click', function () { FS.unlock(); FS.exit(); go('badge'); });
 
 
+/* Tell the game to void whatever is running. Safe to call when nothing is. */
+function abandonGame(){
+  if (!gameStarted || !frame.contentWindow) return;
+  try { frame.contentWindow.postMessage({ type: 'BLITZ_ABANDON' }, '*'); } catch (e) {}
+}
+
 function sendInit() {
   if (!me || !frame.contentWindow) return;
   // Clock the territory high at game start — it drives the colour unlocks.
@@ -1415,6 +1428,7 @@ window.addEventListener('message', function (e) {
   if (!frame || e.source !== frame.contentWindow) return;   // only our own game
   var d = e.data || {};
   if (d.type === 'BLITZ_READY')  { gameReady = true; if (me) sendInit(); }
+  if (d.type === 'BLITZ_EXIT')   { go('badge'); }        // the game's own X
   if (d.type === 'BLITZ_RESULT') submitScore(d);
 });
 
