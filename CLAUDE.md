@@ -251,6 +251,63 @@ devtools) and was deliberately not added.
   Mindtickle widget turns out to call `/api/lookupTrigram`, it now 404s; restore
   it from history or add a `vercel.json` rewrite to the recroom action.
 
+## Maintenance mode — the runbook
+
+Closing the room takes one SQL statement and no deploy. That is the whole
+point: an env var would need a redeploy each way, which you cannot do while
+mid-update.
+
+**One-time setup** (safe to re-run):
+
+```sql
+CREATE TABLE IF NOT EXISTS app_state (
+  key        text PRIMARY KEY,
+  value      text,
+  updated_at timestamptz DEFAULT now()
+);
+INSERT INTO app_state (key, value) VALUES
+  ('maintenance',         'off'),
+  ('maintenance_message', 'The REC Room is closed for a short update.'),
+  ('maintenance_eta',     '')
+ON CONFLICT (key) DO NOTHING;
+```
+
+**Close the room** — wrap it, or the Neon editor may not commit (see Gotchas):
+
+```sql
+BEGIN;
+UPDATE app_state SET value = 'on', updated_at = now() WHERE key = 'maintenance';
+UPDATE app_state SET value = 'Back by 3pm ET — banking scores and shipping an update.'
+  WHERE key = 'maintenance_message';
+UPDATE app_state SET value = 'Back by 3pm ET' WHERE key = 'maintenance_eta';
+COMMIT;
+```
+
+**Reopen:**
+
+```sql
+BEGIN;
+UPDATE app_state SET value = 'off', updated_at = now() WHERE key = 'maintenance';
+COMMIT;
+```
+
+**What closing actually does:**
+
+- Desktop and mobile show a full-screen BE RIGHT BACK. It is not dismissible.
+- Any run in progress is abandoned (`BLITZ_ABANDON`), so nothing keeps playing
+  behind the screen.
+- `logScore` returns **503** — so a session that was already open cannot land a
+  straggler write while you are migrating or wiping. This is the bit that makes
+  it safe to run DDL.
+- Pages poll every **45s**, and again whenever a tab is refocused. So expect up
+  to a minute for everyone to fall in, and the same to come back. Nobody has to
+  refresh.
+
+**It fails OPEN, everywhere and on purpose.** Missing table, unreachable
+database, request timeout — all of them mean "stay online". Only an explicit
+`'on'` read back from a healthy query closes anything, because a switch that
+can close the room by breaking is worse than having no switch.
+
 ## ⚠ Live temporary state — check this first
 
 - **`OPEN_SCORING` in `lib/recroom/logScore.js` disables the key gate.** Turned

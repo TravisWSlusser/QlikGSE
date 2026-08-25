@@ -2,6 +2,7 @@
 // Hobby plan caps 12 functions/deployment; vercel.json rewrites
 // /api/recroom/<action> -> here, so client paths never change.
 import exportData from '../lib/recroom/exportData.js';
+import getAppState from '../lib/recroom/getAppState.js';
 import getEvents from '../lib/recroom/getEvents.js';
 import getLeaderboard from '../lib/recroom/getLeaderboard.js';
 import getRecentScores from '../lib/recroom/getRecentScores.js';
@@ -14,6 +15,7 @@ import updateIdentity from '../lib/recroom/updateIdentity.js';
 
 const HANDLERS = {
   exportData,
+  getAppState,
   getEvents,
   getLeaderboard,
   getRecentScores,

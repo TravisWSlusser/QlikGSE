@@ -442,6 +442,31 @@
     .modal h3 { font-family:'Share Tech Mono',monospace; color: var(--emea); font-size: 0.95rem; letter-spacing: 0.15em; margin-bottom: 14px; text-transform: uppercase; }
     .modal p { font-size: 1.25rem; line-height: 1.5; margin-bottom: 20px; color: #d8e2f0; }
     .modal .hl { color: var(--cyan); }
+
+    /* ---- DOWNTIME ----------------------------------------------------
+       Above everything, including the login gate (10000), because during
+       maintenance nothing behind it is worth reaching. Every widget section
+       gets it, so a closed room reads the same whichever ?section= a
+       Mindtickle widget happens to be showing. */
+    .down { position: fixed; inset: 0; z-index: 20000; display: none;
+      flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; gap: 18px; padding: 40px;
+      background: radial-gradient(120% 80% at 50% 0%, #1a1330 0%, #0a1020 55%, #05080f 100%); }
+    html[data-down="1"] .down { display: flex; }
+    .down .ico { font-size: 3.4rem; line-height: 1; filter: drop-shadow(0 0 22px rgba(255,107,53,.5)); }
+    .down h1 { font-family: 'Press Start 2P', monospace; font-size: 1.5rem; color: #fff;
+      letter-spacing: .06em; line-height: 1.5; }
+    .down .msg { font-family: 'Share Tech Mono', monospace; font-size: 0.95rem; line-height: 1.8;
+      color: #dbe8f6; max-width: 46ch; }
+    .down .eta { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; letter-spacing: .18em;
+      text-transform: uppercase; color: var(--emea); }
+    .down .sub { font-family: 'Share Tech Mono', monospace; font-size: 0.68rem; line-height: 1.7;
+      letter-spacing: .06em; color: #7f93b8; max-width: 44ch; }
+    .down .bar { width: 160px; height: 2px; background: var(--dim); position: relative; overflow: hidden; }
+    .down .bar::after { content: ''; position: absolute; inset: 0; width: 40%; background: var(--emea);
+      animation: downScan 1.6s ease-in-out infinite; }
+    @keyframes downScan { 0% { transform: translateX(-120%); } 100% { transform: translateX(320%); } }
+    @media (prefers-reduced-motion: reduce) { .down .bar::after { animation: none; } }
     .modal-btns { display: flex; gap: 12px; }
     .modal-btns button { flex: 1; font-family:'Share Tech Mono',monospace; font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; padding: 12px; cursor: pointer; border: none; }
     .btn-back { background: #233247; color: #cdd9ea; }
@@ -643,6 +668,19 @@
 </div>
 
 <!-- ============ DORC DETECTED (score not validated) ============ -->
+<!-- DOWNTIME — driven by the maintenance flag in app_state. Not dismissible
+     on purpose: the room really is closed, and anything played behind it
+     could not bank a score anyway. -->
+<div class="down" id="down" role="alertdialog" aria-live="assertive">
+  <div class="ico">&#128736;</div>
+  <h1>BE RIGHT BACK</h1>
+  <div class="msg" id="downMsg">The REC Room is closed for a short update.</div>
+  <div class="eta" id="downEta" hidden></div>
+  <div class="bar"></div>
+  <div class="sub">Your scores are safe. This screen clears itself the moment
+       the room reopens &mdash; no need to refresh.</div>
+</div>
+
 <div class="modal-back" id="dorcModal">
   <div class="modal">
     <h3>&#9888; DORC Detected</h3>
@@ -1278,6 +1316,47 @@ if (SHOW_GAME){
   }
 }
 
+
+/* ---- MAINTENANCE --------------------------------------------------------
+   Polled, not pushed: a closed room has to reach the people already sitting
+   in it, not just the next person to load. Every widget section runs this,
+   so whichever ?section= a Mindtickle widget is showing closes together.
+
+   Every failure path leaves the room OPEN — only an explicit maintenance:true
+   from a successful request closes anything. A switch that shuts the room
+   because a request timed out would be worse than no switch. */
+(function () {
+  const POLL_MS = 45000;
+  let down = false;
+  function apply(d) {
+    const on = !!(d && d.maintenance);
+    if (on === down) return;
+    down = on;
+    document.documentElement.setAttribute('data-down', on ? '1' : '0');
+    if (!on) return;
+    const m = document.getElementById('downMsg');
+    if (m) m.textContent = (d && d.message) || 'The REC Room is closed for a short update.';
+    const e = document.getElementById('downEta');
+    if (e) { e.hidden = !(d && d.eta); e.textContent = (d && d.eta) || ''; }
+    // Stop any run behind the screen. It could not bank a score anyway —
+    // logScore returns 503 while the flag is on — so end it cleanly.
+    try {
+      if (gameFrame && gameFrame.contentWindow) {
+        gameFrame.contentWindow.postMessage({ type: 'BLITZ_ABANDON' }, '*');
+      }
+    } catch (err) {}
+    if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (err) {} }
+  }
+  function poll() {
+    fetch('/api/recroom/getAppState', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : null)
+      .then(apply)
+      .catch(() => {});          // unreachable: stay open
+  }
+  poll();
+  setInterval(poll, POLL_MS);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+})();
 
 /* Play mode had no reachable sign-in. The only thing that opens the gate is
    #playBtn, which lives inside .ph-online — and that is display:none under

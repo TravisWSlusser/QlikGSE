@@ -482,6 +482,29 @@ html[data-locked="1"] .tabs{display:none}
   width:34px;height:2px;background:var(--cyan);
 }
 
+/* ------------------------------ downtime ------------------------------- */
+/* Sits above everything, tab bar included, because during maintenance there
+   is nothing else worth reaching. z-index beats the play view (40), the
+   tab bar (30) and the DORC modal (60). */
+.down{
+  position:fixed;inset:0;z-index:90;display:none;
+  flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  gap:14px;padding:calc(var(--safe-t) + 32px) 26px calc(var(--safe-b) + 32px);
+  background:radial-gradient(120% 80% at 50% 0%, #1a1330 0%, #0a1020 55%, #05080f 100%);
+}
+html[data-down="1"] .down{display:flex}
+html[data-down="1"] .tabs{display:none}
+.down .ico{font-size:2.8rem;line-height:1;filter:drop-shadow(0 0 18px rgba(255,107,53,.5))}
+.down h1{font-family:'VT323',monospace;font-size:2.7rem;line-height:1;color:#fff;letter-spacing:.03em}
+.down .msg{font-size:.74rem;line-height:1.8;letter-spacing:.04em;color:var(--ink);max-width:34ch}
+.down .eta{font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--warn)}
+.down .sub{font-size:.58rem;line-height:1.7;letter-spacing:.06em;color:var(--muted);max-width:32ch}
+.down .bar{width:120px;height:2px;background:var(--dim);overflow:hidden;position:relative}
+.down .bar::after{content:'';position:absolute;inset:0;width:40%;background:var(--warn);
+  animation:downScan 1.6s ease-in-out infinite}
+@keyframes downScan{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+@media (prefers-reduced-motion:reduce){.down .bar::after{animation:none}}
+
 /* -------------------------------- modal -------------------------------- */
 .modal{
   position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
@@ -868,6 +891,20 @@ html[data-locked="1"] .tabs{display:none}
       Board
     </button>
   </nav>
+</div>
+
+<!-- ------------------------------ DOWNTIME ------------------------------
+     Shown when the maintenance flag is on. Deliberately not dismissible:
+     the room is genuinely closed and letting someone poke past it would
+     mean runs that cannot bank. -->
+<div class="down" id="down" role="alertdialog" aria-live="assertive">
+  <div class="ico">&#128736;</div>
+  <h1>BE RIGHT BACK</h1>
+  <div class="msg" id="downMsg">The REC Room is closed for a short update.</div>
+  <div class="eta" id="downEta" hidden></div>
+  <div class="bar"></div>
+  <div class="sub">Your scores are safe. This screen will clear itself the
+       moment the room reopens &mdash; no need to refresh.</div>
 </div>
 
 <!-- ---------------------------- DORC DETECTED --------------------------- -->
@@ -1746,6 +1783,50 @@ function paintBoard() {
 document.addEventListener('visibilitychange', function () {
   if (!document.hidden && view === 'board') loadBoard();
 });
+
+/* ======================================================================
+   9b. MAINTENANCE
+
+   Polled rather than pushed, because there is no socket here and a closed
+   room needs to reach people who are already sitting in it — not just the
+   next person to load the page.
+
+   Every failure path leaves the room OPEN. A switch that can close the room
+   by timing out is worse than no switch, so only an explicit maintenance:true
+   from a successful request closes anything.
+   ====================================================================== */
+var DOWN_POLL_MS = 45000;
+var isDown = false;
+
+function applyDownState(d) {
+  var on = !!(d && d.maintenance);
+  if (on === isDown) return;                 // nothing changed; don't touch the DOM
+  isDown = on;
+  document.documentElement.setAttribute('data-down', on ? '1' : '0');
+  if (on) {
+    $('downMsg').textContent = (d && d.message) || 'The REC Room is closed for a short update.';
+    var eta = (d && d.eta) || '';
+    $('downEta').hidden = !eta;
+    $('downEta').textContent = eta;
+    // Kill any run in progress. Points from a half-finished run would not bank
+    // anyway (logScore returns 503), so ending it cleanly beats letting someone
+    // play on behind the screen.
+    abandonGame();
+    FS.unlock(); FS.exit();
+    VIEW_EL.play.classList.remove('playing');
+  }
+}
+
+function pollDownState() {
+  fetch(API + 'getAppState', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(applyDownState)
+    .catch(function () { /* unreachable: stay open */ });
+}
+pollDownState();
+setInterval(pollDownState, DOWN_POLL_MS);
+// Someone coming back to a backgrounded tab should not sit on a stale answer.
+document.addEventListener('visibilitychange', function () { if (!document.hidden) pollDownState(); });
 
 /* ======================================================================
    10. BOOT
