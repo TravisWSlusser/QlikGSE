@@ -102,19 +102,34 @@ img{max-width:100%;display:block}
 .framed-only{display:none}
 html[data-frame="1"] .room{display:none}
 html[data-frame="1"] .framed-only{display:flex}
-html[data-frame="1"] body{background:transparent}
+/* Framed, this sits directly under the hero rotator, which ends its descent
+   on #10172A. Picking that exact colour up and carrying it down means the
+   two widgets read as one continuous surface instead of a dark box dropped
+   below a gradient. */
+html[data-frame="1"] body{background:linear-gradient(180deg,#10172A 0%,#0B1220 100%)}
 
 .card{
   min-height:100vh; min-height:100svh; flex-direction:column; align-items:center;
-  justify-content:center; text-align:center; gap:10px; padding:12px 16px;
+  justify-content:center; text-align:center; gap:9px; padding:14px 18px;
+}
+/* Mission Control card treatment: same border, fill and inset highlight the
+   hero, ticker and glossary widgets use. */
+html[data-frame="1"] .card{
+  border:1px solid rgba(255,255,255,.10);border-radius:14px;
+  background:rgba(255,255,255,.03);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+  margin:10px;min-height:calc(100svh - 20px);
 }
 .card-logo{width:64px;filter:drop-shadow(0 0 16px rgba(16,207,201,.4))}
 .card-title{font-family:'VT323',monospace;font-size:1.9rem;line-height:1;color:#fff;letter-spacing:.03em}
 .card-sub{font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);opacity:.85}
+/* Rounded and gradient-filled rather than a flat cyan rectangle, so it reads
+   as part of the Mission Control set rather than a raw button dropped on a
+   dark box. */
 .card-btn{
-  margin-top:2px;padding:12px 20px;background:var(--cyan);color:#04121a;
-  font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;font-weight:bold;
-  box-shadow:0 0 20px rgba(16,207,201,.4);
+  margin-top:2px;padding:13px 22px;border-radius:12px;
+  background:linear-gradient(180deg,#13E0DA 0%,#10CFC9 100%);color:#04121a;
+  font-size:.78rem;letter-spacing:.1em;font-weight:700;
+  box-shadow:0 6px 18px rgba(16,207,201,.28);
 }
 .card-btn:active{transform:translateY(1px)}
 .card-note{font-size:.55rem;letter-spacing:.08em;color:var(--muted)}
