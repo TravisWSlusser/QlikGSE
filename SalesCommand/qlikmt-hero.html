@@ -244,6 +244,12 @@
   .scard-cta{display:inline-flex;align-items:center;gap:6px;margin-top:2px;font-size:13px;
     color:var(--sky);text-decoration:none;border-bottom:1px solid rgba(16,207,201,.4)}
   .scard-cta:hover{border-bottom-color:var(--sky)}
+  /* [hidden] is only display:none in the UA sheet, so ANY author display rule
+     beats it — and .scard-cta sets display:inline-flex. A card with no cta
+     therefore rendered the empty anchor anyway: its &nbsp; plus the cyan
+     border-bottom showed up as a stray blue dash with a gap above it. Same
+     trap as .mcard [hidden] in the REC Room. */
+  .scard-cta[hidden]{display:none}
   [data-theme="light"] .scard-cta{color:#068a45;border-bottom-color:rgba(6,138,69,.4)}
   .scard-blurb{margin:0;font-weight:400;color:#BCCFE2;max-width:62ch;
     font-size:clamp(13px,1.15vw,16px);line-height:1.55}
