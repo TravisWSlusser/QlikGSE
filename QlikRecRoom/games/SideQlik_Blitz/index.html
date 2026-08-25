@@ -1500,7 +1500,11 @@ let activeCount = 5;                  // colors live this session; derived from 
    at game start so the bar is fixed for the run. As the current game score crosses
    bar, bar+1000, bar+2000, the next D.O.R.C. color enters the board live. */
 const BASE_COLORS = 5, MAX_COLORS = PALETTE.length;  // 8
-const UNLOCK_FLOOR = 2500;            // bar when the territory has no score yet
+const UNLOCK_FLOOR = 2000;            // bar when the territory has no score yet
+                                      // NOTE: only a fallback. getTerritoryHigh sends
+                                      // GREATEST(2000, high), so territoryHigh is never 0
+                                      // and the SERVER floor is what actually applies.
+                                      // Change both or you change nothing.
 const UNLOCK_STEPS = [0, 1000, 2000]; // teal at bar, orange at bar+1000, pink at bar+2000
 let unlockBar = UNLOCK_FLOOR;         // snapshotted at game start from territoryHigh
 let lastUnlockColors = 5;             // for the mid-game unlock toast (celebration pass)
