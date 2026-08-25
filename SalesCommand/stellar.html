@@ -73,7 +73,19 @@ body{
   word-break:normal; overflow-wrap:normal;
   -webkit-text-size-adjust:100%;
 }
+/* The rotator is the seam between Mission Control and the REC Room: it sits
+   under the Mission Control widgets and above the REC Room ones. So it fades
+   from Mission Control navy (#11304D, the exact surface its neighbours are
+   painted on) into the REC Room night sky (#10172A, the exact surface the
+   REC Room widgets use) — the two ends match their neighbours precisely, so
+   the join is invisible and the section reads as one descent rather than
+   three separate boxes. */
+html[data-section="hero"] body{
+  background:linear-gradient(180deg,#11304D 0%,#16294A 45%,#10172A 100%);
+}
+/* Light mode has no night sky to descend into, so it stays flat. */
 [data-theme="light"] body{background:#eef3f9}
+html[data-section="hero"][data-theme="light"] body{background:#eef3f9}
 @media (max-width:500px){ [data-theme="light"] body{background:#fff} }
 img{max-width:100%;display:block}
 
@@ -91,6 +103,9 @@ html[data-section],html[data-section] body{overflow:hidden}
 html[data-section]{--secpad-x:36px}
 @media (max-width:640px){ html[data-section]{--secpad-x:20px} }
 .wrap{margin:0;max-width:none;padding:clamp(14px,1.6vw,20px) var(--secpad-x)}
+/* The banner was cramped along its bottom edge — the chips sat right on it.
+   Give that edge its own breathing room without changing the shared inset. */
+html[data-section="banner"] .wrap{padding-bottom:clamp(22px,2.6vw,34px)}
 
 /* Hide every top-level block; per-section rules re-show what that view owns,
    at matching specificity and ordered after. */
@@ -98,13 +113,18 @@ html[data-section] .wrap > *{display:none}
 
 /* ============ BANNER — wordmark centred, Systems Watch beneath ============ */
 .ssb{text-align:center}
-/* 34vw made this 166px tall at a 1100px widget — 60% of the whole banner,
-   and the reason the first height I quoted was short. */
-.ssb-mark{margin:0 auto;width:clamp(190px,26vw,340px)}
+/* Sized to lead the widget. The art measures 900x400 with SOLID ink only
+   between 24% and 75.5% of its height — the bottom quarter is transparent
+   falloff. That band is why the Systems Watch can ride up underneath it
+   without ever touching the wordmark. */
+.ssb-mark{margin:0 auto;width:clamp(240px,42vw,520px)}
 .ssb-mark img{width:100%;height:auto;filter:drop-shadow(0 0 26px rgba(155,89,255,.30))}
 [data-theme="light"] .ssb-mark img{filter:none}
 
-.ssb-watch{margin-top:clamp(10px,1.4vw,16px)}
+/* Negative, on purpose: the watch tucks up into the artwork's transparent
+   lower band so the two read as one lockup instead of two stacked blocks.
+   It only ever overlaps falloff, never the letterforms. */
+.ssb-watch{margin-top:clamp(-46px,-2.8vw,-16px);position:relative;z-index:1}
 .ssb-kicker{
   font-size:12px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
   color:var(--sky);display:inline-flex;align-items:center;gap:7px;margin-bottom:9px;

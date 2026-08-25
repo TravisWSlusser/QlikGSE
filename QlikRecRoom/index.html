@@ -93,6 +93,21 @@
        "auto" in the widget because the expanded mobile view needs to scroll;
        this only removes the chrome, never the ability. */
     html[data-section], html[data-section] body { min-height: 0; }
+
+    /* ---- widget surface --------------------------------------------------
+       Embedded in Mission Control, a REC Room widget sits inches from the
+       hero, ticker and glossary widgets, all of which are painted on Mission
+       Control navy (#11304D). Left on the REC Room night sky (#10172A) the
+       REC Room widgets read as dark holes punched into the page, so the
+       sectioned views take Mission Control's surface instead. The standalone
+       page (no ?section=) keeps the night sky — it is a room, not a widget.
+
+       .scoreboard is rgba(16,23,42,.5), i.e. SEMI-TRANSPARENT, so it would
+       lighten as the page behind it changed. Over the night sky that alpha
+       resolves to exactly #10172A, so pinning it there leaves the inside of
+       the board pixel-identical while everything around it changes. */
+    html[data-section], html[data-section] body { background: #11304D; }
+    html[data-section] .scoreboard { background: #10172A; }
     html[data-section] { scrollbar-width: none; -ms-overflow-style: none; }
     html[data-section]::-webkit-scrollbar,
     html[data-section] body::-webkit-scrollbar { width: 0; height: 0; display: none; }
