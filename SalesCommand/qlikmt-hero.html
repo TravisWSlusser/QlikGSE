@@ -908,9 +908,13 @@
   /* Section cards. data-card is set by the script for any ?section= listed in
      SECTION_CARDS, so adding a section needs no new CSS. Deliberately absent
      from the mobile view — there Mindtickle shows the hardcoded white twin.
-     The frame hugs its copy; the WRAP fills the iframe so the widget still
-     matches the height of the Mindtickle widget beside it. */
-  html[data-card] .scard{display:flex;height:auto}
+     The frame FILLS the iframe rather than hugging its copy. Hugging meant a
+     card's height was set by how much blurb it happened to have, so the two
+     shorter Stellar-Seller cards floated as small boxes next to the taller
+     Hubs one. Filling makes every card the height of its widget, so a set of
+     them lines up regardless of what the copy says — and the copy stays
+     vertically centred inside. */
+  html[data-card] .scard{display:flex;height:100%;justify-content:center}
   /* A widget is handed a fixed height and has nowhere to put a scrollbar, so
      it must not scroll. The clamp is the real guard: .scard hugs its copy, so
      a longer blurb grows the card until it outruns the widget. Three lines is
