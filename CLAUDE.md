@@ -159,6 +159,22 @@ devtools) and was deliberately not added.
   still lays out against the viewport and `overflow:hidden` does not clip it.
   **Anything new that overlays the game must be added to that list** —
   `OVERLAY_IDS` in `index.html`, `relocateDorc` in `mobile.html`.
+- **Duplicated handlers: check which copy the caller actually hits.**
+  `api/status.js` was a byte-for-byte duplicate of `lib/command/status.js` —
+  same fetchers, same service list, its own cache. Adding Mindtickle to the lib
+  copy changed `/api/command/status` and left `/api/status` untouched, which is
+  the path every page actually calls. Nine minutes were spent blaming a
+  five-minute cache. `api/status.js` is now a thin re-export; one
+  implementation.
+  **Still duplicated:** `lib/recroom/lookupTrigram.js` and
+  `lib/blitz/lookupTrigram.js` are identical and both routed. Fix one and the
+  other silently keeps the old behaviour. Worth collapsing to a shared module.
+- **Verify structural changes structurally.** A `grep`/`.test()` for a service
+  name passed on an unrelated `names` array while the actual fetch call was
+  missing, and the change was reported as done. If two lists must correspond,
+  compare them to *each other* — the fetch array and `names` in
+  `lib/command/status.js` are positional, so a mismatch mislabels a failed
+  fetch with the wrong service.
 - **ffmpeg drops WebM alpha silently, and the container tag lies about it.**
   VP8/VP9 alpha lives in an auxiliary stream; `ffprobe` reports the video stream
   as plain `yuv420p`, so a transparent video looks like an ordinary opaque one.
