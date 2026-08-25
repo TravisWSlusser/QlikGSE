@@ -462,25 +462,35 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
 html[data-view="play"] .conn,
 html[data-locked="1"] .conn{display:none}
 
-/* ---- the room is portrait, the way the game is landscape ------------------
-   Turning the phone to play leaves it turned when you come back, so the
-   portrait-built room was rendering into a landscape viewport: squeezed,
-   wide and short. Same trick as the game, mirrored — rotate the room -90°
-   in a landscape viewport so it reads as portrait and the phone naturally
-   gets turned back upright. Turn it back and the query stops matching and
-   nothing is applied at all.
+/* ---- the room held sideways ----------------------------------------------
+   Previously this rotated the whole room -90° so it would read as portrait.
+   That was wrong, and badly so: .tabs is position:fixed, a transformed
+   ancestor becomes its containing block, and the rotation threw the tab bar
+   onto the RIGHT EDGE of the screen as a sideways 60px strip. Present in the
+   DOM, impossible to find, and no way back to the scoreboard.
 
-   .tabs is position:fixed, which normally ignores ancestors — but a
-   transformed ancestor becomes its containing block, so the tab bar rotates
-   with the room instead of being left behind at the real screen bottom. */
+   The room is responsive instead. Held sideways it simply lays out for a short
+   wide viewport — tighter vertical rhythm, smaller hero — and the tab bar
+   stays exactly where it belongs, along the bottom of the real screen.
+   Nothing is ever rotated out from under the player. */
 @media (orientation:landscape) and (pointer:coarse){
-  html:not([data-playing="1"]) .room{
-    position:fixed; top:50%; left:50%;
-    width:100vh;  width:100svh;
-    height:100vw; height:100svw;
-    transform:translate(-50%,-50%) rotate(-90deg);
-    transform-origin:center center;
-  }
+  :root{--tabh:52px}                       /* less vertical budget to spend */
+  .scroll{padding-top:calc(var(--safe-t) + 8px)}
+  .hero{margin-bottom:10px}
+  .hero img{width:64px;margin-bottom:4px}
+  .hero h1{font-size:1.7rem}
+  .hero .sub{font-size:.52rem}
+  .welcome{padding:12px 4px 10px}
+  .welcome h1{font-size:2rem}
+  .badge{padding:12px 14px 10px}
+  .tri{font-size:2.3rem}
+  .stats{margin-top:10px}
+  .stat{padding:7px 10px}
+  .stat .v{font-size:1.35rem}
+  /* The shelf gets wider tiles rather than taller ones. */
+  .shelf{grid-template-columns:repeat(3,minmax(0,1fr));max-width:560px;margin:0 auto}
+  .tab{height:52px;font-size:.5rem}
+  .tab svg{width:17px;height:17px}
 }
 
 /* ------------------------------- tab bar ------------------------------- */
