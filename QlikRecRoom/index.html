@@ -199,29 +199,6 @@
     .game-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; z-index: 6; background: #06101f; }
     .game-frame.playing .ph-online, .game-frame.playing .ph-offline { display: none; }
 
-    /* ---- full-screen control -------------------------------------------
-       Desktop only, and only once the game is actually running — before that
-       it would fullscreen an empty frame. Sits above the iframe (z-index 6)
-       and fades back until hovered so it never competes with the game. */
-    .fs-btn {
-      position: absolute; z-index: 8; top: 12px; right: 12px;
-      display: flex; align-items: center; gap: 7px; padding: 7px 11px;
-      background: rgba(6,16,31,0.82); border: 1px solid rgba(16,207,201,0.55);
-      color: var(--cyan); cursor: pointer; opacity: 0.7;
-      font-family: 'Share Tech Mono', monospace; font-size: 0.55rem;
-      letter-spacing: 0.14em; text-transform: uppercase;
-      transition: opacity 0.18s ease, border-color 0.18s ease;
-      -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
-    }
-    .game-frame:hover .fs-btn { opacity: 0.9; }
-    .fs-btn:hover { opacity: 1; border-color: var(--cyan); }
-    .fs-btn svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
-    .fs-btn[hidden] { display: none; }
-    /* In full screen the frame is the viewport, so drop the 16:9 letterbox. */
-    .game-frame:fullscreen { aspect-ratio: auto; width: 100%; height: 100%; margin: 0; border: 0; }
-    .game-frame:-webkit-full-screen { aspect-ratio: auto; width: 100%; height: 100%; margin: 0; border: 0; }
-    .game-frame:fullscreen .corner, .game-frame:fullscreen svg.diag { display: none; }
-    @media (max-width: 1023px) { .fs-btn { display: none; } }
     .placeholder-text {
       font-family: 'Share Tech Mono', monospace; font-size: 1.3rem; letter-spacing: 0.32em;
       color: rgba(255,255,255,0.92); background: rgba(8,18,34,0.55);
@@ -728,10 +705,6 @@
       <svg style="position:absolute;bottom:14px;left:14px;width:18px;height:18px" viewBox="0 0 18 18"><polygon points="0,18 0,0 18,18" fill="#10CFC9" opacity="0.55"/></svg>
       <svg style="position:absolute;bottom:14px;right:14px;width:18px;height:18px" viewBox="0 0 18 18"><polygon points="18,18 0,18 18,0" fill="#10CFC9" opacity="0.55"/></svg>
       <iframe id="gameFrame" title="SIDE-QLIK BLITZ" allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>
-      <button class="fs-btn" id="fsBtn" hidden aria-label="Toggle full screen" title="Full screen">
-        <svg viewBox="0 0 24 24" aria-hidden="true" id="fsIcon"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
-        <span id="fsLabel">Full screen</span>
-      </button>
       <div class="launchcard" id="launchCard">
         <div class="lc-title">SIDE-QLIK BLITZ</div>
         <div class="lc-sub">This game plays best in your browser, in landscape. Tap below to launch &mdash; sign in with your trigram and go.</div>
@@ -1029,6 +1002,15 @@ function dorcAlert(line, sub, opts) {
   if (once) dorcShownThisSession = true;
   dorcLine.textContent = line;
   dorcSub.textContent = sub;
+  // The game has its own full-screen button, and when it uses it the fullscreen
+  // element in THIS document is the iframe — so everything else here, this modal
+  // included, stops being painted. A "score not validated" nobody can see is the
+  // exact silent failure DORC DETECTED exists to prevent, so drop out of full
+  // screen before showing it.
+  if (document.fullscreenElement || document.webkitFullscreenElement) {
+    const off = document.exitFullscreen || document.webkitExitFullscreen;
+    if (off) { try { Promise.resolve(off.call(document)).catch(() => {}); } catch (e) {} }
+  }
   dorcModal.classList.add('open');
 }
 if (dorcOk) dorcOk.addEventListener('click', () => dorcModal.classList.remove('open'));
@@ -1296,119 +1278,6 @@ if (SHOW_GAME){
   }
 }
 
-/* ---- FULL SCREEN (desktop) ----------------------------------------------
-   Fullscreens .game-frame, not the iframe, so the frame's own chrome comes
-   along and the CSS above can drop the 16:9 letterbox for the real viewport.
-
-   Desktop only on purpose. On a phone this button would be a lie: iPhone
-   Safari has no Fullscreen API at all (only <video> can go fullscreen), so
-   it would sit there doing nothing. The phone path is mobile.html, which
-   goes fullscreen automatically where the platform allows it and offers
-   Add to Home Screen where it does not. */
-(function () {
-  const fsBtn = document.getElementById('fsBtn');
-  if (!fsBtn) return;
-
-  const frameEl = document.querySelector('.game-frame');
-
-  // Framed = running as a Mindtickle Custom HTML widget, which is the normal
-  // way this page is seen (GitHub -> Vercel -> widget iframe -> browser).
-  const FRAMED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
-
-  // Testing for the METHOD is not enough, and this is what made the button
-  // dead on the desktop room: inside the Mindtickle iframe requestFullscreen
-  // exists but Permissions Policy blocks it, because the host iframe does not
-  // carry allow="fullscreen" — and that attribute is on Mindtickle's side of
-  // the boundary, so we cannot add it. document.fullscreenEnabled is the flag
-  // that actually reports permission, and it is false in there.
-  const FS_OK = (document.fullscreenEnabled !== false &&
-                 document.webkitFullscreenEnabled !== false) &&
-                !!(frameEl.requestFullscreen || frameEl.webkitRequestFullscreen ||
-                   frameEl.msRequestFullscreen);
-
-  const isFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement ||
-                        document.msFullscreenElement);
-
-  // Show it once the game is really in the frame — and also when fullscreen is
-  // blocked but we are framed, because then it has somewhere useful to go.
-  const armed = () => !!gameFrame.getAttribute('src') &&
-                      window.matchMedia('(min-width: 1024px)').matches &&
-                      (FS_OK || FRAMED);
-
-  /* In full screen the browser paints ONLY the fullscreened element and its
-     descendants. loginGate, mismatchModal and dorcModal are all siblings of
-     .game-frame, so "Sign In to Play" (which lives inside the frame, and so
-     stays clickable) opened the gate into a part of the DOM that was not
-     being rendered: it looked like nothing happened, then appeared the moment
-     you exited. Park them inside the fullscreen element while it is active
-     and put them back exactly where they were afterwards.
-
-     Safe to move: each is position:fixed with no transformed ancestor, so it
-     still lays out against the viewport and .game-frame's overflow:hidden
-     does not clip it. */
-  const OVERLAY_IDS = ['loginGate', 'mismatchModal', 'dorcModal'];
-  let parked = [];
-  function relocateOverlays() {
-    const fsEl = document.fullscreenElement || document.webkitFullscreenElement ||
-                 document.msFullscreenElement;
-    if (fsEl) {
-      if (parked.length) return;                       // already parked
-      OVERLAY_IDS.forEach(id => {
-        const el = document.getElementById(id);
-        if (!el || fsEl.contains(el)) return;
-        parked.push({ el, parent: el.parentNode, next: el.nextSibling });
-        fsEl.appendChild(el);
-      });
-    } else if (parked.length) {
-      // Reverse order so each goes back against a sibling that is already home.
-      parked.slice().reverse().forEach(h => h.parent.insertBefore(h.el, h.next));
-      parked = [];
-    }
-  }
-
-  function sync() {
-    relocateOverlays();
-    fsBtn.hidden = !armed();
-    document.getElementById('fsLabel').textContent =
-      isFs() ? 'Exit' : (FS_OK ? 'Full screen' : 'Full screen ↗');
-    fsBtn.title = FS_OK ? 'Full screen'
-                        : 'Mindtickle blocks full screen in the widget — opens the game in its own tab';
-    document.getElementById('fsIcon').innerHTML = isFs()
-      ? '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'
-      : '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>';
-  }
-
-  fsBtn.addEventListener('click', () => {
-    if (isFs()) {
-      const off = document.exitFullscreen || document.webkitExitFullscreen ||
-                  document.msExitFullscreen;
-      if (off) Promise.resolve(off.call(document)).catch(() => {});
-      return;
-    }
-    // Blocked in the widget: hand them the thing that does work. openInNewTab
-    // opens ?section=play at top level, carrying the session key, where the
-    // game already covers the viewport and this button genuinely fullscreens.
-    if (!FS_OK) { openInNewTab(); return; }
-
-    const fn = frameEl.requestFullscreen || frameEl.webkitRequestFullscreen ||
-               frameEl.msRequestFullscreen;
-    // requestFullscreen returns a PROMISE. try/catch only catches a synchronous
-    // throw, so a rejection here used to vanish and the button just sat there.
-    let p;
-    try { p = fn.call(frameEl); } catch (e) { p = Promise.reject(e); }
-    Promise.resolve(p).catch((e) => {
-      console.warn('fullscreen refused:', e);
-      if (FRAMED) openInNewTab();          // last resort, still gets them there
-    });
-  });
-
-  ['fullscreenchange', 'webkitfullscreenchange', 'msfullscreenchange']
-    .forEach(ev => document.addEventListener(ev, sync));
-  window.addEventListener('resize', sync);
-  // The frame gets its src later (sign-in, launch view), so re-check for it.
-  new MutationObserver(sync).observe(gameFrame, { attributes: true, attributeFilter: ['src'] });
-  sync();
-})();
 
 /* Play mode had no reachable sign-in. The only thing that opens the gate is
    #playBtn, which lives inside .ph-online — and that is display:none under

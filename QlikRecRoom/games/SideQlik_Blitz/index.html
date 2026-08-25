@@ -705,14 +705,53 @@ function startMusic(){ try{
 function stopMusic(){ try{ if(AUDIO.bgm) AUDIO.bgm.pause(); }catch(e){} }
 
 /* ---- one-shot SFX + single-instance Side-Qlik voice ---- */
+/* ---- SFX through Web Audio, not <audio> elements -------------------------
+   Every `new Audio()` registers with iOS's media session, so on iPhone each
+   sound effect popped its own audio control into the UI — tap it and you were
+   scrubbing a 200ms explosion. Web Audio has no media session, so the control
+   never appears.
+
+   Decoded buffers are cached, which also stops the same clip being refetched
+   and redecoded on every play — there are 57 of them.
+
+   Falls back to the old <audio> path if Web Audio is unavailable, so a browser
+   without it still gets sound (with the icon, which beats silence). */
+const sfxCache = new Map();
+function sfxPlayBuffer(ctx, buf, vol){
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  const g = ctx.createGain(); g.gain.value = vol;
+  src.connect(g); g.connect(ctx.destination);
+  src.start(0);
+  return src;
+}
+function sfxLoad(ctx, url){
+  if (sfxCache.has(url)) return sfxCache.get(url);
+  const p = fetch(url).then(r => r.arrayBuffer()).then(a => ctx.decodeAudioData(a));
+  sfxCache.set(url, p);
+  p.catch(() => sfxCache.delete(url));      // let a failed load be retried
+  return p;
+}
 function playSfxFile(path, rel){ try{
-  const a=new Audio(AUDIO.base+path); a.volume=AUDIO.sfxVol*(rel==null?1:rel); a.play().catch(()=>{});
+  const ctx = ac(), url = AUDIO.base + path, vol = AUDIO.sfxVol*(rel==null?1:rel);
+  if (!ctx){ const a=new Audio(url); a.volume=vol; a.play().catch(()=>{}); return; }
+  if (ctx.state === 'suspended') ctx.resume().catch(()=>{});
+  Promise.resolve(sfxLoad(ctx, url)).then(b => sfxPlayBuffer(ctx, b, vol)).catch(()=>{});
 }catch(e){} }
 function playVoice(path){ try{
-  if(AUDIO.voice){ AUDIO.voice.pause(); AUDIO.voice.currentTime=0; }   // voice lines never overlap
-  AUDIO.voice=new Audio(AUDIO.base+path); AUDIO.voice.volume=AUDIO.sfxVol; AUDIO.voice.play().catch(()=>{});
+  const ctx = ac(), url = AUDIO.base + path;
+  stopVoice();                                        // voice lines never overlap
+  if (!ctx){ AUDIO.voice=new Audio(url); AUDIO.voice.volume=AUDIO.sfxVol; AUDIO.voice.play().catch(()=>{}); return; }
+  if (ctx.state === 'suspended') ctx.resume().catch(()=>{});
+  Promise.resolve(sfxLoad(ctx, url)).then(b => {
+    AUDIO.voiceSrc = sfxPlayBuffer(ctx, b, AUDIO.sfxVol);
+  }).catch(()=>{});
 }catch(e){} }
-function stopVoice(){ try{ if(AUDIO.voice){ AUDIO.voice.pause(); AUDIO.voice.currentTime=0; } }catch(e){} }
+function stopVoice(){
+  // Two paths now: a Web Audio BufferSource (the normal one) and the <audio>
+  // fallback. Stop whichever is live, or overlapping voice lines come back.
+  try{ if(AUDIO.voiceSrc){ AUDIO.voiceSrc.stop(); AUDIO.voiceSrc=null; } }catch(e){ AUDIO.voiceSrc=null; }
+  try{ if(AUDIO.voice){ AUDIO.voice.pause(); AUDIO.voice.currentTime=0; } }catch(e){}
+}
 function sideQlikLine(){
   if (HZ.inZone) return;   // quiet during a hazard alert
   const n=1+Math.floor(Math.random()*MULTIPOP_COUNT);
@@ -963,6 +1002,29 @@ function blockDims(el){
   return el.children.length ? { w, h: bot - top } : { w: 0, h: 0 };
 }
 
+/* Methodology Madness answers: keep each on ONE line by shrinking the font,
+   rather than letting a single trailing word wrap and knock the 2x2 grid out
+   of alignment.
+
+   Floors at MIN and then gives up gracefully — if an answer is so long it
+   cannot fit even at the minimum, wrapping is restored, because an unreadably
+   small answer is worse than an untidy one. Reads the CSS size as the starting
+   point so restyling .opt does not silently break this. */
+function fitOptOneLine(el){
+  const MIN = 12;
+  const base = parseFloat(getComputedStyle(el).fontSize) || 18;
+  el.style.whiteSpace = 'nowrap';
+  let s = base;
+  el.style.fontSize = s + 'px';
+  while (s > MIN && el.scrollWidth > el.clientWidth){
+    s -= 1;
+    el.style.fontSize = s + 'px';
+  }
+  if (el.scrollWidth > el.clientWidth){      // still too long at MIN
+    el.style.whiteSpace = 'normal';          // let it wrap; readable beats tidy
+  }
+}
+
 function fitPromptFont(box, txt, base, min){
   // shrink font until text fits the fixed-height box (overflow:hidden clips otherwise)
   let s = base; txt.style.fontSize = s + 'px';
@@ -1128,6 +1190,10 @@ async function openCoin(){
     b.onclick = () => coinAnswer(o.key, b);
     opts.appendChild(b);
   });
+  // A long answer used to wrap with one orphaned word on a second line, which
+  // made the 2x2 grid look broken. Shrink each answer until it fits on one
+  // line instead. Measured after append, because scrollWidth needs layout.
+  opts.querySelectorAll('.opt').forEach(fitOptOneLine);
   $('coinCountdown').classList.remove('show');
   opts.classList.add('show');
   $('coinTimerwrap').style.visibility = 'visible';
