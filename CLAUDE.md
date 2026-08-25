@@ -159,6 +159,33 @@ devtools) and was deliberately not added.
   still lays out against the viewport and `overflow:hidden` does not clip it.
   **Anything new that overlays the game must be added to that list** —
   `OVERLAY_IDS` in `index.html`, `relocateDorc` in `mobile.html`.
+- **ffmpeg drops WebM alpha silently, and the container tag lies about it.**
+  VP8/VP9 alpha lives in an auxiliary stream; `ffprobe` reports the video stream
+  as plain `yuv420p`, so a transparent video looks like an ordinary opaque one.
+  ffmpeg's *native* decoder discards the alpha, and a re-encode then copies the
+  `ALPHA_MODE=1` tag onto opaque output — so the file still claims transparency
+  it no longer has, and renders with a black box. This ate the REC Room logo.
+  Decode through `-c:v libvpx-vp9` (which exposes `yuva420p`) and encode with
+  `-pix_fmt yuva420p -auto-alt-ref 0`.
+  **Never trust a codec to preserve alpha — test it.** Composite a frame over
+  red, again over blue, and diff. Identical means the alpha is gone. That check
+  caught H.264 flattening the tool GIFs and would have caught the logo.
+- **Landscape on a phone is forced by rotating the iframe, not by asking the
+  OS.** `screen.orientation.lock()` does not exist in Safari, and rotation lock
+  defeats the rest. `mobile.html` rotates `#gameFrame` 90° in CSS when the
+  viewport is portrait. Rotate the **iframe**, never anything inside the game:
+  the browser owns hit-testing through a transformed iframe and gives the inner
+  document untransformed coordinates, so `frameToInternal` needs no changes.
+  Rotate inside the game and you must rewrite the aim mapping.
+- **`new Audio()` per sound effect puts a media control on the iOS lock screen
+  and in the UI** — one per clip. SFX and voice go through the game's existing
+  `AudioContext` instead, which has no media session. Decoded buffers are cached
+  (there are 57 clips); do not go back to `<audio>` elements for one-shots.
+- **Deployment weight is `.vercelignore`'s job, not the bin.** ~540MB of source
+  masters and unreferenced media are kept in git and excluded from the CDN.
+  Before adding a line, grep every html/js/json for the filename — a file that
+  exists locally but is excluded is the nastiest failure mode there is: perfect
+  on your machine, 404 in production.
 - **Full screen is blocked inside the Mindtickle widget, and the feature test
   that catches it is `document.fullscreenEnabled` — not the method.** Inside the
   widget iframe `element.requestFullscreen` *exists*, so a `!!(...)` test passes
@@ -223,6 +250,24 @@ devtools) and was deliberately not added.
   and it had been 500ing on its roster-prefill path. If some hand-edited
   Mindtickle widget turns out to call `/api/lookupTrigram`, it now 404s; restore
   it from history or add a `vercel.json` rewrite to the recroom action.
+
+## ⚠ Live temporary state — check this first
+
+- **`OPEN_SCORING` in `lib/recroom/logScore.js` disables the key gate.** Turned
+  on 2026-08-25 for a demo. While true, anyone who knows the URL can POST a
+  score. **It fails closed after `OPEN_UNTIL` (2026-08-27)** — if scoring starts
+  returning 401 for no apparent reason, this is why. Set `OPEN_SCORING = false`
+  to restore the gate, or move the date if the window needs extending.
+  The plausibility ceiling and the cooldown are still enforced either way.
+- **The underlying key mismatch is unfixed.** The 401 diagnostic reported
+  `serverHasKeys: true`, so Vercel's env vars are correct and the Mindtickle
+  widget URL carries the wrong `?k=`. Suspects: the `YOUR_DESKTOP_KEY`
+  placeholder left in a pasted snippet, or a `+`/`#` in the key being mangled
+  (`URLSearchParams` decodes `+` as a space; `#` truncates the URL).
+- **`durationSec` is client-supplied and uncapped**, so `max = 5000 + 60 ×
+  durationSec` authorises itself — claim an hour and you may post 221,000.
+  If the key gate is removed permanently this must be capped first, or the
+  ceiling bounds nothing.
 
 ## Open work
 
