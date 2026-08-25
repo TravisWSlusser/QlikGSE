@@ -911,6 +911,15 @@
      The frame hugs its copy; the WRAP fills the iframe so the widget still
      matches the height of the Mindtickle widget beside it. */
   html[data-card] .scard{display:flex;height:auto}
+  /* A widget is handed a fixed height and has nowhere to put a scrollbar, so
+     it must not scroll. The clamp is the real guard: .scard hugs its copy, so
+     a longer blurb grows the card until it outruns the widget. Three lines is
+     what the existing cards already use at their 62ch measure, so this costs
+     hubs and certs nothing and stops the next edit breaking the layout. */
+  html[data-card],html[data-card] body{overflow:hidden}
+  html[data-card] .scard-blurb{
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  }
   html[data-card] .wrap{height:100%;display:flex;flex-direction:column;justify-content:center}
   html[data-card] body{min-height:100%;height:100%}
   html[data-card]{height:100%}
@@ -1319,11 +1328,11 @@ const SECTION_CARDS = {
      for certs. */
   comic:  { kicker:'Stellar-Seller Universe',
             title:'The Comic Rack',
-            blurb:'Every issue of Stellar-Seller and the Side-Qlik in one place. The DORCs, the deals they block, and the field lessons hiding inside them — read straight through or drop into any issue.' },
+            blurb:'Every issue of Stellar-Seller and the Side-Qlik in one place — the DORCs, the deals they block, and the lessons hiding inside.' },
 
   academy:{ kicker:'Stellar-Seller Universe',
             title:'AI Academy',
-            blurb:'Practical AI for sellers: what each tool is actually good for, when to reach for it, and the prompts that move a deal forward rather than just filling a page.' }
+            blurb:'Practical AI for sellers: what each tool is good for, when to reach for it, and the prompts that actually move a deal.' }
 };
 (function(){
   const card = SECTION_CARDS[SECTION];
