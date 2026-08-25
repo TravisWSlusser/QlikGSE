@@ -355,6 +355,76 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
      font-size:.68rem;line-height:1.7;letter-spacing:.03em;color:var(--ink)}
 .fin b{color:var(--ok);font-weight:normal}
 
+/* ------------------------------ sign-in head --------------------------- */
+.signin-head{text-align:center;padding:22px 4px 18px}
+.signin-head h1{font-family:'VT323',monospace;font-size:2.6rem;line-height:1;color:#fff;letter-spacing:.03em}
+.signin-head p{margin-top:8px;font-size:.66rem;line-height:1.7;letter-spacing:.05em;color:var(--muted)}
+
+/* ----------------------------- cartridge shelf ------------------------- */
+/* One row of three, so it reads as a shelf rather than a list. Sized to fit
+   the narrowest phone without scrolling sideways. */
+.shelf-wrap{display:none}
+#viewPlay.on:not(.playing) .shelf-wrap{display:block}
+.shelf{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cart{
+  display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 6px 12px;
+  background:var(--panel);border:1px solid var(--cyan);
+}
+.cart .art{
+  position:relative;width:100%;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;
+  background:#0b1424;border:1px solid var(--line);overflow:hidden;
+}
+.cart .art img{width:72%;height:auto}
+.cart .nm{
+  font-size:.55rem;line-height:1.35;letter-spacing:.1em;text-transform:uppercase;
+  color:#fff;text-align:center;
+}
+.cart:active{transform:translateY(1px)}
+
+.cart.locked{border-color:var(--dim);opacity:.85}
+.cart.locked .nm{color:var(--dim)}
+.cart.locked .art{background:#080d18}
+/* The question mark glitches rather than sitting still, so the empty slots
+   read as "coming" rather than "broken". */
+.cart.locked .q{
+  font-family:'VT323',monospace;font-size:2.4rem;line-height:1;color:var(--dim);
+  animation:qGlitch 2.6s steps(1,end) infinite;
+}
+@keyframes qGlitch{
+  0%,72%,100%{opacity:.55;transform:translate(0,0);color:var(--dim)}
+  74%{opacity:1;transform:translate(-2px,1px);color:var(--cyan)}
+  76%{opacity:.5;transform:translate(2px,-1px);color:var(--latam)}
+  78%{opacity:1;transform:translate(-1px,0);color:var(--dim)}
+  86%{opacity:.35;transform:translate(1px,1px)}
+}
+@media (prefers-reduced-motion:reduce){ .cart.locked .q{animation:none;opacity:.55} }
+.shelf-note{margin-top:14px;font-size:.58rem;letter-spacing:.08em;color:var(--dim);text-align:center}
+
+/* The game frame only exists once a cartridge is chosen. */
+#gameFrame{display:none}
+#viewPlay.on.playing #gameFrame{display:block}
+#viewPlay.on:not(.playing) .exit,
+#viewPlay.on:not(.playing) .fsbtn,
+#viewPlay.on:not(.playing) .playtip{display:none}
+
+/* --------------------------- connection dot ---------------------------- */
+/* Was a full-width SCORING LIVE bar at the top of the badge. It is diagnostic,
+   not something a player needs to read every time, so it is a dot now. */
+.conn{
+  position:fixed;z-index:31;left:calc(var(--safe-l) + 10px);
+  bottom:calc(var(--safe-b) + var(--tabh) + 10px);
+  display:flex;align-items:center;gap:7px;padding:6px 10px;
+  background:rgba(8,14,28,.9);border:1px solid var(--dim);
+  font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+}
+.conn .cdot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:0 0 auto}
+.conn.live .cdot{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.conn.dead .cdot{background:var(--warn);box-shadow:0 0 8px var(--warn)}
+.conn.dead{border-color:rgba(255,107,53,.5);color:var(--warn)}
+html[data-view="play"] .conn,
+html[data-locked="1"] .conn{display:none}
+
 /* ------------------------------- tab bar ------------------------------- */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
@@ -424,14 +494,17 @@ html[data-locked="1"] .tabs{display:none}
   <!-- ------------------------------ BADGE ------------------------------ -->
   <section class="view" id="viewBadge">
     <div class="scroll">
-      <div class="hero">
+      <!-- Shown once they are signed in. The sign-in screen deliberately does
+           not carry it: the logo is what you get for being in the room. -->
+      <div class="hero" id="hero" hidden>
         <img src="assets/images/misc/RecRoom_Logo1.png" alt="">
         <h1>REC ROOM</h1>
         <div class="sub">Rank &middot; Elevate &middot; Compete</div>
       </div>
 
-      <div class="status live" id="status" hidden>
-        <span class="dot"></span><span id="statusText"></span>
+      <div class="signin-head" id="signinHead" hidden>
+        <h1>Sign in</h1>
+        <p>Your trigram is how the board knows you.</p>
       </div>
 
       <!-- signed in -->
@@ -454,8 +527,6 @@ html[data-locked="1"] .tabs{display:none}
           </div>
           <div class="rankline" id="myRank">Play a run to take a place on the board.</div>
         </div>
-
-        <button class="btn" id="playNow">&#9654;&nbsp; Play Side-Qlik Blitz</button>
 
         <button class="tip" id="a2hs" style="width:100%;text-align:left;cursor:pointer">
           <span>&#128241;</span>
@@ -503,6 +574,29 @@ html[data-locked="1"] .tabs{display:none}
 
   <!-- ------------------------------- PLAY ------------------------------ -->
   <section class="view" id="viewPlay">
+    <!-- The shelf is what Play opens on. The game frame stays empty until a
+         cartridge is tapped, so opening Play costs no download. -->
+    <div class="scroll shelf-wrap" id="shelf">
+      <div class="eyebrow">Choose your cartridge</div>
+      <div class="shelf">
+        <button class="cart" id="cartBlitz">
+          <span class="art">
+            <img src="assets/images/misc/RecRoom_Logo1.png" alt="">
+          </span>
+          <span class="nm">Side-Qlik<br>Blitz</span>
+        </button>
+        <button class="cart locked" disabled aria-label="Locked">
+          <span class="art"><span class="q">?</span></span>
+          <span class="nm">Locked</span>
+        </button>
+        <button class="cart locked" disabled aria-label="Locked">
+          <span class="art"><span class="q">?</span></span>
+          <span class="nm">Locked</span>
+        </button>
+      </div>
+      <div class="shelf-note">Two more cartridges in development.</div>
+    </div>
+
     <iframe id="gameFrame" title="Side-Qlik Blitz" allow="autoplay; fullscreen"
             referrerpolicy="no-referrer"></iframe>
     <button class="exit" id="exitPlay">&#10005;&nbsp; Room</button>
@@ -721,6 +815,11 @@ html[data-locked="1"] .tabs{display:none}
     </div>
   </section>
 
+  <!-- Dev/roadside indicator: green when this session can bank points, orange
+       when it cannot. Replaces the SCORING LIVE bar that used to take a whole
+       block at the top of the badge. -->
+  <button class="conn" id="conn" aria-live="polite"><span class="cdot"></span><span id="connTxt"></span></button>
+
   <!-- ----------------------------- tab bar ----------------------------- -->
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" data-go="badge" aria-selected="true">
@@ -917,16 +1016,16 @@ function go(v) {
     b.setAttribute('aria-selected', b.dataset.go === v ? 'true' : 'false');
   });
   if (v === 'play') {
-    startGame();
-    // Straight out of the tap that got us here — requestFullscreen is only
-    // granted inside a user gesture, so this cannot be deferred or awaited.
-    if (TOUCH) enterPlayScreen();
+    // Opens on the cartridge shelf. The game frame is not loaded until a
+    // cartridge is tapped, so browsing Play costs no download and no audio.
+    VIEW_EL.play.classList.remove('playing');
   } else {
     if (FS.active()) { FS.unlock(); FS.exit(); }
     VIEW_EL.play.classList.remove('show-tip');
     // Leaving Play abandons the run — no points. Without this the game kept
     // running behind the room, still descending and still playing audio.
     abandonGame();
+    VIEW_EL.play.classList.remove('playing');
   }
   if (v === 'board')   loadBoard();
   if (v === 'install') paintInstall();
@@ -940,19 +1039,31 @@ document.querySelectorAll('.tab').forEach(function (b) {
 /* ======================================================================
    6. BADGE
    ====================================================================== */
+/* A dot above the tab bar rather than a banner on the badge. It is a
+   connection light for us, not a headline for the player — but it stays
+   loud (orange) when runs cannot bank, because that is the one state a
+   player genuinely needs to notice. */
 function paintStatus() {
-  var s = $('status');
-  s.hidden = false;
-  s.className = 'status ' + (CAN_SCORE ? 'live' : 'dead');
-  $('statusText').textContent = CAN_SCORE
-    ? 'Scoring live — runs count'
-    : 'Practice mode — runs will not be saved';
+  var c = $('conn');
+  c.className = 'conn ' + (CAN_SCORE ? 'live' : 'dead');
+  $('connTxt').textContent = CAN_SCORE ? 'Scoring live' : 'Not scoring';
 }
+$('conn').addEventListener('click', function () {
+  dorcAlert(CAN_SCORE ? 'Scoring live' : 'Not scoring',
+    CAN_SCORE
+      ? 'This session can bank points. Runs you finish are saved to the board.'
+      : 'This copy has no session key, so runs will <b>not</b> be saved.<br><br>' +
+        'Open the REC Room from Mindtickle and install again from that page.');
+});
 
 function paintBadge() {
   var signedIn = !!me;
   $('badgeCard').hidden  = !signedIn;
   $('signInCard').hidden = signedIn;
+  // The logo is the reward for being in the room; the sign-in screen gets a
+  // plain heading instead so the first thing asked for is the trigram.
+  $('hero').hidden       = !signedIn;
+  $('signinHead').hidden = signedIn;
   paintStatus();
   if (!signedIn) return;
 
@@ -990,7 +1101,6 @@ function paintRank() {
     : 'Play a run to take a place on the board.';
 }
 
-$('playNow').addEventListener('click', function () { go('play'); });
 $('signOut').addEventListener('click', function () {
   me = null; drop(ID_STORE);
   gameStarted = false; gameReady = false; $('gameFrame').removeAttribute('src');
@@ -1397,6 +1507,16 @@ syncFsBtn();
 
 $('exitPlay').addEventListener('click', function () { FS.unlock(); FS.exit(); go('badge'); });
 
+/* Tapping the Blitz cartridge is what actually starts a game. Fullscreen is
+   requested from inside this tap because that is the only moment a browser
+   will grant it. */
+$('cartBlitz').addEventListener('click', function () {
+  if (!me) { go('badge'); return; }        // never start a run that cannot score
+  VIEW_EL.play.classList.add('playing');
+  startGame();
+  if (TOUCH) enterPlayScreen();
+});
+
 
 /* Tell the game to void whatever is running. Safe to call when nothing is. */
 function abandonGame(){
@@ -1428,7 +1548,10 @@ window.addEventListener('message', function (e) {
   if (!frame || e.source !== frame.contentWindow) return;   // only our own game
   var d = e.data || {};
   if (d.type === 'BLITZ_READY')  { gameReady = true; if (me) sendInit(); }
-  if (d.type === 'BLITZ_EXIT')   { go('badge'); }        // the game's own X
+  if (d.type === 'BLITZ_EXIT') {                          // the game's own X
+    FS.unlock(); FS.exit();
+    VIEW_EL.play.classList.remove('playing');             // back to the shelf
+  }
   if (d.type === 'BLITZ_RESULT') submitScore(d);
 });
 
