@@ -82,6 +82,10 @@ html[data-section],html[data-section] body{min-height:0}
 html[data-section]{scrollbar-width:none;-ms-overflow-style:none}
 html[data-section]::-webkit-scrollbar,
 html[data-section] body::-webkit-scrollbar{width:0;height:0;display:none}
+/* A widget has a height handed to it and nowhere to put a scrollbar, so it must
+   not scroll at all. This is a backstop, not the fix — the stage below is sized
+   to its content at runtime so there should be nothing to clip. */
+html[data-section],html[data-section] body{overflow:hidden}
 
 /* THE alignment knob. Fixed px so every widget lands on the same line. */
 html[data-section]{--secpad-x:36px}
@@ -94,7 +98,9 @@ html[data-section] .wrap > *{display:none}
 
 /* ============ BANNER — wordmark centred, Systems Watch beneath ============ */
 .ssb{text-align:center}
-.ssb-mark{margin:0 auto;width:clamp(220px,34vw,420px)}
+/* 34vw made this 166px tall at a 1100px widget — 60% of the whole banner,
+   and the reason the first height I quoted was short. */
+.ssb-mark{margin:0 auto;width:clamp(190px,26vw,340px)}
 .ssb-mark img{width:100%;height:auto;filter:drop-shadow(0 0 26px rgba(155,89,255,.30))}
 [data-theme="light"] .ssb-mark img{filter:none}
 
@@ -144,12 +150,20 @@ html[data-section] .wrap > *{display:none}
   color:var(--sky);display:inline-flex;align-items:center;gap:7px;
 }
 .ssh-kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sky);flex:0 0 auto}
+/* Capped at two lines, and the body at two, because the widget height is a
+   fixed constant in Mindtickle while the copy in STELLAR_POSTS is not. Without
+   a cap, a longer headline silently outgrows the widget and gets clipped —
+   editing a post would break the layout with no warning. This makes the tallest
+   possible post a known quantity, which is what the height below is measured
+   against. */
 .ssh-title{
   font-weight:600;line-height:1.04;font-size:clamp(30px,4.2vw,50px);
   letter-spacing:-.01em;margin:.22em 0 .3em;text-wrap:balance;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
 .ssh-title .ac{color:var(--green)}
-.ssh-body{font-size:clamp(14px,1.4vw,16px);line-height:1.55;color:#bccfe2;max-width:560px}
+.ssh-body{font-size:clamp(14px,1.4vw,16px);line-height:1.55;color:#bccfe2;max-width:560px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 [data-theme="light"] .ssh-body{color:#42566c}
 .ssh-dots{display:flex;gap:7px;margin-top:14px}
 .ssh-dots button{
@@ -352,6 +366,21 @@ function buildHero() {
   });
 }
 
+/* .ssh-item is position:absolute so it cannot push .ssh-stage taller — a
+   two-line title simply overflowed and spilled out of the widget, which is
+   what cut it off and made the page scroll. Measure the tallest item and give
+   the stage that height, so the card always fits whatever the posts say.
+   Re-run on resize because every size in here is vw-based, and after fonts
+   load because metrics move when Inter arrives. */
+function sizeStage() {
+  var stage = document.getElementById('sshStage');
+  if (!stage || !items.length) return;
+  stage.style.height = 'auto';
+  var tallest = 0;
+  items.forEach(function (el) { tallest = Math.max(tallest, el.offsetHeight); });
+  if (tallest) stage.style.height = tallest + 'px';
+}
+
 function show(i) {
   if (!items.length) return;
   idx = (i + items.length) % items.length;
@@ -379,7 +408,11 @@ if (SECTION === 'banner' || SECTION === '') {
 
 if (SECTION === 'hero' || SECTION === '') {
   buildHero();
+  sizeStage();
   restart();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeStage).catch(function(){});
+  var rt;
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(sizeStage, 120); });
   // A rotator ticking in a hidden tab is wasted work, and lands the reader on
   // a random post when they come back.
   document.addEventListener('visibilitychange', function () {
