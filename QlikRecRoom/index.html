@@ -726,17 +726,23 @@
   <div class="content">
 
     <div class="header">
-      <!-- H.264, and the Mission Control navy is COMPOSITED IN rather than
-           left transparent. The old VP9 had real alpha, but the colour under
-           it was #000000 and Safari/iOS does not honour VP9 alpha at all — so
-           on every iPhone the logo arrived inside a black box. Baking the
-           backdrop removes the need for alpha entirely: 600KB instead of
-           786KB, and it renders identically on every browser.
-           It does mean the logo must always sit on --mc-navy. -->
-      <video class="logo-video" autoplay muted loop playsinline
-             poster="assets/images/misc/RecRoom_Logo1.png">
-        <source src="assets/images/misc/REC_Room_logo_360.mp4" type="video/mp4">
-      </video>
+      <!-- Animated WebP, with REAL alpha.
+
+           Two earlier attempts failed, both instructively. The original VP9
+           carried alpha but #000000 underneath, and Safari ignores VP9 alpha
+           entirely, so iOS drew a black box. Compositing the page colour in
+           behind it fixed iOS but assumed a flat background — and this page
+           has a FIXED .bg-overlay of rgba(16,23,42,.58) which the logo sits
+           ABOVE, so the real surround is #102239 while the baked square was
+           #11304D. A lighter square with a hard edge, exactly as reported.
+
+           Alpha is the only thing that survives a background you do not
+           control, and animated WebP is the format that carries 8-bit alpha
+           AND plays on iOS. As an <img> there is no autoplay policy to lose
+           to either. It also restores the drop-shadow below: against the
+           opaque video that glow traced the rectangle, not the logo. -->
+      <img class="logo-video" src="assets/images/misc/REC_Room_logo_360.webp"
+           alt="REC Room">
     </div>
 
     <!-- Collapsed state inside the Mindtickle app. Populated per section by
