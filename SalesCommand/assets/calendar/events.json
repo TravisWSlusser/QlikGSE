@@ -68,12 +68,32 @@
       "year": "2026"
     },
     {
+      "date": "2026-09-01",
+      "category": "event",
+      "month": "SEP",
+      "day": "1",
+      "title": "Sparks: Get More — Notetaker",
+      "detail": "Second session in the Accelerate Pipeline with AI series, on Mindtickle Notetaker — working sessions co-led by your field colleagues on how they're actually using these tools on live deals. 10:00-11:00 AM. Zoom link and full agenda to follow.",
+      "year": "2026"
+    },
+    {
       "date": "2026-09-03",
       "category": "event",
       "month": "SEP",
       "day": "3",
       "title": "Sparks: Open Lakehouse Update",
-      "detail": "A Sparks session on Open Lakehouse: what has shipped, what it changes for customers, and how to position it.",
+      "detail": "What’s New, What’s Next, What’s In It For You. The newly released Replicate Source for Open Lakehouse, the upcoming Open Lakehouse on Google Cloud launch, and how to position it as an ingestion and cost play rather than a rip-and-replace. 10:00-11:00 AM.",
+      "full": "Open Lakehouse capability is expanding — and there’s real money on the table for sellers who know how to position it properly. Join this session for a fast-paced update on where Open Lakehouse stands in the market today, plus two big pieces of news you can take straight to customers: (1) the newly released Replicate Source for Open Lakehouse — existing Replicate customers can now write straight into Iceberg, no pipeline rebuild required; and (2) the upcoming Open Lakehouse on Google Cloud launch. We’ll also cover where Open Lakehouse fits alongside AWS, Google Cloud Platform, Snowflake and Databricks, and how to talk about it as an ingestion and cost play rather than a rip-and-replace. Come ready with your questions. This is your shortcut to sounding sharp on Open Lakehouse in front of customers in time for Q4.",
+      "link": "https://qlik.zoom.us/j/92137971282?pwd=ck1jsgUZNca8G3I8jurvkFNPRmC5uA.1",
+      "year": "2026"
+    },
+    {
+      "date": "2026-09-08",
+      "category": "event",
+      "month": "SEP",
+      "day": "8",
+      "title": "Sparks: Get More — Deal Guides",
+      "detail": "Third and final session in the Accelerate Pipeline with AI series, on Deal Guides — working sessions co-led by your field colleagues on how they're actually using these tools on live deals. 10:00-11:00 AM. Zoom link and full agenda to follow.",
       "year": "2026"
     },
     {
