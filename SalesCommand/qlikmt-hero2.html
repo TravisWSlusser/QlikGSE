@@ -375,6 +375,10 @@
   .cal-pill{display:flex;align-items:center;gap:6px;width:100%;text-align:left;border:0;cursor:pointer;background:transparent;
     font:inherit;color:var(--ink);padding:2px 5px;border-radius:6px;font-size:11px;line-height:1.2;overflow:hidden;transition:background .15s}
   .cal-pill:hover{background:rgba(255,255,255,.08)}
+  /* Been and gone. Dimmed rather than removed — the grid is a record of the
+     month, so the event should still be there and still open its detail. */
+  .cal-pill.past{opacity:.4}
+  .cal-pill.past:hover{opacity:.75}
   .cal-pill .cdot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
   .cal-pill .ct{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cal-more{font-size:10px;color:var(--muted);font-family:'Barlow Condensed';font-weight:600;letter-spacing:.04em;
@@ -391,6 +395,8 @@
   .cal-li{display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;border:0;background:transparent;
     cursor:pointer;font:inherit;color:var(--ink);padding:9px 6px;border-radius:8px;transition:background .15s}
   .cal-li:hover{background:rgba(255,255,255,.05)}
+  .cal-li.past{opacity:.45}
+  .cal-li.past:hover{opacity:.8}
   .cal-li+.cal-li{border-top:1px solid var(--line)}
   .cal-li .cdot{width:8px;height:8px;border-radius:50%;flex:0 0 auto;margin-top:5px}
   .cal-li-body{flex:1;min-width:0}
@@ -1327,6 +1333,24 @@ const EVENTS_URL = 'assets/calendar/events.json';
 
 const CAL_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 function calIso(d){ var m=d.getMonth()+1, day=d.getDate(); return d.getFullYear()+'-'+(m<10?'0'+m:m)+'-'+(day<10?'0'+day:day); }
+
+/* Has this date already gone by? Dims past events in the grid and the list,
+   and keeps them out of the Spotlight entirely. Duplicated from
+   qlikmt-hero.html on purpose — no build step, no shared JS file. If one
+   changes, change both.
+
+   Built from the date PARTS: `new Date('2026-09-01')` is parsed as UTC, so
+   west of Greenwich it lands on the evening of 31 Aug and the event reads as
+   past a day early. `new Date(y, m-1, d)` is local midnight, which is what
+   "has today passed it" means to the person looking at the page. */
+function isPastEvent(iso){
+  if(!iso) return false;
+  var p = String(iso).split('-');
+  if(p.length !== 3) return false;
+  var ev = new Date(+p[0], +p[1]-1, +p[2]);
+  var t = new Date(); t.setHours(0,0,0,0);
+  return ev < t;
+}
 function calCatColor(k){ return (CATEGORIES[k]||{}).color || 'var(--muted)'; }
 var calNow = new Date(), calY = calNow.getFullYear(), calM = calNow.getMonth();
 var calGrid = document.getElementById('calGrid'), calMonthEl = document.getElementById('calMonth');
@@ -1360,7 +1384,7 @@ function renderCal(){
     var num = document.createElement('span'); num.className='cal-num'; num.textContent = d.getDate(); cell.appendChild(num);
     var evs = calByDate[ds] || [];
     evs.slice(0,3).forEach(function(ev){
-      var p = document.createElement('button'); p.type='button'; p.className='cal-pill';
+      var p = document.createElement('button'); p.type='button'; p.className='cal-pill' + (isPastEvent(ev.date) ? ' past' : '');
       p.innerHTML = '<span class="cdot" style="background:'+calCatColor(ev.category)+'"></span><span class="ct">'+ev.title+'</span>';
       p.addEventListener('click', function(){ openCalModal(ev); });
       cell.appendChild(p);
@@ -1398,7 +1422,7 @@ function renderCalList(){
   for(var pg=0; pg<pages; pg++){
     var page = document.createElement('div'); page.className = 'cal-list-page';
     evs.slice(pg*LIST_PER_PAGE, pg*LIST_PER_PAGE+LIST_PER_PAGE).forEach(function(ev){
-      var row = document.createElement('button'); row.type='button'; row.className='cal-li';
+      var row = document.createElement('button'); row.type='button'; row.className='cal-li' + (isPastEvent(ev.date) ? ' past' : '');
       row.innerHTML = calLiHTML(ev);
       row.addEventListener('click', function(){ openCalModal(ev); });
       page.appendChild(row);
@@ -1421,8 +1445,22 @@ var bbEvents = [], bbIndex = 0, bbTimer = null, BB_INTERVAL = 5000, bbHover = fa
 function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i];a[i]=a[j];a[j]=t; } return a; }
 function buildBB(){
   var bb = document.getElementById('calBB'); stopBB();
-  var evs = calMonthEvents();
-  if(!evs.length){ bb.innerHTML = '<div class="cal-bb-empty">No events to spotlight this month.</div>'; bb.onclick = null; return; }
+  /* Spotlight is a "what's coming up" widget, so a date that has already been
+     is never a candidate — promoting last week's session as a highlight is
+     worse than showing nothing. The grid and the list still show past events,
+     dimmed, because those are a record; this one is a recommendation. */
+  var all = calMonthEvents();
+  var evs = all.filter(function(e){ return !isPastEvent(e.date); });
+  if(!evs.length){
+    /* Two different empty states. "Nothing scheduled" and "everything has
+       already happened" look identical to the old single message, and the
+       second one is the common case late in a month — it should not read as
+       though the calendar failed to load. */
+    bb.innerHTML = '<div class="cal-bb-empty">' +
+      (all.length ? 'Nothing more scheduled this month.'
+                  : 'No events to spotlight this month.') + '</div>';
+    bb.onclick = null; return;
+  }
   bbEvents = shuffle(evs); bbIndex = 0;
   bb.innerHTML =
     '<div class="cal-bb-eyebrow"><span class="pulse-dot"></span>Spotlight</div>'+

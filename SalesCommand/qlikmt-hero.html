@@ -275,6 +275,12 @@
     font-size:12px;letter-spacing:.02em;color:var(--ink);text-align:left;
     transition:background .18s,border-color .18s}
   .ue-chip:hover{background:rgba(255,255,255,.07)}
+  /* Already happened. Dimmed, not hidden — the strip back-fills with recent
+     past events so it never shows an empty slot, and a chip that is simply
+     dim reads as "that one has been" without looking broken. Still clickable:
+     the detail is often still worth reading the day after. */
+  .ue-chip.past{opacity:.45}
+  .ue-chip.past:hover{opacity:.7}
   [data-theme="light"] .ue-chip{background:rgba(255,255,255,.5)}
   [data-theme="light"] .ue-chip:hover{background:#fff}
   .ue-date{font-weight:700;white-space:nowrap;flex:0 0 auto}
@@ -823,6 +829,7 @@
     border:1px solid var(--line);border-radius:7px;padding:3px 9px;
     background:rgba(255,255,255,.03)}
   .lc-date-chip i{width:6px;height:6px;border-radius:50%;background:var(--line);flex:0 0 auto}
+  .lc-date-chip.past{opacity:.4}
   .lc-date-chip.soon{color:var(--ink);border-color:var(--uec,var(--sky));
     background:rgba(255,255,255,.06)}
   .lc-date-chip.soon i{background:var(--uec,var(--sky));
@@ -1486,6 +1493,24 @@ let KEY_DATES = [   /* OFFLINE FALLBACK ONLY — live values come from assets/ca
 ];
 const UE_SHOW = 3;
 
+/* Has this date already gone by? Used to dim past events everywhere they are
+   listed, and to keep them out of the calendar Spotlight in qlikmt-hero2.html
+   (which carries its own copy of this — no build step, so it is duplicated on
+   purpose, like COUNTRIES in the REC Room).
+
+   Built from the date PARTS. `new Date('2026-09-01')` is parsed as UTC, so
+   anywhere west of Greenwich it lands on the evening of 31 Aug and an event
+   reads as past a day early. `new Date(y, m-1, d)` is local midnight, which is
+   what "has today passed it" actually means to the person reading the page. */
+function isPastEvent(iso){
+  if (!iso) return false;
+  const p = String(iso).split('-');
+  if (p.length !== 3) return false;
+  const ev = new Date(+p[0], +p[1] - 1, +p[2]);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return ev < today;
+}
+
 /* ---- shared events source --------------------------------------------------
    KEY_DATES and CATEGORIES above are the offline fallback. The live values come
    from data/events.json so the calendar in qlikmt-hero2.html and these chips
@@ -1528,7 +1553,7 @@ if (IS_MOBILE){
     list.forEach(function(d){
       const c = document.createElement('span');
       const days = (new Date(d.date+'T00:00:00') - today) / 86400000;
-      c.className = 'lc-date-chip' + (days >= 0 && days <= 7 ? ' soon' : '');
+      c.className = 'lc-date-chip' + (days >= 0 && days <= 7 ? ' soon' : '') + (isPastEvent(d.date) ? ' past' : '');
       c.style.setProperty('--uec', (CATEGORIES[d.category]||{}).color || 'var(--sky)');
       c.innerHTML = '<i></i>' + d.month + ' ' + d.day;
       lcDates.appendChild(c);
@@ -1590,7 +1615,7 @@ if (SHOW_HL){
         b.innerHTML='<span class="ue-date">&nbsp;</span>';
         ueRow.appendChild(b); continue;
       }
-      b.className='ue-chip';
+      b.className='ue-chip' + (isPastEvent(d.date) ? ' past' : '');
       b.style.setProperty('--uec', (CATEGORIES[d.category]||{}).color || 'var(--sky)');
       b.innerHTML='<span class="ue-date">'+d.month+' '+d.day+'</span>'
                  +'<span class="ue-title"><span>'+d.title+'</span></span>'
@@ -1616,7 +1641,7 @@ if (SHOW_HL){
     ueRow.className='ue-row open';
     ueRow.innerHTML='';
     const w=document.createElement('div');
-    w.className='ue-chip'; w.style.cursor='default';
+    w.className='ue-chip' + (isPastEvent(d.date) ? ' past' : ''); w.style.cursor='default';
     w.style.setProperty('--uec', (CATEGORIES[d.category]||{}).color || 'var(--sky)');
     w.innerHTML='<span class="ue-date">'+d.month+' '+d.day+'</span>'
                +'<span class="ue-title">'+d.title+'</span>'
