@@ -109,10 +109,25 @@ system. `lookupTrigram` reads `players` first, then falls back to `mt_roster`
 (the Mindtickle roster export) to prefill territory and country. A mismatch
 warns but does not gate. Entering someone else's trigram donates points to them.
 
+**⚠ THE KEY GATE IS OFF (2026-08-26, permanent until someone turns it back on).**
+`REQUIRE_KEY = false` in both `lib/recroom/logScore.js` and
+`lib/recroom/updateIdentity.js`, and `CAN_SCORE` is forced `true` in both
+`QlikRecRoom/index.html` and `QlikRecRoom/mobile.html`. Anyone who knows the URL
+can post a plausible score to any trigram. That is an accepted trade for an
+internal leaderboard, made after a week in which the widget and the server
+disagreed about the key and real players were told their runs did not count.
+
+**Turning it back on is four edits and they must all land together**: two
+`REQUIRE_KEY = true`, and both `CAN_SCORE` back to `SESSION_KEY.length > 0` /
+`KEY.length > 0`. Server-only is the dangerous half-move — the pages would keep
+letting people sign in and play while every write 401s. Client-only is the other
+half-move: `index.html` only opens the sign-in gate when `CAN_SCORE`, so players
+land silently in practice mode while the API would happily have taken the score.
+Nothing was deleted to turn this off, only bypassed: `?k=` is still read, still
+stored, still sent, and the env vars are still parsed.
+
 **The session key is not in the repo.** `index.html` reads it from `?k=`, which
-lives in the Mindtickle widget URL (admin is not public). Loaded without a key
-the page still plays but cannot score, and says so via the orange **DORC
-DETECTED** alert rather than failing silently.
+lives in the Mindtickle widget URL (admin is not public).
 
 `logScore` and `updateIdentity` accept `MT_SESSION_REF` (desktop) or
 `MT_SESSION_REF_MOBILE` (mobile). **Each may hold a comma-separated list**,
@@ -127,10 +142,21 @@ instant, because homepage custom-HTML widgets are *not* in Mindtickle's API
 ```
 
 **Score plausibility is tied to time played**, not a flat cap, so a genuine
-fifteen-minute run is never rejected: `max = 5000 + (60 × durationSec)`. Plus a
-10-second per-trigram cooldown. These are server-side and are the real
-protection; client-side device detection would be theatre (one toggle in
-devtools) and was deliberately not added.
+fifteen-minute run is never rejected:
+`max = min(5000 + 60 × min(durationSec, 1800), 50000)`. Plus a 10-second
+per-trigram cooldown. These are server-side and, with the key gate off, they are
+now the *only* protection — so both caps matter:
+
+- **`durationSec` is client-supplied**, and it is the input to the ceiling, so
+  uncapped it authorises itself (claim an hour, post 221,000). `DURATION_CAP`
+  of 1800s prices any run as at most 30 minutes. A longer genuine run is not
+  rejected, just priced as 30 minutes.
+- **`SCORE_ABSOLUTE_MAX` (50,000) cannot be argued with by anything in the
+  request body.** ~12× the best score ever recorded (4,235). Raise it if real
+  scores ever approach it.
+
+Client-side device detection would be theatre (one toggle in devtools) and was
+deliberately not added.
 
 ## Gotchas that cost real time
 
@@ -327,25 +353,21 @@ can close the room by breaking is worse than having no switch.
 
 ## ⚠ Live temporary state — check this first
 
-- **`OPEN_SCORING` in `lib/recroom/logScore.js` disables the key gate.** Turned
-  on 2026-08-25 for a demo. While true, anyone who knows the URL can POST a
-  score. **It fails closed after `OPEN_UNTIL` (2026-08-29)** — if scoring starts
-  returning 401 for no apparent reason, this is why. Set `OPEN_SCORING = false`
-  to restore the gate, or move the date if the window needs extending.
-  The plausibility ceiling and the cooldown are still enforced either way.
-  Moved 27th → 29th on 2026-08-26: the original date would have closed scoring
-  at 8pm ET on announcement evening. **Margin, not a fix** — turn it off as soon
-  as the reissued key is confirmed.
-- **The underlying key mismatch is unfixed.** The 401 diagnostic reported
-  `serverHasKeys: true`, so Vercel's env vars are correct and the Mindtickle
-  widget URL carries the wrong `?k=`. Suspects: the `YOUR_DESKTOP_KEY`
-  placeholder left in a pasted snippet, or a `+`/`#` in the key being mangled
-  (`URLSearchParams` decodes `+` as a space; `#` truncates the URL).
-  **Mitigated 2026-08-26**: both `logScore` and `updateIdentity` now also
-  compare the submitted key trimmed and with spaces rewritten to `+`, so the
-  `+`-decoded-as-space failure can no longer cause a silent 401. A `#` still
-  cannot be repaired server-side — it truncates the URL before the request is
-  made — so **issue alphanumeric keys only**.
+- ~~**`OPEN_SCORING`**~~ **Gone 2026-08-26.** The dated bypass was replaced by
+  `REQUIRE_KEY = false` — a permanent, undated off switch. See **Auth and score
+  integrity** for what that means and the four edits that reverse it. There is
+  no longer an expiry that will silently close scoring on a date nobody
+  remembers, which was itself a hazard: the original `OPEN_UNTIL` would have
+  shut scoring off at 8pm ET on the evening the game was announced to the org.
+- **The key mismatch was never diagnosed, and now cannot be from here.** The
+  401 diagnostic said `serverHasKeys: true`, so Vercel had keys and the widget
+  `?k=` disagreed. The `+`/`#` mangling theory was **disproved** on 2026-08-26:
+  the actual widget key (`qgse-d-oAMfNDco…`) contains neither. It was a plain
+  value mismatch. The tolerance for trimmed / space→`+` keys was kept anyway —
+  it costs nothing and kills that failure mode permanently — but **it was not
+  the cause**, and a future debugger should not read it as evidence that it was.
+  A `#` in a key truncates the URL before the request is made and cannot be
+  repaired server-side, so **issue alphanumeric keys only**.
 - **Testing a key costs nothing — use `updateIdentity`, not `logScore`.** It has
   no `OPEN_SCORING` bypass (so it tests the real gate even while scoring is
   open) and it validates the trigram *after* the key check, with no write on
@@ -361,10 +383,10 @@ can close the room by breaking is worse than having no switch.
   This is the technique to reach for generally: **find the validation that runs
   just after the thing you want to test and fail it deliberately.** Two test
   rows are on the live leaderboard because this was not done.
-- **`durationSec` is client-supplied and uncapped**, so `max = 5000 + 60 ×
-  durationSec` authorises itself — claim an hour and you may post 221,000.
-  If the key gate is removed permanently this must be capped first, or the
-  ceiling bounds nothing.
+- ~~**`durationSec` is client-supplied and uncapped**~~ **Capped 2026-08-26**,
+  in the same change that removed the key gate — which is exactly the condition
+  this entry said had to be met first. `DURATION_CAP = 1800` plus
+  `SCORE_ABSOLUTE_MAX = 50000`. See **Auth and score integrity**.
 
 ## Open work
 

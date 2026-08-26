@@ -1007,7 +1007,14 @@ var qs  = new URLSearchParams(location.search);
 var KEY = qs.get('k') || '';
 if (KEY) store(K_STORE, KEY);
 else     KEY = read(K_STORE) || '';
-var CAN_SCORE = KEY.length > 0;
+/* Forced true 2026-08-26 — the server no longer requires a key (grep
+   REQUIRE_KEY in lib/recroom/logScore.js). Must move in step with the server:
+   left as `KEY.length > 0`, an installed home-screen copy that lost its key
+   would still refuse to POST at all (see the !CAN_SCORE early return in the
+   submit path), so runs would die on the phone even though the API would
+   accept them. Restore with `KEY.length > 0` when REQUIRE_KEY goes back to
+   true. KEY is still read and still sent. */
+var CAN_SCORE = true;
 
 /* Point the manifest at the keyed endpoint BEFORE anyone can install, so
    start_url launches with the session key. Without this an installed copy on

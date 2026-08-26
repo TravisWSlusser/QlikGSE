@@ -869,7 +869,19 @@ console.log('[REC Room build] 2026-07-18-1500');
    Both writes are behind this gate: logScore AND updateIdentity.
    ============================================================ */
 const SESSION_KEY = new URLSearchParams(location.search).get('k') || '';
-const CAN_SCORE = SESSION_KEY.length > 0;
+/* CAN_SCORE is forced true from 2026-08-26: the server no longer requires a
+   key (grep REQUIRE_KEY in lib/recroom/logScore.js). This MUST move in step
+   with the server. Left as `SESSION_KEY.length > 0` it would keep the old
+   behaviour client-side — the sign-in gate below never opens without a key,
+   so anyone arriving on the bare Vercel URL would be quietly parked in
+   practice mode while the API was perfectly willing to take their score.
+   That is the same silent-non-scoring failure the DORC alert exists to
+   prevent, just moved one layer up.
+
+   To restore the gate: set REQUIRE_KEY = true on the server and change this
+   back to `SESSION_KEY.length > 0`. The key is still read and still sent, so
+   nothing else has to change. */
+const CAN_SCORE = true;
 // Deployed SIDE-QLIK BLITZ game (its own Vercel project). Verify this matches your deploy.
 const GAME_URL = "games/SideQlik_Blitz/";   // same-origin under QlikGSE — no separate deployment
 const SECTION = document.documentElement.getAttribute('data-section') || '';
