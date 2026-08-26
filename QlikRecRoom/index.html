@@ -1031,7 +1031,15 @@ async function attemptEnter() {
 
     if (data.territory === terr) {
       if (data.country_code !== selectedCountry.c) silentCountrySync(tri, terr, selectedCountry.c);
-      return enterRoom({ trigram: tri, country_code: selectedCountry.c, territory: terr });
+      // Carry the lifetime total straight from lookupTrigram. playerLifetime()
+      // otherwise falls back to searching the leaderboard for yourself, which
+      // returns 0 for anyone in EXCLUDED (lib/recroom/excluded.js) — they are
+      // deliberately absent from every board. lookupTrigram is not filtered,
+      // so this is the one source that is right for everybody.
+      return enterRoom({
+        trigram: tri, country_code: selectedCountry.c, territory: terr,
+        lifetime: Number(data.total_score) || 0
+      });
     }
 
     // territory mismatch
