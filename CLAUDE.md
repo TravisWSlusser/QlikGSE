@@ -54,6 +54,46 @@ Edit the committed HTML directly. Only npm dependency is
 
 Chain: **GitHub → Vercel → Mindtickle Custom HTML widget (iframe) → browser.**
 
+### Verifying before you push — READ THIS FIRST
+
+**There IS a Node, it is just not on PATH.** `node`, `npm`, `npx`, `python` and
+`psql` all fail from the shell, which makes it look like there is no way to
+parse-check anything. There is:
+
+```
+N="C:/Program Files/Adobe/Adobe Creative Cloud Experience/libs/node.exe"   # v24
+for f in api/*.js lib/*/*.js; do "$N" --check "$f" || echo "FAIL $f"; done
+```
+
+`package.json` has `"type": "module"`, so `--check` parses `lib/` as ESM
+correctly. For an inline `<script>`, strip the tags to a `.cjs` and check that:
+
+```
+awk '/<script[^>]*src=/{next} /<script/{i=1;next} /<\/script>/{i=0;print "";next} i' page.html > /tmp/x.cjs
+"$N" --check /tmp/x.cjs
+```
+
+This matters more than it sounds. **A syntax error in one `lib/` file takes
+down the entire namespace** (see Gotchas), and Vercel does not fail the build
+on one.
+
+**Do not substitute a hand-rolled checker.** On 2026-08-26 a whole session ran
+on a homemade brace-balancer and the Windows JScript host because `node` was
+assumed missing. Both lied, in ways that looked like real findings:
+
+- The brace-balancer does not understand **regex literals**, so `/[",\n]/` and
+  `/[&<>"']/g` read as unterminated strings. It reported FAIL on files that
+  were perfectly valid, every time, and the only way to tell a real failure
+  from a false one was to run it against `HEAD` and compare.
+- **JScript is ES3.** It cannot parse `let`, arrow functions or template
+  literals, *and* `new Date("2026-09-01T00:00:00")` returns `NaN` — so a
+  simulation of the page's date logic silently compared against NaN, made every
+  comparison false, and produced a confident, plausible, wrong answer that was
+  reported to Travis as verified.
+
+If a checker disagrees with `HEAD` in the same way on unmodified code, the
+checker is what is broken. Use the real parser.
+
 ## The section system
 
 Every page reads `?section=` and sets `data-section` on `<html>` *before* styles
@@ -101,6 +141,49 @@ are the authority here. The essentials:
   `html[data-section]` drops the `min-height:100vh` floor and hides the bar —
   scrolling still works, the chrome does not show.
 - Two widgets with opposite visibility is the only way to reorder for mobile.
+
+## The calendar — one source, three files
+
+`SalesCommand/assets/calendar/events.json` is the source of truth. Both
+`qlikmt-hero.html` (the key-date chips under the header rotator) and
+`qlikmt-hero2.html` (the month calendar) fetch it and **replace `KEY_DATES`
+wholesale** — `KEY_DATES.length = 0` then push. It is not a merge.
+
+Two consequences people get wrong:
+
+1. **`KEY_DATES` in each page is an OFFLINE FALLBACK, not data.** A successful
+   fetch deletes whatever is in it. An entry that exists only in a fallback is
+   invisible in production and appears *only* when the JSON 404s. Both Q3
+   Certification dates were in that state until 2026-08-26.
+2. **Edit all three, every time.** No build step, so they are kept in step by
+   hand. The check that catches drift:
+
+```
+norm(){ grep -oE "date:'[0-9-]+'|\"date\": \"[0-9-]+\"" "$1" | grep -oE '[0-9]{4}-[0-9]{2}-[0-9]{2}' | sort; }
+norm SalesCommand/assets/calendar/events.json > /tmp/a
+awk '/^let KEY_DATES = \[/,/^\];/' SalesCommand/qlikmt-hero.html | norm /dev/stdin > /tmp/b
+diff /tmp/a /tmp/b
+```
+
+**Schema** is documented in the file's own `_comment`. `date` `category`
+`month` `day` `title` `detail` `year`, optional `full`, `link`, `pin`.
+**`full` and `link` are stored but NOTHING RENDERS THEM** — the Sept 3 session's
+Zoom link is sitting in `link` unused. Do not tell anyone a link is on the page.
+
+**`pin` costs one of only three chip slots** (`UE_SHOW = 3`) and bypasses the
+past-date filter, so a pinned date that has gone by squats on the strip forever.
+Pinning two dates leaves one slot for everything else.
+
+**Past events** are dimmed via `.past` (`.ue-chip`, `.lc-date-chip`, `.cal-pill`,
+`.cal-li`) and excluded from the calendar Spotlight entirely — that widget is a
+recommendation, not a record. `isPastEvent()` is **duplicated in both pages** on
+purpose; if one changes, change both.
+
+**Never build a date with `new Date('2026-09-01')`.** It parses as UTC, so west
+of Greenwich it lands on the evening of 31 Aug and events read as past a day
+early — for a NAM-heavy audience, that is every event, every time. Build from
+parts: `new Date(+y, +m-1, +d)`. The existing code uses the
+`new Date(iso + 'T00:00:00')` form for the same reason.
 
 ## Auth and score integrity
 
@@ -158,6 +241,29 @@ now the *only* protection — so both caps matter:
 Client-side device detection would be theatre (one toggle in devtools) and was
 deliberately not added.
 
+**Excluded players** — `lib/recroom/excluded.js` holds `EXCLUDED_TRIGRAMS`
+(currently `TVO`, `LND`: the two people who build the thing). Applied at **read
+time only**, as `trigram <> ALL(${EXCLUDED}::text[])`, in `getLeaderboard`
+(all three queries), `getRecentScores`, `getTerritoryHigh` and `trend`.
+
+Deliberately **not** applied in `lookupTrigram` (so an excluded player still
+sees their own badge and total — that is how they keep tracking themselves) or
+`exportData` (the CSV stays complete and gains an `excluded` column). Nothing in
+the write path knows the list exists: scores still accumulate, so removing a
+trigram brings them back with their real total, not from zero.
+
+Two traps if you touch it:
+
+- The filter must sit **inside** the `ROW_NUMBER()` subquery in the top-3 query.
+  Filtering after ranking leaves a hole where the excluded player was — two
+  names under a heading of three.
+- `playerLifetime()` in `index.html` falls back to finding yourself on the
+  leaderboard, which returns 0 for an excluded player. Sign-in now carries
+  `lifetime` from `lookupTrigram` instead. Mobile already did this.
+
+An empty `EXCLUDED` array makes `<> ALL('{}')` true for every row, so emptying
+the list restores the old behaviour exactly — the filter cannot half-apply.
+
 ## Gotchas that cost real time
 
 - **`?section=play` had no reachable sign-in on a phone.** `#playBtn` sits in
@@ -172,6 +278,31 @@ deliberately not added.
 - **Neon:** a `TRUNCATE` in the SQL editor silently did nothing until wrapped in
   an explicit `BEGIN; … COMMIT;`. If the API still shows old data after a wipe,
   check the commit before hunting branches.
+- **`perl -0pi` destroyed the UTF-8 in both hero files.** A one-line
+  substitution run through it re-encoded *every* high byte in the file as
+  Latin-1 — all 54 em-dashes in `qlikmt-hero.html` and 23 in `qlikmt-hero2.html`
+  became `C3 A2 C2 80 C2 94` mojibake, thousands of lines away from the text
+  being edited. Perl without `use utf8`/`binmode` treats the file as bytes and
+  re-encodes on output. **Use the editor, or a tool that is explicitly UTF-8
+  aware.** The check that caught it before commit:
+
+  ```
+  od -An -tx1 -v FILE | tr -s ' ' '\n' | grep -v '^$' | tr '\n' ' ' \
+    | grep -o 'c3 a2 c2 80' | wc -l      # want 0
+  ```
+
+  Count `e2 80 94` against `HEAD` too — a *drop* in correct em-dashes is the
+  tell. `git diff` will not make this obvious and PowerShell's `-Encoding UTF8`
+  decodes the damage back into plausible-looking characters.
+- **A view built once at load will silently serve stale data forever.**
+  `calByDate` in `qlikmt-hero2.html` was indexed a single time from `KEY_DATES`
+  while that still held the offline fallback. The fetch replaces `KEY_DATES` and
+  calls `renderCal()`, but `renderCal` read the stale index — so the month grid
+  showed fallback data for the life of the page while the list underneath it
+  (which filters `KEY_DATES` directly) showed the live JSON. Two views of the
+  same data, on the same screen, disagreeing. It was invisible only because the
+  fallback happened to match. When something is refreshed asynchronously, **every
+  derived structure has to be rebuilt in the render, not at module scope.**
 - `[hidden]` loses to any author `display` rule. `.mcard [hidden]{display:none
   !important}` exists for that reason.
 - **Full screen paints ONLY the fullscreened element and its descendants.** Any
@@ -350,6 +481,72 @@ COMMIT;
 database, request timeout — all of them mean "stay online". Only an explicit
 `'on'` read back from a healthy query closes anything, because a switch that
 can close the room by breaking is worse than having no switch.
+
+## Where we left off — 26 Aug 2026
+
+Last session ended here. Everything below is pushed, deployed and verified live
+unless it says otherwise.
+
+**Shipped that day:** calendar refresh (Huw's changes, the Q3 cert dates, the
+three Sparks sessions), zero-score rows dropped from Recent Activity, the key
+gate removed permanently with `durationSec` capped, TVO/LND excluded from the
+public boards, the calendar grid's stale-index bug fixed, and past events dimmed
+everywhere plus excluded from the Spotlight.
+
+**Travis was about to announce the REC Room** to the Sales Enablement Slack
+(20+ people, the whole enablement org). Announcement copy was drafted and is in
+that conversation, not in the repo.
+
+### Open — needs Travis, cannot be done from here
+
+- **`QQQ` and `ZZZ` are still on the live leaderboard.** Test rows, both written
+  by Claude. There is no DB access from this environment (no `psql`, no
+  `DATABASE_URL`, no Vercel CLI), so this needs running in the Neon editor —
+  **wrapped in `BEGIN; … COMMIT;`** or the editor may not commit it:
+
+  ```sql
+  BEGIN;
+  DELETE FROM score_events WHERE trigram IN ('QQQ','ZZZ');
+  DELETE FROM players      WHERE trigram IN ('QQQ','ZZZ');
+  COMMIT;
+  ```
+
+- **`CREATE TABLE app_state`** has still never been run, so maintenance mode has
+  no table behind it. It fails open, so nothing is broken — but the switch does
+  not work yet. DDL is in the **Maintenance mode** runbook above.
+
+### Open — decisions Travis has not made
+
+- **Unpin the 14 Sept Q3 deadline?** It permanently holds one of three chip
+  slots. Unpinned, the strip reads SEP 1 / SEP 3 / SEP 8 — all three Sparks,
+  which is what he said he wanted the chips to show. Pinned (current), it reads
+  SEP 1 / SEP 3 / SEP 14. Asked twice, not answered; left pinned because losing
+  a real deadline off the strip is a genuine cost.
+- **What timezone are the Sparks sessions?** All three are "10:00-11:00 AM" with
+  no zone, because none was given. For a NAM/LATAM/EMEA/APAC audience that is
+  actively misleading. The times live in `detail`; the schema has no time field.
+- **Render the Zoom link?** The 3 Sept session's link is stored in `link` and
+  nothing displays it. Wiring a "Join" button into the calendar modal would
+  cover every future session.
+- **A staff-only leaderboard** so TVO and LND can still compete with each other,
+  behind `EXPORT_KEY`. Offered, not requested.
+
+### Known-imperfect, flagged not fixed
+
+- `lib/recroom/lookupTrigram.js` and `lib/blitz/lookupTrigram.js` are still
+  identical duplicates, both routed. Fix one and the other keeps the old
+  behaviour.
+- The Spotlight is month-scoped, so with past events now excluded it reads
+  "Nothing more scheduled this month" for the rest of August. Correct, but it
+  will look empty until someone pages to September. Falling back to the next
+  upcoming events across months would fix it — the date labels in that widget
+  derive from the displayed month rather than the event, so they would need
+  fixing first.
+- Two of the three dates relayed second-hand from Huw turned out not to be real
+  sessions (Competitive Compass, Assistant in Action). **Check for an invite
+  before putting a relayed date on a page the whole org reads.**
+- `CAN_SCORE` is hardcoded `true` in both room pages. Intentional (see **Auth
+  and score integrity**) but it is a lie the moment `REQUIRE_KEY` goes back on.
 
 ## ⚠ Live temporary state — check this first
 
