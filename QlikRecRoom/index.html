@@ -28,7 +28,8 @@
   <style>
     :root {
       --cyan:    #10CFC9;
-      --bg-dark: #10172A;
+      --bg-dark: #10172A;   /* panels, map, scoreboard interior */
+      --mc-navy: #11304D;   /* Mission Control surface — the page itself */
       --bg-outer:#123456;
       --nam:     #9B59FF;
       --latam:   #FF2D9B;
@@ -42,7 +43,11 @@
     html, body {
       width: 100%;
       min-height: 100vh;
-      background: var(--bg-dark);
+      /* Mission Control navy, not the night sky. The REC Room sits inside
+         Mission Control, and the header logo now has this exact colour baked
+         in behind it — see the video note below. Panels, the map and the
+         scoreboard interior keep --bg-dark. */
+      background: var(--mc-navy);
       font-family: 'VT323', monospace;
       color: #fff;
       overflow-x: hidden;
@@ -106,8 +111,6 @@
        lighten as the page behind it changed. Over the night sky that alpha
        resolves to exactly #10172A, so pinning it there leaves the inside of
        the board pixel-identical while everything around it changes. */
-    html[data-section], html[data-section] body { background: #11304D; }
-    html[data-section] .scoreboard { background: #10172A; }
     html[data-section] { scrollbar-width: none; -ms-overflow-style: none; }
     html[data-section]::-webkit-scrollbar,
     html[data-section] body::-webkit-scrollbar { width: 0; height: 0; display: none; }
@@ -223,7 +226,12 @@
     .ph-offline { display: none; }
 
     .scoreboard {
-      border: 1px solid rgba(16,207,201,0.4); background: rgba(16,23,42,0.5);
+      border: 1px solid rgba(16,207,201,0.4);
+      /* Opaque, not rgba(16,23,42,.5). The page behind it is Mission Control
+         navy now, and a half-transparent board would have lightened with it.
+         #10172A is exactly what that alpha used to resolve to over the old
+         night-sky page, so the board looks exactly as it always did. */
+      background: #10172A;
       box-shadow: 0 0 24px rgba(16,207,201,0.12); padding: 10px 12px 12px;
     }
     .sb-grid { display: grid; grid-template-columns: 250px 1fr 250px; gap: 12px; align-items: stretch; }
@@ -718,8 +726,16 @@
   <div class="content">
 
     <div class="header">
-      <video class="logo-video" autoplay muted loop playsinline>
-        <source src="assets/images/misc/REC_Room_logo_360.webm" type="video/webm">
+      <!-- H.264, and the Mission Control navy is COMPOSITED IN rather than
+           left transparent. The old VP9 had real alpha, but the colour under
+           it was #000000 and Safari/iOS does not honour VP9 alpha at all — so
+           on every iPhone the logo arrived inside a black box. Baking the
+           backdrop removes the need for alpha entirely: 600KB instead of
+           786KB, and it renders identically on every browser.
+           It does mean the logo must always sit on --mc-navy. -->
+      <video class="logo-video" autoplay muted loop playsinline
+             poster="assets/images/misc/RecRoom_Logo1.png">
+        <source src="assets/images/misc/REC_Room_logo_360.mp4" type="video/mp4">
       </video>
     </div>
 
