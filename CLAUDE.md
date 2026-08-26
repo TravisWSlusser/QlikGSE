@@ -329,15 +329,38 @@ can close the room by breaking is worse than having no switch.
 
 - **`OPEN_SCORING` in `lib/recroom/logScore.js` disables the key gate.** Turned
   on 2026-08-25 for a demo. While true, anyone who knows the URL can POST a
-  score. **It fails closed after `OPEN_UNTIL` (2026-08-27)** — if scoring starts
+  score. **It fails closed after `OPEN_UNTIL` (2026-08-29)** — if scoring starts
   returning 401 for no apparent reason, this is why. Set `OPEN_SCORING = false`
   to restore the gate, or move the date if the window needs extending.
   The plausibility ceiling and the cooldown are still enforced either way.
+  Moved 27th → 29th on 2026-08-26: the original date would have closed scoring
+  at 8pm ET on announcement evening. **Margin, not a fix** — turn it off as soon
+  as the reissued key is confirmed.
 - **The underlying key mismatch is unfixed.** The 401 diagnostic reported
   `serverHasKeys: true`, so Vercel's env vars are correct and the Mindtickle
   widget URL carries the wrong `?k=`. Suspects: the `YOUR_DESKTOP_KEY`
   placeholder left in a pasted snippet, or a `+`/`#` in the key being mangled
   (`URLSearchParams` decodes `+` as a space; `#` truncates the URL).
+  **Mitigated 2026-08-26**: both `logScore` and `updateIdentity` now also
+  compare the submitted key trimmed and with spaces rewritten to `+`, so the
+  `+`-decoded-as-space failure can no longer cause a silent 401. A `#` still
+  cannot be repaired server-side — it truncates the URL before the request is
+  made — so **issue alphanumeric keys only**.
+- **Testing a key costs nothing — use `updateIdentity`, not `logScore`.** It has
+  no `OPEN_SCORING` bypass (so it tests the real gate even while scoring is
+  open) and it validates the trigram *after* the key check, with no write on
+  the failure path. POST a deliberately invalid trigram: `401` means the key is
+  wrong, `400 Bad trigram` means the key is right and nothing was written.
+
+  ```
+  curl -s -X POST https://qlik-gse.vercel.app/api/recroom/updateIdentity \
+    -H "Content-Type: application/json" \
+    -d '{"key":"<KEY>","trigram":"1","territory":"NAM"}' -w "\n%{http_code}\n"
+  ```
+
+  This is the technique to reach for generally: **find the validation that runs
+  just after the thing you want to test and fail it deliberately.** Two test
+  rows are on the live leaderboard because this was not done.
 - **`durationSec` is client-supplied and uncapped**, so `max = 5000 + 60 ×
   durationSec` authorises itself — claim an hour and you may post 221,000.
   If the key gate is removed permanently this must be capped first, or the
