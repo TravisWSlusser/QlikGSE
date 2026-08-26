@@ -726,23 +726,23 @@
   <div class="content">
 
     <div class="header">
-      <!-- Animated WebP, with REAL alpha.
+      <!-- VP9 with alpha, 400px. Reverted here at Travis's request pending a
+           decision on the trade — the two alternatives were both worse in a
+           different direction:
 
-           Two earlier attempts failed, both instructively. The original VP9
-           carried alpha but #000000 underneath, and Safari ignores VP9 alpha
-           entirely, so iOS drew a black box. Compositing the page colour in
-           behind it fixed iOS but assumed a flat background — and this page
-           has a FIXED .bg-overlay of rgba(16,23,42,.58) which the logo sits
-           ABOVE, so the real surround is #102239 while the baked square was
-           #11304D. A lighter square with a hard edge, exactly as reported.
+             baked mp4 (600KB)   assumed a flat surround. This page has a fixed
+                                 .bg-overlay of rgba(16,23,42,.58) over it, so
+                                 the real colour behind the logo is #102239 and
+                                 the baked #11304D square showed a hard edge.
+             animated WebP       correct on any background and works on iOS,
+             (1.17MB)            but nearly twice the weight.
 
-           Alpha is the only thing that survives a background you do not
-           control, and animated WebP is the format that carries 8-bit alpha
-           AND plays on iOS. As an <img> there is no autoplay policy to lose
-           to either. It also restores the drop-shadow below: against the
-           opaque video that glow traced the rectangle, not the logo. -->
-      <img class="logo-video" src="assets/images/misc/REC_Room_logo_360.webp"
-           alt="REC Room">
+           KNOWN LIMITATION of what is here now: Safari/iOS does not honour VP9
+           alpha, and the colour under the transparent pixels is #000000 — so
+           on iPhone this renders inside a black box. Fine on desktop. -->
+      <video class="logo-video" autoplay muted loop playsinline>
+        <source src="assets/images/misc/REC_Room_logo_360.webm" type="video/webm">
+      </video>
     </div>
 
     <!-- Collapsed state inside the Mindtickle app. Populated per section by
