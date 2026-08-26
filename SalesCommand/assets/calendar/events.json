@@ -36,16 +36,6 @@
   },
   "events": [
     {
-      "date": "2026-08-18",
-      "category": "event",
-      "month": "AUG",
-      "day": "18",
-      "title": "Side-Qlik AI Upgrade",
-      "detail": "Redesigned Mindtickle navigation, a new AI assistant with Learn Mode, Qlik Notetaker, and Deal Guides.",
-      "full": "At SKO we told you who you are: you're Stellar-Seller. And Side-Qlik is the AI companion at your side. On August 18th, Side-Qlik is getting a serious upgrade. Your Mindtickle navigation is redesigned, cutting your hunt for content. Your new AI assistant answers in the flow of your day, and it comes with Learn Mode — so when you need to go deeper, it doesn't just hand you the answer, it walks you through it, building the knowledge you'll carry into every call. Qlik Notetaker now captures, transcribes, and summarizes your calls on demand, so the hours you lose to recaps and follow-up go straight back into your selling time. And here's the major upgrade — everything Notetaker hears feeds straight into Mindtickle Deal Guides, your newest AI tool, pulling the scattered story of opportunities into one place with recommended next best actions and relevant sales, marketing, and customer references at your fingertips. You walk into your next conversation knowing exactly where you stand and what to do next. Join us on August 18th. The sellers who pick these tools up are working smarter, closing faster, and winning more. Come level up.",
-      "year": "2026"
-    },
-    {
       "date": "2026-08-20",
       "category": "event",
       "month": "AUG",
@@ -56,13 +46,21 @@
       "year": "2026"
     },
     {
-      "date": "2026-08-27",
+      "date": "2026-08-26",
       "category": "event",
       "month": "AUG",
-      "day": "27",
-      "title": "Competitive Compass",
-      "detail": "Compete and win in Open Lakehouse — the landscape, the players, and the Replicate Source messaging that separates Qlik.",
-      "full": "This session equips sellers to compete and win in the Open Lakehouse market. We'll map the competitive landscape — who the players are, how they position, and where the real battlegrounds sit — so you can recognize the competitive dynamics at play in your deals. We'll also cover the Replicate Source for Open Lakehouse messaging, a significant differentiator over our competitors and a key part of how we separate Qlik from the field. Attendees will leave with a clear view of the market, the competitive talk tracks that matter, and the positioning to use in live opportunities.",
+      "day": "26",
+      "title": "Assistant in Action: Real Prompts on Real Deals",
+      "detail": "The AI assistant put to work on live opportunities — the prompts that earn their keep, and what to do with what comes back.",
+      "year": "2026"
+    },
+    {
+      "date": "2026-09-03",
+      "category": "event",
+      "month": "SEP",
+      "day": "3",
+      "title": "Sparks: Open Lakehouse Update",
+      "detail": "A Sparks session on Open Lakehouse: what has shipped, what it changes for customers, and how to position it.",
       "year": "2026"
     }
   ]

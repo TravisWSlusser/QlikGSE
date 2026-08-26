@@ -1261,17 +1261,18 @@
   </div>
 <script>
 function sfBrandFallback(img){ var p=img.closest('.sf-brand'); if(p) p.classList.add('fb'); }
-let KEY_DATES = [   /* OFFLINE FALLBACK ONLY — the live values come from data/events.json.
+let KEY_DATES = [   /* OFFLINE FALLBACK ONLY — the live values come from assets/calendar/events.json
+                       (see EVENTS_URL below; there is no data/events.json — that path 404s).
                        Keep these in step with that file so a failed fetch still shows the truth. */
-  { date:'2026-08-18', category:'event', month:'AUG', day:'18', year:'2026',
-    title:'Side-Qlik AI Upgrade',
-    detail:'Redesigned Mindtickle navigation, a new AI assistant with Learn Mode, Qlik Notetaker, and Deal Guides.' },
   { date:'2026-08-20', category:'event', month:'AUG', day:'20', year:'2026',
     title:'Move to Cloud Update',
     detail:'Where the Qlik Talend Cloud motion stands, the Precog to Stitch shift, and what Sales, BDRs, SEs and CSMs do next.' },
-  { date:'2026-08-27', category:'event', month:'AUG', day:'27', year:'2026',
-    title:'Competitive Compass',
-    detail:'Compete and win in Open Lakehouse — the landscape, the players, and the Replicate Source messaging that separates Qlik.' }
+  { date:'2026-08-26', category:'event', month:'AUG', day:'26', year:'2026',
+    title:'Assistant in Action: Real Prompts on Real Deals',
+    detail:'The AI assistant put to work on live opportunities — the prompts that earn their keep, and what to do with what comes back.' },
+  { date:'2026-09-03', category:'event', month:'SEP', day:'3', year:'2026',
+    title:'Sparks: Open Lakehouse Update',
+    detail:'A Sparks session on Open Lakehouse: what has shipped, what it changes for customers, and how to position it.' }
 ];
 const kdModal = document.getElementById('kdModal');
 function openKd(d){
