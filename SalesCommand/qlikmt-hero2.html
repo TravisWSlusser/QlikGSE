@@ -1333,9 +1333,22 @@ function calIso(d){ var m=d.getMonth()+1, day=d.getDate(); return d.getFullYear(
 function calCatColor(k){ return (CATEGORIES[k]||{}).color || 'var(--muted)'; }
 var calNow = new Date(), calY = calNow.getFullYear(), calM = calNow.getMonth();
 var calGrid = document.getElementById('calGrid'), calMonthEl = document.getElementById('calMonth');
+/* Rebuilt on every render, NOT once at load. It used to be built a single
+   time from KEY_DATES while that still held the offline fallback, and the
+   fetch that replaces KEY_DATES never rebuilt it — so the grid rendered the
+   hardcoded fallback for the life of the page while the list underneath it
+   (calMonthEvents, which reads KEY_DATES directly) rendered the live JSON.
+   Two views of the same calendar, silently disagreeing, and only when the
+   fallback had drifted from events.json — which is exactly when you would
+   least want to be looking at stale data. */
 var calByDate = {};
-KEY_DATES.forEach(function(e){ if(e.date){ (calByDate[e.date] = calByDate[e.date] || []).push(e); } });
+function rebuildCalIndex(){
+  calByDate = {};
+  KEY_DATES.forEach(function(e){ if(e.date){ (calByDate[e.date] = calByDate[e.date] || []).push(e); } });
+}
+rebuildCalIndex();
 function renderCal(){
+  rebuildCalIndex();
   calMonthEl.textContent = CAL_MONTHS[calM] + ' ' + calY;
   calGrid.innerHTML = '';
   var first = new Date(calY, calM, 1);
