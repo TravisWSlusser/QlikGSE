@@ -241,10 +241,32 @@ now the *only* protection — so both caps matter:
 Client-side device detection would be theatre (one toggle in devtools) and was
 deliberately not added.
 
-**Excluded players** — `lib/recroom/excluded.js` holds `EXCLUDED_TRIGRAMS`
-(currently `TVO`, `LND`: the two people who build the thing). Applied at **read
-time only**, as `trigram <> ALL(${EXCLUDED}::text[])`, in `getLeaderboard`
-(all three queries), `getRecentScores`, `getTerritoryHigh` and `trend`.
+**Excluded players** — `lib/excluded.js` holds `EXCLUDED_TRIGRAMS` (currently
+`TVO`, `LND`: the two people who build the thing). Applied at **read time only**,
+as `trigram <> ALL(${EXCLUDED}::text[])`.
+
+It lives at `lib/` root, **not inside a namespace**, and that is deliberate.
+It shipped in `lib/recroom/` on 2026-08-26 and the game's own leaderboard was
+missed — `/api/blitz/getScores` feeds the game-over arcade table from the same
+`players` table and inherits nothing from `/api/recroom`, so for a day the game
+showed both excluded players at the top of NAM while the REC Room scoreboard
+beside it correctly did not. **The two namespaces share a database and share
+nothing else. A policy applied to one is not applied to the other.**
+
+Currently filtered — if you add a player-listing endpoint in *either* namespace,
+add it here:
+
+| File | What it feeds |
+|---|---|
+| `lib/recroom/getLeaderboard.js` | standings, top 3/territory, game masters (3 queries) |
+| `lib/recroom/getRecentScores.js` | activity feed + map bursts |
+| `lib/recroom/getTerritoryHigh.js` | colour-unlock bar |
+| `lib/recroom/trend.js` | territory graph |
+| `lib/recroom/getEvents.js` | dead code, filtered pre-emptively — the real-time map would revive it |
+| `lib/blitz/getScores.js` | **the game's own arcade table** |
+
+Correctly **not** filtered: both `lookupTrigram`s and `logScore` /
+`updateIdentity` (single-trigram reads and the write path), plus `exportData`.
 
 Deliberately **not** applied in `lookupTrigram` (so an excluded player still
 sees their own badge and total — that is how they keep tracking themselves) or
