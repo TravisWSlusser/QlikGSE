@@ -87,28 +87,59 @@ async function move(b, rows, i, dir, rerender) {
   } catch (err) { toast(err.message, 'err'); }
 }
 
+/* Editors write PLAIN TEXT. The pages store the accent word as an HTML span,
+   but nobody should have to read markup in a form field — so the editor
+   round-trips it through a friendly convention: the green word is wrapped in
+   *asterisks*. toFriendly() also decodes entities (&mdash; → —) so stored
+   copy reads like copy. */
+function toFriendly(html) {
+  let s = String(html || '').replace(/<span[^>]*>([\s\S]*?)<\/span>/gi, '*$1*');
+  // textarea innerHTML decodes entities without treating anything as markup
+  const ta = document.createElement('textarea');
+  ta.innerHTML = s.replace(/</g, '&lt;');
+  return ta.value.replace(/&lt;/g, '<');
+}
+function toHtml(friendly) {
+  return String(friendly || '').replace(/\*([^*\n]+)\*/g, '<span class="ac">$1</span>');
+}
+
+/* Server limits, mirrored here so the counter and maxLength agree with the
+   rejection the API would send. Title gets +8 headroom for the asterisks. */
+const LIMITS = { kicker: 40, title: 60, body: 300, date_text: 40 };
+
+function counter(input, cap) {
+  const c = h('span', { class: 'char-count' });
+  const paint = () => {
+    const n = input.value.replace(/\*/g, '').length;
+    c.textContent = `${n}/${cap}`;
+    c.classList.toggle('over', n > cap);
+  };
+  input.addEventListener('input', paint); paint();
+  return c;
+}
+
 function editBanner(b, board, rerender) {
   const isNew = !b;
   const isStellar = board === 'stellar';
   b = b || { kicker: '', title: '', body: '', date_text: '', ctas: [], image_url: '', sort: 99, active: true };
 
   const f = {
-    kicker: textInput({ value: b.kicker }),
-    title: textInput({ value: b.title, placeholder: 'Wrap the accent word: Built to <span class="ac">Win</span>.' }),
-    body: textArea({ value: b.body, rows: 3 }),
-    date_text: textInput({ value: b.date_text, placeholder: 'August 14, 2026 — shows as “Added …”' }),
+    kicker: textInput({ value: toFriendly(b.kicker), maxLength: LIMITS.kicker }),
+    title: textInput({ value: toFriendly(b.title), maxLength: LIMITS.title + 8, placeholder: 'Built to *Win*. — asterisks mark the green word' }),
+    body: textArea({ value: toFriendly(b.body), rows: 3, maxLength: LIMITS.body }),
+    date_text: textInput({ value: b.date_text, maxLength: LIMITS.date_text, placeholder: 'August 14, 2026 — shows as “Added …”' }),
     image_url: textInput({ value: b.image_url, placeholder: 'https://… or upload below' }),
   };
 
-  // live accent preview under the title box
+  // live preview under the title box — shows the accent exactly as the page will
   const preview = h('div', { class: 'bn-preview' });
-  const paint = () => { preview.innerHTML = f.title.value || '<span class="dim">title preview</span>'; };
+  const paint = () => { preview.innerHTML = toHtml(f.title.value) || '<span class="dim">title preview</span>'; };
   f.title.addEventListener('input', paint); paint();
 
   // CTA editor — up to 4 {label, href}
   const ctaList = h('div', { class: 'cta-list' });
   const ctaRow = (c) => {
-    const label = textInput({ value: c ? c.label : '', placeholder: 'Label', class: 'narrow' });
+    const label = textInput({ value: c ? c.label : '', placeholder: 'Label', class: 'narrow', maxLength: 40 });
     const href = textInput({ value: c ? c.href : '', placeholder: 'https://…' });
     const del = h('button', { class: 'btn xs danger', onClick: () => row.remove(), 'aria-label': 'Remove link' }, '✕');
     const row = h('div', { class: 'cta-row' }, label, href, del);
@@ -126,28 +157,54 @@ function editBanner(b, board, rerender) {
     class: 'btn sm', onClick: () => {
       const file = fileIn.files && fileIn.files[0];
       if (!file) { toast('Choose a file first', 'err'); return; }
-      if (file.size > 3 * 1024 * 1024) { toast('Max 3MB — it renders at most 190px wide', 'err'); return; }
+      // Client-side pre-checks mirror the server caps (1.5MB, 50–2000px per
+      // side) so the common mistakes fail instantly, before any upload.
+      if (file.size > 1.5 * 1024 * 1024) {
+        toast(`That file is ${(file.size / 1048576).toFixed(1)}MB — the cap is 1.5MB. It renders at most 190px wide, so export smaller.`, 'err');
+        return;
+      }
       upBtn.disabled = true; upBtn.textContent = 'Uploading…';
-      const rd = new FileReader();
-      rd.onload = async () => {
-        try {
-          const b64 = String(rd.result).split(',')[1] || '';
-          const r = await api.uploadImage({ name: file.name, type: file.type, data: b64 });
-          f.image_url.value = r.url;
-          toast('Uploaded — save the post to use it');
-        } catch (err) { toast(err.message, 'err'); }
-        upBtn.disabled = false; upBtn.textContent = 'Upload';
+      const done = () => { upBtn.disabled = false; upBtn.textContent = 'Upload'; };
+      const objUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(objUrl);
+        if (img.naturalWidth > 2000 || img.naturalHeight > 2000) {
+          toast(`That image is ${img.naturalWidth}×${img.naturalHeight}px — the cap is 2000px on either side.`, 'err');
+          done(); return;
+        }
+        if (img.naturalWidth < 50 || img.naturalHeight < 50) {
+          toast('That image is under 50px — too small to render cleanly.', 'err');
+          done(); return;
+        }
+        const rd = new FileReader();
+        rd.onload = async () => {
+          try {
+            const b64 = String(rd.result).split(',')[1] || '';
+            const r = await api.uploadImage({ name: file.name, type: file.type, data: b64 });
+            f.image_url.value = r.url;
+            toast('Uploaded — save the post to use it');
+          } catch (err) { toast(err.message, 'err'); }
+          done();
+        };
+        rd.readAsDataURL(file);
       };
-      rd.readAsDataURL(file);
+      img.onerror = () => { URL.revokeObjectURL(objUrl); toast('That file does not look like an image.', 'err'); done(); };
+      img.src = objUrl;
     },
   }, 'Upload');
 
+  const capField = (label, input, cap, hint) => h('div', { class: 'field' },
+    h('span', { class: 'field-label' }, label, counter(input, cap)),
+    input,
+    hint ? h('span', { class: 'field-hint' }, hint) : null);
+
   modal(isNew ? 'New post' : 'Edit post',
     h('div', { class: 'form' },
-      field('Kicker', f.kicker, 'The short eyebrow label above the title.'),
-      field('Title', f.title, 'HTML is stripped except the accent span and basic emphasis.'),
+      capField('Kicker', f.kicker, LIMITS.kicker, 'The short label above the title.'),
+      capField('Title', f.title, LIMITS.title, 'Wrap the word that should be green in asterisks: Built to *Win*.'),
       h('div', { class: 'field' }, h('span', { class: 'field-label' }, 'Preview'), preview),
-      field('Body', f.body),
+      capField('Body', f.body, LIMITS.body),
       isStellar ? null : field('Date text (optional)', f.date_text),
       isStellar ? null : h('div', { class: 'field' },
         h('span', { class: 'field-label' }, 'Links (optional, up to 4)'), ctaList, addCta),
@@ -162,7 +219,7 @@ function editBanner(b, board, rerender) {
           try {
             const ctas = [...ctaList.children].map(r => r._get()).filter(x => x.label && x.href);
             await api.saveBanner({
-              id: b.id, board, kicker: f.kicker.value, title: f.title.value, body: f.body.value,
+              id: b.id, board, kicker: f.kicker.value, title: toHtml(f.title.value), body: f.body.value,
               date_text: f.date_text.value, ctas, image_url: f.image_url.value.trim(),
               sort: b.sort, active: b.active,
             });

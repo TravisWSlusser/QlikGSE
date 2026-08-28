@@ -93,7 +93,15 @@ html[data-theme="light"] .tm-light{display:block}
 .gate-card{
   width:min(440px,100%);background:var(--card);border:1px solid var(--line);
   border-radius:16px;padding:36px 32px;text-align:center;box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
 }
+/* Brand contrail (AI-Wings) sweeping behind the card head — decorative, so
+   it sits under the content and never blocks a click. */
+.gate-contrail{
+  position:absolute;top:-40px;left:-30px;width:130%;opacity:.5;
+  pointer-events:none;user-select:none;
+}
+.gate-card>*:not(.gate-contrail){position:relative}
 .gate-tm{width:min(300px,86%);margin:0 auto 8px}
 .gate-mark{
   font-size:.82rem;font-weight:700;letter-spacing:.42em;color:var(--muted);
@@ -126,8 +134,12 @@ html[data-theme="light"] .tm-light{display:block}
 .nav-group::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--link);flex:0 0 auto}
 .nav a{
   color:var(--ink-2);padding:8px 12px;border-radius:8px;font-weight:600;font-size:.9rem;
-  margin-bottom:2px;
+  margin-bottom:2px;display:flex;align-items:center;gap:10px;
 }
+/* Brand icon set: gray strokes are currentColor (follow the link state),
+   green accent strokes stay Qlik Green in both themes. */
+.nav-ic{width:19px;height:19px;flex:none;display:inline-flex}
+.nav-ic svg{width:100%;height:100%}
 .nav a:hover{background:var(--card-2);color:var(--ink)}
 .nav a.on{background:rgba(0,152,69,.15);color:var(--accent)}
 html[data-theme="dark"] .nav a.on{color:#5AD68E}
@@ -328,7 +340,9 @@ html[data-theme="dark"] .status-dot.open{color:#5AD68E}
 /* ── forms / modal ── */
 .form{display:flex;flex-direction:column;gap:14px}
 .field{display:flex;flex-direction:column;gap:5px}
-.field-label{font-size:.78rem;font-weight:700;color:var(--ink-2);letter-spacing:.03em}
+.field-label{font-size:.78rem;font-weight:700;color:var(--ink-2);letter-spacing:.03em;display:flex;align-items:baseline}
+.char-count{margin-left:auto;font-weight:400;font-size:.72rem;color:var(--muted)}
+.char-count.over{color:var(--danger);font-weight:700}
 .field-hint{font-size:.75rem;color:var(--muted);line-height:1.5}
 .check-row{display:flex;gap:22px}
 .check-row label{display:flex;gap:8px;align-items:center;cursor:pointer}

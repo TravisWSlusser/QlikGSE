@@ -20,21 +20,22 @@ import * as banners from './views/banners.js';
 import * as questions from './views/questions.js';
 import * as maintenance from './views/maintenance.js';
 import * as system from './views/system.js';
+import { ICONS } from './icons.js';
 
 const NAV = [
   { group: 'Mission Control', items: [
-    { route: 'calendar', label: 'Calendar', scope: 'calendar', mod: calendar },
-    { route: 'banners/highlights', label: 'Hero Banners', scope: 'banners', mod: banners },
-    { route: 'banners/stellar', label: 'Stellar-Seller', scope: 'banners', mod: banners },
+    { route: 'calendar', label: 'Calendar', scope: 'calendar', mod: calendar, icon: 'calendar' },
+    { route: 'banners/highlights', label: 'Hero Banners', scope: 'banners', mod: banners, icon: 'banners' },
+    { route: 'banners/stellar', label: 'Stellar-Seller', scope: 'banners', mod: banners, icon: 'stellar' },
   ]},
   { group: 'REC Room', items: [
-    { route: 'dashboard', label: 'Dashboard', scope: 'analytics', mod: dashboard },
-    { route: 'players', label: 'Players', scope: 'analytics', mod: players },
-    { route: 'questions', label: 'Questions', scope: 'content', mod: questions },
-    { route: 'maintenance', label: 'Maintenance', scope: 'system', mod: maintenance },
+    { route: 'dashboard', label: 'Dashboard', scope: 'analytics', mod: dashboard, icon: 'dashboard' },
+    { route: 'players', label: 'Players', scope: 'analytics', mod: players, icon: 'players' },
+    { route: 'questions', label: 'Questions', scope: 'content', mod: questions, icon: 'questions' },
   ]},
   { group: 'System', items: [
-    { route: 'system', label: 'Access & Setup', scope: 'system', mod: system },
+    { route: 'maintenance', label: 'Maintenance', scope: 'system', mod: maintenance, icon: 'maintenance' },
+    { route: 'system', label: 'Access & Setup', scope: 'system', mod: system, icon: 'system' },
   ]},
 ];
 
@@ -84,7 +85,9 @@ function buildNav() {
     if (!items.length) continue;
     nav.appendChild(h('div', { class: 'nav-group' }, g.group));
     items.forEach(it => nav.appendChild(
-      h('a', { href: '#' + it.route, dataset: { route: it.route } }, it.label)));
+      h('a', { href: '#' + it.route, dataset: { route: it.route } },
+        h('span', { class: 'nav-ic', html: ICONS[it.icon] || '' }),
+        it.label)));
   }
 }
 
