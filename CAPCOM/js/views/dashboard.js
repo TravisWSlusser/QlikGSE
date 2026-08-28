@@ -85,8 +85,10 @@ async function load(root, rerender) {
 
   // ── Game Masters + territory podiums, hover cards throughout ──
   const excluded = d.excluded || [];
-  // Roster-seeded players who never banked a point don't medal.
-  const top = (d.top || []).filter(p => Number(p.total_score) > 0);
+  // No zero-point roster ghosts, and no staff — a podium ranks the org.
+  // Staff stay visible and managed in the Players table.
+  const top = (d.top || []).filter(p =>
+    Number(p.total_score) > 0 && !excluded.includes(p.trigram));
   const podium = (players, title) => {
     const col = h('div', { class: 'gm-col' },
       h('h3', { class: 'ss-h' }, title));

@@ -315,8 +315,10 @@ async function loadStellar(card, scopes) {
   card.appendChild(cols);
 
   // ── leaders ──
+  // Staff never rank, in CAPCOM either — a leaderboard is a leaderboard.
+  // They remain visible (badged) in the Players table, where they're managed.
   if (canStats) {
-    const top = ((a && a.top) || []).slice(0, 6);
+    const top = ((a && a.top) || []).filter(p => !excluded.includes(p.trigram)).slice(0, 6);
     const col = h('div', { class: 'ss-col' }, h('h3', { class: 'ss-h' }, 'Leaders'));
     if (!top.length) col.appendChild(emptyState('No players yet.'));
     else col.appendChild(h('div', { class: 'ld-list' }, top.map((p, i) => {
