@@ -1,12 +1,13 @@
-/* home.js — CAPCOM's landing screen. Quick actions, a recreation of the
-   Mission Control calendar widget, the change feed, latest scores, and the
-   questions players miss most.
+/* home.js — CAPCOM's landing screen.
 
-   Every card degrades by scope: the calendar rebuild reads the PUBLIC feed
-   (no scope needed), the change feed takes any valid key, scores need
-   analytics, and the miss-rate readout takes analytics OR content. A card a
-   key can't open simply doesn't render, so an SME's Home is quieter than
-   the master's — by design, not by error. */
+   Layout: quick actions (Mission Control content only — the rare/dangerous
+   actions were deliberately removed so nothing tempts), then the calendar
+   widget rebuild beside the operations clocks, the change feed, and one
+   STELLAR-SELLER widget that folds together everything Side-Qlik: the
+   recent-scores ticker, the leaders (hover a trigram for a live stat card),
+   the most-missed questions, and the Stellar edit hotlinks.
+
+   Every card degrades by scope; a card a key can't open doesn't render. */
 import { h, clear, fmt, isPast, esc } from '../util.js';
 import { api } from '../api.js';
 import { spinner, errorState, sectionTitle, chip, emptyState } from '../ui.js';
@@ -18,54 +19,113 @@ export function render(params, rerender, who) {
   const scopes = (who && who.scopes) || [];
   const root = h('div', { class: 'view' });
 
-  // ── quick actions ──
+  // ── quick actions: everyday content edits only ──
   const acts = [];
   const act = (icon, label, hash) => h('a', { class: 'qa', href: hash },
     h('span', { class: 'qa-ic', html: ICONS[icon] || '' }), label);
   if (scopes.includes('calendar')) acts.push(act('calendar', 'New event', '#calendar/new'));
-  if (scopes.includes('banners')) {
-    acts.push(act('banners', 'New hero post', '#banners/highlights/new'));
-    acts.push(act('stellar', 'New Stellar post', '#banners/stellar/new'));
-  }
-  if (scopes.includes('content')) acts.push(act('questions', 'New question', '#questions/questions/new'));
-  if (scopes.includes('system')) {
-    acts.push(act('maintenance', 'Room switch', '#maintenance'));
-    acts.push(act('system', 'New access key', '#system/newkey'));
-  }
+  if (scopes.includes('banners')) acts.push(act('banners', 'New hero post', '#banners/highlights/new'));
   if (acts.length) root.appendChild(h('div', { class: 'qa-row' }, acts));
 
   const grid = h('div', { class: 'grid2' });
   root.appendChild(grid);
 
-  // ── the calendar widget, recreated ──
   const calCard = h('div', { class: 'card' }, spinner());
   grid.appendChild(calCard);
   loadCalendar(calCard, scopes);
 
-  // ── latest changes ──
+  grid.appendChild(clockCard());
+
   const logCard = h('div', { class: 'card' }, spinner());
   grid.appendChild(logCard);
   loadLog(logCard);
 
-  // ── latest scores ──
-  if (scopes.includes('analytics')) {
-    const scoreCard = h('div', { class: 'card' }, spinner());
-    grid.appendChild(scoreCard);
-    loadScores(scoreCard);
-  }
-
-  // ── most-missed questions ──
-  if (scopes.includes('analytics') || scopes.includes('content')) {
-    const missCard = h('div', { class: 'card' }, spinner());
-    grid.appendChild(missCard);
-    loadMisses(missCard, scopes);
+  // ── the Stellar-Seller widget — full width under the grid ──
+  if (scopes.some(s => ['analytics', 'content', 'banners'].includes(s))) {
+    const ss = h('div', { class: 'card ss-widget' }, spinner());
+    root.appendChild(ss);
+    loadStellar(ss, scopes);
   }
 
   return root;
 }
 
-/* Month grid + the next events, in the calendar page's own visual language:
-   category-coloured dots on days, today ringed, past dimmed. */
+/* ── operations clocks — the Mission Control set, recreated ──
+   Local time large, then the four hub clocks (New York, São Paulo, London,
+   Singapore) analog + digital, ordered furthest-ahead first, night hours
+   dimmed — same rules as the homepage widget. */
+const ZONES = [
+  { country: 'UNITED STATES', city: 'New York', tz: 'America/New_York' },
+  { country: 'BRAZIL', city: 'São Paulo', tz: 'America/Sao_Paulo' },
+  { country: 'UNITED KINGDOM', city: 'London', tz: 'Europe/London' },
+  { country: 'SINGAPORE', city: 'Singapore', tz: 'Asia/Singapore' },
+];
+const CLOCK_SVG = '<svg class="cl" viewBox="0 0 100 100" aria-hidden="true">'
+  + '<circle class="cl-ring" cx="50" cy="50" r="46"/>'
+  + '<line class="cl-h" x1="50" y1="50" x2="50" y2="30"/>'
+  + '<line class="cl-m" x1="50" y1="50" x2="50" y2="20"/>'
+  + '<circle class="cl-hub" cx="50" cy="50" r="2.6"/></svg>';
+
+function tzParts(tz) {
+  const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', hour: '2-digit', minute: '2-digit' })
+    .formatToParts(new Date());
+  const get = t => Number((p.find(x => x.type === t) || {}).value || 0);
+  return { hh: get('hour'), mm: get('minute') };
+}
+function tzOffsetMin(tz) {
+  const now = new Date();
+  const loc = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+  const utc = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+  return Math.round((loc - utc) / 60000);
+}
+
+function clockCard() {
+  const localTime = h('div', { class: 'lk-time' });
+  const localDate = h('div', { class: 'lk-date' });
+  const zones = ZONES.slice().sort((a, b) => tzOffsetMin(b.tz) - tzOffsetMin(a.tz));
+  const zoneEls = zones.map(z => {
+    const el = h('div', { class: 'clk' },
+      h('span', { class: 'clk-face', html: CLOCK_SVG }),
+      h('div', { class: 'clk-txt' },
+        h('div', { class: 'clk-country' }, z.country),
+        h('div', { class: 'clk-city' }, z.city),
+        h('div', { class: 'clk-time' })));
+    el._tz = z.tz;
+    return el;
+  });
+  const card = h('div', { class: 'card' },
+    sectionTitle('Operations clock'),
+    localTime, localDate,
+    h('div', { class: 'clk-grid' }, zoneEls));
+
+  const tick = () => {
+    if (!card.isConnected) { clearInterval(timer); return; }
+    const now = new Date();
+    localTime.textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+    localDate.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+    for (const el of zoneEls) {
+      const { hh, mm } = tzParts(el._tz);
+      const hAng = ((hh % 12) + mm / 60) * 30, mAng = mm * 6;
+      const face = el.children[0];
+      const svg = face.firstElementChild;
+      if (svg && svg.children) {
+        for (const c of svg.children) {
+          const cls = (c.getAttribute && c.getAttribute('class')) || '';
+          if (cls === 'cl-h') c.setAttribute('transform', `rotate(${hAng} 50 50)`);
+          if (cls === 'cl-m') c.setAttribute('transform', `rotate(${mAng} 50 50)`);
+        }
+      }
+      el.children[1].children[2].textContent =
+        new Intl.DateTimeFormat('en-US', { timeZone: el._tz, hour: 'numeric', minute: '2-digit', hour12: true }).format(now);
+      el.classList.toggle('night', hh < 7 || hh >= 21);
+    }
+  };
+  const timer = setInterval(tick, 1000);
+  tick();
+  return card;
+}
+
+/* ── calendar widget rebuild (public feed — every key sees it) ── */
 async function loadCalendar(card, scopes) {
   let d;
   try { d = await api.publicEvents(); }
@@ -78,7 +138,6 @@ async function loadCalendar(card, scopes) {
   for (const e of events) (byDate[e.date] = byDate[e.date] || []).push(e);
 
   let view = new Date(); view.setDate(1);
-
   const head = h('div', { class: 'mc-head' });
   const gridEl = h('div', { class: 'mc-grid' });
   const listEl = h('div', { class: 'mc-list' });
@@ -89,7 +148,6 @@ async function loadCalendar(card, scopes) {
       h('button', { class: 'btn xs', 'aria-label': 'Previous month', onClick: () => { view = new Date(y, m - 1, 1); draw(); } }, '‹'),
       h('span', { class: 'mc-month' }, `${MONTHS_LONG[m]} ${y}`),
       h('button', { class: 'btn xs', 'aria-label': 'Next month', onClick: () => { view = new Date(y, m + 1, 1); draw(); } }, '›'));
-
     clear(gridEl);
     for (const wd of ['S', 'M', 'T', 'W', 'T', 'F', 'S']) gridEl.appendChild(h('span', { class: 'mc-wd' }, wd));
     const first = new Date(y, m, 1).getDay();
@@ -101,8 +159,7 @@ async function loadCalendar(card, scopes) {
       const evs = byDate[iso] || [];
       const cell = h('span', {
         class: 'mc-day' + (evs.length ? ' has' : '')
-          + (+new Date(y, m, day) === +today ? ' today' : '')
-          + (isPast(iso) ? ' past' : ''),
+          + (+new Date(y, m, day) === +today ? ' today' : '') + (isPast(iso) ? ' past' : ''),
         title: evs.map(e => e.title).join(' · ') || null,
       }, String(day),
         evs.length ? h('span', { class: 'mc-dots' }, evs.slice(0, 3).map(e =>
@@ -117,7 +174,6 @@ async function loadCalendar(card, scopes) {
   draw();
 
   const upcoming = events.filter(e => !isPast(e.date)).slice(0, 3);
-  clear(listEl);
   if (upcoming.length) {
     listEl.append(...upcoming.map(e => h('a', {
       class: 'mc-up', href: scopes.includes('calendar') ? '#calendar' : null,
@@ -129,9 +185,10 @@ async function loadCalendar(card, scopes) {
     listEl.appendChild(h('p', { class: 'sub' }, 'Nothing upcoming on the calendar.'));
   }
 
-  card.append(sectionTitle('Calendar — as Mission Control shows it'), head, gridEl, listEl);
+  card.append(sectionTitle('Calendar', h('span', { class: 'sec-sub' }, 'as Mission Control shows it')), head, gridEl, listEl);
 }
 
+/* ── change feed ── */
 async function loadLog(card) {
   let d;
   try { d = await api.listLog(); }
@@ -152,55 +209,141 @@ async function loadLog(card) {
         h('span', { class: 'feed-actor' }, r.actor, ' · ', r.action))))));
 }
 
-async function loadScores(card) {
-  let d;
-  try { d = await api.analytics(); }
-  catch (err) { clear(card).appendChild(errorState(err, () => loadScores(card))); return; }
+/* ── the Stellar-Seller widget ── */
+async function loadStellar(card, scopes) {
+  const canStats = scopes.includes('analytics');
+  const canContent = scopes.includes('content');
+  const canBanners = scopes.includes('banners');
+
+  let a = null, q = null;
+  try {
+    [a, q] = await Promise.all([
+      canStats ? api.analytics() : Promise.resolve(null),
+      (canStats || canContent) ? api.questionStats() : Promise.resolve(null),
+    ]);
+  } catch (err) { clear(card).appendChild(errorState(err, () => loadStellar(card, scopes))); return; }
   clear(card);
-  card.appendChild(sectionTitle('Latest scores',
-    h('a', { class: 'btn sm', href: '#dashboard' }, 'Dashboard')));
-  const rows = (d.recent || []).slice(0, 8);
-  if (!rows.length) { card.appendChild(emptyState('No runs yet.')); return; }
-  card.appendChild(h('div', { class: 'feed' }, rows.map(r =>
-    h('div', { class: 'feed-row' },
-      h('span', { class: 'feed-at' }, r.at),
-      h('div', { class: 'feed-main' },
-        h('span', { class: 'feed-summary' },
-          h('b', { class: 'mono' }, r.trigram), ` scored ${fmt.int(r.points)} — ${r.territory}`,
-          (d.excluded || []).includes(r.trigram) ? chip('staff', 'muted') : null))))));
-}
 
-async function loadMisses(card, scopes) {
-  let d;
-  try { d = await api.questionStats(); }
-  catch (err) { clear(card).appendChild(errorState(err, () => loadMisses(card, scopes))); return; }
-  clear(card);
-  card.appendChild(sectionTitle('Most-missed questions',
-    scopes.includes('content') ? h('a', { class: 'btn sm', href: '#questions' }, 'Question banks') : null));
+  const links = [];
+  if (canBanners) links.push(h('a', { class: 'btn sm', href: '#banners/stellar/new' }, '+ Stellar post'));
+  if (canContent) links.push(h('a', { class: 'btn sm', href: '#questions/questions/new' }, '+ Question'));
+  if (canStats) links.push(h('a', { class: 'btn sm accent', href: '#dashboard' }, 'Full stats'));
+  card.appendChild(sectionTitle('Stellar-Seller & the Side-Qlik', ...links));
 
-  const min = d.minAttempts || 5;
-  const scored = (d.rows || []).map(r => ({
-    ...r,
-    missPct: r.attempted > 0 ? Math.round(100 * (r.attempted - r.correct) / r.attempted) : 0,
-  }));
-  const solid = scored.filter(r => r.attempted >= min && r.missPct > 0)
-    .sort((a, b) => b.missPct - a.missPct || b.attempted - a.attempted).slice(0, 8);
+  const excluded = (a && a.excluded) || [];
+  const statsByTrig = {};
+  for (const p of (a && a.top) || []) statsByTrig[p.trigram] = p;
 
-  if (!solid.length) {
-    card.appendChild(emptyState('Not enough answer data yet.',
-      d.pending
-        ? 'Run Setup to switch per-question tracking on — it counts every answer from then forward.'
-        : `Per-question tracking is on; the readout fills in once questions have ${min}+ answers. There is no data from before tracking started.`));
-    return;
+  // ── recent scores as a ticker banner ──
+  if (canStats) {
+    const recent = (a.recent || []);
+    if (recent.length) {
+      const items = recent.map(r => {
+        const it = h('span', { class: 'tk-item', dataset: { trigram: r.trigram } },
+          h('b', { class: 'mono' }, r.trigram), ` +${fmt.int(r.points)} `,
+          h('i', null, r.territory));
+        wirePop(it, statsByTrig[r.trigram], excluded);
+        return it;
+      });
+      // duplicated run so the loop is seamless
+      const items2 = recent.map(r => h('span', { class: 'tk-item', 'aria-hidden': 'true' },
+        h('b', { class: 'mono' }, r.trigram), ` +${fmt.int(r.points)} `, h('i', null, r.territory)));
+      card.appendChild(h('div', { class: 'tk-wrap' },
+        h('span', { class: 'tk-label' }, 'RECENT'),
+        h('div', { class: 'tk-window' }, h('div', { class: 'tk-run' }, items, items2))));
+    }
   }
 
-  card.appendChild(h('p', { class: 'sub' },
-    `Miss rate on questions with at least ${min} answers — the ones worth building guidance around.`));
-  card.appendChild(h('div', { class: 'miss-list' }, solid.map(r =>
-    h('div', { class: 'miss-row', title: r.label },
-      h('div', { class: 'miss-main' },
-        h('span', { class: 'miss-label' }, r.label),
-        h('span', { class: 'miss-meta' }, `${r.game} · ${r.attempted - r.correct} of ${r.attempted} missed`)),
-      h('div', { class: 'miss-track' }, h('div', { class: 'miss-fill', style: { width: r.missPct + '%' } })),
-      h('span', { class: 'miss-pct' }, r.missPct + '%')))));
+  const cols = h('div', { class: 'ss-cols' });
+  card.appendChild(cols);
+
+  // ── leaders ──
+  if (canStats) {
+    const top = ((a && a.top) || []).slice(0, 6);
+    const col = h('div', { class: 'ss-col' }, h('h3', { class: 'ss-h' }, 'Leaders'));
+    if (!top.length) col.appendChild(emptyState('No players yet.'));
+    else col.appendChild(h('div', { class: 'ld-list' }, top.map((p, i) => {
+      const row = h('div', { class: 'ld-row', dataset: { trigram: p.trigram } },
+        h('span', { class: 'ld-rank' }, String(i + 1)),
+        h('span', { class: 'ld-trig mono' }, p.trigram,
+          excluded.includes(p.trigram) ? chip('staff', 'muted') : null),
+        h('span', { class: 'ld-terr' }, p.territory),
+        h('span', { class: 'ld-pts num' }, fmt.int(p.total_score)),
+        h('span', { class: 'ld-acc num' }, fmt.pct(p.correct, p.attempted)));
+      wirePop(row, p, excluded);
+      return row;
+    })));
+    cols.appendChild(col);
+  }
+
+  // ── most-missed questions ──
+  if (q) {
+    const min = q.minAttempts || 5;
+    const scored = (q.rows || []).map(r => ({
+      ...r, missPct: r.attempted > 0 ? Math.round(100 * (r.attempted - r.correct) / r.attempted) : 0,
+    }));
+    const solid = scored.filter(r => r.attempted >= min && r.missPct > 0)
+      .sort((x, y) => y.missPct - x.missPct || y.attempted - x.attempted).slice(0, 6);
+    const col = h('div', { class: 'ss-col' }, h('h3', { class: 'ss-h' }, 'Most missed'));
+    if (!solid.length) {
+      col.appendChild(emptyState('Not enough answer data yet.',
+        `Fills in once questions have ${min}+ answers — counting started 28 Aug.`));
+    } else {
+      col.appendChild(h('div', { class: 'miss-list' }, solid.map(r =>
+        h('div', { class: 'miss-row', title: r.label },
+          h('div', { class: 'miss-main' },
+            h('span', { class: 'miss-label' }, r.label),
+            h('span', { class: 'miss-meta' }, `${r.game} · ${r.attempted - r.correct} of ${r.attempted} missed`)),
+          h('div', { class: 'miss-track' }, h('div', { class: 'miss-fill', style: { width: r.missPct + '%' } })),
+          h('span', { class: 'miss-pct' }, r.missPct + '%')))));
+    }
+    cols.appendChild(col);
+  }
+}
+
+/* ── player stat pop-up on trigram hover ──
+   One shared floating card; built fresh per player from the analytics top
+   rows. The three stream bars reuse the dashboard's magnitude language
+   (single validated hue, direct labels). */
+let popEl = null;
+function pop() {
+  if (!popEl) { popEl = h('div', { id: 'player-pop' }); document.body.appendChild(popEl); }
+  return popEl;
+}
+function wirePop(el, p, excluded) {
+  if (!p) return; // no stats known for this trigram (not in top 50)
+  el.classList.add('has-pop');
+  el.addEventListener('mouseenter', () => showPop(el, p, excluded));
+  el.addEventListener('mouseleave', hidePop);
+}
+function hidePop() { if (popEl) popEl.style.display = 'none'; }
+function showPop(anchor, p, excluded) {
+  const e = pop();
+  clear(e);
+  const bar = (label, c, at) => h('div', { class: 'pp-bar' },
+    h('span', { class: 'pp-bar-label' }, label),
+    h('div', { class: 'pp-track' }, h('div', { class: 'pp-fill', style: { width: (at > 0 ? Math.max(2, 100 * c / at) : 0) + '%' } })),
+    h('span', { class: 'pp-bar-val' }, fmt.pct(c, at)));
+  e.append(
+    h('div', { class: 'pp-head' },
+      h('span', { class: 'pp-trig mono' }, p.trigram),
+      h('span', { class: 'pp-terr' }, `${p.territory} · ${(p.country_code || '').toUpperCase()}`),
+      excluded.includes(p.trigram) ? chip('staff', 'muted') : null),
+    h('div', { class: 'pp-stats' },
+      h('div', { class: 'pp-stat' }, h('b', null, fmt.int(p.total_score)), h('i', null, 'points')),
+      h('div', { class: 'pp-stat' }, h('b', null, fmt.int(p.games_played)), h('i', null, 'games')),
+      h('div', { class: 'pp-stat' }, h('b', null, fmt.int(p.blitz_personal_high)), h('i', null, 'best run')),
+      h('div', { class: 'pp-stat' }, h('b', null, fmt.dur(p.blitz_longest_sec)), h('i', null, 'longest'))),
+    bar('Knowledge', p.q_correct, p.q_attempted),
+    bar('Methodology', p.c_correct, p.c_attempted),
+    bar('Glossary', p.t_correct, p.t_attempted),
+    h('div', { class: 'pp-foot' }, `First seen ${p.first_seen} · last ${p.last_seen}`));
+  e.style.display = 'block';
+  const r = anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : { left: 100, bottom: 100, top: 80 };
+  const w = e.offsetWidth || 280;
+  let x = Math.min(r.left, window.innerWidth - w - 16);
+  let y = r.bottom + 10;
+  if (y + (e.offsetHeight || 260) > window.innerHeight - 8) y = Math.max(8, r.top - (e.offsetHeight || 260) - 10);
+  e.style.left = x + 'px';
+  e.style.top = y + 'px';
 }

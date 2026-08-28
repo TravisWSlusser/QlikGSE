@@ -178,7 +178,13 @@ main{flex:1;min-width:0;padding:28px 32px 64px;max-width:1200px}
 .grid2 .card{margin:0}
 @media (max-width:980px){.grid2{grid-template-columns:1fr}}
 .sec-title{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.sec-title h2{font-size:1.02rem;font-weight:700;flex:1;color:var(--heading);letter-spacing:-.01em}
+/* Stylized titles: Inter caps with wide tracking; subtitles ride beside or
+   under them in Inter regular at a smaller size. */
+.sec-title h2{
+  font-size:.9rem;font-weight:800;flex:1;color:var(--heading);
+  text-transform:uppercase;letter-spacing:.14em;
+}
+.sec-sub{font-weight:400;font-size:.76rem;color:var(--muted);letter-spacing:0;text-transform:none}
 .sec-extras{display:flex;gap:8px;align-items:center}
 .sub{color:var(--muted);font-size:.84rem;line-height:1.55;margin-bottom:10px}
 .warn-note{
@@ -382,6 +388,128 @@ html[data-theme="dark"] .status-dot.open{color:#5AD68E}
 .miss-track{height:10px;background:var(--card-2);border-radius:0 4px 4px 0;overflow:hidden}
 .miss-fill{height:100%;background:var(--viz-seq);border-radius:0 4px 4px 0;min-width:2px}
 .miss-pct{font-size:.82rem;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+
+/* ── banner live preview — always the page's navy, whatever CAPCOM's theme ── */
+.pv{padding:0;overflow:hidden}
+.pv-tag{
+  padding:8px 16px;font-size:.66rem;font-weight:700;letter-spacing:.18em;
+  color:var(--muted);border-bottom:1px solid var(--line);
+}
+.pv-frame{
+  background:#0B1F33;padding:26px 30px 20px;position:relative;min-height:150px;
+  border:0;
+}
+.pv-stage{position:relative;min-height:110px}
+.pv-item{
+  position:absolute;inset:0;opacity:0;transform:translateY(8px);
+  transition:opacity .5s ease,transform .5s ease;pointer-events:none;
+}
+.pv-item.on{opacity:1;transform:none;pointer-events:auto}
+.pv-kicker{
+  display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:500;
+  letter-spacing:.2em;text-transform:uppercase;color:#10CFC9;
+}
+.pv-kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:#10CFC9}
+.pv-title{
+  margin:6px 0 2px;font-size:clamp(20px,2.4vw,30px);font-weight:800;
+  letter-spacing:-.01em;color:#EDF3F9;text-transform:none;
+}
+.pv-title .ac{color:#00A651}
+.pv-date{font-size:11px;color:#90A6BD}
+.pv-body{margin:8px 0 0;max-width:560px;font-size:14px;line-height:1.6;color:#B9C9DA}
+.pv-ctas{display:inline-flex;gap:18px;margin-top:12px}
+.pv-cta{
+  font-size:13px;font-weight:600;color:#10CFC9;
+  border-bottom:1px solid rgba(16,207,201,.35);padding-bottom:2px;
+}
+.pv-img{
+  position:absolute;right:0;top:50%;transform:translateY(-50%);
+  width:clamp(80px,18%,140px);aspect-ratio:1;border-radius:50%;object-fit:cover;
+}
+.pv-item.has-img .pv-body{max-width:calc(100% - 170px)}
+.pv-stellar .pv-item{text-align:center}
+.pv-stellar .pv-body{margin-left:auto;margin-right:auto}
+.pv-dots{display:flex;gap:7px;justify-content:center;margin-top:14px;position:relative}
+.pv-dots button{
+  width:8px;height:8px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:rgba(255,255,255,.18);transition:background .2s,transform .2s;
+}
+.pv-dots button.on{background:#10CFC9;transform:scale(1.25)}
+.pv-frame .sub{color:#90A6BD}
+
+/* ── operations clock ── */
+.lk-time{font-size:2.3rem;font-weight:800;line-height:1.05;color:var(--heading);font-variant-numeric:tabular-nums}
+.lk-date{color:var(--muted);font-size:.84rem;margin-bottom:16px}
+.clk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.clk{display:flex;gap:10px;align-items:center}
+.clk.night{opacity:.55}
+.clk-face{width:44px;height:44px;flex:none;display:block}
+.cl{width:100%;height:100%}
+.cl-ring{fill:none;stroke:var(--baseline);stroke-width:3}
+.cl-h,.cl-m{stroke:var(--ink);stroke-width:4;stroke-linecap:round}
+.cl-m{stroke-width:3}
+.cl-hub{fill:var(--accent)}
+.clk-country{font-size:.6rem;font-weight:700;letter-spacing:.12em;color:var(--muted)}
+.clk-city{font-size:.82rem;font-weight:600}
+.clk-time{font-size:.78rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
+/* ── the Stellar-Seller widget ── */
+.ss-widget{margin-top:18px}
+.ss-cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:16px}
+@media (max-width:980px){.ss-cols{grid-template-columns:1fr}}
+.ss-h{
+  font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.16em;
+  color:var(--link);margin-bottom:10px;display:flex;align-items:center;gap:7px;
+}
+.ss-h::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--link)}
+.tk-wrap{
+  display:flex;align-items:center;gap:0;margin-top:4px;
+  border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--card-2);
+}
+.tk-label{
+  flex:none;padding:8px 12px;font-size:.64rem;font-weight:800;letter-spacing:.18em;
+  color:var(--accent-ink);background:var(--accent);
+}
+.tk-window{flex:1;overflow:hidden;white-space:nowrap}
+.tk-run{display:inline-flex;gap:34px;padding:8px 0 8px 34px;animation:tkscroll 40s linear infinite;will-change:transform}
+.tk-wrap:hover .tk-run{animation-play-state:paused}
+@keyframes tkscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.tk-item{font-size:.82rem;color:var(--ink-2)}
+.tk-item b{color:var(--ink)}
+.tk-item i{font-style:normal;color:var(--muted);font-size:.72rem}
+.ld-list{display:flex;flex-direction:column;gap:6px}
+.ld-row{
+  display:grid;grid-template-columns:26px minmax(0,1fr) 60px 80px 60px;
+  gap:8px;align-items:center;padding:7px 10px;border-radius:8px;background:var(--card-2);
+}
+.ld-rank{font-weight:800;color:var(--muted);font-size:.8rem}
+.ld-row:nth-child(1) .ld-rank{color:var(--warn)}
+.ld-trig{font-weight:700}
+.ld-terr{font-size:.72rem;color:var(--muted)}
+.ld-pts{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.ld-acc{font-size:.78rem;color:var(--ink-2);text-align:right;font-variant-numeric:tabular-nums}
+.has-pop{cursor:default}
+.has-pop:hover{outline:1px solid var(--focus);outline-offset:1px;border-radius:6px}
+
+/* ── player stat pop-up ── */
+#player-pop{
+  position:fixed;display:none;z-index:80;width:300px;
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:14px 16px;box-shadow:var(--shadow);pointer-events:none;
+}
+.pp-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.pp-trig{font-size:1.15rem;font-weight:800;color:var(--heading)}
+.pp-terr{font-size:.74rem;color:var(--muted)}
+.pp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px}
+.pp-stat{text-align:center;background:var(--card-2);border-radius:8px;padding:6px 2px}
+.pp-stat b{display:block;font-size:.9rem;font-variant-numeric:tabular-nums}
+.pp-stat i{font-style:normal;font-size:.6rem;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.pp-bar{display:grid;grid-template-columns:82px 1fr 46px;gap:8px;align-items:center;margin-bottom:6px}
+.pp-bar-label{font-size:.7rem;font-weight:600;color:var(--ink-2)}
+.pp-track{height:8px;background:var(--card-2);border-radius:0 4px 4px 0;overflow:hidden}
+.pp-fill{height:100%;background:var(--viz-seq);border-radius:0 4px 4px 0}
+.pp-bar-val{font-size:.72rem;text-align:right;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.pp-foot{font-size:.68rem;color:var(--muted);margin-top:8px}
 
 /* ── keys & services ── */
 .sec-list{display:flex;flex-direction:column;gap:10px}

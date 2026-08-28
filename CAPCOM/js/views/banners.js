@@ -29,6 +29,60 @@ export function render(params, rerender) {
   return root;
 }
 
+/* A faithful preview of the live rotator, above the editor. Always painted
+   on the Mission Control navy regardless of CAPCOM's theme — the preview's
+   job is to show the PAGE, and the page is navy. Rotates the active posts
+   on the real 9s cadence with working dots. */
+const stripTags = s => String(s || '').replace(/<[^>]*>/g, '');
+
+function previewPanel(active, board) {
+  const stage = h('div', { class: 'pv-stage' });
+  const dots = h('div', { class: 'pv-dots' });
+  const wrap = h('div', { class: 'pv card' },
+    h('div', { class: 'pv-tag' }, 'LIVE PREVIEW — as the page renders it'),
+    h('div', { class: 'pv-frame pv-' + board }, stage, dots));
+  if (!active.length) {
+    stage.appendChild(h('p', { class: 'sub' }, 'No live posts — the page is showing its built-in fallback copy.'));
+    return wrap;
+  }
+  let i = 0, timer = null;
+  const slides = active.map(b => {
+    const s = h('div', { class: 'pv-item' },
+      h('span', { class: 'pv-kicker' }, b.kicker || ''),
+      h('h1', { class: 'pv-title', html: b.title }),
+      (board === 'highlights' && b.date_text) ? h('span', { class: 'pv-date' }, 'Added ' + b.date_text) : null,
+      h('p', { class: 'pv-body', html: board === 'stellar' ? esc(stripTags(b.body)) : b.body }),
+      (board === 'highlights' && Array.isArray(b.ctas) && b.ctas.length)
+        ? h('span', { class: 'pv-ctas' }, b.ctas.map(c => h('span', { class: 'pv-cta' }, c.label + ' ↗'))) : null);
+    if (board === 'highlights' && b.image_url) {
+      s.appendChild(h('img', { class: 'pv-img', src: b.image_url, alt: '' }));
+      s.classList.add('has-img');
+    }
+    stage.appendChild(s);
+    return s;
+  });
+  const btns = active.map((b, n) => {
+    const btn = h('button', { type: 'button', 'aria-label': 'Post ' + (n + 1), onClick: () => { go(n); hold(); } });
+    dots.appendChild(btn);
+    return btn;
+  });
+  function go(n) {
+    i = (n + slides.length) % slides.length;
+    slides.forEach((s, k) => s.classList.toggle('on', k === i));
+    btns.forEach((b, k) => b.classList.toggle('on', k === i));
+  }
+  function hold() {
+    clearInterval(timer);
+    timer = setInterval(() => {
+      if (!wrap.isConnected) { clearInterval(timer); return; } // view was swapped out
+      go(i + 1);
+    }, 9000);
+  }
+  go(0);
+  if (slides.length > 1) hold(); else dots.style.display = 'none';
+  return wrap;
+}
+
 async function load(root, board, rerender, wantNew) {
   let d;
   try { d = await api.listBanners(); }
@@ -38,6 +92,7 @@ async function load(root, board, rerender, wantNew) {
   const [title, sub] = BOARDS[board];
   const rows = (d.banners || []).filter(b => b.board === board);
   const active = rows.filter(b => b.active);
+  root.appendChild(previewPanel(active, board));
   root.appendChild(h('div', { class: 'card' },
     sectionTitle(title,
       h('button', { class: 'btn accent', onClick: () => editBanner(null, board, rerender) }, '+ New post')),
