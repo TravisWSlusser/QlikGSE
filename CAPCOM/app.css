@@ -739,3 +739,7 @@ html[data-theme="light"] .pv-cta{color:#006580;border-bottom-color:rgba(0,101,12
 html[data-theme="light"] .pv-dots button{background:rgba(18,38,60,.2)}
 html[data-theme="light"] .pv-dots button.on{background:#006580}
 html[data-theme="light"] .pv-frame .sub{color:#5b7186}
+.cp-frame .mc-head{margin-bottom:8px}
+.cp-frame .mc-head .cp-month{flex:1;text-align:center;margin-bottom:0}
+.cp-more{font-size:.68rem;color:#90A6BD;margin-top:8px;font-style:italic}
+html[data-theme="light"] .cp-more{color:#5b7186}

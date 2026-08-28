@@ -23,6 +23,7 @@ import * as system from './views/system.js';
 import * as home from './views/home.js';
 import { ICONS } from './icons.js';
 import { mountFx } from './fx.js';
+import { hidePop } from './pop.js';
 
 const NAV = [
   { group: '', items: [
@@ -71,6 +72,10 @@ function draw() {
   }
   const item = findItem(raw, head);
   if (!item) { location.hash = '#' + open[0].route; return; }
+
+  // A route change never fires mouseleave on whatever was hovered, so an
+  // open stat card would float over the next view forever. Seen live.
+  hidePop();
 
   // sidebar state: exact route on, else head match for param routes the
   // nav doesn't list (questions tabs)

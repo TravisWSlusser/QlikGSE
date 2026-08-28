@@ -65,76 +65,118 @@ function calendarPreview(events, cats) {
   const byDate = {};
   for (const e of events) (byDate[e.date] = byDate[e.date] || []).push(e);
   const upcoming = events.filter(e => !isPast(e.date));
-
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth();
   const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+  const head = h('div', { class: 'mc-head' });
   const gridEl = h('div', { class: 'mc-grid' });
-  const cellByIso = {};
-  for (const wd of ['S','M','T','W','T','F','S']) gridEl.appendChild(h('span', { class: 'mc-wd' }, wd));
-  const first = new Date(y, m, 1).getDay();
-  const days = new Date(y, m + 1, 0).getDate();
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  for (let i = 0; i < first; i++) gridEl.appendChild(h('span'));
-  for (let day = 1; day <= days; day++) {
-    const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const evs = byDate[iso] || [];
-    const cell = h('span', {
-      class: 'mc-day' + (evs.length ? ' has' : '')
-        + (+new Date(y, m, day) === +today ? ' today' : '') + (isPast(iso) ? ' past' : ''),
-      title: evs.map(e => e.title).join(' · ') || null,
-    }, String(day),
-      evs.length ? h('span', { class: 'mc-dots' }, evs.slice(0, 3).map(e =>
-        h('i', { style: { background: (cats[e.category] || {}).color || 'var(--muted)' } }))) : null);
-    cellByIso[iso] = cell;
-    gridEl.appendChild(cell);
-  }
-
-  const listEl = h('div', { class: 'mc-list' },
-    upcoming.slice(0, 3).map(e => h('div', {
-      class: 'mc-up', style: { '--evc': (cats[e.category] || {}).color || 'var(--muted)' },
-    },
-      h('span', { class: 'mc-up-date' }, fmt.day(e.date)),
-      h('span', { class: 'mc-up-title' }, e.title))));
-
-  // ── the Spotlight ──
   const spot = h('div', { class: 'cp-spot' });
-  let si = 0, lit = null;
-  const feature = () => {
-    if (!upcoming.length) {
-      spot.appendChild(h('p', { class: 'sub' }, 'Nothing upcoming to spotlight.'));
-      return;
+
+  let view = new Date(); view.setDate(1);
+  let cellByIso = {};
+  let lit = null, litIso = null;
+  let si = 0, dayCycle = 0;
+  let pinnedUntil = 0; // a clicked date holds the Spotlight; rotation resumes after
+
+  const light = iso => {
+    if (lit) { lit.classList.remove('mc-spotlit'); lit.style.removeProperty('--spot'); lit = null; }
+    litIso = iso;
+    const cell = iso && cellByIso[iso];
+    if (cell) {
+      const e = (byDate[iso] || [])[0];
+      const color = e ? ((cats[e.category] || {}).color || '#10CFC9') : '#10CFC9';
+      cell.classList.add('mc-spotlit');
+      cell.style.setProperty('--spot', color);
+      lit = cell;
     }
-    const e = upcoming[si % upcoming.length];
-    const color = (cats[e.category] || {}).color || 'var(--sky, #10CFC9)';
+  };
+
+  const feature = (e, extraCount) => {
+    const color = (cats[e.category] || {}).color || '#10CFC9';
     clear(spot).append(
       h('div', { class: 'cp-eyebrow' }, h('i', { class: 'cp-pulse', style: { background: color } }), 'SPOTLIGHT'),
       h('div', { class: 'cp-cat' }, h('i', { class: 'cp-cdot', style: { background: color } }),
         (cats[e.category] || {}).label || e.category),
-      h('div', { class: 'cp-date' }, fmt.day(e.date)),
+      h('div', { class: 'cp-date' }, fmt.day(e.date), isPast(e.date) ? ' — past' : ''),
       h('div', { class: 'cp-title' }, e.title),
-      h('div', { class: 'cp-detail' }, e.detail));
-    if (lit) { lit.classList.remove('mc-spotlit'); lit.style.removeProperty('--spot'); }
-    lit = cellByIso[e.date];
-    if (lit) { lit.classList.add('mc-spotlit'); lit.style.setProperty('--spot', color); }
-    si++;
+      h('div', { class: 'cp-detail' }, e.detail),
+      extraCount ? h('div', { class: 'cp-more' }, `+${extraCount} more this day — click the date again`) : null);
+    light(e.date);
   };
-  feature();
-  if (upcoming.length > 1) {
-    const timer = setInterval(() => {
-      if (!spot.isConnected) { clearInterval(timer); return; }
-      feature();
-    }, 8000);
+
+  const draw = () => {
+    const y = view.getFullYear(), m = view.getMonth();
+    clear(head).append(
+      h('button', { class: 'btn xs', 'aria-label': 'Previous month', onClick: () => { view = new Date(y, m - 1, 1); draw(); } }, '‹'),
+      h('span', { class: 'cp-month' }, `${MONTHS_LONG[m]} ${y}`),
+      h('button', { class: 'btn xs', 'aria-label': 'Next month', onClick: () => { view = new Date(y, m + 1, 1); draw(); } }, '›'));
+
+    clear(gridEl);
+    cellByIso = {};
+    for (const wd of ['S','M','T','W','T','F','S']) gridEl.appendChild(h('span', { class: 'mc-wd' }, wd));
+    const first = new Date(y, m, 1).getDay();
+    const days = new Date(y, m + 1, 0).getDate();
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    for (let i = 0; i < first; i++) gridEl.appendChild(h('span'));
+    for (let day = 1; day <= days; day++) {
+      const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const evs = byDate[iso] || [];
+      const cell = h('span', {
+        class: 'mc-day' + (evs.length ? ' has' : '')
+          + (+new Date(y, m, day) === +today ? ' today' : '') + (isPast(iso) ? ' past' : ''),
+        title: evs.map(e => e.title).join(' · ') || null,
+      }, String(day),
+        evs.length ? h('span', { class: 'mc-dots' }, evs.slice(0, 3).map(e =>
+          h('i', { style: { background: (cats[e.category] || {}).color || 'var(--muted)' } }))) : null);
+      if (evs.length) {
+        cell.style.cursor = 'pointer';
+        cell.addEventListener('click', () => {
+          // clicking the same date again cycles through that day's events
+          dayCycle = litIso === iso ? dayCycle + 1 : 0;
+          const e = evs[dayCycle % evs.length];
+          feature(e, evs.length - 1);
+          pinnedUntil = Date.now() + 25_000; // hold before rotation resumes
+        });
+      }
+      cellByIso[iso] = cell;
+      gridEl.appendChild(cell);
+    }
+    // re-glow the featured date if it lives in this month
+    light(litIso);
+  };
+  draw();
+
+  const listEl = h('div', { class: 'mc-list' },
+    upcoming.slice(0, 3).map(e => {
+      const row = h('div', {
+        class: 'mc-up', style: { '--evc': (cats[e.category] || {}).color || 'var(--muted)', cursor: 'pointer' },
+      },
+        h('span', { class: 'mc-up-date' }, fmt.day(e.date)),
+        h('span', { class: 'mc-up-title' }, e.title));
+      row.addEventListener('click', () => { feature(e, 0); pinnedUntil = Date.now() + 25_000; });
+      return row;
+    }));
+
+  // ── rotation ──
+  if (upcoming.length) {
+    feature(upcoming[0], 0);
+    si = 1;
+    if (upcoming.length > 1) {
+      const timer = setInterval(() => {
+        if (!spot.isConnected) { clearInterval(timer); return; }
+        if (Date.now() < pinnedUntil) return; // a clicked date holds the stage
+        feature(upcoming[si % upcoming.length], 0);
+        si++;
+      }, 8000);
+    }
+  } else {
+    spot.appendChild(h('p', { class: 'sub' }, 'Nothing upcoming to spotlight.'));
   }
 
   return h('div', { class: 'pv card' },
-    h('div', { class: 'pv-tag' }, 'LIVE PREVIEW — the calendar widget as Mission Control shows it'),
+    h('div', { class: 'pv-tag' }, 'LIVE PREVIEW — the calendar widget as Mission Control shows it. Page months, click a date for its info.'),
     h('div', { class: 'pv-frame cp-frame' },
       h('div', { class: 'cp-cols' },
-        h('div', null,
-          h('div', { class: 'cp-month' }, `${MONTHS_LONG[m]} ${y}`),
-          gridEl, listEl),
+        h('div', null, head, gridEl, listEl),
         spot)));
 }
 

@@ -85,7 +85,8 @@ async function load(root, rerender) {
 
   // ── Game Masters + territory podiums, hover cards throughout ──
   const excluded = d.excluded || [];
-  const top = d.top || [];
+  // Roster-seeded players who never banked a point don't medal.
+  const top = (d.top || []).filter(p => Number(p.total_score) > 0);
   const podium = (players, title) => {
     const col = h('div', { class: 'gm-col' },
       h('h3', { class: 'ss-h' }, title));
