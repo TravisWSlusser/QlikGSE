@@ -20,9 +20,13 @@ import * as banners from './views/banners.js';
 import * as questions from './views/questions.js';
 import * as maintenance from './views/maintenance.js';
 import * as system from './views/system.js';
+import * as home from './views/home.js';
 import { ICONS } from './icons.js';
 
 const NAV = [
+  { group: '', items: [
+    { route: 'home', label: 'Home', scope: null, mod: home, icon: 'home' },
+  ]},
   { group: 'Mission Control', items: [
     { route: 'calendar', label: 'Calendar', scope: 'calendar', mod: calendar, icon: 'calendar' },
     { route: 'banners/highlights', label: 'Hero Banners', scope: 'banners', mod: banners, icon: 'banners' },
@@ -74,7 +78,7 @@ function draw() {
     a.classList.toggle('on', r === raw || (r === item.route && item.route.split('/')[0] === head));
   });
 
-  clear(main).appendChild(item.mod.render(parts.slice(1), draw));
+  clear(main).appendChild(item.mod.render(parts.slice(1), draw, WHO));
 }
 
 function buildNav() {
@@ -83,7 +87,7 @@ function buildNav() {
   for (const g of NAV) {
     const items = g.items.filter(allowed);
     if (!items.length) continue;
-    nav.appendChild(h('div', { class: 'nav-group' }, g.group));
+    if (g.group) nav.appendChild(h('div', { class: 'nav-group' }, g.group));
     items.forEach(it => nav.appendChild(
       h('a', { href: '#' + it.route, dataset: { route: it.route } },
         h('span', { class: 'nav-ic', html: ICONS[it.icon] || '' }),
@@ -127,7 +131,7 @@ function toggleTheme() {
   const el = document.documentElement;
   const next = el.dataset.theme === 'light' ? 'dark' : 'light';
   el.dataset.theme = next;
-  try { localStorage.setItem('controlroom.theme', next); } catch {}
+  try { localStorage.setItem('capcom.theme', next); } catch {}
 }
 
 export function boot() {

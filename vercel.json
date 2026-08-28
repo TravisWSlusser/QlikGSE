@@ -15,6 +15,14 @@
     {
       "source": "/api/admin/:action",
       "destination": "/api/admin?action=:action"
+    },
+    {
+      "source": "/ControlRoom",
+      "destination": "/CAPCOM/index.html"
+    },
+    {
+      "source": "/ControlRoom/:path*",
+      "destination": "/CAPCOM/:path*"
     }
   ]
 }

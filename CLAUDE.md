@@ -504,11 +504,11 @@ database, request timeout — all of them mean "stay online". Only an explicit
 `'on'` read back from a healthy query closes anything, because a switch that
 can close the room by breaking is worse than having no switch.
 
-## The Control Room — `ControlRoom/` + `/api/admin/*` (added 28 Aug 2026)
+## CAPCOM — `CAPCOM/` + `/api/admin/*` (added 28 Aug 2026)
 
 The manager control app the hero comment always promised. A BRUCE-style SPA
 (hash-routed, `h()` hyperscript, `api/ui/util/charts` + one file per view in
-`js/views/`) served at `/ControlRoom/`, desktop-only, over a fourth API
+`js/views/`) served at `/CAPCOM/` (né `/ControlRoom/` — a rewrite keeps the old URL working; localStorage keys renamed `capcom.*`, so anyone who signed in before the rename pastes their key once more), desktop-only, over a fourth API
 namespace: `api/admin.js` → `lib/admin/*`, added to `vercel.json`'s rewrites.
 
 **Branded per the Qlik Guidelines (10/01/24 PDF, in Travis's Reference
@@ -579,9 +579,38 @@ creates `app_state` per the runbook; the System view closes/reopens the room.
 The read side still fails open everywhere.
 
 **First-run order matters:** set `ADMIN_KEY` in Vercel → create the Blob store
-→ deploy → open `/ControlRoom/`, sign in with the master key → run Setup. Until
+→ deploy → open `/CAPCOM/`, sign in with the master key → run Setup. Until
 Setup runs, both public feeds return empty and the pages keep their fallbacks —
-the rollout is zero-risk by construction.
+the rollout is zero-risk by construction. **Re-run Setup after pulling new
+CAPCOM features** — it is idempotent and later features add tables/columns
+(admin_log, app_secrets, the per-question counters).
+
+**Home** (`views/home.js`, the landing route) — scope-filtered quick actions
+(deep links like `#calendar/new` open the target view with its editor up;
+each view rewrites the hash back so a redraw doesn't re-open it), a rebuild
+of the Mission Control calendar widget from the PUBLIC feed, the change
+feed, latest scores, and most-missed questions.
+
+**The change feed** — every `/api/admin` write calls `logChange` (from
+`lib/admin/log.js`, fire-and-forget into `admin_log`), attributed to the key
+LABEL. New write actions must call it too.
+
+**Per-question stats** — `attempted`/`correct` columns on all three question
+tables, bumped non-fatally by the game's `check*` endpoints. **Counting
+started 28 Aug 2026; there is no per-question data from before.**
+`questionStats` (analytics OR content — `requireScope` accepts an array) is
+the read; the Home card ignores rows under 5 answers.
+
+**Keys & Services** (`lib/secrets.js` at lib root — both namespaces read it):
+runtime-editable secrets in `app_secrets`, resolution row → env var → '',
+60s cache per warm lambda. Managed: the two MT session keys, EXPORT_KEY,
+the three news/market API keys, NOTIFY_EMAIL. **Env-only forever (the trust
+root): DATABASE_URL, BLOB_READ_WRITE_TOKEN, ADMIN_KEY, RESEND_API_KEY.**
+Consumers (logScore, updateIdentity, exportData, news, market) go through
+`getSecret()`. Changes email NOTIFY_EMAIL via Resend when RESEND_API_KEY is
+set — the mail includes the FULL new value at Travis's request
+(`INCLUDE_VALUE` in `lib/admin/notify.js` flips that); the change feed only
+ever stores the masked form, and `list` never returns full values at all.
 
 ## Where we left off — 26 Aug 2026
 

@@ -7,11 +7,16 @@ import { toast, modal, confirmBox, field, textInput, textArea, select, spinner, 
 
 export function render(params, rerender) {
   const root = h('div', { class: 'view' }, spinner());
-  load(root, rerender);
+  // '#calendar/new' (a Home quick action) lands here with the editor open.
+  // The hash is rewritten back to '#calendar' so closing or saving the
+  // dialog doesn't re-open it on the next redraw.
+  const wantNew = params && params[0] === 'new';
+  if (wantNew) history.replaceState(null, '', '#calendar');
+  load(root, rerender, wantNew);
   return root;
 }
 
-async function load(root, rerender) {
+async function load(root, rerender, wantNew) {
   let d;
   try { d = await api.listEvents(); }
   catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender))); return; }
@@ -45,6 +50,8 @@ async function load(root, rerender) {
   root.appendChild(section('Upcoming', upcoming) || emptyState('No upcoming events.', 'Add one — the homepage chips fill from here.'));
   root.appendChild(section('Past', past, 'Dimmed on the pages, excluded from the Spotlight.') || h('span'));
   root.appendChild(section('Retired', retired, 'Off the public feed entirely. Restore from the edit dialog.') || h('span'));
+
+  if (wantNew) editEvent(null, cats, rerender);
 }
 
 function evRow(e, cats, rerender) {

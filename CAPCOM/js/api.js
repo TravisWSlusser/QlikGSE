@@ -1,7 +1,7 @@
 /* api.js — the only file that calls fetch (the BRUCE rule). Every endpoint is
    one line. The admin key rides in the x-admin-key header, never a URL. */
 
-const KEY_STORE = 'controlroom.key';
+const KEY_STORE = 'capcom.key';
 
 export const keyStore = {
   get() { try { return localStorage.getItem(KEY_STORE) || ''; } catch { return ''; } },
@@ -54,4 +54,15 @@ export const api = {
   maintenanceSet: m => call('maintenance', { method: 'POST', body: m }),
 
   keys: body => call('keys', { method: 'POST', body }),
+  secrets: body => call('secrets', { method: 'POST', body }),
+  listLog: () => call('listLog'),
+  questionStats: () => call('questionStats'),
+
+  /* The one non-admin fetch: the public calendar feed, so Home can rebuild
+     the widget for every key holder regardless of scope. */
+  publicEvents: async () => {
+    const r = await fetch('/api/command/events', { cache: 'no-store' });
+    if (!r.ok) throw new Error('Calendar feed unavailable');
+    return r.json();
+  },
 };

@@ -24,7 +24,10 @@ const CATS = [
 const LETTERS = ['a', 'b', 'c', 'd'];
 
 export function render(params, rerender) {
-  const table = (params && params[0]) || 'questions';
+  const table = TABS.some(t => t[0] === (params && params[0])) ? params[0] : 'questions';
+  // '#questions/<table>/new' (a Home quick action) opens the editor on arrival.
+  const wantNew = params && params[1] === 'new';
+  if (wantNew) history.replaceState(null, '', '#questions/' + table);
   const root = h('div', { class: 'view' });
 
   root.appendChild(h('div', { class: 'tabs' }, TABS.map(([key, label]) =>
@@ -32,11 +35,11 @@ export function render(params, rerender) {
 
   const body = h('div', null, spinner());
   root.appendChild(body);
-  load(body, table, rerender);
+  load(body, table, rerender, wantNew);
   return root;
 }
 
-async function load(body, table, rerender) {
+async function load(body, table, rerender, wantNew) {
   let d;
   try { d = await api.listQuestions(table); }
   catch (err) { clear(body).appendChild(errorState(err, () => load(body, table, rerender))); return; }
@@ -69,6 +72,8 @@ async function load(body, table, rerender) {
     listWrap.appendChild(h('div', { class: 'q-list' }, shown.map(r => qRow(r, table, rerender))));
   }
   draw();
+
+  if (wantNew) edit(null, table, rerender);
 }
 
 function qRow(r, table, rerender) {

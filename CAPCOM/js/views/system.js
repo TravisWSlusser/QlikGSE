@@ -14,15 +14,20 @@ const SCOPE_DESC = {
 };
 
 export function render(params, rerender) {
+  // '#system/newkey' (a Home quick action) opens the mint dialog on arrival.
+  const wantNew = params && params[0] === 'newkey';
+  if (wantNew) history.replaceState(null, '', '#system');
   const root = h('div', { class: 'view' });
   const keys = h('div', { class: 'card' }, spinner());
-  root.append(keys, setupCard(rerender));
-  loadKeys(keys, rerender);
+  const secrets = h('div', { class: 'card' }, spinner());
+  root.append(keys, secrets, setupCard(rerender));
+  loadKeys(keys, rerender, wantNew);
+  loadSecrets(secrets, rerender);
   return root;
 }
 
 /* ── Access keys ── */
-async function loadKeys(card, rerender) {
+async function loadKeys(card, rerender, wantNew) {
   let d;
   try { d = await api.keys({ op: 'list' }); }
   catch (err) {
@@ -40,6 +45,8 @@ async function loadKeys(card, rerender) {
   card.appendChild(h('p', { class: 'sub' },
     'Scoped keys for leaders and SMEs — an SME key with only “content” opens the question banks and nothing else. '
     + 'The master key lives in the Vercel env and is not listed here.'));
+
+  if (wantNew) createKey(d.scopes || [], rerender);
 
   const rows = d.keys || [];
   if (!rows.length) { card.appendChild(emptyState('No scoped keys yet.')); return; }
@@ -99,6 +106,73 @@ function createKey(scopes, rerender) {
                   class: 'btn', onClick: () => { keyBox.select(); document.execCommand('copy'); toast('Copied'); },
                 }, 'Copy to clipboard')),
               [{ label: 'Done', onClick: cc => { cc(); rerender(); } }]);
+          } catch (err) { toast(err.message, 'err'); }
+        },
+      },
+    ]);
+}
+
+/* ── Keys & Services ── */
+async function loadSecrets(card, rerender) {
+  let d;
+  try { d = await api.secrets({ op: 'list' }); }
+  catch (err) {
+    clear(card);
+    card.appendChild(sectionTitle('Keys & Services'));
+    card.appendChild(err.status === 403
+      ? h('p', { class: 'sub' }, 'Your key does not include the system scope.')
+      : errorState(err, () => loadSecrets(card, rerender)));
+    return;
+  }
+  clear(card);
+
+  card.appendChild(sectionTitle('Keys & Services'));
+  card.appendChild(h('p', { class: 'sub' },
+    'The service keys the apps run on. Values set here take effect within a minute, no deploy — the Vercel '
+    + 'env var stays as the fallback, so clearing a value here falls back to it. Full values are never shown '
+    + 'back, only their masked form.'));
+  if (!d.mailReady) {
+    card.appendChild(h('p', { class: 'warn-note' },
+      '⚠ Email notifications are off — add RESEND_API_KEY in the Vercel env (free account at resend.com) '
+      + 'and changes will be mailed to the notification address below.'));
+  }
+
+  const srcChip = s => chip(s === 'app' ? 'set here' : s === 'env' ? 'from Vercel env' : 'not set',
+    s === 'unset' ? 'pin' : 'muted');
+
+  card.appendChild(h('div', { class: 'sec-list' }, (d.slots || []).map(s =>
+    h('div', { class: 'sec-row' },
+      h('div', { class: 'sec-main' },
+        h('span', { class: 'sec-name mono' }, s.name, srcChip(s.src)),
+        h('span', { class: 'sec-desc' }, s.desc),
+        h('span', { class: 'sec-meta' }, 'Current: ', h('b', { class: 'mono' }, s.masked),
+          s.at ? ` — updated ${s.at} by ${s.by || '?'}` : '')),
+      h('button', { class: 'btn sm', onClick: () => editSecret(s, rerender) }, 'Update')))));
+
+  card.appendChild(h('p', { class: 'field-hint' },
+    'Env-only (never editable from here, by design — they are what the app boots from): '
+    + (d.roots || []).map(r => `${r.name} (${r.src === 'env' ? 'set' : 'MISSING'})`).join(' · ')));
+}
+
+function editSecret(s, rerender) {
+  const input = h('input', {
+    type: 'text', autocomplete: 'off', spellcheck: 'false',
+    placeholder: s.name === 'NOTIFY_EMAIL' ? 'name@qlik.com' : 'Paste the new value — leave empty to clear',
+  });
+  modal(`Update ${s.name}`,
+    h('div', { class: 'form' },
+      h('p', { class: 'sub' }, s.desc),
+      field('New value', input,
+        'Saving emails the notification address with the change. An empty value clears this row so the Vercel env var applies again.')),
+    [
+      { label: 'Cancel', onClick: c => c() },
+      {
+        label: 'Save & notify', kind: 'accent', onClick: async c => {
+          try {
+            const r = await api.secrets({ op: 'set', name: s.name, value: input.value });
+            c();
+            toast(r.notified ? `Saved — ${r.mailNote}` : `Saved. Email not sent: ${r.mailNote}`, r.notified ? 'ok' : 'err');
+            rerender();
           } catch (err) { toast(err.message, 'err'); }
         },
       },

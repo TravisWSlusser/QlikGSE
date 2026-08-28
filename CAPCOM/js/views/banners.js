@@ -21,12 +21,15 @@ const BOARDS = {
 
 export function render(params, rerender) {
   const board = BOARDS[params && params[0]] ? params[0] : 'highlights';
+  // '#banners/<board>/new' (a Home quick action) opens the editor on arrival.
+  const wantNew = params && params[1] === 'new';
+  if (wantNew) history.replaceState(null, '', '#banners/' + board);
   const root = h('div', { class: 'view' }, spinner());
-  load(root, board, rerender);
+  load(root, board, rerender, wantNew);
   return root;
 }
 
-async function load(root, board, rerender) {
+async function load(root, board, rerender, wantNew) {
   let d;
   try { d = await api.listBanners(); }
   catch (err) { clear(root).appendChild(errorState(err, () => load(root, board, rerender))); return; }
@@ -42,6 +45,8 @@ async function load(root, board, rerender) {
     rows.length
       ? h('div', { class: 'bn-list' }, rows.map((b, i) => bnRow(b, rows, i, rerender)))
       : emptyState('Nothing here yet.', 'The page is showing its built-in fallback copy until a post goes live.')));
+
+  if (wantNew) editBanner(null, board, rerender);
 }
 
 function bnRow(b, rows, i, rerender) {

@@ -26,6 +26,9 @@ import analytics from '../lib/admin/analytics.js';
 import maintenance from '../lib/admin/maintenance.js';
 import keys from '../lib/admin/keys.js';
 import uploadImage from '../lib/admin/uploadImage.js';
+import listLog from '../lib/admin/listLog.js';
+import questionStats from '../lib/admin/questionStats.js';
+import secrets from '../lib/admin/secrets.js';
 
 const HANDLERS = {
   migrate, whoami,
@@ -33,6 +36,7 @@ const HANDLERS = {
   listBanners, saveBanner, deleteBanner,
   listQuestions, saveQuestion, deleteQuestion,
   analytics, maintenance, keys, uploadImage,
+  listLog, questionStats, secrets,
 };
 
 export default async function handler(req, res) {
