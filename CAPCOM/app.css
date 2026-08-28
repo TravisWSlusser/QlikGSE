@@ -63,7 +63,14 @@ html[data-theme="light"]{
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+html{
+  height:100%;
+  /* Reserve the scrollbar's gutter permanently: without this, a long view
+     grows a scrollbar and shoves the whole page sideways when a short one
+     doesn't. The page keeps one consistent width in every view. */
+  overflow-y:scroll;scrollbar-gutter:stable;
+}
+body{height:100%}
 body{
   background:var(--page);color:var(--ink);
   font:15px/1.5 'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -593,6 +600,71 @@ html[data-theme="light"] .st-tag.ok{color:#006300}
 .st-tag.down{color:var(--danger)}
 .st-tag.off{color:var(--muted)}
 
+/* ── calendar widget preview (Spotlight) ── */
+.cp-frame{padding:20px 24px}
+.cp-cols{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:22px;align-items:start}
+@media (max-width:900px){.cp-cols{grid-template-columns:1fr}}
+.cp-month{font-weight:700;font-size:.92rem;margin-bottom:8px;color:#EDF3F9}
+html[data-theme="light"] .cp-month{color:#12263c}
+.cp-frame .mc-day{color:#B9C9DA}
+.cp-frame .mc-day.has{background:rgba(255,255,255,.07);color:#EDF3F9}
+html[data-theme="light"] .cp-frame .mc-day{color:#42566c}
+html[data-theme="light"] .cp-frame .mc-day.has{background:rgba(18,38,60,.07);color:#12263c}
+.cp-frame .mc-up{background:rgba(255,255,255,.05);color:#EDF3F9}
+html[data-theme="light"] .cp-frame .mc-up{background:rgba(18,38,60,.06);color:#12263c}
+.cp-frame .mc-up-date{color:#EDF3F9}
+html[data-theme="light"] .cp-frame .mc-up-date{color:#12263c}
+.mc-spotlit{
+  outline:1px solid var(--spot,#10CFC9);
+  animation:spotGlow 2.2s ease-in-out infinite;
+}
+@keyframes spotGlow{
+  0%,100%{box-shadow:0 0 5px 0 rgba(16,207,201,.2)}
+  50%{box-shadow:0 0 14px 3px rgba(16,207,201,.5)}
+}
+@media (prefers-reduced-motion:reduce){.mc-spotlit{animation:none;box-shadow:0 0 10px 1px rgba(16,207,201,.4)}}
+.cp-spot{
+  border:1px solid rgba(255,255,255,.12);border-radius:12px;
+  background:rgba(255,255,255,.04);padding:14px 15px;min-height:190px;
+}
+html[data-theme="light"] .cp-spot{border-color:rgba(18,38,60,.14);background:rgba(255,255,255,.6)}
+.cp-eyebrow{
+  display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;
+  letter-spacing:.2em;color:#EDF3F9;opacity:.92;margin-bottom:10px;
+}
+html[data-theme="light"] .cp-eyebrow{color:#12263c}
+.cp-pulse{width:6px;height:6px;border-radius:50%;animation:bbpulse 2s infinite}
+@keyframes bbpulse{0%,100%{opacity:1}50%{opacity:.3}}
+.cp-cat{
+  display:inline-flex;align-items:center;gap:6px;font-size:.66rem;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;color:#B9C9DA;margin-bottom:6px;
+}
+html[data-theme="light"] .cp-cat{color:#42566c}
+.cp-cdot{width:7px;height:7px;border-radius:50%}
+.cp-date{font-size:.72rem;color:#90A6BD;font-weight:600}
+html[data-theme="light"] .cp-date{color:#5b7186}
+.cp-title{font-weight:800;font-size:1rem;margin:2px 0 6px;color:#EDF3F9}
+html[data-theme="light"] .cp-title{color:#12263c}
+.cp-detail{
+  font-size:.78rem;line-height:1.55;color:#B9C9DA;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;
+}
+html[data-theme="light"] .cp-detail{color:#42566c}
+
+/* ── game masters ── */
+.tiles-5{grid-template-columns:repeat(5,1fr)}
+@media (max-width:1100px){.tiles-5{grid-template-columns:repeat(3,1fr)}}
+.gm-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+@media (max-width:1100px){.gm-grid{grid-template-columns:repeat(2,1fr)}}
+.gm-list{display:flex;flex-direction:column;gap:5px}
+.gm-row{
+  display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:6px;
+  align-items:center;padding:6px 9px;border-radius:8px;background:var(--card-2);
+}
+.gm-rank{font-size:.9rem}
+.gm-trig{font-weight:700;font-size:.86rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gm-pts{font-size:.8rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+
 /* ── keys & services ── */
 .sec-list{display:flex;flex-direction:column;gap:10px}
 .sec-row{
@@ -652,4 +724,18 @@ html[data-theme="light"] .st-tag.ok{color:#006300}
 html[data-theme="light"] .side{background:rgba(255,255,255,.72)}
 .card,.gate-card{background:rgba(255,255,255,.035);backdrop-filter:blur(6px)}
 html[data-theme="light"] .card,html[data-theme="light"] .gate-card{background:rgba(255,255,255,.78)}
+
+/* The banner preview follows the THEME TOGGLE — Mission Control itself has
+   a light theme, so the preview shows that page's light rendering rather
+   than staying navy in a light app. */
 .pv-frame{background:#0B1F33}
+html[data-theme="light"] .pv-frame{background:#eef3f9}
+html[data-theme="light"] .pv-title{color:#12263c}
+html[data-theme="light"] .pv-body{color:#42566c}
+html[data-theme="light"] .pv-date{color:#5b7186}
+html[data-theme="light"] .pv-kicker{color:#006580}
+html[data-theme="light"] .pv-kicker::before{background:#006580}
+html[data-theme="light"] .pv-cta{color:#006580;border-bottom-color:rgba(0,101,128,.35)}
+html[data-theme="light"] .pv-dots button{background:rgba(18,38,60,.2)}
+html[data-theme="light"] .pv-dots button.on{background:#006580}
+html[data-theme="light"] .pv-frame .sub{color:#5b7186}

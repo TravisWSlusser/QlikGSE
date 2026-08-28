@@ -4,6 +4,14 @@ import { h, clear, fmt, esc } from '../util.js';
 import { api } from '../api.js';
 import { spinner, errorState, sectionTitle, chip } from '../ui.js';
 import { statTile, hbars, columns } from '../charts.js';
+import { wirePop } from '../pop.js';
+
+/* seconds → "34h 12m" (or "48m" under an hour) */
+const fmtPlay = s => {
+  s = Number(s || 0);
+  const hrs = Math.floor(s / 3600), min = Math.round((s % 3600) / 60);
+  return hrs ? `${fmt.int(hrs)}h ${min}m` : `${min}m`;
+};
 
 const STREAMS = [
   ['Knowledge', 'q_attempted', 'q_correct', 'Brain Freeze questions'],
@@ -66,12 +74,40 @@ async function load(root, rerender) {
   clear(root);
 
   const t = d.totals || {};
-  root.appendChild(h('div', { class: 'tiles' },
+  root.appendChild(h('div', { class: 'tiles tiles-5' },
     statTile('Players', fmt.int(t.players)),
     statTile('Games played', fmt.int(t.games)),
     statTile('Points scored', fmt.int(t.points)),
+    statTile('Total playtime', fmtPlay(t.playtime),
+      'across every player — counting since 28 Aug'),
     statTile('Answer accuracy', fmt.pct(t.correct, t.attempted),
       `${fmt.int(t.correct)} of ${fmt.int(t.attempted)} answers`)));
+
+  // ── Game Masters + territory podiums, hover cards throughout ──
+  const excluded = d.excluded || [];
+  const top = d.top || [];
+  const podium = (players, title) => {
+    const col = h('div', { class: 'gm-col' },
+      h('h3', { class: 'ss-h' }, title));
+    if (!players.length) { col.appendChild(h('p', { class: 'sub' }, 'Nobody yet.')); return col; }
+    col.appendChild(h('div', { class: 'gm-list' }, players.map((p, i) => {
+      const row = h('div', { class: 'gm-row' },
+        h('span', { class: 'gm-rank r' + (i + 1) }, ['🥇', '🥈', '🥉'][i] || String(i + 1)),
+        h('span', { class: 'gm-trig mono' }, p.trigram,
+          excluded.includes(p.trigram) ? chip('staff', 'muted') : null),
+        h('span', { class: 'gm-pts num' }, fmt.int(p.total_score)));
+      wirePop(row, p, excluded);
+      return row;
+    })));
+    return col;
+  };
+  const TERRITORIES = ['NAM', 'LATAM', 'EMEA', 'APAC'];
+  root.appendChild(h('div', { class: 'card' },
+    sectionTitle('Game Masters', h('span', { class: 'sec-sub' }, 'hover a trigram for the full read')),
+    h('div', { class: 'gm-grid' },
+      podium(top.slice(0, 3), 'Worldwide'),
+      ...TERRITORIES.map(terr =>
+        podium(top.filter(p => p.territory === terr).slice(0, 3), terr)))));
 
   // ── Daily runs, last 30 days ──
   const daily = (d.daily || []).map(r => ({

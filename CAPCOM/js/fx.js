@@ -43,7 +43,9 @@ export function mountFx() {
       if (p.y < -0.02) { p.y = 1.02; p.x = rnd(0, 1); }
       const sway = Math.sin(t / 2400 + p.ph) * p.sway;
       ctx.globalAlpha = p.a * dim;
-      ctx.fillStyle = light() && p.c === '#EDF3F9' ? '#19426C' : p.c;
+      // Light mode: all pixels go Qlik Green (Travis's call) — the mixed
+      // Sky/white set reads as dust on white; green reads as brand.
+      ctx.fillStyle = light() ? '#009845' : p.c;
       ctx.fillRect(p.x * w + sway, p.y * hgt, p.s, p.s);
     }
     for (const l of lines) {

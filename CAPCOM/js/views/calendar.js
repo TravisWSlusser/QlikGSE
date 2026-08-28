@@ -27,6 +27,8 @@ async function load(root, rerender, wantNew) {
   const events = d.events || [];
   const pins = events.filter(e => e.pin && e.active).length;
 
+  root.appendChild(calendarPreview(events.filter(e => e.active), cats));
+
   root.appendChild(sectionTitle('Calendar',
     h('button', { class: 'btn accent', onClick: () => editEvent(null, cats, rerender) }, '+ New event'),
     h('button', { class: 'btn', onClick: () => editCategories(d.categories || [], rerender) }, 'Categories')));
@@ -52,6 +54,88 @@ async function load(root, rerender, wantNew) {
   root.appendChild(section('Retired', retired, 'Off the public feed entirely. Restore from the edit dialog.') || h('span'));
 
   if (wantNew) editEvent(null, cats, rerender);
+}
+
+/* ── the Mission Control calendar widget, recreated — month grid, upcoming
+   list, and the revolving event SPOTLIGHT with its pulsing eyebrow. The
+   spotlighted event's day cell glows in its category color, same as the
+   page. Rotates every 8s through upcoming events; past ones never feature
+   (the Spotlight is a recommendation, not a record). ── */
+function calendarPreview(events, cats) {
+  const byDate = {};
+  for (const e of events) (byDate[e.date] = byDate[e.date] || []).push(e);
+  const upcoming = events.filter(e => !isPast(e.date));
+
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth();
+  const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  const gridEl = h('div', { class: 'mc-grid' });
+  const cellByIso = {};
+  for (const wd of ['S','M','T','W','T','F','S']) gridEl.appendChild(h('span', { class: 'mc-wd' }, wd));
+  const first = new Date(y, m, 1).getDay();
+  const days = new Date(y, m + 1, 0).getDate();
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  for (let i = 0; i < first; i++) gridEl.appendChild(h('span'));
+  for (let day = 1; day <= days; day++) {
+    const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const evs = byDate[iso] || [];
+    const cell = h('span', {
+      class: 'mc-day' + (evs.length ? ' has' : '')
+        + (+new Date(y, m, day) === +today ? ' today' : '') + (isPast(iso) ? ' past' : ''),
+      title: evs.map(e => e.title).join(' · ') || null,
+    }, String(day),
+      evs.length ? h('span', { class: 'mc-dots' }, evs.slice(0, 3).map(e =>
+        h('i', { style: { background: (cats[e.category] || {}).color || 'var(--muted)' } }))) : null);
+    cellByIso[iso] = cell;
+    gridEl.appendChild(cell);
+  }
+
+  const listEl = h('div', { class: 'mc-list' },
+    upcoming.slice(0, 3).map(e => h('div', {
+      class: 'mc-up', style: { '--evc': (cats[e.category] || {}).color || 'var(--muted)' },
+    },
+      h('span', { class: 'mc-up-date' }, fmt.day(e.date)),
+      h('span', { class: 'mc-up-title' }, e.title))));
+
+  // ── the Spotlight ──
+  const spot = h('div', { class: 'cp-spot' });
+  let si = 0, lit = null;
+  const feature = () => {
+    if (!upcoming.length) {
+      spot.appendChild(h('p', { class: 'sub' }, 'Nothing upcoming to spotlight.'));
+      return;
+    }
+    const e = upcoming[si % upcoming.length];
+    const color = (cats[e.category] || {}).color || 'var(--sky, #10CFC9)';
+    clear(spot).append(
+      h('div', { class: 'cp-eyebrow' }, h('i', { class: 'cp-pulse', style: { background: color } }), 'SPOTLIGHT'),
+      h('div', { class: 'cp-cat' }, h('i', { class: 'cp-cdot', style: { background: color } }),
+        (cats[e.category] || {}).label || e.category),
+      h('div', { class: 'cp-date' }, fmt.day(e.date)),
+      h('div', { class: 'cp-title' }, e.title),
+      h('div', { class: 'cp-detail' }, e.detail));
+    if (lit) { lit.classList.remove('mc-spotlit'); lit.style.removeProperty('--spot'); }
+    lit = cellByIso[e.date];
+    if (lit) { lit.classList.add('mc-spotlit'); lit.style.setProperty('--spot', color); }
+    si++;
+  };
+  feature();
+  if (upcoming.length > 1) {
+    const timer = setInterval(() => {
+      if (!spot.isConnected) { clearInterval(timer); return; }
+      feature();
+    }, 8000);
+  }
+
+  return h('div', { class: 'pv card' },
+    h('div', { class: 'pv-tag' }, 'LIVE PREVIEW — the calendar widget as Mission Control shows it'),
+    h('div', { class: 'pv-frame cp-frame' },
+      h('div', { class: 'cp-cols' },
+        h('div', null,
+          h('div', { class: 'cp-month' }, `${MONTHS_LONG[m]} ${y}`),
+          gridEl, listEl),
+        spot)));
 }
 
 function evRow(e, cats, rerender) {
