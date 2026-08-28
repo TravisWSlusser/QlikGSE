@@ -1308,10 +1308,11 @@ let CATEGORIES = {
   content:  { label:'Content Drop',     color:'var(--cat-content)' }
 };
 /* ---- shared events source --------------------------------------------------
-   KEY_DATES below is the offline fallback. Live values come from
-   data/events.json, the same file the key-date chips in qlikmt-hero.html read,
-   so the two can never drift. Swap for /api/command/events when Neon lands. */
-const EVENTS_URL = 'assets/calendar/events.json';
+   KEY_DATES below is the offline fallback. Live values come from the Neon
+   events table via /api/command/events — the same feed the key-date chips in
+   qlikmt-hero.html read, so the two can never drift. Edited in the Control
+   Room; if the API is down or the table empty, the fallback below renders. */
+const EVENTS_URL = '/api/command/events';
 (function(){
   fetch(EVENTS_URL, { cache:'no-store' })
     .then(function(r){ return r.ok ? r.json() : null; })

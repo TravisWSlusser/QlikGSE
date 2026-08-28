@@ -504,6 +504,65 @@ database, request timeout — all of them mean "stay online". Only an explicit
 `'on'` read back from a healthy query closes anything, because a switch that
 can close the room by breaking is worse than having no switch.
 
+## The Control Room — `ControlRoom/` + `/api/admin/*` (added 28 Aug 2026)
+
+The manager control app the hero comment always promised. A BRUCE-style SPA
+(hash-routed, `h()` hyperscript, `api/ui/util/charts` + one file per view in
+`js/views/`) served at `/ControlRoom/`, desktop-only, over a fourth API
+namespace: `api/admin.js` → `lib/admin/*`, added to `vercel.json`'s rewrites.
+
+**Access is scoped keys, failing closed.** `ADMIN_KEY` env var (comma-list,
+master, all scopes) plus an `admin_keys` table of minted keys with per-key
+scope arrays — `calendar`, `banners`, `content`, `analytics`, `system`. An SME
+key with only `content` sees the question banks and nothing else; the nav
+filters itself from `whoami`. Keys travel in the `x-admin-key` header, never a
+URL; minted keys are alphanumeric only (the `#`/`+` lessons); the full value is
+shown exactly once at creation and masked forever after. `lib/admin/auth.js`
+is the whole gate — every action calls `requireScope`, the router adds nothing.
+
+**Calendar and banners moved to Neon.** Tables `events` + `event_categories`
+feed `/api/command/events` in exactly the old `events.json` shape (`month`/
+`day` derived server-side, same casing rules); table `banners` feeds
+`/api/command/banners?board=highlights|stellar`. Both hero pages now fetch
+those endpoints; **the hardcoded `KEY_DATES`/`HIGHLIGHTS`/`STELLAR_POSTS`
+literals are offline fallbacks only** — an empty or errored feed leaves them
+rendering, which means an unmigrated database changes nothing on the live
+site. The HIGHLIGHTS build in `qlikmt-hero.html` was refactored into a
+rebuildable `buildHl()` (the calByDate lesson: everything derived from the
+array rebuilds inside it, and the minHeight floor resets on rebuild).
+`assets/calendar/events.json` still exists but is no longer fetched by any
+page — the Control Room is the editor now; do not hand-edit the JSON and
+expect it to show up.
+
+**Write-path rules the endpoints enforce** (so the editor cannot break the
+pages): banner titles/bodies are sanitised on SAVE to the whitelist the
+rotators were designed around (`<span class="ac">`, b/i/em/strong/br — nothing
+else, no attributes); the last active banner on a board cannot be retired (the
+page would silently fall back to stale hardcoded copy); glossary terms are
+unique case-insensitively (checkTerm scores by text); question banks refuse to
+drop below the game's floors (getTerms needs ~30 active terms for its
+distractor pool); every delete anywhere is `active=false`, restorable, never a
+row removal. Banner images upload to **Vercel Blob** (`uploadImage`, base64 in
+JSON, 3MB cap, magic-byte checked — needs `BLOB_READ_WRITE_TOKEN`).
+
+**The dashboard finally reads what logScore always wrote:** the per-stream
+counters (`q_*`/`c_*`/`t_*`) and `score_events`. `lib/admin/analytics.js` is
+one payload — totals, per-territory, stream accuracy, 30-day daily series,
+top-50, recent runs, score distribution. It deliberately does NOT call
+`/api/recroom/trend` (a GET that manufactures snapshot rows every ~55 min —
+polling it from a dashboard would fabricate history). TVO/LND are INCLUDED
+here and flagged, per the exportData precedent.
+
+**Maintenance mode finally has its table and a switch.** `migrate` (system
+scope, idempotent, seeds from the shipped literals only into empty tables)
+creates `app_state` per the runbook; the System view closes/reopens the room.
+The read side still fails open everywhere.
+
+**First-run order matters:** set `ADMIN_KEY` in Vercel → create the Blob store
+→ deploy → open `/ControlRoom/`, sign in with the master key → run Setup. Until
+Setup runs, both public feeds return empty and the pages keep their fallbacks —
+the rollout is zero-risk by construction.
+
 ## Where we left off — 26 Aug 2026
 
 Last session ended here. Everything below is pushed, deployed and verified live

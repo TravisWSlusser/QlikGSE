@@ -440,6 +440,23 @@ if (SECTION === 'hero' || SECTION === '') {
   buildHero();
   sizeStage();
   restart();
+
+  /* Live feed — Control Room content. Replaces STELLAR_POSTS wholesale (the
+     calendar's KEY_DATES contract): a successful non-empty fetch rebuilds the
+     rotator; anything else leaves the hardcoded fallback on stage. buildHero
+     is already a from-scratch rebuild, so it only needs re-invoking, plus a
+     height reset because the new copy may be shorter than the old. */
+  fetch('/api/command/banners?board=stellar', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d || !Array.isArray(d.posts) || !d.posts.length) return;
+      STELLAR_POSTS = d.posts;
+      idx = 0;
+      buildHero();
+      sizeStage();
+      restart();
+    })
+    .catch(function () { /* fallback posts already on stage */ });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeStage).catch(function(){});
   var rt;
   window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(sizeStage, 120); });

@@ -5,12 +5,16 @@ import market from '../lib/command/market.js';
 import news from '../lib/command/news.js';
 import onthisday from '../lib/command/onthisday.js';
 import status from '../lib/command/status.js';
+import events from '../lib/command/events.js';
+import banners from '../lib/command/banners.js';
 
 const HANDLERS = {
   market,
   news,
   onthisday,
-  status
+  status,
+  events,
+  banners
 };
 
 export default async function handler(req, res) {

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control Room — Qlik Sales Enablement</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="app.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%9B%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+
+<!-- ── key gate ─────────────────────────────────────────────────────── -->
+<div id="gate" style="display:none">
+  <div class="gate-card">
+    <div class="gate-mark">CONTROL ROOM</div>
+    <p class="gate-sub">Mission Control &amp; REC Room administration</p>
+    <input id="gate-key" type="password" placeholder="Paste your access key" autocomplete="off" spellcheck="false">
+    <button id="gate-go" class="btn accent">Enter</button>
+    <p id="gate-err" class="gate-err" style="display:none"></p>
+    <p class="gate-note">Keys are scoped — you will only see the areas yours opens.
+    Don't have one? Ask Travis.</p>
+  </div>
+</div>
+
+<!-- ── app shell ────────────────────────────────────────────────────── -->
+<div id="shell" style="display:none">
+  <aside class="side">
+    <div class="side-mark">CONTROL<br>ROOM</div>
+    <nav class="nav" id="nav-list"></nav>
+    <div class="side-foot">
+      <span id="who-label" class="who"></span>
+      <button id="signout" class="btn sm">Sign out</button>
+    </div>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

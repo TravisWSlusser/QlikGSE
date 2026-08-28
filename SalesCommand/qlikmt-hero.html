@@ -1513,10 +1513,10 @@ function isPastEvent(iso){
 
 /* ---- shared events source --------------------------------------------------
    KEY_DATES and CATEGORIES above are the offline fallback. The live values come
-   from data/events.json so the calendar in qlikmt-hero2.html and these chips
-   never drift apart. Swap EVENTS_URL for /api/command/events when the Neon
-   table lands — nothing else here changes. */
-const EVENTS_URL = 'assets/calendar/events.json';
+   from the Neon events table via /api/command/events — same shape the old
+   assets/calendar/events.json carried, edited in the Control Room now. If the
+   API is down or the table is empty the fallback below is what renders. */
+const EVENTS_URL = '/api/command/events';
 (function(){
   fetch(EVENTS_URL, { cache:'no-store' })
     .then(function(r){ return r.ok ? r.json() : null; })
@@ -1700,33 +1700,51 @@ if (SHOW_HL){
 if (SHOW_HL){
   const hlStage = document.getElementById('hlStage');
   const hlDots  = document.getElementById('hlDots');
-  const hlNodes = HIGHLIGHTS.map(function(h,i){
-    const d = document.createElement('div');
-    d.className = 'hl-item' + (i===0 ? ' on' : '');
-    d.innerHTML = '<span class="hl-kicker">'+h.kicker+'</span>'
-      + '<h1 class="hl-title">'+h.title+'</h1>'
-      + (h.date ? '<span class="hl-date">Added '+h.date+'</span>' : '')
-      + '<p class="hl-body">'+h.body+'</p>'
-      + (function(){
-          if(!h.cta) return '';
-          const list = Array.isArray(h.cta) ? h.cta : [h.cta];
-          return '<span class="hl-ctas">' + list.map(function(c){
-            return '<a class="hl-cta" href="'+c.href+'"'
-              + (c.href.indexOf('http')===0 ? ' target="_top"' : '')
-              + '>'+c.label+' &#8599;</a>';
-          }).join('') + '</span>';
-        })();
-    hlStage.appendChild(d);
-    return d;
-  });
-  const hlBtns = HIGHLIGHTS.map(function(h,i){
-    const b = document.createElement('button');
-    b.type='button'; b.className = i===0 ? 'on' : '';
-    b.setAttribute('aria-label','Highlight '+(i+1));
-    b.addEventListener('click', function(){ hlGo(i); hlHold(); });
-    hlDots.appendChild(b);
-    return b;
-  });
+  /* Rebuildable, not build-once: the live feed replaces HIGHLIGHTS after boot
+     (same wholesale-replace contract as the calendar), so everything derived
+     from the array is rebuilt inside buildHl() — the calByDate lesson. */
+  let hlNodes = [], hlBtns = [];
+  function buildHl(){
+    if (hlRo) hlRo.disconnect();
+    clearInterval(hlTimer);
+    hlStage.innerHTML = ''; hlDots.innerHTML = '';
+    /* New content may be shorter than the old — reset the floor, then let
+       sizeHlStage re-grow it for what is actually on stage now. */
+    hlStage.style.minHeight = '';
+    hlNodes = HIGHLIGHTS.map(function(h,i){
+      const d = document.createElement('div');
+      d.className = 'hl-item' + (i===0 ? ' on' : '');
+      d.innerHTML = '<span class="hl-kicker">'+h.kicker+'</span>'
+        + '<h1 class="hl-title">'+h.title+'</h1>'
+        + (h.date ? '<span class="hl-date">Added '+h.date+'</span>' : '')
+        + '<p class="hl-body">'+h.body+'</p>'
+        + (function(){
+            if(!h.cta) return '';
+            const list = Array.isArray(h.cta) ? h.cta : [h.cta];
+            return '<span class="hl-ctas">' + list.map(function(c){
+              return '<a class="hl-cta" href="'+c.href+'"'
+                + (c.href.indexOf('http')===0 ? ' target="_top"' : '')
+                + '>'+c.label+' &#8599;</a>';
+            }).join('') + '</span>';
+          })();
+      hlStage.appendChild(d);
+      return d;
+    });
+    hlBtns = HIGHLIGHTS.map(function(h,i){
+      const b = document.createElement('button');
+      b.type='button'; b.className = i===0 ? 'on' : '';
+      b.setAttribute('aria-label','Highlight '+(i+1));
+      b.addEventListener('click', function(){ hlGo(i); hlHold(); });
+      hlDots.appendChild(b);
+      return b;
+    });
+    if (hlRo) hlNodes.forEach(function(n){ hlRo.observe(n); });
+    sizeHlStage();
+    hlGo(0);
+    requestAnimationFrame(sizeHlStage);
+    if (hlNodes.length > 1){ hlDots.style.display=''; hlHold(); }
+    else { hlDots.style.display='none'; }
+  }
   /* Slides are absolutely stacked for the crossfade, so the stage has no
      natural height. Measure the tallest slide and reserve that much, or a long
      slide's CTA overflows the card and lands on the key-date chips. */
@@ -1747,6 +1765,7 @@ if (SHOW_HL){
   const hlBox = document.getElementById('hl');
   const hlMedia = document.getElementById('hlMedia');
   let hlI = 0, hlTimer = null;
+  const hlRo = window.ResizeObserver ? new ResizeObserver(sizeHlStage) : null;
   function hlGo(n){
     hlI = (n + hlNodes.length) % hlNodes.length;
     hlNodes.forEach(function(el,i){ el.classList.toggle('on', i===hlI); });
@@ -1755,21 +1774,28 @@ if (SHOW_HL){
     hlBox.classList.toggle('has-media', !!img);
     hlMedia.innerHTML = img ? '<img src="'+img+'" alt="">' : '';
   }
-  sizeHlStage();
-  hlGo(0);
   /* Re-measure whenever anything actually reflows: fonts arriving late, the
      responsive breakpoints, or a slide's copy changing. The stage only ever
-     grows, so this settles rather than oscillating. */
+     grows within one content set, so this settles rather than oscillating;
+     buildHl resets the floor when the content itself changes. */
   window.addEventListener('resize', sizeHlStage);
   window.addEventListener('load', sizeHlStage);
-  requestAnimationFrame(sizeHlStage);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeHlStage);
-  if (window.ResizeObserver){
-    const hro = new ResizeObserver(sizeHlStage);
-    hlNodes.forEach(function(n){ hro.observe(n); });
-  }
   function hlHold(){ clearInterval(hlTimer); hlTimer = setInterval(function(){ hlGo(hlI+1); }, HL_MS); }
-  if (hlNodes.length > 1) hlHold(); else hlDots.style.display='none';
+  buildHl();
+
+  /* Live feed — Control Room content. Replaces HIGHLIGHTS wholesale, exactly
+     like the calendar replaces KEY_DATES: a successful non-empty fetch wins,
+     anything else leaves the hardcoded fallback on stage. */
+  fetch('/api/command/banners?board=highlights', { cache:'no-store' })
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(d){
+      if (!d || !Array.isArray(d.posts) || !d.posts.length) return;
+      HIGHLIGHTS.length = 0;
+      d.posts.forEach(function(p){ HIGHLIGHTS.push(p); });
+      buildHl();
+    })
+    .catch(function(){ /* fallback array already on stage */ });
 }
 
 /* HUB TAXONOMY — categorized content hubs. href='#' = placeholder for real MT links. */
