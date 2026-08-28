@@ -10,7 +10,7 @@
    Every card degrades by scope; a card a key can't open doesn't render. */
 import { h, clear, fmt, isPast, esc } from '../util.js';
 import { api } from '../api.js';
-import { spinner, errorState, sectionTitle, chip, emptyState } from '../ui.js';
+import { spinner, errorState, sectionTitle, chip, emptyState, toast, modal, confirmBox, field, textInput } from '../ui.js';
 import { ICONS } from '../icons.js';
 import { wirePop } from '../pop.js';
 
@@ -20,25 +20,33 @@ export function render(params, rerender, who) {
   const scopes = (who && who.scopes) || [];
   const root = h('div', { class: 'view' });
 
-  // ── quick actions: everyday content edits only ──
+  // ── the hotlinks bar — shared quick nav, any key can add to it ──
+  const linkBar = h('div', { class: 'hlk-bar' }, spinner());
+  root.appendChild(linkBar);
+  loadHotlinks(linkBar, rerender);
+
+  // Quick actions live under the calendar now, not in a top row.
   const acts = [];
-  const act = (icon, label, hash) => h('a', { class: 'qa', href: hash },
+  const act = (icon, label, hash) => h('a', { class: 'qa qa-sm', href: hash },
     h('span', { class: 'qa-ic', html: ICONS[icon] || '' }), label);
   if (scopes.includes('calendar')) acts.push(act('calendar', 'New event', '#calendar/new'));
   if (scopes.includes('banners')) acts.push(act('banners', 'New headline', '#banners/highlights/new'));
-  if (acts.length) root.appendChild(h('div', { class: 'qa-row' }, acts));
 
-  const grid = h('div', { class: 'grid2' });
+  // Two columns: calendar (with its actions) left; clock over changes right.
+  const grid = h('div', { class: 'grid2 home-cols' });
   root.appendChild(grid);
 
+  const leftCol = h('div', { class: 'home-col' });
+  const rightCol = h('div', { class: 'home-col' });
+  grid.append(leftCol, rightCol);
+
   const calCard = h('div', { class: 'card' }, spinner());
-  grid.appendChild(calCard);
-  loadCalendar(calCard, scopes);
+  leftCol.appendChild(calCard);
+  loadCalendar(calCard, scopes, acts);
 
-  grid.appendChild(clockCard());
-
+  rightCol.appendChild(clockCard());
   const logCard = h('div', { class: 'card' }, spinner());
-  grid.appendChild(logCard);
+  rightCol.appendChild(logCard);
   loadLog(logCard);
 
   // ── the Stellar-Seller widget — full width under the grid ──
@@ -136,11 +144,48 @@ function clockCard() {
   return card;
 }
 
+/* ── the hotlinks bar ── */
+async function loadHotlinks(bar, rerender) {
+  let d;
+  try { d = await api.hotlinks({ op: 'list' }); }
+  catch { clear(bar); return; } // a broken bar is not worth an error card
+  clear(bar);
+  for (const l of d.links || []) {
+    const pill = h('span', { class: 'hlk' },
+      h('a', { href: l.href, target: '_blank', rel: 'noopener' }, l.label, h('i', null, ' ↗')),
+      h('button', {
+        class: 'hlk-x', 'aria-label': `Remove ${l.label}`, title: 'Remove',
+        onClick: () => confirmBox('Remove this link?', `“${l.label}” disappears from everyone's bar.`, async () => {
+          try { await api.hotlinks({ op: 'delete', id: l.id }); toast('Link removed'); rerender(); }
+          catch (err) { toast(err.message, 'err'); }
+        }, 'Remove it'),
+      }, '✕'));
+    bar.appendChild(pill);
+  }
+  bar.appendChild(h('button', {
+    class: 'hlk-add', onClick: () => {
+      const label = textInput({ maxLength: 30, placeholder: 'Sales Hub' });
+      const href = textInput({ maxLength: 500, placeholder: 'https://…' });
+      modal('Add a hotlink',
+        h('div', { class: 'form' },
+          field('Label', label),
+          field('Link', href, 'Shows on every leader’s Home bar.')),
+        [
+          { label: 'Cancel', onClick: c => c() },
+          { label: 'Add', kind: 'accent', onClick: async c => {
+            try { await api.hotlinks({ op: 'save', label: label.value, href: href.value }); c(); toast('Link added'); rerender(); }
+            catch (err) { toast(err.message, 'err'); }
+          } },
+        ]);
+    },
+  }, '+ Add link'));
+}
+
 /* ── calendar widget rebuild (public feed — every key sees it) ── */
-async function loadCalendar(card, scopes) {
+async function loadCalendar(card, scopes, acts) {
   let d;
   try { d = await api.publicEvents(); }
-  catch (err) { clear(card).appendChild(errorState(err, () => loadCalendar(card, scopes))); return; }
+  catch (err) { clear(card).appendChild(errorState(err, () => loadCalendar(card, scopes, acts))); return; }
   clear(card);
 
   const events = d.events || [];
@@ -197,6 +242,7 @@ async function loadCalendar(card, scopes) {
   }
 
   card.append(sectionTitle('Calendar', h('span', { class: 'sec-sub' }, 'as Mission Control shows it')), head, gridEl, listEl);
+  if (acts && acts.length) card.appendChild(h('div', { class: 'qa-row qa-under' }, acts));
 }
 
 /* ── change feed ── */

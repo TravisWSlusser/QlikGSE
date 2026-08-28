@@ -789,3 +789,31 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
 .pv-h-sub{font-weight:400;font-size:.78rem;color:var(--muted)}
 .pv-h-hint{flex-basis:100%;font-weight:300;font-size:.72rem;color:var(--muted);margin-top:-2px}
 .explain{font-weight:300;font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:10px}
+
+/* ── the hotlinks bar + home two-column layout ── */
+.hlk-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hlk{
+  display:inline-flex;align-items:center;background:var(--card);
+  border:1px solid var(--line);border-radius:99px;overflow:hidden;
+}
+.hlk>a{
+  padding:7px 6px 7px 15px;font-size:.82rem;font-weight:600;color:var(--ink);
+}
+.hlk>a:hover{color:var(--link)}
+.hlk>a i{font-style:normal;color:var(--link);font-size:.72rem}
+.hlk-x{
+  border:0;background:none;color:var(--muted);font-size:.62rem;
+  padding:7px 10px 7px 4px;opacity:0;transition:opacity .15s;
+}
+.hlk:hover .hlk-x{opacity:1}
+.hlk-x:hover{color:var(--danger)}
+.hlk-add{
+  border:1px dashed var(--line);background:none;border-radius:99px;
+  color:var(--muted);font-size:.78rem;font-weight:600;padding:7px 14px;
+}
+.hlk-add:hover{color:var(--link);border-color:var(--link)}
+.home-cols{align-items:start}
+.home-col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.qa-under{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.qa.qa-sm{padding:9px 14px;font-size:.84rem}
+.qa.qa-sm .qa-ic{width:20px;height:20px}
