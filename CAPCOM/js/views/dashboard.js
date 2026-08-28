@@ -41,19 +41,19 @@ async function loadStatus(card) {
   card.appendChild(sectionTitle('Systems', banner,
     h('span', { class: 'sec-sub' }, 'checked ' + new Date(d.checkedAt).toLocaleTimeString())));
 
-  const groups = {};
-  for (const s of d.systems || []) (groups[s.group] = groups[s.group] || []).push(s);
-  const wrap = h('div', { class: 'st-groups' });
-  for (const g of Object.keys(groups)) {
-    wrap.appendChild(h('div', { class: 'st-group' },
-      h('h3', { class: 'ss-h' }, g),
-      groups[g].map(s => h('div', { class: 'st-row', title: s.detail },
-        h('span', { class: 'st-dot ' + s.status }),
-        h('span', { class: 'st-name' }, s.name,
-          h('i', { class: 'st-tag ' + s.status }, ST_LABEL[s.status] || s.status)),
-        h('span', { class: 'st-detail' }, s.detail, s.ms != null ? ` · ${s.ms}ms` : '')))));
+  // One compact strip of pills — dot, name, status tag. The full detail and
+  // latency live in the hover tooltip; anything not-green also prints its
+  // one-line reason underneath so a problem never hides in a tooltip.
+  card.appendChild(h('div', { class: 'st-strip' }, (d.systems || []).map(s =>
+    h('span', { class: 'st-pill', title: `${s.group} · ${s.detail}${s.ms != null ? ` · ${s.ms}ms` : ''}` },
+      h('span', { class: 'st-dot ' + s.status }),
+      s.name,
+      h('i', { class: 'st-tag ' + s.status }, ST_LABEL[s.status] || s.status)))));
+  const issues = (d.systems || []).filter(s => s.status === 'warn' || s.status === 'down');
+  if (issues.length) {
+    card.appendChild(h('div', { class: 'st-issues' }, issues.map(s =>
+      h('p', { class: 'st-issue' }, h('b', null, s.name + ': '), s.detail))));
   }
-  card.appendChild(wrap);
 
   // one refresh cycle per open Dashboard; dies with the view
   setTimeout(() => { if (card.isConnected) loadStatus(card); }, 60_000);

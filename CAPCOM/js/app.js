@@ -22,6 +22,7 @@ import * as maintenance from './views/maintenance.js';
 import * as system from './views/system.js';
 import * as home from './views/home.js';
 import { ICONS } from './icons.js';
+import { mountFx } from './fx.js';
 
 const NAV = [
   { group: '', items: [
@@ -135,6 +136,7 @@ function toggleTheme() {
 }
 
 export function boot() {
+  mountFx();
   $('gate-go').addEventListener('click', () => tryKey($('gate-key').value));
   $('gate-key').addEventListener('keydown', e => { if (e.key === 'Enter') tryKey($('gate-key').value); });
   $('theme-toggle').addEventListener('click', toggleTheme);

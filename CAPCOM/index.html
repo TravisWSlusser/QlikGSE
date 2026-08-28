@@ -17,6 +17,9 @@ try{ document.documentElement.dataset.theme = localStorage.getItem('capcom.theme
 </head>
 <body>
 
+<!-- ambient background: floating pixels + contrail streaks (js/fx.js) -->
+<canvas id="fx" aria-hidden="true"></canvas>
+
 <!-- ── key gate ─────────────────────────────────────────────────────── -->
 <div id="gate" style="display:none">
   <div class="gate-card">

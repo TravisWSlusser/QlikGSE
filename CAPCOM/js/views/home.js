@@ -80,6 +80,7 @@ function tzOffsetMin(tz) {
 }
 
 function clockCard() {
+  const greeting = h('div', { class: 'lk-greet' });
   const localTime = h('div', { class: 'lk-time' });
   const localDate = h('div', { class: 'lk-date' });
   const zones = ZONES.slice().sort((a, b) => tzOffsetMin(b.tz) - tzOffsetMin(a.tz));
@@ -95,12 +96,15 @@ function clockCard() {
   });
   const card = h('div', { class: 'card' },
     sectionTitle('Operations clock'),
-    localTime, localDate,
+    greeting, localTime, localDate,
     h('div', { class: 'clk-grid' }, zoneEls));
 
   const tick = () => {
     if (!card.isConnected) { clearInterval(timer); return; }
     const now = new Date();
+    // Mission Control's greeting rules, verbatim: <12 morning, <18 afternoon.
+    const hr = now.getHours();
+    greeting.textContent = hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening';
     localTime.textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
     localDate.textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
     for (const el of zoneEls) {

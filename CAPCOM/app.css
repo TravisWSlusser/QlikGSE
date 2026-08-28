@@ -69,6 +69,20 @@ body{
   font:15px/1.5 'Inter',system-ui,-apple-system,"Segoe UI",sans-serif;
   -webkit-font-smoothing:antialiased;
 }
+/* Mission Control's ground: the same radial navy wash, top-right hot. */
+html[data-theme="dark"] body, :root:not([data-theme="light"]) body{
+  background:radial-gradient(140% 120% at 88% -10%, #1b4670 0%, #19426C 26%, #11304D 58%, #0B1F33 100%);
+  background-attachment:fixed;
+}
+html[data-theme="light"] body{
+  background:radial-gradient(140% 120% at 88% -10%, #ffffff 0%, #f4f8fc 40%, #eef3f9 100%);
+  background-attachment:fixed;
+}
+/* ambient pixel/streak canvas sits under everything, never catches a click */
+#fx{position:fixed;inset:0;z-index:0;pointer-events:none}
+#gate,#shell,#modal-back,#toast,#viz-tip,#player-pop{position:relative;z-index:1}
+#modal-back,#toast{position:fixed}
+#viz-tip,#player-pop{position:fixed}
 ::selection{background:rgba(0,152,69,.30)}
 a{color:var(--link);text-decoration:none}
 button{font:inherit;cursor:pointer}
@@ -177,14 +191,27 @@ main{flex:1;min-width:0;padding:28px 32px 64px;max-width:1200px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .grid2 .card{margin:0}
 @media (max-width:980px){.grid2{grid-template-columns:1fr}}
-.sec-title{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-/* Stylized titles: Inter caps with wide tracking; subtitles ride beside or
-   under them in Inter regular at a smaller size. */
+/* Stylized titles, the Mission Control way: Inter caps with wide tracking,
+   a hairline divider below, and a short Sky→Green accent segment on it.
+   Subtitles ride beside in Inter regular at a smaller size. */
+.sec-title{
+  display:flex;align-items:center;gap:12px;margin-bottom:14px;
+  padding-bottom:9px;border-bottom:1px solid var(--line);position:relative;
+}
+.sec-title::after{
+  content:"";position:absolute;left:0;bottom:-1px;width:46px;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--link));border-radius:2px;
+}
 .sec-title h2{
   font-size:.9rem;font-weight:800;flex:1;color:var(--heading);
   text-transform:uppercase;letter-spacing:.14em;
 }
 .sec-sub{font-weight:400;font-size:.76rem;color:var(--muted);letter-spacing:0;text-transform:none}
+.ss-h{padding-bottom:6px;border-bottom:1px solid var(--line);position:relative}
+.ss-h::after{
+  content:"";position:absolute;left:0;bottom:-1px;width:28px;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--link));border-radius:2px;
+}
 .sec-extras{display:flex;gap:8px;align-items:center}
 .sub{color:var(--muted);font-size:.84rem;line-height:1.55;margin-bottom:10px}
 .warn-note{
@@ -399,12 +426,16 @@ html[data-theme="dark"] .status-dot.open{color:#5AD68E}
   background:#0B1F33;padding:26px 30px 20px;position:relative;min-height:150px;
   border:0;
 }
-.pv-stage{position:relative;min-height:110px}
+/* The active slide sits IN FLOW so the stage takes its natural height —
+   absolute-stacking all of them squished the frame (the same trap the real
+   page solves by measuring). Inactive slides stack absolutely behind for
+   the crossfade. */
+.pv-stage{position:relative;min-height:80px}
 .pv-item{
   position:absolute;inset:0;opacity:0;transform:translateY(8px);
   transition:opacity .5s ease,transform .5s ease;pointer-events:none;
 }
-.pv-item.on{opacity:1;transform:none;pointer-events:auto}
+.pv-item.on{position:relative;inset:auto;opacity:1;transform:none;pointer-events:auto}
 .pv-kicker{
   display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:500;
   letter-spacing:.2em;text-transform:uppercase;color:#10CFC9;
@@ -422,11 +453,13 @@ html[data-theme="dark"] .status-dot.open{color:#5AD68E}
   font-size:13px;font-weight:600;color:#10CFC9;
   border-bottom:1px solid rgba(16,207,201,.35);padding-bottom:2px;
 }
+/* The image gets a RESERVED column: padding on the slide, not an overlay —
+   it must never sit on top of the copy. */
 .pv-img{
-  position:absolute;right:0;top:50%;transform:translateY(-50%);
-  width:clamp(80px,18%,140px);aspect-ratio:1;border-radius:50%;object-fit:cover;
+  position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:clamp(70px,16%,120px);aspect-ratio:1;border-radius:50%;object-fit:cover;
 }
-.pv-item.has-img .pv-body{max-width:calc(100% - 170px)}
+.pv-item.has-img{padding-right:clamp(90px,20%,150px)}
 .pv-stellar .pv-item{text-align:center}
 .pv-stellar .pv-body{margin-left:auto;margin-right:auto}
 .pv-dots{display:flex;gap:7px;justify-content:center;margin-top:14px;position:relative}
@@ -437,8 +470,15 @@ html[data-theme="dark"] .status-dot.open{color:#5AD68E}
 .pv-dots button.on{background:#10CFC9;transform:scale(1.25)}
 .pv-frame .sub{color:#90A6BD}
 
-/* ── operations clock ── */
-.lk-time{font-size:2.3rem;font-weight:800;line-height:1.05;color:var(--heading);font-variant-numeric:tabular-nums}
+/* ── operations clock — greeting + digital, Mission Control's timecard ── */
+.lk-greet{
+  font-size:13px;font-weight:500;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--link);
+}
+.lk-time{
+  font-size:clamp(34px,3vw,44px);font-weight:600;line-height:1.1;
+  color:var(--heading);font-variant-numeric:tabular-nums;
+}
 .lk-date{color:var(--muted);font-size:.84rem;margin-bottom:16px}
 .clk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .clk{display:flex;gap:10px;align-items:center}
@@ -522,11 +562,18 @@ html[data-theme="dark"] .status-dot.open{color:#5AD68E}
 html[data-theme="light"] .st-banner.ok{color:#006300}
 .st-banner.warn{background:rgba(250,178,25,.15);color:var(--warn)}
 .st-banner.down{background:rgba(208,59,59,.16);color:var(--danger)}
-.st-groups{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-@media (max-width:1100px){.st-groups{grid-template-columns:repeat(2,1fr)}}
-.st-row{display:grid;grid-template-columns:9px 1fr;column-gap:8px;padding:5px 0}
+.st-strip{display:flex;flex-wrap:wrap;gap:8px}
+.st-pill{
+  display:inline-flex;align-items:center;gap:7px;padding:5px 12px;
+  background:var(--card-2);border:1px solid var(--line);border-radius:99px;
+  font-size:.76rem;font-weight:600;cursor:default;
+}
+.st-pill:hover{border-color:var(--focus)}
+.st-issues{margin-top:10px}
+.st-issue{font-size:.78rem;color:var(--warn);line-height:1.5}
+.st-issue b{font-weight:700}
 .st-dot{
-  width:9px;height:9px;border-radius:50%;flex:none;margin-top:5px;
+  width:8px;height:8px;border-radius:50%;flex:none;
   background:var(--muted);
 }
 .st-dot.ok{background:#0ca30c;animation:stpulse 3s ease-in-out infinite}
@@ -547,7 +594,6 @@ html[data-theme="light"] .st-tag.ok{color:#006300}
 .st-tag.warn{color:var(--warn)}
 .st-tag.down{color:var(--danger)}
 .st-tag.off{color:var(--muted)}
-.st-detail{grid-column:2;font-size:.72rem;color:var(--muted);line-height:1.45;min-width:0}
 
 /* ── keys & services ── */
 .sec-list{display:flex;flex-direction:column;gap:10px}
@@ -599,3 +645,13 @@ html[data-theme="light"] .st-tag.ok{color:#006300}
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.err{border-color:var(--danger);color:var(--danger)}
+
+/* ── glass over the gradient — LAST so it wins the cascade ──
+   Panels float on Mission Control's navy wash instead of painting solid
+   ground over it. The banner preview frame stays solid navy on purpose:
+   it is a picture of the page, not part of CAPCOM's chrome. */
+.side{background:rgba(11,31,51,.55);backdrop-filter:blur(8px)}
+html[data-theme="light"] .side{background:rgba(255,255,255,.72)}
+.card,.gate-card{background:rgba(255,255,255,.035);backdrop-filter:blur(6px)}
+html[data-theme="light"] .card,html[data-theme="light"] .gate-card{background:rgba(255,255,255,.78)}
+.pv-frame{background:#0B1F33}
