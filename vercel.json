@@ -21,8 +21,12 @@
       "destination": "/CAPCOM/index.html"
     },
     {
-      "source": "/ControlRoom/:path*",
-      "destination": "/CAPCOM/:path*"
+      "source": "/ControlRoom/",
+      "destination": "/CAPCOM/index.html"
+    },
+    {
+      "source": "/ControlRoom/:path+",
+      "destination": "/CAPCOM/:path+"
     }
   ]
 }
