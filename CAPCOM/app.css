@@ -743,3 +743,23 @@ html[data-theme="light"] .pv-frame .sub{color:#5b7186}
 .cp-frame .mc-head .cp-month{flex:1;text-align:center;margin-bottom:0}
 .cp-more{font-size:.68rem;color:#90A6BD;margin-top:8px;font-style:italic}
 html[data-theme="light"] .cp-more{color:#5b7186}
+
+/* ── hover affordances: anything clickable says so on approach ──
+   Dates with events lift and ring in Sky; event rows slide and ring.
+   Both live at the end of the sheet so they win inside the preview frame's
+   recolored context too. */
+.mc-day{transition:transform .12s ease, box-shadow .12s ease, background .12s ease}
+.mc-day.has:hover{
+  transform:scale(1.12);
+  box-shadow:0 0 0 1px var(--link), 0 4px 14px rgba(0,0,0,.25);
+  z-index:2;position:relative;
+}
+.cp-frame .mc-day.has:hover{box-shadow:0 0 0 1px #10CFC9, 0 4px 14px rgba(0,0,0,.35)}
+html[data-theme="light"] .cp-frame .mc-day.has:hover{box-shadow:0 0 0 1px #006580, 0 4px 14px rgba(18,38,60,.18)}
+.mc-up{transition:transform .12s ease, box-shadow .12s ease}
+.mc-up:hover{
+  transform:translateX(4px);
+  box-shadow:0 0 0 1px var(--link);
+}
+.cp-frame .mc-up:hover{box-shadow:0 0 0 1px #10CFC9}
+html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
