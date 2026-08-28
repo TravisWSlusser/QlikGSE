@@ -101,7 +101,6 @@ function clockCard() {
     h('div', { class: 'clk-grid' }, zoneEls));
 
   const tick = () => {
-    if (!card.isConnected) { clearInterval(timer); return; }
     const now = new Date();
     // Mission Control's greeting rules, verbatim: <12 morning, <18 afternoon.
     const hr = now.getHours();
@@ -125,7 +124,14 @@ function clockCard() {
       el.classList.toggle('night', hh < 7 || hh >= 21);
     }
   };
-  const timer = setInterval(tick, 1000);
+  // First paint runs UNCONDITIONALLY — at build time the card is not yet in
+  // the document, and an isConnected guard here killed the clock at birth
+  // (blank greeting, frozen time). The liveness check belongs only inside
+  // the interval, where "no longer connected" genuinely means "view gone".
+  const timer = setInterval(() => {
+    if (!card.isConnected) { clearInterval(timer); return; }
+    tick();
+  }, 1000);
   tick();
   return card;
 }
