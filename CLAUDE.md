@@ -506,6 +506,12 @@ can close the room by breaking is worse than having no switch.
 
 ## CAPCOM — `CAPCOM/` + `/api/admin/*` (added 28 Aug 2026)
 
+**The name is an acronym, chosen by Travis: Content, Analytics & Players —
+Command Operations Module.** The CAP is the app's own three nav pillars; the
+COM carries the Apollo nod (the Command Module was the capsule Mission
+Control's CAPCOM talked to — and this app is the one voice authorized to
+change what Mission Control says). Keep the expansion intact on the gate.
+
 The manager control app the hero comment always promised. A BRUCE-style SPA
 (hash-routed, `h()` hyperscript, `api/ui/util/charts` + one file per view in
 `js/views/`) served at `/CAPCOM/` (né `/ControlRoom/` — a rewrite keeps the old URL working; localStorage keys renamed `capcom.*`, so anyone who signed in before the rename pastes their key once more), desktop-only, over a fourth API

@@ -822,3 +822,7 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
 .players-table table{font-size:.82rem}
 .players-table th{padding:6px 8px}
 .players-table td{padding:6px 8px;white-space:nowrap}
+
+/* gate: the acronym expansion, in the type system's three tiers */
+.gate-sub{font-weight:400;line-height:1.7}
+.gate-hint{font-weight:300;font-size:.78rem;color:var(--muted);margin:-14px 0 22px}
