@@ -267,7 +267,13 @@
     .perf-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
       font-family: 'Share Tech Mono', monospace; font-size: 0.55rem; color: var(--dim); letter-spacing: 0.12em; text-transform: uppercase; }
 
-    .fx-canvas { position: absolute; left: 0; right: 0; top: 32px; bottom: 0; z-index: 5; pointer-events: none; image-rendering: pixelated; }
+    /* width/height are EXPLICIT because a canvas is a replaced element:
+       left+right / top+bottom do not stretch it the way they stretch a div —
+       it stays at its intrinsic 300×150. territoryPoint() measures this box
+       to place score bursts, so at 300×150 every territory's burst landed in
+       the panel's top-left corner, i.e. visually on NAM, whatever the score's
+       real region. */
+    .fx-canvas { position: absolute; left: 0; right: 0; top: 32px; bottom: 0; width: 100%; height: calc(100% - 32px); z-index: 5; pointer-events: none; image-rendering: pixelated; }
     .map-grid {
       position: absolute; left: 0; right: 0; top: 32px; bottom: 0; z-index: 0; pointer-events: none;
       background-image:
