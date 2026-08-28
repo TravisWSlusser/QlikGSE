@@ -511,6 +511,44 @@ html[data-theme="dark"] .status-dot.open{color:#5AD68E}
 .pp-bar-val{font-size:.72rem;text-align:right;color:var(--ink-2);font-variant-numeric:tabular-nums}
 .pp-foot{font-size:.68rem;color:var(--muted);margin-top:8px}
 
+/* ── systems status board ──
+   Status colors are the reserved status set (never series colors), and no
+   light is color-alone: each carries a text tag and its reason. */
+.view-body>*+*{margin-top:18px}
+.st-banner{
+  font-size:.7rem;font-weight:800;letter-spacing:.14em;padding:3px 12px;border-radius:99px;
+}
+.st-banner.ok{background:rgba(12,163,12,.15);color:#0ca30c}
+html[data-theme="light"] .st-banner.ok{color:#006300}
+.st-banner.warn{background:rgba(250,178,25,.15);color:var(--warn)}
+.st-banner.down{background:rgba(208,59,59,.16);color:var(--danger)}
+.st-groups{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+@media (max-width:1100px){.st-groups{grid-template-columns:repeat(2,1fr)}}
+.st-row{display:grid;grid-template-columns:9px 1fr;column-gap:8px;padding:5px 0}
+.st-dot{
+  width:9px;height:9px;border-radius:50%;flex:none;margin-top:5px;
+  background:var(--muted);
+}
+.st-dot.ok{background:#0ca30c;animation:stpulse 3s ease-in-out infinite}
+.st-dot.warn{background:#fab219;animation:stpulse 1.6s ease-in-out infinite}
+.st-dot.down{background:#d03b3b;animation:stpulse .8s ease-in-out infinite}
+.st-dot.off{background:var(--muted);opacity:.5}
+@keyframes stpulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(128,128,128,0);opacity:1}
+  50%{opacity:.55}
+}
+.st-name{font-size:.82rem;font-weight:600;display:block}
+.st-tag{
+  font-style:normal;font-size:.58rem;font-weight:800;letter-spacing:.1em;
+  margin-left:7px;vertical-align:1px;
+}
+.st-tag.ok{color:#0ca30c}
+html[data-theme="light"] .st-tag.ok{color:#006300}
+.st-tag.warn{color:var(--warn)}
+.st-tag.down{color:var(--danger)}
+.st-tag.off{color:var(--muted)}
+.st-detail{grid-column:2;font-size:.72rem;color:var(--muted);line-height:1.45;min-width:0}
+
 /* ── keys & services ── */
 .sec-list{display:flex;flex-direction:column;gap:10px}
 .sec-row{

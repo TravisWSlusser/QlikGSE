@@ -12,9 +12,51 @@ const STREAMS = [
 ];
 
 export function render(params, rerender) {
-  const root = h('div', { class: 'view' }, spinner());
-  load(root, rerender);
+  const root = h('div', { class: 'view' });
+  const status = h('div', { class: 'card st-card' }, spinner());
+  const body = h('div', { class: 'view-body' }, spinner());
+  root.append(status, body);
+  loadStatus(status);
+  load(body, rerender);
   return root;
+}
+
+/* ── the systems board ──
+   Live probes of everything the apps stand on, redrawn every 60s while the
+   Dashboard is open. Status is never color alone: every light carries its
+   label (OK / SLOW-ish warn text / DOWN / OFF) and its one-line reason. */
+const ST_LABEL = { ok: 'OK', warn: 'CHECK', down: 'DOWN', off: 'OFF' };
+
+async function loadStatus(card) {
+  let d;
+  try { d = await api.systemStatus(); }
+  catch (err) { clear(card).appendChild(errorState(err, () => loadStatus(card))); return; }
+  clear(card);
+
+  const banner = d.overall === 'ok'
+    ? h('span', { class: 'st-banner ok' }, 'ALL SYSTEMS GO')
+    : d.overall === 'warn'
+      ? h('span', { class: 'st-banner warn' }, `${d.counts.warn} TO CHECK`)
+      : h('span', { class: 'st-banner down' }, `${d.counts.down} DOWN`);
+  card.appendChild(sectionTitle('Systems', banner,
+    h('span', { class: 'sec-sub' }, 'checked ' + new Date(d.checkedAt).toLocaleTimeString())));
+
+  const groups = {};
+  for (const s of d.systems || []) (groups[s.group] = groups[s.group] || []).push(s);
+  const wrap = h('div', { class: 'st-groups' });
+  for (const g of Object.keys(groups)) {
+    wrap.appendChild(h('div', { class: 'st-group' },
+      h('h3', { class: 'ss-h' }, g),
+      groups[g].map(s => h('div', { class: 'st-row', title: s.detail },
+        h('span', { class: 'st-dot ' + s.status }),
+        h('span', { class: 'st-name' }, s.name,
+          h('i', { class: 'st-tag ' + s.status }, ST_LABEL[s.status] || s.status)),
+        h('span', { class: 'st-detail' }, s.detail, s.ms != null ? ` · ${s.ms}ms` : '')))));
+  }
+  card.appendChild(wrap);
+
+  // one refresh cycle per open Dashboard; dies with the view
+  setTimeout(() => { if (card.isConnected) loadStatus(card); }, 60_000);
 }
 
 async function load(root, rerender) {

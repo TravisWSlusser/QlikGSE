@@ -57,6 +57,7 @@ export const api = {
   secrets: body => call('secrets', { method: 'POST', body }),
   listLog: () => call('listLog'),
   questionStats: () => call('questionStats'),
+  systemStatus: () => call('systemStatus'),
 
   /* The one non-admin fetch: the public calendar feed, so Home can rebuild
      the widget for every key holder regardless of scope. */
