@@ -92,14 +92,17 @@ function calendarPreview(events, cats) {
 
   const feature = (e, extraCount) => {
     const color = (cats[e.category] || {}).color || '#10CFC9';
-    clear(spot).append(
+    // NB: native append() stringifies null into a literal "null" on the page
+    // (unlike h(), which skips it) — hence the filter. Seen live.
+    clear(spot).append(...[
       h('div', { class: 'cp-eyebrow' }, h('i', { class: 'cp-pulse', style: { background: color } }), 'SPOTLIGHT'),
       h('div', { class: 'cp-cat' }, h('i', { class: 'cp-cdot', style: { background: color } }),
         (cats[e.category] || {}).label || e.category),
       h('div', { class: 'cp-date' }, fmt.day(e.date), isPast(e.date) ? ' — past' : ''),
       h('div', { class: 'cp-title' }, e.title),
       h('div', { class: 'cp-detail' }, e.detail),
-      extraCount ? h('div', { class: 'cp-more' }, `+${extraCount} more this day — click the date again`) : null);
+      extraCount ? h('div', { class: 'cp-more' }, `+${extraCount} more this day — click the date again`) : null,
+    ].filter(Boolean));
     light(e.date);
   };
 
