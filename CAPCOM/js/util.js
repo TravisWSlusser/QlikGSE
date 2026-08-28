@@ -47,6 +47,9 @@ export const fmt = {
     return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   },
   dur: s => { s = Number(s || 0); const m = Math.floor(s / 60); return m ? `${m}m ${s % 60}s` : `${s}s`; },
+  // ISO timestamp → the VIEWER's local time, AM/PM — so the same change
+  // reads as 3:30 PM in Philadelphia and 9:30 PM in Amsterdam.
+  when: iso => iso ? new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '',
 };
 
 /* Past-date check, same parts-based construction as the calendar pages —

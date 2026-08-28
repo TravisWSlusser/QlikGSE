@@ -60,6 +60,7 @@ export const api = {
   systemStatus: () => call('systemStatus'),
   setStaff: (trigram, staff) => call('setStaff', { method: 'POST', body: { trigram, staff } }),
   hotlinks: body => call('hotlinks', { method: 'POST', body }),
+  stickies: body => call('stickies', { method: 'POST', body }),
 
   /* The one non-admin fetch: the public calendar feed, so Home can rebuild
      the widget for every key holder regardless of scope. */

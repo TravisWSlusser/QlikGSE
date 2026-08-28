@@ -56,6 +56,11 @@ export function render(params, rerender, who) {
     loadStellar(ss, scopes);
   }
 
+  // ── the community corkboard — full width, every key holder ──
+  const board = h('div', { class: 'card' }, spinner());
+  root.appendChild(board);
+  loadBoard(board, rerender);
+
   return root;
 }
 
@@ -258,12 +263,107 @@ async function loadLog(card) {
       d.pending ? 'Run Setup under Access & Setup to switch the change feed on.' : 'Edits made from here will show up in this feed.'));
     return;
   }
-  card.appendChild(h('div', { class: 'feed' }, rows.slice(0, 10).map(r =>
+  // Three rows visible, the rest a scroll away inside the frame. Times are
+  // the VIEWER's local clock, AM/PM — fmt.when formats the raw timestamp.
+  card.appendChild(h('div', { class: 'feed feed-scroll' }, rows.map(r =>
     h('div', { class: 'feed-row' },
-      h('span', { class: 'feed-at' }, r.at),
+      h('span', { class: 'feed-at' }, fmt.when(r.created_at)),
       h('div', { class: 'feed-main' },
         h('span', { class: 'feed-summary' }, r.summary),
         h('span', { class: 'feed-actor' }, r.actor, ' · ', r.action))))));
+}
+
+/* ── the community corkboard ──
+   Digital sticky notes anyone with a key can pin: a short face on the
+   board, the longer story on hover. Removals are one click and logged —
+   the change feed is the moderation. */
+let notePopEl = null;
+function notePop() {
+  if (!notePopEl) { notePopEl = h('div', { id: 'note-pop' }); document.body.appendChild(notePopEl); }
+  return notePopEl;
+}
+function hideNotePop() { if (notePopEl) notePopEl.style.display = 'none'; }
+
+async function loadBoard(card, rerender) {
+  let d;
+  try { d = await api.stickies({ op: 'list' }); }
+  catch (err) { clear(card).appendChild(errorState(err, () => loadBoard(card, rerender))); return; }
+  clear(card);
+
+  card.appendChild(sectionTitle('The Corkboard',
+    h('span', { class: 'sec-sub' }, 'community bulletin — hover a note for the whole story'),
+    h('button', {
+      class: 'btn sm accent', onClick: () => {
+        const msg = textInput({ maxLength: 60, placeholder: 'The short version (fits on the note)' });
+        const det = h('textarea', { rows: 4, maxLength: 500, placeholder: 'The whole story — shows when someone hovers' });
+        const colors = ['yellow', 'pink', 'mint', 'blue', 'orange'];
+        let picked = colors[0];
+        const swatches = h('div', { class: 'swatch-row' }, colors.map(c => {
+          const s = h('button', { class: 'swatch sw-' + c + (c === picked ? ' on' : ''), 'aria-label': c, onClick: () => {
+            picked = c;
+            [...swatches.children].forEach(x => x.classList.remove('on'));
+            s.classList.add('on');
+          } });
+          return s;
+        }));
+        modal('Pin a note',
+          h('div', { class: 'form' },
+            field('Note', msg, 'Up to 60 characters — this is what the board shows.'),
+            field('Detail (optional)', det, 'Up to 500 — revealed on hover.'),
+            field('Color', swatches)),
+          [
+            { label: 'Cancel', onClick: c => c() },
+            { label: 'Pin it', kind: 'accent', onClick: async c => {
+              try { await api.stickies({ op: 'save', message: msg.value, detail: det.value, color: picked }); c(); toast('Pinned'); rerender(); }
+              catch (err) { toast(err.message, 'err'); }
+            } },
+          ]);
+      },
+    }, '+ Pin a note')));
+
+  const notes = d.notes || [];
+  if (!notes.length) {
+    card.appendChild(h('div', { class: 'cork' },
+      h('p', { class: 'cork-empty' }, 'Nothing pinned yet. Be the first — jokes, shout-outs, bug sightings, heads-ups.')));
+    return;
+  }
+
+  card.appendChild(h('div', { class: 'cork' }, notes.map(n => {
+    const tilt = ((n.id % 5) - 2) * 1.7;
+    const note = h('div', {
+      class: 'note note-' + (n.color || 'yellow'),
+      style: { transform: `rotate(${tilt}deg)` },
+    },
+      h('i', { class: 'note-pin' }),
+      h('span', { class: 'note-msg' }, n.message),
+      h('span', { class: 'note-by' }, '— ' + (n.author || '?')));
+    note.addEventListener('mouseenter', () => {
+      const e = notePop();
+      clear(e).append(
+        h('div', { class: 'np-msg' }, n.message),
+        n.detail ? h('div', { class: 'np-detail' }, n.detail) : null,
+        h('div', { class: 'np-foot' }, `${n.author || '?'} · ${fmt.when(n.created_at)}`),
+        h('div', { class: 'np-hint' }, 'right-click to take it down'));
+      e.className = 'np-' + (n.color || 'yellow');
+      e.style.display = 'block';
+      const r = note.getBoundingClientRect ? note.getBoundingClientRect() : { left: 100, bottom: 100, top: 80 };
+      const w = e.offsetWidth || 300;
+      let x = Math.min(r.left, window.innerWidth - w - 16);
+      let y = r.bottom + 8;
+      if (y + (e.offsetHeight || 200) > window.innerHeight - 8) y = Math.max(8, r.top - (e.offsetHeight || 200) - 8);
+      e.style.left = x + 'px'; e.style.top = y + 'px';
+    });
+    note.addEventListener('mouseleave', hideNotePop);
+    note.addEventListener('contextmenu', ev => {
+      ev.preventDefault();
+      hideNotePop();
+      confirmBox('Take this note down?', `“${n.message}” comes off everyone's board. The change feed records who did it.`, async () => {
+        try { await api.stickies({ op: 'delete', id: n.id }); toast('Note taken down'); rerender(); }
+        catch (err) { toast(err.message, 'err'); }
+      }, 'Take it down');
+    });
+    return note;
+  })));
 }
 
 /* ── the Stellar-Seller widget ── */

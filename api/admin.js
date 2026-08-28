@@ -33,6 +33,7 @@ import systemStatus from '../lib/admin/systemStatus.js';
 import setStaff from '../lib/admin/setStaff.js';
 import hotlinks from '../lib/admin/hotlinks.js';
 import dedupeTerms from '../lib/admin/dedupeTerms.js';
+import stickies from '../lib/admin/stickies.js';
 
 const HANDLERS = {
   migrate, whoami,
@@ -40,7 +41,7 @@ const HANDLERS = {
   listBanners, saveBanner, deleteBanner,
   listQuestions, saveQuestion, deleteQuestion,
   analytics, maintenance, keys, uploadImage,
-  listLog, questionStats, secrets, systemStatus, setStaff, hotlinks, dedupeTerms,
+  listLog, questionStats, secrets, systemStatus, setStaff, hotlinks, dedupeTerms, stickies,
 };
 
 export default async function handler(req, res) {
