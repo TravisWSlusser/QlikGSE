@@ -13,7 +13,14 @@ export function h(tag, props, ...kids) {
     const v = props[k];
     if (v == null) continue;
     if (k === 'class' || k === 'className') el.className = v;
-    else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
+    else if (k === 'style' && typeof v === 'object') {
+      // Object.assign silently DROPS custom properties ('--evc') — they only
+      // land via setProperty. This is why every category bar rendered grey.
+      for (const sk of Object.keys(v)) {
+        if (sk.startsWith('--')) el.style.setProperty(sk, v[sk]);
+        else el.style[sk] = v[sk];
+      }
+    }
     else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2).toLowerCase(), v);
     else if (k === 'dataset') Object.assign(el.dataset, v);
     else if (k === 'html') el.innerHTML = v; // explicit opt-in, used only for server-sanitised banner previews

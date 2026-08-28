@@ -763,3 +763,9 @@ html[data-theme="light"] .cp-frame .mc-day.has:hover{box-shadow:0 0 0 1px #00658
 }
 .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #10CFC9}
 html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
+
+/* ── category color lives until the date passes; grey means "over" ── */
+.ev-row.past .ev-date{border-left-color:var(--muted)}
+.ev-row.past .ev-cat{color:var(--muted)}
+.ev-row.retired .ev-date{border-left-color:var(--muted)}
+.ev-row.retired .ev-cat{color:var(--muted)}
