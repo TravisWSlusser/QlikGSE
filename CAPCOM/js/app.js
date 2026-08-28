@@ -30,8 +30,8 @@ const NAV = [
   ]},
   { group: 'Mission Control', items: [
     { route: 'calendar', label: 'Calendar', scope: 'calendar', mod: calendar, icon: 'calendar' },
-    { route: 'banners/highlights', label: 'Hero Banners', scope: 'banners', mod: banners, icon: 'banners' },
-    { route: 'banners/stellar', label: 'Stellar-Seller', scope: 'banners', mod: banners, icon: 'stellar' },
+    { route: 'banners/highlights', label: 'Focused Headlines', scope: 'banners', mod: banners, icon: 'banners' },
+    { route: 'banners/stellar', label: 'Action Banner', scope: 'banners', mod: banners, icon: 'stellar' },
   ]},
   { group: 'REC Room', items: [
     { route: 'dashboard', label: 'Dashboard', scope: 'analytics', mod: dashboard, icon: 'dashboard' },

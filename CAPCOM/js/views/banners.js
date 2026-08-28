@@ -15,8 +15,8 @@ import { toast, modal, confirmBox, field, textInput, textArea, spinner, errorSta
    separate Mission Control entries, both landing here with the board as a
    route param. */
 const BOARDS = {
-  highlights: ['Hero Banners', 'The rotating HIGHLIGHTS on the Mission Control homepage — kicker, title, body, links, optional image.'],
-  stellar: ['Stellar-Seller', 'The rotating posts in the Stellar-Seller hero widget. Text only — kicker, title, body.'],
+  highlights: ['Focused Headlines', 'The rotating headlines on the Mission Control homepage — kicker, title, body, links, optional image.'],
+  stellar: ['Action Banner', 'The rotating posts in the Stellar-Seller hero widget. Text only — kicker, title, body.'],
 };
 
 export function render(params, rerender) {

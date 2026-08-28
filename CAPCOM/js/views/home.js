@@ -24,7 +24,7 @@ export function render(params, rerender, who) {
   const act = (icon, label, hash) => h('a', { class: 'qa', href: hash },
     h('span', { class: 'qa-ic', html: ICONS[icon] || '' }), label);
   if (scopes.includes('calendar')) acts.push(act('calendar', 'New event', '#calendar/new'));
-  if (scopes.includes('banners')) acts.push(act('banners', 'New hero post', '#banners/highlights/new'));
+  if (scopes.includes('banners')) acts.push(act('banners', 'New headline', '#banners/highlights/new'));
   if (acts.length) root.appendChild(h('div', { class: 'qa-row' }, acts));
 
   const grid = h('div', { class: 'grid2' });
@@ -229,7 +229,7 @@ async function loadStellar(card, scopes) {
   clear(card);
 
   const links = [];
-  if (canBanners) links.push(h('a', { class: 'btn sm', href: '#banners/stellar/new' }, '+ Stellar post'));
+  if (canBanners) links.push(h('a', { class: 'btn sm', href: '#banners/stellar/new' }, '+ Action banner'));
   if (canContent) links.push(h('a', { class: 'btn sm', href: '#questions/questions/new' }, '+ Question'));
   if (canStats) links.push(h('a', { class: 'btn sm accent', href: '#dashboard' }, 'Full stats'));
   card.appendChild(sectionTitle('Stellar-Seller & the Side-Qlik', ...links));

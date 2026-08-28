@@ -460,8 +460,6 @@ html[data-theme="dark"] .status-dot.open{color:#5AD68E}
   width:clamp(70px,16%,120px);aspect-ratio:1;border-radius:50%;object-fit:cover;
 }
 .pv-item.has-img{padding-right:clamp(90px,20%,150px)}
-.pv-stellar .pv-item{text-align:center}
-.pv-stellar .pv-body{margin-left:auto;margin-right:auto}
 .pv-dots{display:flex;gap:7px;justify-content:center;margin-top:14px;position:relative}
 .pv-dots button{
   width:8px;height:8px;border-radius:50%;border:0;padding:0;cursor:pointer;
