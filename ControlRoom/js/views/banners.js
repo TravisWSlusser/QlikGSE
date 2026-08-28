@@ -11,34 +11,37 @@ import { h, clear, esc } from '../util.js';
 import { api } from '../api.js';
 import { toast, modal, confirmBox, field, textInput, textArea, spinner, errorState, sectionTitle, chip, emptyState } from '../ui.js';
 
-const BOARDS = [
-  ['highlights', 'Mission Control hero', 'The HIGHLIGHTS rotator on the enablement homepage.'],
-  ['stellar', 'Stellar-Seller widget', 'The rotating posts in the Stellar-Seller hero. Text only — kicker, title, body.'],
-];
+/* One board per screen — the nav lists Hero Banners and Stellar-Seller as
+   separate Mission Control entries, both landing here with the board as a
+   route param. */
+const BOARDS = {
+  highlights: ['Hero Banners', 'The rotating HIGHLIGHTS on the Mission Control homepage — kicker, title, body, links, optional image.'],
+  stellar: ['Stellar-Seller', 'The rotating posts in the Stellar-Seller hero widget. Text only — kicker, title, body.'],
+};
 
 export function render(params, rerender) {
+  const board = BOARDS[params && params[0]] ? params[0] : 'highlights';
   const root = h('div', { class: 'view' }, spinner());
-  load(root, rerender);
+  load(root, board, rerender);
   return root;
 }
 
-async function load(root, rerender) {
+async function load(root, board, rerender) {
   let d;
   try { d = await api.listBanners(); }
-  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender))); return; }
+  catch (err) { clear(root).appendChild(errorState(err, () => load(root, board, rerender))); return; }
   clear(root);
 
-  for (const [board, title, sub] of BOARDS) {
-    const rows = (d.banners || []).filter(b => b.board === board);
-    const active = rows.filter(b => b.active);
-    root.appendChild(h('div', { class: 'card' },
-      sectionTitle(title,
-        h('button', { class: 'btn accent', onClick: () => editBanner(null, board, rerender) }, '+ New post')),
-      h('p', { class: 'sub' }, sub, ` ${active.length} live.`),
-      rows.length
-        ? h('div', { class: 'bn-list' }, rows.map((b, i) => bnRow(b, rows, i, rerender)))
-        : emptyState('Nothing here yet.', 'The page is showing its built-in fallback copy until a post goes live.')));
-  }
+  const [title, sub] = BOARDS[board];
+  const rows = (d.banners || []).filter(b => b.board === board);
+  const active = rows.filter(b => b.active);
+  root.appendChild(h('div', { class: 'card' },
+    sectionTitle(title,
+      h('button', { class: 'btn accent', onClick: () => editBanner(null, board, rerender) }, '+ New post')),
+    h('p', { class: 'sub' }, sub, ` ${active.length} live.`),
+    rows.length
+      ? h('div', { class: 'bn-list' }, rows.map((b, i) => bnRow(b, rows, i, rerender)))
+      : emptyState('Nothing here yet.', 'The page is showing its built-in fallback copy until a post goes live.')));
 }
 
 function bnRow(b, rows, i, rerender) {

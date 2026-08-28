@@ -1,10 +1,17 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Control Room — Qlik Sales Enablement</title>
 <meta name="robots" content="noindex">
+<!-- Theme before first paint, or light-mode users get a navy flash -->
+<script>
+try{ document.documentElement.dataset.theme = localStorage.getItem('controlroom.theme') || 'dark'; }catch(e){}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="app.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%9B%3C/text%3E%3C/svg%3E">
 </head>
@@ -13,7 +20,11 @@
 <!-- ── key gate ─────────────────────────────────────────────────────── -->
 <div id="gate" style="display:none">
   <div class="gate-card">
-    <div class="gate-mark">CONTROL ROOM</div>
+    <div class="gate-tm">
+      <img class="tm tm-dark" src="assets/typemark-white.svg" alt="Qlik Sales Enablement">
+      <img class="tm tm-light" src="assets/typemark-color.svg" alt="Qlik Sales Enablement">
+    </div>
+    <div class="gate-mark">Control Room</div>
     <p class="gate-sub">Mission Control &amp; REC Room administration</p>
     <input id="gate-key" type="password" placeholder="Paste your access key" autocomplete="off" spellcheck="false">
     <button id="gate-go" class="btn accent">Enter</button>
@@ -26,10 +37,15 @@
 <!-- ── app shell ────────────────────────────────────────────────────── -->
 <div id="shell" style="display:none">
   <aside class="side">
-    <div class="side-mark">CONTROL<br>ROOM</div>
+    <div class="side-tm">
+      <img class="tm tm-dark" src="assets/typemark-white.svg" alt="Qlik Sales Enablement">
+      <img class="tm tm-light" src="assets/typemark-color.svg" alt="Qlik Sales Enablement">
+    </div>
+    <div class="side-mark">Control Room</div>
     <nav class="nav" id="nav-list"></nav>
     <div class="side-foot">
       <span id="who-label" class="who"></span>
+      <button id="theme-toggle" class="theme-btn" title="Toggle light / dark" aria-label="Toggle light or dark mode">◐</button>
       <button id="signout" class="btn sm">Sign out</button>
     </div>
   </aside>

@@ -1,5 +1,6 @@
-/* system.js — maintenance switch, access keys, and setup. Master/system
-   scope territory: everything on this screen can affect everyone. */
+/* system.js — access keys and setup. (The REC Room maintenance switch has
+   its own view under the REC Room nav group.) Master/system scope
+   territory: everything on this screen can affect everyone. */
 import { h, clear, esc } from '../util.js';
 import { api } from '../api.js';
 import { toast, modal, confirmBox, field, textInput, spinner, errorState, sectionTitle, chip, emptyState } from '../ui.js';
@@ -14,64 +15,10 @@ const SCOPE_DESC = {
 
 export function render(params, rerender) {
   const root = h('div', { class: 'view' });
-  const maint = h('div', { class: 'card' }, spinner());
   const keys = h('div', { class: 'card' }, spinner());
-  root.append(maint, keys, setupCard(rerender));
-  loadMaint(maint, rerender);
+  root.append(keys, setupCard(rerender));
   loadKeys(keys, rerender);
   return root;
-}
-
-/* ── Maintenance ── */
-async function loadMaint(card, rerender) {
-  let m;
-  try { m = await api.maintenanceGet(); }
-  catch (err) { clear(card).appendChild(errorState(err, () => loadMaint(card, rerender))); return; }
-  clear(card);
-
-  card.appendChild(sectionTitle('REC Room maintenance',
-    h('span', { class: 'status-dot ' + (m.on ? 'closed' : 'open') }, m.on ? 'CLOSED' : 'OPEN')));
-
-  if (!m.tableExists) {
-    card.appendChild(h('p', { class: 'warn-note' },
-      '⚠ The app_state table does not exist yet, so the switch is inert (the room fails open). Run setup below first.'));
-    return;
-  }
-
-  card.appendChild(h('p', { class: 'sub' },
-    'Closing shows every player a full-screen BE RIGHT BACK, abandons runs in progress, and rejects score writes with a 503. '
-    + 'Pages poll every 45 seconds, so allow up to a minute each way. It fails open on any error, by design.'));
-
-  const msg = textInput({ value: m.message, placeholder: 'Back by 3pm ET — banking scores and shipping an update.' });
-  const eta = textInput({ value: m.eta, placeholder: 'Back by 3pm ET', class: 'narrow' });
-  card.appendChild(h('div', { class: 'form' },
-    field('Message shown to players', msg),
-    field('ETA line', eta)));
-
-  card.appendChild(h('div', { class: 'btn-row' },
-    m.on
-      ? h('button', {
-          class: 'btn accent', onClick: async () => {
-            try { await api.maintenanceSet({ on: false }); toast('Room reopening — up to a minute to reach everyone'); rerender(); }
-            catch (err) { toast(err.message, 'err'); }
-          },
-        }, 'Reopen the room')
-      : h('button', {
-          class: 'btn danger', onClick: () =>
-            confirmBox('Close the REC Room?', 'Everyone currently playing loses their run. Score writes 503 until you reopen.',
-              async () => {
-                try {
-                  await api.maintenanceSet({ on: true, message: msg.value, eta: eta.value });
-                  toast('Room closing — up to a minute to reach everyone'); rerender();
-                } catch (err) { toast(err.message, 'err'); }
-              }, 'Close it'),
-        }, 'Close the room'),
-    h('button', {
-      class: 'btn', onClick: async () => {
-        try { await api.maintenanceSet({ on: m.on, message: msg.value, eta: eta.value }); toast('Message saved'); }
-        catch (err) { toast(err.message, 'err'); }
-      },
-    }, 'Save message only')));
 }
 
 /* ── Access keys ── */

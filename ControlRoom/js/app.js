@@ -1,6 +1,11 @@
 /* app.js — shell and router, the BRUCE pattern: a NAV table drives the
-   sidebar, draw() switches on the route head and mounts a view. Views export
+   sidebar, draw() switches on the route and mounts a view. Views export
    render(params, rerender) and return a DOM node.
+
+   NAV is grouped BY APP — Mission Control first, then the REC Room — so
+   "where do I change that?" answers itself: it's under the app you saw it
+   on. Both banner boards are Mission Control page widgets, so they live
+   there as two separate entries sharing one view module.
 
    Access: the key gate runs before anything else. whoami() turns a pasted
    key into a scope list; NAV filters to what the key can actually open, so
@@ -13,57 +18,74 @@ import * as players from './views/players.js';
 import * as calendar from './views/calendar.js';
 import * as banners from './views/banners.js';
 import * as questions from './views/questions.js';
+import * as maintenance from './views/maintenance.js';
 import * as system from './views/system.js';
 
 const NAV = [
-  ['dashboard', 'Dashboard', 'analytics', dashboard],
-  ['players', 'Players', 'analytics', players],
-  ['calendar', 'Calendar', 'calendar', calendar],
-  ['banners', 'Banners', 'banners', banners],
-  ['questions', 'Questions', 'content', questions],
-  ['system', 'System', null, system], // shown to all; the card degrades per scope
+  { group: 'Mission Control', items: [
+    { route: 'calendar', label: 'Calendar', scope: 'calendar', mod: calendar },
+    { route: 'banners/highlights', label: 'Hero Banners', scope: 'banners', mod: banners },
+    { route: 'banners/stellar', label: 'Stellar-Seller', scope: 'banners', mod: banners },
+  ]},
+  { group: 'REC Room', items: [
+    { route: 'dashboard', label: 'Dashboard', scope: 'analytics', mod: dashboard },
+    { route: 'players', label: 'Players', scope: 'analytics', mod: players },
+    { route: 'questions', label: 'Questions', scope: 'content', mod: questions },
+    { route: 'maintenance', label: 'Maintenance', scope: 'system', mod: maintenance },
+  ]},
+  { group: 'System', items: [
+    { route: 'system', label: 'Access & Setup', scope: 'system', mod: system },
+  ]},
 ];
 
 let WHO = null; // {label, scopes, master}
 
-function route() {
-  const raw = location.hash.replace(/^#/, '') || '';
-  const parts = raw.split('/').filter(Boolean);
-  return { head: parts[0] || '', params: parts.slice(1) };
-}
+const allItems = () => NAV.flatMap(g => g.items);
+const allowed = it => !!WHO && (!it.scope || WHO.scopes.includes(it.scope));
 
-function allowed(entry) {
-  if (!WHO) return false;
-  const need = entry[2];
-  if (!need) return true;
-  return WHO.scopes.includes(need);
+/* Route → nav item. An exact match wins (banners/stellar); otherwise the
+   first item whose head segment matches (questions/glossary_terms →
+   questions). */
+function findItem(raw, head) {
+  const open = allItems().filter(allowed);
+  return open.find(it => it.route === raw)
+    || open.find(it => it.route.split('/')[0] === head);
 }
 
 function draw() {
-  const { head, params } = route();
+  const raw = location.hash.replace(/^#/, '') || '';
+  const parts = raw.split('/').filter(Boolean);
+  const head = parts[0] || '';
   const main = $('main');
-  const open = NAV.filter(allowed);
+  const open = allItems().filter(allowed);
   if (!open.length) {
     clear(main).appendChild(h('div', { class: 'empty' },
       h('p', null, 'This key opens nothing. Ask for a key with at least one scope.')));
     return;
   }
-  let entry = NAV.find(n => n[0] === head && allowed(n));
-  if (!entry) { location.hash = '#' + open[0][0]; return; }
+  const item = findItem(raw, head);
+  if (!item) { location.hash = '#' + open[0].route; return; }
 
-  // sidebar state
-  document.querySelectorAll('.nav a').forEach(a =>
-    a.classList.toggle('on', a.dataset.route === entry[0]));
+  // sidebar state: exact route on, else head match for param routes the
+  // nav doesn't list (questions tabs)
+  document.querySelectorAll('.nav a').forEach(a => {
+    const r = a.dataset.route;
+    a.classList.toggle('on', r === raw || (r === item.route && item.route.split('/')[0] === head));
+  });
 
-  clear(main).appendChild(entry[3].render(params, draw));
+  clear(main).appendChild(item.mod.render(parts.slice(1), draw));
 }
 
 function buildNav() {
   const nav = $('nav-list');
   clear(nav);
-  NAV.filter(allowed).forEach(([key, label]) => {
-    nav.appendChild(h('a', { href: '#' + key, dataset: { route: key } }, label));
-  });
+  for (const g of NAV) {
+    const items = g.items.filter(allowed);
+    if (!items.length) continue;
+    nav.appendChild(h('div', { class: 'nav-group' }, g.group));
+    items.forEach(it => nav.appendChild(
+      h('a', { href: '#' + it.route, dataset: { route: it.route } }, it.label)));
+  }
 }
 
 function showApp() {
@@ -95,9 +117,20 @@ async function tryKey(key) {
   btn.disabled = false; btn.textContent = 'Enter';
 }
 
+/* Theme: data-theme on <html>, set pre-paint by the inline snippet in
+   index.html; the toggle just flips and persists. Charts follow via CSS
+   custom properties, so nothing re-renders. */
+function toggleTheme() {
+  const el = document.documentElement;
+  const next = el.dataset.theme === 'light' ? 'dark' : 'light';
+  el.dataset.theme = next;
+  try { localStorage.setItem('controlroom.theme', next); } catch {}
+}
+
 export function boot() {
   $('gate-go').addEventListener('click', () => tryKey($('gate-key').value));
   $('gate-key').addEventListener('keydown', e => { if (e.key === 'Enter') tryKey($('gate-key').value); });
+  $('theme-toggle').addEventListener('click', toggleTheme);
   $('signout').addEventListener('click', () => {
     keyStore.clear(); WHO = null;
     toast('Signed out');

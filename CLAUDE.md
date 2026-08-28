@@ -511,6 +511,26 @@ The manager control app the hero comment always promised. A BRUCE-style SPA
 `js/views/`) served at `/ControlRoom/`, desktop-only, over a fourth API
 namespace: `api/admin.js` → `lib/admin/*`, added to `vercel.json`'s rewrites.
 
+**Branded per the Qlik Guidelines (10/01/24 PDF, in Travis's Reference
+Material):** Deep Blue `#19426C` / the Mission Control navy family, Ocean
+`#006580`, Sky `#10CFC9`, Green `#009845` (the SE typemark green — UI accent
+only, never a data mark), Gray `#54565A`, Inter throughout. Light/dark via
+`data-theme` on `<html>` (toggle in the sidebar, persisted as
+`controlroom.theme`, set pre-paint by an inline snippet, dark default = the
+Mission Control look). Every color is a CSS custom property — style against
+the tokens or one theme breaks. The SE typemark SVGs live in
+`ControlRoom/assets/` (white for dark, color for light — CSS swaps them).
+Chart marks are per-theme tokens validated with the dataviz six-checks
+script against their actual surfaces: dark `#0AA49E` on `#11304D`, light
+`#007396` on `#FFFFFF` — plain Sky/Ocean fail those checks, so don't "fix"
+the marks back to brand hexes without re-validating.
+
+**Nav is grouped by app** — Mission Control (Calendar, Hero Banners,
+Stellar-Seller — the two banner boards are separate entries into one
+param-driven view), REC Room (Dashboard, Players, Questions, Maintenance),
+System (Access & Setup). Maintenance sits under REC Room because it closes
+the room; it still requires the `system` scope.
+
 **Access is scoped keys, failing closed.** `ADMIN_KEY` env var (comma-list,
 master, all scopes) plus an `admin_keys` table of minted keys with per-key
 scope arrays — `calendar`, `banners`, `content`, `analytics`, `system`. An SME
