@@ -605,7 +605,11 @@ the read; the Home card ignores rows under 5 answers.
 runtime-editable secrets in `app_secrets`, resolution row → env var → '',
 60s cache per warm lambda. Managed: the two MT session keys, EXPORT_KEY,
 the three news/market API keys, NOTIFY_EMAIL. **Env-only forever (the trust
-root): DATABASE_URL, BLOB_READ_WRITE_TOKEN, ADMIN_KEY, RESEND_API_KEY.**
+root): DATABASE_URL, BLOB_READ_WRITE_TOKEN, ADMIN_KEY, ULTRA_ADMIN_KEY,
+RESEND_API_KEY.** ULTRA_ADMIN_KEY is Travis's break-glass master key —
+checked before and independently of ADMIN_KEY so no rotation can lock him
+out; only he knows the value (deliberately never generated or recorded by
+Claude); its edits are labeled "ultra" in the change feed.
 Consumers (logScore, updateIdentity, exportData, news, market) go through
 `getSecret()`. Changes email NOTIFY_EMAIL via Resend when RESEND_API_KEY is
 set — the mail includes the FULL new value at Travis's request
