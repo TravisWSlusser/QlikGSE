@@ -2,7 +2,7 @@
    dashboard's table view: every number, no charts. */
 import { h, clear, fmt } from '../util.js';
 import { api } from '../api.js';
-import { spinner, errorState, sectionTitle, chip, emptyState } from '../ui.js';
+import { spinner, errorState, sectionTitle, chip, emptyState, toast, confirmBox } from '../ui.js';
 
 const COLS = [
   ['trigram', 'Trigram', r => r.trigram],
@@ -28,21 +28,45 @@ function sortVal(r, key) {
   return r[key];
 }
 
-export function render(params, rerender) {
+export function render(params, rerender, who) {
   const root = h('div', { class: 'view' }, spinner());
-  load(root);
+  load(root, rerender, who);
   return root;
 }
 
-async function load(root) {
+async function load(root, rerender, who) {
   let d;
   try { d = await api.analytics(); }
-  catch (err) { clear(root).appendChild(errorState(err, () => load(root))); return; }
+  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, who))); return; }
   clear(root);
 
   let rows = (d.top || []).slice();
   let sortKey = 'total_score', sortDir = -1;
   const excluded = d.excluded || [];
+  const canTag = !!(who && who.scopes && who.scopes.includes('system'));
+
+  /* Tag or untag a player as staff — staff score privately but vanish from
+     every public board. Tagging asks first; untagging is one click, since it
+     only ever restores someone. */
+  const staffBtn = r => {
+    const isStaff = excluded.includes(r.trigram);
+    return h('button', {
+      class: 'btn xs' + (isStaff ? '' : ' danger'),
+      onClick: () => {
+        const flip = async () => {
+          try {
+            await api.setStaff(r.trigram, !isStaff);
+            toast(isStaff ? `${r.trigram} is back on the public boards` : `${r.trigram} tagged staff — off the boards within a minute`);
+            rerender();
+          } catch (err) { toast(err.message, 'err'); }
+        };
+        if (isStaff) flip();
+        else confirmBox(`Tag ${r.trigram} as staff?`,
+          'They keep scoring and keep their totals, but disappear from every public leaderboard, feed and graph until untagged.',
+          flip, 'Tag as staff');
+      },
+    }, isStaff ? 'Untag' : 'Staff');
+  };
 
   const filterBox = h('input', {
     type: 'search', placeholder: 'Filter by trigram, territory or country…', class: 'filter',
@@ -64,7 +88,7 @@ async function load(root) {
     clear(wrap);
     if (!shown.length) { wrap.appendChild(emptyState('Nobody matches that filter.')); return; }
     wrap.appendChild(h('table', null,
-      h('thead', null, h('tr', null, COLS.map(([key, label]) =>
+      h('thead', null, h('tr', null, [...COLS.map(([key, label]) =>
         h('th', {
           class: 'sortable' + (key === sortKey ? (sortDir < 0 ? ' desc' : ' asc') : ''),
           onClick: () => {
@@ -72,12 +96,14 @@ async function load(root) {
             else { sortKey = key; sortDir = -1; }
             draw();
           },
-        }, label)))),
+        }, label)),
+        canTag ? h('th', null, 'Staff') : null].filter(Boolean))),
       h('tbody', null, shown.map(r => h('tr', excluded.includes(r.trigram) ? { class: 'staff' } : null,
         COLS.map(([key, , get], i) =>
           h('td', { class: (i === 0 ? 'mono' : '') + (i >= 3 && i <= 10 ? ' num' : '') },
             get(r),
-            i === 0 && excluded.includes(r.trigram) ? chip('staff', 'muted') : null)))))));
+            i === 0 && excluded.includes(r.trigram) ? chip('staff', 'muted') : null)),
+        canTag ? h('td', null, staffBtn(r)) : null)))));
   }
   draw();
 }

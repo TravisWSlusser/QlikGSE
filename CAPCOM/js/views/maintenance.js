@@ -28,7 +28,7 @@ async function load(card, rerender) {
     return;
   }
 
-  card.appendChild(h('p', { class: 'sub' },
+  card.appendChild(h('p', { class: 'explain' },
     'Closing shows every player a full-screen BE RIGHT BACK, abandons runs in progress, and rejects score writes with a 503. '
     + 'Pages poll every 45 seconds, so allow up to a minute each way. It fails open on any error, by design.'));
 

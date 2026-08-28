@@ -39,7 +39,9 @@ function previewPanel(active, board) {
   const stage = h('div', { class: 'pv-stage' });
   const dots = h('div', { class: 'pv-dots' });
   const wrap = h('div', { class: 'pv card' },
-    h('div', { class: 'pv-tag' }, 'LIVE PREVIEW — as the page renders it'),
+    h('div', { class: 'pv-head' },
+      h('span', { class: 'pv-h-title' }, 'Live Preview'),
+      h('span', { class: 'pv-h-sub' }, board === 'stellar' ? 'The Action Banner, as the widget renders it' : 'Focused Headlines, as the homepage renders them')),
     h('div', { class: 'pv-frame pv-' + board }, stage, dots));
   if (!active.length) {
     stage.appendChild(h('p', { class: 'sub' }, 'No live posts — the page is showing its built-in fallback copy.'));
@@ -96,7 +98,7 @@ async function load(root, board, rerender, wantNew) {
   root.appendChild(h('div', { class: 'card' },
     sectionTitle(title,
       h('button', { class: 'btn accent', onClick: () => editBanner(null, board, rerender) }, '+ New post')),
-    h('p', { class: 'sub' }, sub, ` ${active.length} live.`),
+    h('p', { class: 'explain' }, sub, ` ${active.length} live.`),
     rows.length
       ? h('div', { class: 'bn-list' }, rows.map((b, i) => bnRow(b, rows, i, rerender)))
       : emptyState('Nothing here yet.', 'The page is showing its built-in fallback copy until a post goes live.')));

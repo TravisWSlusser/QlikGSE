@@ -769,3 +769,23 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
 .ev-row.past .ev-cat{color:var(--muted)}
 .ev-row.retired .ev-date{border-left-color:var(--muted)}
 .ev-row.retired .ev-cat{color:var(--muted)}
+
+/* ── the type system, stated once ──
+   Title    = Inter Bold, larger, caps      (.sec-title h2, .pv-h-title)
+   Subtitle = Inter Regular, smaller        (.sec-sub, .pv-h-sub, .sub)
+   Guidance = Inter Light, below subtitle   (.explain, .pv-h-hint)          */
+.pv-head{
+  display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;
+  padding:12px 16px;border-bottom:1px solid var(--line);position:relative;
+}
+.pv-head::after{
+  content:"";position:absolute;left:16px;bottom:-1px;width:46px;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--link));border-radius:2px;
+}
+.pv-h-title{
+  font-weight:800;font-size:.9rem;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--heading);
+}
+.pv-h-sub{font-weight:400;font-size:.78rem;color:var(--muted)}
+.pv-h-hint{flex-basis:100%;font-weight:300;font-size:.72rem;color:var(--muted);margin-top:-2px}
+.explain{font-weight:300;font-size:.8rem;color:var(--muted);line-height:1.6;margin-bottom:10px}

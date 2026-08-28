@@ -180,7 +180,4 @@ async function load(root, rerender) {
             h('td', null, r.territory),
             h('td', { class: 'num' }, fmt.int(r.points)))))))));
 
-  root.appendChild(h('p', { class: 'gen-note' },
-    `Generated ${new Date(d.generatedAt).toLocaleString()}. Staff trigrams (${(d.excluded || []).join(', ') || 'none'}) `
-    + 'are hidden from the public boards but included here — an admin view that dropped them would misreport every total.'));
 }

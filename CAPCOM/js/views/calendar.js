@@ -176,7 +176,10 @@ function calendarPreview(events, cats) {
   }
 
   return h('div', { class: 'pv card' },
-    h('div', { class: 'pv-tag' }, 'LIVE PREVIEW — the calendar widget as Mission Control shows it. Page months, click a date for its info.'),
+    h('div', { class: 'pv-head' },
+      h('span', { class: 'pv-h-title' }, 'Live Preview'),
+      h('span', { class: 'pv-h-sub' }, 'The calendar, as Mission Control shows it'),
+      h('span', { class: 'pv-h-hint' }, 'Page months · click a date for its details')),
     h('div', { class: 'pv-frame cp-frame' },
       h('div', { class: 'cp-cols' },
         h('div', null, head, gridEl, listEl),

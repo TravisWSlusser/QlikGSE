@@ -42,7 +42,7 @@ async function loadKeys(card, rerender, wantNew) {
 
   card.appendChild(sectionTitle('Access keys',
     h('button', { class: 'btn accent', onClick: () => createKey(d.scopes || [], rerender) }, '+ New key')));
-  card.appendChild(h('p', { class: 'sub' },
+  card.appendChild(h('p', { class: 'explain' },
     'Scoped keys for leaders and SMEs — an SME key with only “content” opens the question banks and nothing else. '
     + 'The master key lives in the Vercel env and is not listed here.'));
 
@@ -127,7 +127,7 @@ async function loadSecrets(card, rerender) {
   clear(card);
 
   card.appendChild(sectionTitle('Keys & Services'));
-  card.appendChild(h('p', { class: 'sub' },
+  card.appendChild(h('p', { class: 'explain' },
     'The service keys the apps run on. Values set here take effect within a minute, no deploy — the Vercel '
     + 'env var stays as the fallback, so clearing a value here falls back to it. Full values are never shown '
     + 'back, only their masked form.'));

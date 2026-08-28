@@ -30,6 +30,7 @@ import listLog from '../lib/admin/listLog.js';
 import questionStats from '../lib/admin/questionStats.js';
 import secrets from '../lib/admin/secrets.js';
 import systemStatus from '../lib/admin/systemStatus.js';
+import setStaff from '../lib/admin/setStaff.js';
 
 const HANDLERS = {
   migrate, whoami,
@@ -37,7 +38,7 @@ const HANDLERS = {
   listBanners, saveBanner, deleteBanner,
   listQuestions, saveQuestion, deleteQuestion,
   analytics, maintenance, keys, uploadImage,
-  listLog, questionStats, secrets, systemStatus,
+  listLog, questionStats, secrets, systemStatus, setStaff,
 };
 
 export default async function handler(req, res) {

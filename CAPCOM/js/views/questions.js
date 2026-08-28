@@ -57,7 +57,7 @@ async function load(body, table, rerender, wantNew) {
     sectionTitle(`${tabMeta[1]} — ${activeN} active of ${rows.length}`,
       filterBox,
       h('button', { class: 'btn accent', onClick: () => edit(null, table, rerender) }, '+ New')),
-    h('p', { class: 'sub' }, tabMeta[2]),
+    h('p', { class: 'explain' }, tabMeta[2]),
     listWrap));
 
   function matches(r, q) {
