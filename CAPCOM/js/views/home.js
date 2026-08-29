@@ -483,17 +483,24 @@ function noteItem(n, reacts, cork, reload) {
     h('i', { class: 'note-pin' }),
     h('span', { class: 'note-msg' }, n.message),
     h('span', { class: 'note-by' }, '— ' + (n.author || '?')),
-    reacts.length ? h('span', { class: 'rx-cluster' },
-      reacts.slice(0, 4).map(r => r.sticker_url
-        ? h('img', { class: 'rx rx-img', src: r.sticker_url, alt: '', title: `${r.name} · ${fmt.when(r.created_at)}` })
-        : h('span', { class: 'rx', title: `${r.name} · ${fmt.when(r.created_at)}` }, r.emoji)),
-      reacts.length > 4 ? h('span', { class: 'rx rx-more' }, '+' + (reacts.length - 4)) : null) : null);
+    reacts.length ? (() => {
+      const cluster = h('span', { class: 'rx-cluster', title: 'Click to manage reactions' },
+        reacts.slice(0, 4).map(r => r.sticker_url
+          ? h('img', { class: 'rx rx-img', src: r.sticker_url, alt: '', title: `${r.name} · ${fmt.when(r.created_at)}` })
+          : h('span', { class: 'rx', title: `${r.name} · ${fmt.when(r.created_at)}` }, r.emoji)),
+        reacts.length > 4 ? h('span', { class: 'rx rx-more' }, '+' + (reacts.length - 4)) : null);
+      // the cluster is its own control — clicking it must not select/drag the note
+      cluster.addEventListener('pointerdown', ev => ev.stopPropagation());
+      cluster.addEventListener('click', ev => { ev.stopPropagation(); hideNotePop(); manageReactionsDialog(n, reacts, reload); });
+      return cluster;
+    })() : null);
   applyXf(el, n);
   makeInteractive(el, n, cork, {
     scalable: false,
     reload,
     onMenu: () => [
       ['React…', () => reactDialog(n, reload), false],
+      ...(reacts.length ? [['Reactions…', () => manageReactionsDialog(n, reacts, reload), false]] : []),
       ['Take it down', () => confirmBox('Take this note down?',
         `“${n.message}” comes off everyone's board. The change feed records who did it.`, async () => {
           try { await api.stickies({ op: 'delete', id: n.id }); toast('Note taken down'); reload(); }
@@ -609,6 +616,57 @@ function stickerDialog(reload) {
         } catch (err) { toast(err.message, 'err'); }
       } },
     ]);
+}
+
+/* ── manage reactions: stacked in order, each ✕-able. A group of the same
+   emoji asks HOW MANY to remove, adjusted with − / + around the number.
+   Removal takes the newest first — the mistaken click is the latest. ── */
+function manageReactionsDialog(n, reacts, reload) {
+  // group by emoji-or-sticker, in order of first appearance
+  const groups = [];
+  const byKey = {};
+  for (const r of reacts) {
+    const k = r.sticker_url || r.emoji;
+    if (!byKey[k]) { byKey[k] = { emoji: r.emoji, sticker_url: r.sticker_url, names: [] }; groups.push(byKey[k]); }
+    byKey[k].names.push(r.name);
+  }
+  let close;
+  const remove = async (g, count) => {
+    try {
+      await api.stickies({ op: 'unreact', sticky_id: n.id, emoji: g.emoji, sticker_url: g.sticker_url, count });
+      close(); toast(count > 1 ? `${count} reactions removed` : 'Reaction removed'); reload();
+    } catch (err) { toast(err.message, 'err'); }
+  };
+  const rows = groups.map(g => {
+    const face = g.sticker_url
+      ? h('img', { class: 'rx-img rxm-face', src: g.sticker_url, alt: '' })
+      : h('span', { class: 'rxm-face' }, g.emoji);
+    const names = h('span', { class: 'rxm-names' },
+      g.names.length > 1 ? `×${g.names.length} — ${g.names.join(', ')}` : g.names[0]);
+    const row = h('div', { class: 'rxm-row' }, face, names);
+    if (g.names.length === 1) {
+      row.appendChild(h('button', { class: 'btn xs danger', 'aria-label': 'Remove', onClick: () => remove(g, 1) }, '✕'));
+    } else {
+      // ✕ swaps the row's tail for the − n + stepper
+      const tail = h('span', { class: 'rxm-tail' },
+        h('button', { class: 'btn xs danger', 'aria-label': 'Remove some', onClick: () => {
+          let k = 1;
+          const num = h('b', { class: 'rxm-n' }, '1');
+          clear(tail).append(
+            h('button', { class: 'btn xs', 'aria-label': 'Fewer', onClick: () => { k = Math.max(1, k - 1); num.textContent = String(k); } }, '−'),
+            num,
+            h('button', { class: 'btn xs', 'aria-label': 'More', onClick: () => { k = Math.min(g.names.length, k + 1); num.textContent = String(k); } }, '+'),
+            h('button', { class: 'btn xs danger', onClick: () => remove(g, k) }, 'Remove'));
+        } }, '✕'));
+      row.appendChild(tail);
+    }
+    return row;
+  });
+  close = modal('Reactions on the note',
+    h('div', { class: 'form' },
+      h('p', { class: 'explain' }, `“${n.message}” — removals take the newest of a kind first.`),
+      h('div', { class: 'rxm-list' }, rows)),
+    [{ label: 'Done', onClick: c => c() }]);
 }
 
 function reactDialog(n, reload) {

@@ -1060,3 +1060,17 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
 /* board economy chrome */
 .bd-fill{font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums}
 .bd-lock{font-size:.7rem}
+
+/* reaction manager */
+.rxm-list{display:flex;flex-direction:column;gap:8px}
+.rxm-row{
+  display:flex;align-items:center;gap:12px;padding:8px 12px;
+  background:var(--card-2);border-radius:10px;
+}
+.rxm-face{font-size:1.3rem;flex:none;width:32px;text-align:center}
+img.rxm-face{width:32px;height:32px;border-radius:50%;object-fit:cover;background:#fff;padding:2px}
+.rxm-names{flex:1;font-size:.84rem;color:var(--ink-2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rxm-tail{display:flex;align-items:center;gap:6px}
+.rxm-n{min-width:22px;text-align:center;font-variant-numeric:tabular-nums}
+.rx-cluster{cursor:pointer}
+.rx-cluster:hover .rx{box-shadow:0 0 0 2px var(--focus), 0 2px 5px rgba(0,0,0,.35)}
