@@ -224,17 +224,34 @@ async function loadBoard(card, rerender) {
 
   const reload = () => loadBoard(card, rerender);
   const boards = d.boards || 5;
+  const unlocked = d.unlocked || 1;
+  const caps = d.caps || { items: 18, stickers: 10, unlockAt: 9 };
+  // The wall is earned: board N+1 opens when board N is half full.
   const go = n => {
-    boardNo = ((n - 1 + boards) % boards) + 1;
+    if (n < 1) n = 1;
+    if (n > unlocked) {
+      toast(`Board ${n} is locked — fill board ${unlocked} to ${caps.unlockAt} items to open it (${d.count || 0}/${caps.unlockAt})`, 'err');
+      return;
+    }
+    boardNo = Math.min(boards, n);
     try { localStorage.setItem('capcom.board', String(boardNo)); } catch {}
     reload();
   };
+  if (boardNo > unlocked) { boardNo = unlocked; } // stored board can outrun a thinned wall
 
+  const nextLocked = unlocked < boards && boardNo === unlocked;
   card.appendChild(sectionTitle('The Corkboard',
+    h('span', { class: 'bd-fill', title: `${d.count || 0} of ${caps.items} items · next board opens at ${caps.unlockAt}` },
+      `${d.count || 0}/${caps.items}`),
     h('span', { class: 'bd-nav' },
-      h('button', { class: 'btn xs', 'aria-label': 'Previous board', onClick: () => go(boardNo - 1) }, '‹'),
+      h('button', { class: 'btn xs', 'aria-label': 'Previous board', disabled: boardNo <= 1 ? 'disabled' : null, onClick: () => go(boardNo - 1) }, '‹'),
       h('span', { class: 'bd-no' }, `${boardNo} / ${boards}`),
-      h('button', { class: 'btn xs', 'aria-label': 'Next board', onClick: () => go(boardNo + 1) }, '›')),
+      h('button', {
+        class: 'btn xs' + (nextLocked ? ' bd-lock' : ''),
+        'aria-label': 'Next board',
+        title: nextLocked ? `Unlocks at ${caps.unlockAt} items on this board` : null,
+        onClick: () => go(boardNo + 1),
+      }, nextLocked ? '🔒' : '›')),
     h('button', { class: 'btn sm', onClick: () => stickerDialog(reload) }, '+ Sticker'),
     h('button', { class: 'btn sm accent', onClick: () => noteDialog(reload) }, '+ Note')));
 
@@ -250,9 +267,15 @@ async function loadBoard(card, rerender) {
     return;
   }
 
-  for (const n of notes) cork.appendChild(n.sticker_url
-    ? stickerItem(n, cork, reload)
-    : noteItem(n, reactsBy[n.id] || [], cork, reload));
+  // Layering: the latest pin sits on top. Rows arrive newest-first, so the
+  // base z-index descends through the list; interaction bumps ride above.
+  notes.forEach((n, i) => {
+    const el = n.sticker_url
+      ? stickerItem(n, cork, reload)
+      : noteItem(n, reactsBy[n.id] || [], cork, reload);
+    el.style.zIndex = String(notes.length - i);
+    cork.appendChild(el);
+  });
 }
 
 /* ── direct manipulation: the touch-wall engine ──

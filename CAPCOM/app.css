@@ -1056,3 +1056,7 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
 .ctx-item:hover{background:var(--card-2)}
 .ctx-item.danger{color:var(--danger)}
 .ctx-item.danger:hover{background:var(--danger-soft)}
+
+/* board economy chrome */
+.bd-fill{font-size:.7rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.bd-lock{font-size:.7rem}
