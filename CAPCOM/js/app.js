@@ -77,6 +77,9 @@ function draw() {
   // open stat card would float over the next view forever. Seen live.
   hidePop();
 
+  // phone: picking a destination closes the drawer
+  document.body.classList.remove('nav-open');
+
   // sidebar state: exact route on, else head match for param routes the
   // nav doesn't list (questions tabs)
   document.querySelectorAll('.nav a').forEach(a => {
@@ -151,6 +154,10 @@ export function boot() {
     showGate();
   });
   window.addEventListener('hashchange', () => { if (WHO) draw(); });
+
+  // phone drawer: burger opens, backdrop (or navigating) closes
+  $('nav-burger').addEventListener('click', () => document.body.classList.toggle('nav-open'));
+  $('nav-back').addEventListener('click', () => document.body.classList.remove('nav-open'));
 
   const stored = keyStore.get();
   if (stored) tryKey(stored); else showGate();

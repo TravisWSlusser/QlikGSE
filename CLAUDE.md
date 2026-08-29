@@ -514,8 +514,21 @@ change what Mission Control says). Keep the expansion intact on the gate.
 
 The manager control app the hero comment always promised. A BRUCE-style SPA
 (hash-routed, `h()` hyperscript, `api/ui/util/charts` + one file per view in
-`js/views/`) served at `/CAPCOM/` (né `/ControlRoom/` — a rewrite keeps the old URL working; localStorage keys renamed `capcom.*`, so anyone who signed in before the rename pastes their key once more), desktop-only, over a fourth API
+`js/views/`) served at `/CAPCOM/` (né `/ControlRoom/` — a rewrite keeps the old URL working; localStorage keys renamed `capcom.*`, so anyone who signed in before the rename pastes their key once more) over a fourth API
 namespace: `api/admin.js` → `lib/admin/*`, added to `vercel.json`'s rewrites.
+
+**Mobile (29 Aug 2026):** no longer desktop-only. Under 880px the
+sidebar becomes an off-canvas drawer behind a fixed topbar burger
+(`.mtop`/`.mback` in index.html; `body.nav-open` toggled in `app.js`,
+cleared by `draw()` so navigating closes the drawer), `main` tightens,
+and the existing grid collapses do the rest — every view fits 375px
+with no horizontal scroll. Touch can't right-click (iOS never fires
+`contextmenu`), so every board item wears a ⋯ chip — created in
+`makeInteractive`, shown only under `@media (pointer:coarse)` — that
+opens the same menu; its pointerdown stops propagation so tapping it
+can't start a hold-drag or complete a yarn tie. Media queries here
+measure the real page (no Mindtickle iframe offsets — CAPCOM is opened
+directly).
 
 **Branded per the Qlik Guidelines (10/01/24 PDF, in Travis's Reference
 Material):** Deep Blue `#19426C` / the Mission Control navy family, Ocean

@@ -173,6 +173,35 @@ html[data-theme="dark"] .nav a.on{color:#5AD68E}
 .theme-btn:hover{color:var(--ink);border-color:var(--focus)}
 
 main{flex:1;min-width:0;padding:28px 36px 64px;max-width:1720px} /* wide-monitor cap only — an ops board earns its width */
+
+/* ── phone chrome: topbar, drawer backdrop, touch menu chip ──
+   All hidden on desktop; the media block at the end of this file turns
+   the sidebar into a drawer and shows these under 880px. */
+.mtop{
+  display:none;position:fixed;top:0;left:0;right:0;z-index:110;height:52px;
+  align-items:center;gap:12px;padding:0 12px;
+  background:var(--card);border-bottom:1px solid var(--line);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+}
+.mtop-btn{
+  width:40px;height:40px;border:1px solid var(--line);border-radius:10px;
+  background:none;color:var(--ink);font-size:1.15rem;line-height:1;cursor:pointer;
+}
+.mtop-mark{
+  font-size:.72rem;font-weight:700;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--muted);
+}
+.mback{display:none;position:fixed;inset:0;z-index:115;background:rgba(4,12,20,.55)}
+/* touch has no right-click: a ⋯ chip on each board item opens the same
+   menu. Shown only for coarse pointers — a mouse keeps the clean look. */
+.itm-menu{
+  display:none;position:absolute;top:-12px;right:-12px;z-index:6;
+  width:26px;height:26px;border-radius:50%;align-items:center;justify-content:center;
+  background:var(--card);border:1px solid var(--line);color:var(--ink);
+  font-size:.95rem;line-height:1;padding:0 0 6px;cursor:pointer;
+  box-shadow:0 2px 6px rgba(0,0,0,.4);
+}
+@media (pointer:coarse){.itm-menu{display:flex}}
 .view>*+*{margin-top:18px}
 
 /* ── buttons ── */
@@ -1076,3 +1105,33 @@ img.rxm-face{width:32px;height:32px;border-radius:50%;object-fit:cover;backgroun
 .rxm-n{min-width:22px;text-align:center;font-variant-numeric:tabular-nums}
 .rx-cluster{cursor:pointer}
 .rx-cluster:hover .rx{box-shadow:0 0 0 2px var(--focus), 0 2px 5px rgba(0,0,0,.35)}
+
+/* ── the phone pass: under 880px the sidebar becomes a drawer behind a
+   topbar burger, layouts are already single-column by the grid rules
+   above, and spacing tightens to fit a hand ── */
+@media (max-width:880px){
+  .mtop{display:flex}
+  body.nav-open .mback{display:block}
+  body.nav-open{overflow:hidden}
+  #shell{display:block}
+  .side{
+    position:fixed;top:0;bottom:0;left:0;z-index:120;
+    width:min(280px,84vw);height:100dvh;
+    transform:translateX(-105%);transition:transform .22s ease;
+    box-shadow:8px 0 30px rgba(0,0,0,.45);
+  }
+  body.nav-open .side{transform:none}
+  main{padding:66px 14px 48px;max-width:none}
+  .tiles,.tiles-5{grid-template-columns:repeat(2,1fr);gap:12px}
+  .gm-grid{grid-template-columns:repeat(2,1fr)}
+  .sec-title{flex-wrap:wrap;row-gap:8px}
+  input[type=search].filter{max-width:none;width:100%}
+  th,td{padding:6px 8px}
+  #note-pop{width:min(320px,92vw)}
+  #modal-back{padding:10px}
+  .modal{max-height:92dvh}
+  .gate-card{padding:28px 18px}
+  /* board items are finger-sized already; give the wall a bit more height
+     so a phone can actually arrange things */
+  .board-card .cork{min-height:300px}
+}

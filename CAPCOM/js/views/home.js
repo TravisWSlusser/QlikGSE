@@ -631,6 +631,19 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
     hideNotePop();
     ctxMenu(ev.clientX, ev.clientY, onMenu());
   });
+
+  // Touch has no right-click (and iOS never fires contextmenu), so every
+  // item wears a small ⋯ chip — CSS shows it only for coarse pointers.
+  // Its pointerdown must not fall through, or tapping the menu would
+  // start a hold-drag (or complete a yarn tie) underneath it.
+  const chip = h('button', { class: 'itm-menu', 'aria-label': 'Item menu' }, '⋯');
+  chip.addEventListener('pointerdown', ev => ev.stopPropagation());
+  chip.addEventListener('click', ev => {
+    ev.stopPropagation();
+    hideNotePop();
+    ctxMenu(ev.clientX, ev.clientY, onMenu());
+  });
+  el.appendChild(chip);
 }
 
 /* ── a bare sticker on the cork ── */

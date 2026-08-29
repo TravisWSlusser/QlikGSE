@@ -41,6 +41,12 @@ try{ document.documentElement.dataset.theme = localStorage.getItem('capcom.theme
 
 <!-- ── app shell ────────────────────────────────────────────────────── -->
 <div id="shell" style="display:none">
+  <!-- phone chrome: topbar + drawer backdrop, shown only under 880px -->
+  <header class="mtop">
+    <button id="nav-burger" class="mtop-btn" aria-label="Open menu">☰</button>
+    <span class="mtop-mark">CAPCOM</span>
+  </header>
+  <div id="nav-back" class="mback" aria-hidden="true"></div>
   <aside class="side">
     <div class="side-tm">
       <img class="tm tm-dark" src="assets/typemark-white.svg" alt="Qlik Sales Enablement">
