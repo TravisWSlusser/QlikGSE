@@ -61,6 +61,7 @@ export const api = {
   setStaff: (trigram, staff) => call('setStaff', { method: 'POST', body: { trigram, staff } }),
   hotlinks: body => call('hotlinks', { method: 'POST', body }),
   stickies: body => call('stickies', { method: 'POST', body }),
+  giphySearch: (q, type) => call('giphySearch', { query: `?q=${encodeURIComponent(q)}&type=${type}` }),
 
   /* The one non-admin fetch: the public calendar feed, so Home can rebuild
      the widget for every key holder regardless of scope. */

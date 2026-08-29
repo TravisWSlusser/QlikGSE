@@ -186,6 +186,56 @@ async function loadHotlinks(bar, rerender) {
   }, '+ Add link'));
 }
 
+/* ── the sticker drawer: search GIPHY, pick, pin ── */
+function stickerDialog(rerender) {
+  const q = textInput({ placeholder: 'Search stickers — “high five”, “deal closed”, “facepalm”…' });
+  const cap = textInput({ maxLength: 60, placeholder: 'Optional caption (shows under the sticker)' });
+  let type = 'stickers';
+  let pickedUrl = '';
+  const grid = h('div', { class: 'gif-grid' },
+    h('p', { class: 'sub' }, 'Search to fill the drawer. Stickers have transparent backs; memes are full GIFs.'));
+  const tabs = h('div', { class: 'gif-tabs' },
+    ['stickers', 'gifs'].map(t => h('button', {
+      class: 'btn xs' + (t === type ? ' accent' : ''),
+      onClick: e => {
+        type = t;
+        [...tabs.children].forEach(x => x.classList.remove('accent'));
+        e.target.classList.add('accent');
+        if (q.value.trim()) run();
+      },
+    }, t === 'stickers' ? 'Stickers' : 'Memes')));
+  async function run() {
+    clear(grid).appendChild(h('p', { class: 'sub' }, 'Searching…'));
+    try {
+      const d = await api.giphySearch(q.value.trim(), type);
+      clear(grid);
+      if (!(d.results || []).length) { grid.appendChild(h('p', { class: 'sub' }, 'Nothing for that — try other words.')); return; }
+      for (const g of d.results) {
+        const cell = h('button', { class: 'gif-cell', title: g.title, onClick: () => {
+          pickedUrl = g.url;
+          [...grid.children].forEach(x => x.classList && x.classList.remove('on'));
+          cell.classList.add('on');
+        } }, h('img', { src: g.preview, alt: g.title, loading: 'lazy' }));
+        grid.appendChild(cell);
+      }
+    } catch (err) { clear(grid).appendChild(h('p', { class: 'sub' }, err.message)); }
+  }
+  q.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+  modal('Pin a sticker',
+    h('div', { class: 'form' },
+      h('div', { class: 'gif-search' }, q, h('button', { class: 'btn', onClick: run }, 'Search'), tabs),
+      grid,
+      field('Caption (optional)', cap)),
+    [
+      { label: 'Cancel', onClick: c => c() },
+      { label: 'Pin it', kind: 'accent', onClick: async c => {
+        if (!pickedUrl) { toast('Pick a sticker first', 'err'); return; }
+        try { await api.stickies({ op: 'save', message: cap.value, sticker_url: pickedUrl }); c(); toast('Pinned'); rerender(); }
+        catch (err) { toast(err.message, 'err'); }
+      } },
+    ]);
+}
+
 /* ── calendar widget rebuild (public feed — every key sees it) ── */
 async function loadCalendar(card, scopes, acts) {
   let d;
@@ -292,10 +342,15 @@ async function loadBoard(card, rerender) {
 
   card.appendChild(sectionTitle('The Corkboard',
     h('span', { class: 'sec-sub' }, 'hover for the story'),
+    h('button', { class: 'btn sm', onClick: () => stickerDialog(rerender) }, '+ Sticker'),
     h('button', {
       class: 'btn sm accent', onClick: () => {
         const msg = textInput({ maxLength: 60, placeholder: 'The short version (fits on the note)' });
         const det = h('textarea', { rows: 4, maxLength: 500, placeholder: 'The whole story — shows when someone hovers' });
+        // one-tap emoji — they also just type in the field, this is the lazy row
+        const emojiRow = h('div', { class: 'emoji-row' },
+          ['🎉', '🔥', '😂', '💚', '👀', '🐛', '🏆', '☕'].map(e =>
+            h('button', { class: 'emoji-btn', onClick: () => { msg.value += e; msg.focus(); } }, e)));
         const colors = ['yellow', 'pink', 'mint', 'blue', 'orange'];
         let picked = colors[0];
         const swatches = h('div', { class: 'swatch-row' }, colors.map(c => {
@@ -308,7 +363,8 @@ async function loadBoard(card, rerender) {
         }));
         modal('Pin a note',
           h('div', { class: 'form' },
-            field('Note', msg, 'Up to 60 characters — this is what the board shows.'),
+            field('Note', msg, 'Up to 60 characters — this is what the board shows. Emoji welcome.'),
+            emojiRow,
             field('Detail (optional)', det, 'Up to 500 — revealed on hover.'),
             field('Color', swatches)),
           [
@@ -319,7 +375,7 @@ async function loadBoard(card, rerender) {
             } },
           ]);
       },
-    }, '+ Pin a note')));
+    }, '+ Note')));
 
   const notes = d.notes || [];
   if (!notes.length) {
@@ -330,20 +386,28 @@ async function loadBoard(card, rerender) {
 
   card.appendChild(h('div', { class: 'cork' }, notes.map(n => {
     const tilt = ((n.id % 5) - 2) * 1.7;
-    const note = h('div', {
-      class: 'note note-' + (n.color || 'yellow'),
-      style: { transform: `rotate(${tilt}deg)` },
-    },
-      h('i', { class: 'note-pin' }),
-      h('span', { class: 'note-msg' }, n.message),
-      h('span', { class: 'note-by' }, '— ' + (n.author || '?')));
+    // A sticker pins straight to the cork — no paper, just the pushpin.
+    const note = n.sticker_url
+      ? h('div', { class: 'stk', style: { transform: `rotate(${tilt}deg)` } },
+          h('i', { class: 'note-pin' }),
+          h('img', { src: n.sticker_url, alt: n.message || 'sticker', loading: 'lazy' }),
+          n.message ? h('span', { class: 'stk-cap' }, n.message) : null)
+      : h('div', {
+          class: 'note note-' + (n.color || 'yellow'),
+          style: { transform: `rotate(${tilt}deg)` },
+        },
+          h('i', { class: 'note-pin' }),
+          h('span', { class: 'note-msg' }, n.message),
+          h('span', { class: 'note-by' }, '— ' + (n.author || '?')));
     note.addEventListener('mouseenter', () => {
       const e = notePop();
-      clear(e).append(
-        h('div', { class: 'np-msg' }, n.message),
+      clear(e).append(...[
+        n.sticker_url ? h('img', { class: 'np-stk', src: n.sticker_url, alt: '' }) : null,
+        n.message ? h('div', { class: 'np-msg' }, n.message) : null,
         n.detail ? h('div', { class: 'np-detail' }, n.detail) : null,
         h('div', { class: 'np-foot' }, `${n.author || '?'} · ${fmt.when(n.created_at)}`),
-        h('div', { class: 'np-hint' }, 'right-click to take it down'));
+        h('div', { class: 'np-hint' }, 'right-click to take it down'),
+      ].filter(Boolean));
       e.className = 'np-' + (n.color || 'yellow');
       e.style.display = 'block';
       const r = note.getBoundingClientRect ? note.getBoundingClientRect() : { left: 100, bottom: 100, top: 80 };

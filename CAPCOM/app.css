@@ -921,3 +921,45 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
 .board-card{display:flex;flex-direction:column;flex:1;min-height:0}
 .board-card .sec-title{flex:none}
 .board-card .cork{flex:1;max-height:none;min-height:220px}
+
+/* ── stickers pinned straight to the cork ── */
+.stk{
+  position:relative;width:130px;padding-top:14px;cursor:default;
+  display:flex;flex-direction:column;align-items:center;
+  transition:transform .15s ease;
+}
+.stk:hover{transform:rotate(0deg) scale(1.1) !important;z-index:3}
+.stk img{
+  max-width:100%;max-height:120px;object-fit:contain;
+  filter:drop-shadow(2px 4px 6px rgba(0,0,0,.45));
+}
+.stk-cap{
+  font-family:'Caveat',cursive;font-weight:600;font-size:1rem;color:#f5efdc;
+  text-shadow:0 1px 3px rgba(0,0,0,.6);margin-top:2px;text-align:center;
+}
+.np-stk{display:block;max-width:100%;max-height:220px;object-fit:contain;margin:0 auto 10px}
+
+/* the sticker drawer */
+.gif-search{display:flex;gap:8px;align-items:center}
+.gif-search input{flex:1}
+.gif-tabs{display:flex;gap:6px}
+.gif-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  max-height:300px;overflow-y:auto;scrollbar-width:thin;
+  background:var(--page);border-radius:10px;padding:10px;min-height:80px;
+}
+.gif-cell{
+  border:2px solid transparent;border-radius:8px;background:var(--card-2);
+  padding:4px;cursor:pointer;
+}
+.gif-cell img{width:100%;height:80px;object-fit:contain;display:block}
+.gif-cell:hover{border-color:var(--line)}
+.gif-cell.on{border-color:var(--accent)}
+
+/* emoji quick row in the note dialog */
+.emoji-row{display:flex;gap:6px;margin-top:-6px}
+.emoji-btn{
+  font-size:1.15rem;background:var(--card-2);border:1px solid var(--line);
+  border-radius:8px;padding:4px 8px;cursor:pointer;
+}
+.emoji-btn:hover{border-color:var(--focus)}

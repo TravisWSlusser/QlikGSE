@@ -34,6 +34,7 @@ import setStaff from '../lib/admin/setStaff.js';
 import hotlinks from '../lib/admin/hotlinks.js';
 import dedupeTerms from '../lib/admin/dedupeTerms.js';
 import stickies from '../lib/admin/stickies.js';
+import giphySearch from '../lib/admin/giphySearch.js';
 
 const HANDLERS = {
   migrate, whoami,
@@ -41,7 +42,7 @@ const HANDLERS = {
   listBanners, saveBanner, deleteBanner,
   listQuestions, saveQuestion, deleteQuestion,
   analytics, maintenance, keys, uploadImage,
-  listLog, questionStats, secrets, systemStatus, setStaff, hotlinks, dedupeTerms, stickies,
+  listLog, questionStats, secrets, systemStatus, setStaff, hotlinks, dedupeTerms, stickies, giphySearch,
 };
 
 export default async function handler(req, res) {
