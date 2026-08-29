@@ -898,3 +898,15 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
 .swatch.on{border-color:var(--focus);transform:scale(1.1)}
 .sw-yellow{background:#fff9a6}.sw-pink{background:#ffd3e0}.sw-mint{background:#c8f7d0}
 .sw-blue{background:#cde6ff}.sw-orange{background:#ffe0b3}
+
+/* ── corkboard, column edition: navy cork, tighter notes, wood frame swaps
+   for a deep-navy one so the whole stack reads as one Qlik surface ── */
+.cork{
+  border:8px solid #0a1826;border-radius:10px;
+  box-shadow:inset 0 3px 16px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06);
+  padding:16px;gap:12px;min-height:120px;max-height:300px;overflow-y:auto;
+  scrollbar-width:thin;
+}
+.note{width:126px;min-height:96px;padding:18px 10px 8px}
+.note-msg{font-size:1.05rem}
+.cork-empty{font-size:1.1rem}

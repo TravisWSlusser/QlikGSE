@@ -44,7 +44,11 @@ export function render(params, rerender, who) {
   leftCol.appendChild(calCard);
   loadCalendar(calCard, scopes, acts);
 
+  // Right column: clock, then the corkboard, then the change feed.
   rightCol.appendChild(clockCard());
+  const board = h('div', { class: 'card' }, spinner());
+  rightCol.appendChild(board);
+  loadBoard(board, rerender);
   const logCard = h('div', { class: 'card' }, spinner());
   rightCol.appendChild(logCard);
   loadLog(logCard);
@@ -55,11 +59,6 @@ export function render(params, rerender, who) {
     root.appendChild(ss);
     loadStellar(ss, scopes);
   }
-
-  // ── the community corkboard — full width, every key holder ──
-  const board = h('div', { class: 'card' }, spinner());
-  root.appendChild(board);
-  loadBoard(board, rerender);
 
   return root;
 }
@@ -291,7 +290,7 @@ async function loadBoard(card, rerender) {
   clear(card);
 
   card.appendChild(sectionTitle('The Corkboard',
-    h('span', { class: 'sec-sub' }, 'community bulletin — hover a note for the whole story'),
+    h('span', { class: 'sec-sub' }, 'hover for the story'),
     h('button', {
       class: 'btn sm accent', onClick: () => {
         const msg = textInput({ maxLength: 60, placeholder: 'The short version (fits on the note)' });
