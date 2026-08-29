@@ -787,3 +787,19 @@ Travis reacts to rendered output. Short corrective feedback means fix it now.
 Surgical edits, never full-file rewrites. Validate before shipping — render or
 screenshot to confirm visual changes, and check JS parses. Give honest tradeoff
 analysis before building. Flag gaps rather than filling them with invention.
+
+## OPEN BUG at handoff — 28 Aug 2026, end of session
+
+**The Corkboard's select-then-keyboard transforms (A/D rotate, −/+ scale)
+work under synthetic events but NOT for Travis's real mouse.** Strongest
+lead, unverified: in `makeInteractive` (CAPCOM/js/views/home.js), the
+`moved` flag sets true on ANY pointermove > 1px before the 300ms hold —
+and a real human click always jiggles a pixel or two, so `settle()` sees
+`moved` and never selects. Synthetic clicks move zero pixels, which is why
+every probe passed. FIX TO TRY FIRST: accumulate real distance from the
+down point and only set `moved` past a ~6px threshold. Also verify the
+hold-timer doesn't lift mid-click for slow clickers (300ms). Selection is
+the gate to everything — if click-to-select fails, keys silently do
+nothing, which matches "not working" exactly. Test with a REAL mouse drag
+via the Chrome extension, not dispatched events — this session's probes
+were fooled twice by that gap.
