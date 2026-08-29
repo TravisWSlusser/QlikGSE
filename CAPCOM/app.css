@@ -858,7 +858,9 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
   box-shadow:2px 4px 8px rgba(0,0,0,.35);
   transition:transform .15s ease, box-shadow .15s ease;
 }
-.note:hover{transform:rotate(0deg) scale(1.06) !important;box-shadow:4px 8px 18px rgba(0,0,0,.45);z-index:3}
+/* hover must never touch transform — rotation/scale are persisted state
+   now, and a hover "straighten" visibly snaps an adjusted item back */
+.note:hover{box-shadow:4px 8px 18px rgba(0,0,0,.45);z-index:3}
 .note-pin{
   position:absolute;top:7px;left:50%;transform:translateX(-50%);
   width:12px;height:12px;border-radius:50%;
@@ -928,7 +930,7 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
   display:flex;flex-direction:column;align-items:center;
   transition:transform .15s ease;
 }
-.stk:hover{transform:rotate(0deg) scale(1.1) !important;z-index:3}
+.stk:hover{z-index:3}
 .stk img{
   max-width:100%;max-height:120px;object-fit:contain;
   filter:drop-shadow(2px 4px 6px rgba(0,0,0,.45));
@@ -971,20 +973,7 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
 /* stickers: bare art, no pin, no paper */
 .stk{padding-top:0;width:120px}
 .stk img{max-height:110px}
-.stk:hover{transform:scale(1.06) !important}
-/* shared transform controls — appear on hover, float above the item */
-.xf-ctls{
-  position:absolute;top:-14px;left:50%;transform:translateX(-50%);
-  display:flex;gap:3px;opacity:0;transition:opacity .15s;z-index:4;
-}
-.note:hover .xf-ctls,.stk:hover .xf-ctls{opacity:1}
-.xf-btn{
-  width:22px;height:22px;border-radius:6px;border:1px solid var(--line);
-  background:var(--card);color:var(--ink);font-size:.72rem;line-height:1;
-  cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.4);
-}
-.xf-btn:hover{border-color:var(--focus);color:var(--link)}
-/* the note keeps its pin; controls sit above it */
+/* the note keeps its pin; the adjust pad floats above it */
 .note{overflow:visible}
 /* reactions stuck to the note's corner */
 .rx-cluster{

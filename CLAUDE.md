@@ -833,9 +833,24 @@ Serve everything `Cache-Control: no-store` and bump a query param to
 force the pane to reload modules — same-URL navigates with a hash are
 fragment jumps that reload nothing.
 
+**Follow-ups, same night:** hover was snapping adjusted items back —
+three layered `:hover{transform:… !important}` rules (the old static
+board's straighten-on-hover) beat the inline transform that now carries
+persisted rotation/scale. Hover rules must never touch `transform`
+again; they keep shadow/z-index only. The dead `.xf-ctls`/old `.xf-btn`
+block went with them (it collided with the pad's `.xf-btn`). And
+clicking anywhere off the pad now **commits** exactly like the ✓
+(document-level capture pointerdown) — Escape is the only revert.
+
 Test-harness notes: the browser pane's `key` action does not map `plus`
 — it arrives as `e.key === ""` (use `=`; read real key values from a
 capture-phase logger before trusting a keyboard probe). Screenshot
 coordinates ran at 1.6× CSS px this session — calibrate with a
 pointermove logger instead of trusting the screenshot image, which can
-render stale or offset.
+render stale or offset. And in a hidden pane the compositor freezes CSS
+transitions: `getComputedStyle` can read a transition's START value
+indefinitely while the inline style holds the target and
+`getAnimations()` shows the transition still alive — a computed
+transform that disagrees with the inline style is a frozen transition,
+not a stomping rule, when no `!important` rule exists. Probe twice
+(hover out and back) before believing it.

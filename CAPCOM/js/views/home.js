@@ -287,10 +287,10 @@ async function loadBoard(card, rerender) {
    right-click              menu: react (notes) / scale (stickers) / rotate
                             / take down — Scale and Rotate open a small
                             button pad on screen: − + or ‹ › nudge the
-                            item live, ✓ confirms
+                            item live; ✓ or any click off the pad confirms
 
    One transform write per gesture — drags save on release, the pad saves
-   on ✓ (and only if something changed); an unconfirmed pad reverts. */
+   on confirm (and only if something changed); Escape reverts. */
 
 let zTop = 10; // interacted items float; not persisted, recency is enough
 
@@ -338,9 +338,9 @@ function ctxMenu(x, y, entries) {
 /* The adjust pad — how rotate and scale happen now. Right-click an item,
    pick Rotate or Scale, and a small pad of real buttons appears by it:
    ‹ › spin 5° per press, − + resize 5% per press (stickers only), ✓
-   confirms. Nothing is written until the ✓ — Escape, opening another
-   pad, or dragging the item reverts the preview instead. No readouts on
-   purpose: eyes stay on the item, not on a number. */
+   confirms — and so does clicking anywhere off the pad, so the change
+   people made is the change they keep. Escape is the one way out that
+   reverts. No readouts on purpose: eyes stay on the item. */
 let xfEl = null, xfState = null; // { el, n, undo: { rotation, scale } }
 function hideXfPad(commit) {
   if (xfEl) xfEl.style.display = 'none';
@@ -364,6 +364,11 @@ function xfPad(mode, el, n) {
     document.addEventListener('keydown', ev => {
       if (ev.key === 'Escape' && xfState) { ev.preventDefault(); hideXfPad(false); }
     });
+    // clicking anywhere off the pad confirms, exactly like the ✓ —
+    // capture phase, so it lands before whatever the click was for
+    document.addEventListener('pointerdown', ev => {
+      if (xfState && !xfEl.contains(ev.target)) hideXfPad(true);
+    }, true);
   }
   xfState = { el, n, undo: { rotation: n.rotation || 0, scale: n.scale || 1 } };
   const nudge = fn => { fn(); applyXf(el, n); };
@@ -401,7 +406,7 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
   const lift = () => {
     dragging = true;
     hideNotePop();
-    hideXfPad(false);                                  // dragging abandons an open pad
+    hideXfPad(false);                                  // safety only — the pointerdown that started this hold already committed any open pad
     el.classList.add('lifted');
     el.style.zIndex = ++zTop;
     // an eager hand may have flown to the target before the lift landed —
