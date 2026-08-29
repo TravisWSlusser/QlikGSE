@@ -336,9 +336,38 @@ function ctxMenu(x, y, entries) {
   ctxEl.style.top = Math.min(y, window.innerHeight - entries.length * 40 - 12) + 'px';
 }
 
-let selected = null;
+/* Selection carries the item's data so the keyboard can steer it:
+   A / D rotate 5° per press, − / + scale 5% per press (stickers only),
+   Escape lets go. One debounced save per burst of keys. */
+let selected = null; // { el, n, scalable }
+let keySaveTimer = null;
 function deselect() {
-  if (selected) { selected.classList.remove('sel'); selected = null; }
+  if (selected) { selected.el.classList.remove('sel'); selected = null; }
+}
+let keysInstalled = false;
+function installKeys() {
+  if (keysInstalled) return;
+  keysInstalled = true;
+  document.addEventListener('keydown', ev => {
+    if (!selected) return;
+    // never steal keys from a form field
+    const t = document.activeElement;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
+    const { el, n, scalable } = selected;
+    let handled = true;
+    const k = ev.key;
+    if (k === 'a' || k === 'A') n.rotation = Math.max(-180, (n.rotation || 0) - 5);
+    else if (k === 'd' || k === 'D') n.rotation = Math.min(180, (n.rotation || 0) + 5);
+    else if ((k === '+' || k === '=') && scalable) n.scale = Math.min(2, Math.round(((n.scale || 1) + 0.05) * 100) / 100);
+    else if ((k === '-' || k === '_') && scalable) n.scale = Math.max(0.5, Math.round(((n.scale || 1) - 0.05) * 100) / 100);
+    else if (k === 'Escape') { deselect(); return; }
+    else handled = false;
+    if (!handled) return;
+    ev.preventDefault();
+    applyXf(el, n);
+    clearTimeout(keySaveTimer);
+    keySaveTimer = setTimeout(() => saveXf(n), 600);
+  });
 }
 
 /* wire the full gesture set onto an item */
@@ -377,74 +406,25 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
     applyXf(el, n);
   });
   const settle = ev => {
-    // a handle's gesture must never toggle selection on its way out
-    if (ev.target && ev.target.closest && ev.target.closest('.handle')) return;
     clearTimeout(hold);
     if (dragging) {
       dragging = false;
       el.classList.remove('lifted');
       saveXf(n);                                       // release = confirm
     } else if (!moved && ev.type === 'pointerup') {
-      // plain click: select / toggle
-      if (selected === el) deselect();
-      else { deselect(); selected = el; el.classList.add('sel'); el.style.zIndex = ++zTop; }
+      // plain click: select / toggle — the keyboard steers the selection
+      if (selected && selected.el === el) deselect();
+      else {
+        deselect();
+        selected = { el, n, scalable };
+        el.classList.add('sel');
+        el.style.zIndex = ++zTop;
+        installKeys();
+      }
     }
   };
   el.addEventListener('pointerup', settle);
   el.addEventListener('pointercancel', settle);
-
-  /* Handle gestures listen on the DOCUMENT for the drag's duration — the
-     original element-capture version silently dropped every move (and its
-     bubbled pointerup deselected the item as a parting gift). Document
-     listeners survive the pointer leaving the tiny handle, which it does
-     within the first frame of any real drag. */
-  const handleDrag = (handleEl, onStart, onMove) => {
-    handleEl.addEventListener('pointerdown', ev => {
-      ev.preventDefault(); ev.stopPropagation();
-      try { handleEl.setPointerCapture(ev.pointerId); } catch { /* synthetic or stale pointer */ }
-      const ctx = onStart(ev);
-      const mv = e2 => { onMove(ctx, e2); };
-      const up = () => {
-        document.removeEventListener('pointermove', mv, true);
-        document.removeEventListener('pointerup', up, true);
-        saveXf(n);
-      };
-      document.addEventListener('pointermove', mv, true);
-      document.addEventListener('pointerup', up, true);
-    });
-  };
-
-  // ── rotate handle: a lollipop above the item; drag orbits the center ──
-  const rot = h('span', { class: 'handle h-rot', title: 'Drag to rotate' }, '⟳');
-  el.appendChild(rot);
-  handleDrag(rot,
-    ev => {
-      const r = el.getBoundingClientRect();
-      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      return { cx, cy, startPtr: Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI, startRot: n.rotation || 0 };
-    },
-    (c, e2) => {
-      const a = Math.atan2(e2.clientY - c.cy, e2.clientX - c.cx) * 180 / Math.PI;
-      n.rotation = Math.max(-180, Math.min(180, Math.round(c.startRot + (a - c.startPtr))));
-      applyXf(el, n);
-    });
-
-  // ── scale handle: the corner of the bounding box (stickers only) ──
-  if (scalable) {
-    const cornerEl = h('span', { class: 'handle h-scale', title: 'Drag to resize' });
-    el.appendChild(cornerEl);
-    handleDrag(cornerEl,
-      ev => {
-        const r = el.getBoundingClientRect();
-        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-        return { cx, cy, d0: Math.hypot(ev.clientX - cx, ev.clientY - cy) || 1, s0: n.scale || 1 };
-      },
-      (c, e2) => {
-        const d = Math.hypot(e2.clientX - c.cx, e2.clientY - c.cy);
-        n.scale = Math.max(0.5, Math.min(2, c.s0 * (d / c.d0)));
-        applyXf(el, n);
-      });
-  }
 
   el.addEventListener('contextmenu', ev => {
     ev.preventDefault();
@@ -473,7 +453,7 @@ function stickerItem(n, cork, reload) {
   el.addEventListener('mouseenter', () => {
     if (el.classList.contains('lifted')) return;
     const e = notePop();
-    clear(e).append(h('div', { class: 'np-who' }, `${n.poster_name || '?'} · ${fmt.when(n.created_at)}`));
+    clear(e).append(h('div', { class: 'np-who' }, `${n.poster_name || '?'} · ${fmt.when(n.created_at)}`), h('div', { class: 'np-hint' }, 'hold to move · click then A/D rotate, −/+ size'));
     e.className = 'np-mini';
     placePop(e, el);
   });
@@ -524,7 +504,7 @@ function noteItem(n, reacts, cork, reload) {
           ? h('img', { class: 'rx-img', src: r.sticker_url, alt: '' })
           : h('b', null, r.emoji), ` ${r.name}`))) : null,
       h('div', { class: 'np-foot' }, `${n.author || '?'} · ${fmt.when(n.created_at)}`),
-      h('div', { class: 'np-hint' }, 'hold to move · click for handles · right-click for menu'),
+      h('div', { class: 'np-hint' }, 'hold to move · click then A/D rotate, −/+ size · right-click menu'),
     ].filter(Boolean));
     e.className = 'np-' + (n.color || 'yellow');
     placePop(e, el);
