@@ -217,6 +217,7 @@ function placePop(e, anchor) {
 }
 
 async function loadBoard(card, rerender) {
+  hideXfPad(false); // a re-render orphans the pad's anchor; drop any preview
   let d;
   try { d = await api.stickies({ op: 'list', board: boardNo }); }
   catch (err) { clear(card).appendChild(errorState(err, () => loadBoard(card, rerender))); return; }
@@ -260,7 +261,6 @@ async function loadBoard(card, rerender) {
   for (const r of d.reactions || []) (reactsBy[r.sticky_id] = reactsBy[r.sticky_id] || []).push(r);
 
   const cork = h('div', { class: 'cork cork-free' });
-  cork.addEventListener('pointerdown', ev => { if (ev.target === cork) deselect(); });
   card.appendChild(cork);
   if (!notes.length) {
     cork.appendChild(h('p', { class: 'cork-empty' }, `Board ${boardNo} is bare. Pin something.`));
@@ -284,14 +284,13 @@ async function loadBoard(card, rerender) {
    like a touch screen:
 
    press-and-hold (~300ms)  lift the item, drag anywhere, release to place
-   single click             select — bounding box, rotate handle, ✕
-   drag the ◰ corner        resize (stickers only, 0.5x–2x, from center)
-   drag the ⟳ lollipop      rotate around the center
-   right-click              menu: react (notes) / take down
-   click the cork           deselect
+   right-click              menu: react (notes) / scale (stickers) / rotate
+                            / take down — Scale and Rotate open a small
+                            button pad on screen: − + or ‹ › nudge the
+                            item live, ✓ confirms
 
-   One transform write per gesture, on release — the motion itself is
-   local and 60fps. */
+   One transform write per gesture — drags save on release, the pad saves
+   on ✓ (and only if something changed); an unconfirmed pad reverts. */
 
 let zTop = 10; // interacted items float; not persisted, recency is enough
 
@@ -336,61 +335,86 @@ function ctxMenu(x, y, entries) {
   ctxEl.style.top = Math.min(y, window.innerHeight - entries.length * 40 - 12) + 'px';
 }
 
-/* Selection carries the item's data so the keyboard can steer it:
-   A / D rotate 5° per press, − / + scale 5% per press (stickers only),
-   Escape lets go. One debounced save per burst of keys. */
-let selected = null; // { el, n, scalable }
-let keySaveTimer = null;
-function deselect() {
-  if (selected) { selected.el.classList.remove('sel'); selected = null; }
+/* The adjust pad — how rotate and scale happen now. Right-click an item,
+   pick Rotate or Scale, and a small pad of real buttons appears by it:
+   ‹ › spin 5° per press, − + resize 5% per press (stickers only), ✓
+   confirms. Nothing is written until the ✓ — Escape, opening another
+   pad, or dragging the item reverts the preview instead. No readouts on
+   purpose: eyes stay on the item, not on a number. */
+let xfEl = null, xfState = null; // { el, n, undo: { rotation, scale } }
+function hideXfPad(commit) {
+  if (xfEl) xfEl.style.display = 'none';
+  const s = xfState;
+  xfState = null;
+  if (!s) return;
+  if (commit) {
+    if ((s.n.rotation || 0) !== s.undo.rotation || (s.n.scale || 1) !== s.undo.scale) saveXf(s.n);
+  } else {
+    s.n.rotation = s.undo.rotation;
+    s.n.scale = s.undo.scale;
+    applyXf(s.el, s.n);
+  }
 }
-let keysInstalled = false;
-function installKeys() {
-  if (keysInstalled) return;
-  keysInstalled = true;
-  document.addEventListener('keydown', ev => {
-    if (!selected) return;
-    // never steal keys from a form field
-    const t = document.activeElement;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
-    const { el, n, scalable } = selected;
-    let handled = true;
-    const k = ev.key;
-    if (k === 'a' || k === 'A') n.rotation = Math.max(-180, (n.rotation || 0) - 5);
-    else if (k === 'd' || k === 'D') n.rotation = Math.min(180, (n.rotation || 0) + 5);
-    else if ((k === '+' || k === '=') && scalable) n.scale = Math.min(2, Math.round(((n.scale || 1) + 0.05) * 100) / 100);
-    else if ((k === '-' || k === '_') && scalable) n.scale = Math.max(0.5, Math.round(((n.scale || 1) - 0.05) * 100) / 100);
-    else if (k === 'Escape') { deselect(); return; }
-    else handled = false;
-    if (!handled) return;
-    ev.preventDefault();
-    applyXf(el, n);
-    clearTimeout(keySaveTimer);
-    keySaveTimer = setTimeout(() => saveXf(n), 600);
-  });
+function xfPad(mode, el, n) {
+  hideXfPad(false);                 // one pad at a time; the old preview reverts
+  hideNotePop();
+  if (!xfEl) {
+    xfEl = h('div', { id: 'xf-pad' });
+    document.body.appendChild(xfEl);
+    document.addEventListener('keydown', ev => {
+      if (ev.key === 'Escape' && xfState) { ev.preventDefault(); hideXfPad(false); }
+    });
+  }
+  xfState = { el, n, undo: { rotation: n.rotation || 0, scale: n.scale || 1 } };
+  const nudge = fn => { fn(); applyXf(el, n); };
+  const btn = (label, cls, fn) =>
+    h('button', { class: 'xf-btn' + (cls ? ' ' + cls : ''), onClick: fn }, label);
+  clear(xfEl).append(
+    ...(mode === 'scale'
+      ? [btn('−', '', () => nudge(() => { n.scale = Math.max(0.5, Math.round(((n.scale || 1) - 0.05) * 100) / 100); })),
+         btn('+', '', () => nudge(() => { n.scale = Math.min(2, Math.round(((n.scale || 1) + 0.05) * 100) / 100); }))]
+      : [btn('‹', '', () => nudge(() => { n.rotation = Math.max(-180, (n.rotation || 0) - 5); })),
+         btn('›', '', () => nudge(() => { n.rotation = Math.min(180, (n.rotation || 0) + 5); }))]),
+    btn('✓', 'ok', () => hideXfPad(true)));
+  el.style.zIndex = ++zTop;         // the item being adjusted floats
+  xfEl.style.display = 'flex';
+  const r = el.getBoundingClientRect();
+  const cx = Math.max(70, Math.min(window.innerWidth - 70, r.left + r.width / 2));
+  const above = r.top - 56;
+  xfEl.style.left = cx + 'px';
+  xfEl.style.top = (above > 8 ? above : r.bottom + 12) + 'px';
 }
 
 /* wire the full gesture set onto an item */
 function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
   el.style.touchAction = 'none';
-  const SLOP = 6; // px of travel from the press point before a press stops being a click
-  let hold = null, dragging = false, moved = false, dragMoved = false;
-  let grabDX = 0, grabDY = 0, downX = 0, downY = 0;
+  const SLOP = 6; // px of travel from the press point before a press becomes a drag
+  let hold = null, dragging = false, dragMoved = false;
+  let grabDX = 0, grabDY = 0, downX = 0, downY = 0, lastX = 0, lastY = 0;
 
+  const place = (cx, cy) => {
+    const cr = cork.getBoundingClientRect();
+    n.pos_x = Math.max(0, Math.min(92, ((cx - grabDX - cr.left) / cr.width) * 100 - 4));
+    n.pos_y = Math.max(0, Math.min(88, ((cy - grabDY - cr.top) / cr.height) * 100 - 4));
+    applyXf(el, n);
+  };
   const lift = () => {
     dragging = true;
     hideNotePop();
+    hideXfPad(false);                                  // dragging abandons an open pad
     el.classList.add('lifted');
     el.style.zIndex = ++zTop;
+    // an eager hand may have flown to the target before the lift landed —
+    // catch the item up to the pointer or the gesture strands it behind
+    if (Math.hypot(lastX - downX, lastY - downY) > SLOP) { dragMoved = true; place(lastX, lastY); }
   };
 
   el.addEventListener('pointerdown', ev => {
     if (ev.button === 2) return;                       // right-click is the menu
-    if (ev.target.closest && ev.target.closest('.handle')) return; // handles own their gestures
     ev.preventDefault();
     el.setPointerCapture(ev.pointerId);
-    moved = false; dragMoved = false;
-    downX = ev.clientX; downY = ev.clientY;
+    dragMoved = false;
+    downX = lastX = ev.clientX; downY = lastY = ev.clientY;
     const r = el.getBoundingClientRect();
     grabDX = ev.clientX - (r.left + r.width / 2);
     grabDY = ev.clientY - (r.top + r.height / 2);
@@ -398,44 +422,20 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
   });
   el.addEventListener('pointermove', ev => {
     if (!el.hasPointerCapture || !el.hasPointerCapture(ev.pointerId)) return;
-    // Distance is measured from the press point, never per-event deltas — a
-    // real mouse jitters a pixel or two inside every click, and that jitter
-    // was reading as "moved", which killed click-to-select for real mice
-    // while synthetic (motionless) probes kept passing.
-    const far = Math.hypot(ev.clientX - downX, ev.clientY - downY) > SLOP;
-    if (!dragging) {
-      if (far) moved = true;
-      return;
-    }
-    if (!dragMoved && !far) return;                    // lifted but still inside the click slop
+    lastX = ev.clientX; lastY = ev.clientY;
+    if (!dragging) return;
+    // motion begins only past a slop from the press point — the couple of
+    // pixels a real hand jitters during a click must never nudge the item
+    if (!dragMoved && Math.hypot(lastX - downX, lastY - downY) <= SLOP) return;
     dragMoved = true;
-    const cr = cork.getBoundingClientRect();
-    n.pos_x = Math.max(0, Math.min(92, ((ev.clientX - grabDX - cr.left) / cr.width) * 100 - 4));
-    n.pos_y = Math.max(0, Math.min(88, ((ev.clientY - grabDY - cr.top) / cr.height) * 100 - 4));
-    applyXf(el, n);
+    place(lastX, lastY);
   });
-  const settle = ev => {
+  const settle = () => {
     clearTimeout(hold);
-    if (dragging) {
-      dragging = false;
-      el.classList.remove('lifted');
-      if (dragMoved) { saveXf(n); return; }            // release = confirm
-      // lifted but never left the slop: a slow click is still a click
-    }
-    if (moved || ev.type !== 'pointerup') return;
-    // plain click: select / toggle — the keyboard steers the selection
-    if (selected && selected.el === el) deselect();
-    else {
-      deselect();
-      selected = { el, n, scalable };
-      el.classList.add('sel');
-      el.style.zIndex = ++zTop;
-      installKeys();
-      // pointerdown's preventDefault means focus never left wherever it was;
-      // a form field still holding it would swallow every A/D/−/+ press
-      const t = document.activeElement;
-      if (t && t !== document.body && t.blur) t.blur();
-    }
+    if (!dragging) return;                             // a plain click does nothing
+    dragging = false;
+    el.classList.remove('lifted');
+    if (dragMoved) saveXf(n);                          // release = confirm
   };
   el.addEventListener('pointerup', settle);
   el.addEventListener('pointercancel', settle);
@@ -456,18 +456,20 @@ function stickerItem(n, cork, reload) {
   makeInteractive(el, n, cork, {
     scalable: true,
     reload,
-    onMenu: () => [[
-      'Take it down', () => confirmBox('Take this sticker down?',
+    onMenu: () => [
+      ['Scale', () => xfPad('scale', el, n), false],
+      ['Rotate', () => xfPad('rotate', el, n), false],
+      ['Take it down', () => confirmBox('Take this sticker down?',
         `${n.poster_name || 'Someone'}'s sticker comes off the board (it expires within 24h anyway).`, async () => {
           try { await api.stickies({ op: 'delete', id: n.id }); toast('Sticker down'); reload(); }
           catch (err) { toast(err.message, 'err'); }
-        }, 'Take it down'), true,
-    ]],
+        }, 'Take it down'), true],
+    ],
   });
   el.addEventListener('mouseenter', () => {
     if (el.classList.contains('lifted')) return;
     const e = notePop();
-    clear(e).append(h('div', { class: 'np-who' }, `${n.poster_name || '?'} · ${fmt.when(n.created_at)}`), h('div', { class: 'np-hint' }, 'hold to move · click then A/D rotate, −/+ size'));
+    clear(e).append(h('div', { class: 'np-who' }, `${n.poster_name || '?'} · ${fmt.when(n.created_at)}`), h('div', { class: 'np-hint' }, 'hold to move · right-click to scale or rotate'));
     e.className = 'np-mini';
     placePop(e, el);
   });
@@ -500,6 +502,7 @@ function noteItem(n, reacts, cork, reload) {
     onMenu: () => [
       ['React…', () => reactDialog(n, reload), false],
       ...(reacts.length ? [['Reactions…', () => manageReactionsDialog(n, reacts, reload), false]] : []),
+      ['Rotate', () => xfPad('rotate', el, n), false],
       ['Take it down', () => confirmBox('Take this note down?',
         `“${n.message}” comes off everyone's board. The change feed records who did it.`, async () => {
           try { await api.stickies({ op: 'delete', id: n.id }); toast('Note taken down'); reload(); }
@@ -518,7 +521,7 @@ function noteItem(n, reacts, cork, reload) {
           ? h('img', { class: 'rx-img', src: r.sticker_url, alt: '' })
           : h('b', null, r.emoji), ` ${r.name}`))) : null,
       h('div', { class: 'np-foot' }, `${n.author || '?'} · ${fmt.when(n.created_at)}`),
-      h('div', { class: 'np-hint' }, 'hold to move · click then A/D rotate, −/+ size · right-click menu'),
+      h('div', { class: 'np-hint' }, 'hold to move · right-click to rotate, react, take down'),
     ].filter(Boolean));
     e.className = 'np-' + (n.color || 'yellow');
     placePop(e, el);
