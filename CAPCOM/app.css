@@ -938,6 +938,16 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
   padding:16px;gap:12px;min-height:120px;max-height:300px;overflow-y:auto;
   scrollbar-width:thin;
 }
+/* the light board: the same scan untinted (assets/cork-light.jpg, cut from
+   Travis's original), warm wood frame, softer shadow, dark empty-text */
+html[data-theme="light"] .cork{
+  background-image:url('assets/cork-light.jpg');
+  border-color:#8a6a3e;
+  box-shadow:inset 0 3px 14px rgba(80,50,10,.35), 0 0 0 1px rgba(0,0,0,.08);
+}
+html[data-theme="light"] .cork-empty{
+  color:rgba(74,52,19,.8);text-shadow:0 1px 1px rgba(255,255,255,.35);
+}
 .note{width:126px;min-height:96px;padding:18px 10px 8px}
 .note-msg{font-size:1.05rem}
 .cork-empty{font-size:1.1rem}
@@ -1105,6 +1115,30 @@ img.rxm-face{width:32px;height:32px;border-radius:50%;object-fit:cover;backgroun
 .rxm-n{min-width:22px;text-align:center;font-variant-numeric:tabular-nums}
 .rx-cluster{cursor:pointer}
 .rx-cluster:hover .rx{box-shadow:0 0 0 2px var(--focus), 0 2px 5px rgba(0,0,0,.35)}
+
+/* ── bookmarks: a little manila folder pinned to the cork, the link's
+   title on its face. Reactions stick to its corner like a note's. ── */
+.bkm{position:relative;width:118px;cursor:pointer;user-select:none}
+.bkm-folder{
+  position:relative;min-height:64px;border-radius:7px;
+  background:linear-gradient(180deg,#f0cd7a,#dfae52);
+  box-shadow:2px 4px 8px rgba(0,0,0,.35), inset 0 -2px 4px rgba(0,0,0,.08);
+  display:flex;align-items:center;justify-content:center;padding:10px 8px 12px;
+}
+.bkm-folder::before{
+  content:"";position:absolute;top:-7px;left:8px;width:44px;height:14px;
+  background:linear-gradient(180deg,#f0cd7a,#e8bf63);
+  border-radius:5px 5px 0 0;
+}
+.bkm-title{
+  font-family:'Caveat',cursive;font-weight:600;font-size:1.02rem;line-height:1.15;
+  color:#4a3413;text-align:center;overflow-wrap:anywhere;overflow:hidden;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+}
+.bkm-go{
+  position:absolute;right:6px;bottom:3px;font-size:.62rem;
+  color:rgba(74,52,19,.6);font-weight:800;
+}
 
 /* ── the phone pass: under 880px the sidebar becomes a drawer behind a
    topbar burger, layouts are already single-column by the grid rules

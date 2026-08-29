@@ -826,6 +826,20 @@ One trap already hit while testing: the context menu clamps to the
 viewport bottom, so its ITEM POSITIONS SHIFT when the entry count
 changes — never reuse menu coordinates across opens.
 
+**Light board + bookmarks (29 Aug, same day):** in light theme the cork
+swaps to `assets/cork-light.jpg` — the SAME scan untinted, cut fresh
+from Travis's original (`Reference Material/Fri 082826/CorkBoard_BG.jpeg`,
+ffmpeg scale to 1200px) — with a warm wood frame. **Bookmarks** are a
+third item kind: a manila folder (`.bkm`, pure CSS) wearing the link's
+title; `message` = title, new `link_url` column (**re-run Setup**),
+http(s)-validated both ends. A clean tap opens the link in a new tab
+(`onTap` in makeInteractive — gated on `armed`, so the ⋯ chip's
+stopped-propagation pointerup can't trigger it); hold still drags;
+they take reactions and yarn exactly like notes (the server already
+allowed it — reactions only reject stickers). The tie-mode click-away
+canceller must list every item class — `.note,.stk,.bkm` — or tying to
+the new kind silently cancels; that bug shipped for about five minutes.
+
 **Sounds**: `pop(kind)` in home.js synthesizes pick-up ('up'), put-down
 ('down'), and react/tie ('tick') pops through one lazily-created
 AudioContext — never `new Audio()`/`<audio>` (the REC Room lock-screen

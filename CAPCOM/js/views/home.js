@@ -255,6 +255,7 @@ async function loadBoard(card, rerender) {
         title: nextLocked ? `Unlocks at ${caps.unlockAt} items on this board` : null,
         onClick: () => go(boardNo + 1),
       }, nextLocked ? '🔒' : '›')),
+    h('button', { class: 'btn sm', onClick: () => linkDialog(reload) }, '+ Link'),
     h('button', { class: 'btn sm', onClick: () => stickerDialog(reload) }, '+ Sticker'),
     h('button', { class: 'btn sm accent', onClick: () => noteDialog(reload) }, '+ Note')));
 
@@ -279,8 +280,8 @@ async function loadBoard(card, rerender) {
   // base z-index descends through the list; interaction bumps ride above.
   const itemEls = new Map();
   notes.forEach((n, i) => {
-    const el = n.sticker_url
-      ? stickerItem(n, cork, reload, bd)
+    const el = n.sticker_url ? stickerItem(n, cork, reload, bd)
+      : n.link_url ? bookmarkItem(n, reactsBy[n.id] || [], cork, reload, bd)
       : noteItem(n, reactsBy[n.id] || [], cork, reload, bd);
     el.style.zIndex = String(notes.length - i);
     itemEls.set(n.id, el);
@@ -553,17 +554,17 @@ document.addEventListener('keydown', ev => {
 document.addEventListener('pointerdown', ev => {
   if (xfState && xfEl && !xfEl.contains(ev.target)) hideXfPad(true);
   if (yarnEl && yarnEl.style.display !== 'none' && !yarnEl.contains(ev.target)) hideYarnPad();
-  if (tieMode && !(ev.target.closest && ev.target.closest('.note,.stk'))) {
+  if (tieMode && !(ev.target.closest && ev.target.closest('.note,.stk,.bkm'))) {
     setTie(null);
     toast('Yarn put away');
   }
 }, true);
 
 /* wire the full gesture set onto an item */
-function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
+function makeInteractive(el, n, cork, { scalable, onMenu, reload, onTap }) {
   el.style.touchAction = 'none';
   const SLOP = 6; // px of travel from the press point before a press becomes a drag
-  let hold = null, dragging = false, dragMoved = false;
+  let hold = null, dragging = false, dragMoved = false, armed = false;
   let grabDX = 0, grabDY = 0, downX = 0, downY = 0, lastX = 0, lastY = 0;
 
   const place = (cx, cy) => {
@@ -599,7 +600,7 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
     }
     ev.preventDefault();
     el.setPointerCapture(ev.pointerId);
-    dragMoved = false;
+    dragMoved = false; armed = true;
     downX = lastX = ev.clientX; downY = lastY = ev.clientY;
     const r = el.getBoundingClientRect();
     grabDX = ev.clientX - (r.left + r.width / 2);
@@ -616,9 +617,17 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
     dragMoved = true;
     place(lastX, lastY);
   });
-  const settle = () => {
+  const settle = ev => {
     clearTimeout(hold);
-    if (!dragging) return;                             // a plain click does nothing
+    const wasArmed = armed;                            // a child that stopped propagation
+    armed = false;                                     // (the ⋯ chip) never armed us
+    if (!dragging) {
+      // a clean tap — armed here, never left the slop — opens what wants
+      // opening: bookmarks pass onTap, notes and stickers pass nothing
+      if (onTap && wasArmed && ev.type === 'pointerup' &&
+          Math.hypot(lastX - downX, lastY - downY) <= SLOP) onTap();
+      return;
+    }
     dragging = false;
     el.classList.remove('lifted');
     if (dragMoved) { pop('down'); saveXf(n); }         // release = confirm
@@ -734,7 +743,88 @@ function noteItem(n, reacts, cork, reload, bd) {
   el.addEventListener('mouseleave', hideNotePop);
   return el;
 }
+
+/* ── a bookmark: a manila folder wearing the link's title. Opens on a
+   clean tap, takes reactions and yarn exactly like a note. ── */
+function bookmarkItem(n, reacts, cork, reload, bd) {
+  itemPos(n);
+  const openLink = () => window.open(n.link_url, '_blank', 'noopener');
+  const el = h('div', { class: 'bkm' },
+    h('span', { class: 'bkm-folder' }, h('span', { class: 'bkm-title' }, n.message)),
+    h('span', { class: 'bkm-go' }, '↗'),
+    reacts.length ? (() => {
+      const cluster = h('span', { class: 'rx-cluster', title: 'Click to manage reactions' },
+        reacts.slice(0, 4).map(r => r.sticker_url
+          ? h('img', { class: 'rx rx-img', src: r.sticker_url, alt: '', title: `${r.name} · ${fmt.when(r.created_at)}` })
+          : h('span', { class: 'rx', title: `${r.name} · ${fmt.when(r.created_at)}` }, r.emoji)),
+        reacts.length > 4 ? h('span', { class: 'rx rx-more' }, '+' + (reacts.length - 4)) : null);
+      cluster.addEventListener('pointerdown', ev => ev.stopPropagation());
+      cluster.addEventListener('click', ev => { ev.stopPropagation(); hideNotePop(); manageReactionsDialog(n, reacts, reload); });
+      return cluster;
+    })() : null);
+  applyXf(el, n);
+  makeInteractive(el, n, cork, {
+    scalable: false,
+    reload,
+    onTap: openLink,
+    onMenu: () => [
+      ['Open link', openLink, false],
+      ['React…', () => reactDialog(n, reload), false],
+      ...(reacts.length ? [['Reactions…', () => manageReactionsDialog(n, reacts, reload), false]] : []),
+      ['Rotate', () => xfPad('rotate', el, n), false],
+      ['Tie yarn…', () => yarnPad(el, n, reload), false],
+      ...(bd.yarn.some(y => y.from_id === n.id || y.to_id === n.id)
+        ? [['Yarn…', () => yarnDialog(n, bd), false]] : []),
+      ['Take it down', () => confirmBox('Take this bookmark down?',
+        `“${n.message}” comes off everyone's board. The change feed records who did it.`, async () => {
+          try { await api.stickies({ op: 'delete', id: n.id }); toast('Bookmark down'); reload(); }
+          catch (err) { toast(err.message, 'err'); }
+        }, 'Take it down'), true],
+    ],
+  });
+  el.addEventListener('mouseenter', () => {
+    if (el.classList.contains('lifted')) return;
+    let host = n.link_url;
+    try { host = new URL(n.link_url).host; } catch { /* show the raw string */ }
+    const e = notePop();
+    clear(e).append(...[
+      h('div', { class: 'np-msg' }, n.message),
+      h('div', { class: 'np-detail' }, host),
+      reacts.length ? h('div', { class: 'np-rx' }, reacts.map(r =>
+        h('span', { class: 'np-rx-row' }, r.sticker_url
+          ? h('img', { class: 'rx-img', src: r.sticker_url, alt: '' })
+          : h('b', null, r.emoji), ` ${r.name}`))) : null,
+      h('div', { class: 'np-foot' }, `${n.author || '?'} · ${fmt.when(n.created_at)}`),
+      h('div', { class: 'np-hint' }, 'click to open · hold to move · right-click to react or tie yarn'),
+    ].filter(Boolean));
+    e.className = 'np-yellow';
+    placePop(e, el);
+  });
+  el.addEventListener('mouseleave', hideNotePop);
+  return el;
+}
+
 /* ── dialogs ── */
+function linkDialog(reload) {
+  const title = textInput({ maxLength: 60, placeholder: "What the folder says — the link's name" });
+  const url = textInput({ placeholder: 'https://…' });
+  modal('Pin a bookmark',
+    h('div', { class: 'form' },
+      field('Title', title, 'Shows on the folder — up to 60 characters.'),
+      field('Link', url, 'http(s) only. Clicking the folder opens it in a new tab.')),
+    [
+      { label: 'Cancel', onClick: c => c() },
+      { label: 'Pin it', kind: 'accent', onClick: async c => {
+        const u = url.value.trim();
+        if (!/^https?:\/\/\S+$/i.test(u)) { toast('That link needs to start with http(s)://', 'err'); return; }
+        try {
+          await api.stickies({ op: 'save', board: boardNo, message: title.value, link_url: u });
+          c(); toast('Bookmark pinned'); reload();
+        } catch (err) { toast(err.message, 'err'); }
+      } },
+    ]);
+}
+
 function noteDialog(reload) {
   const msg = textInput({ maxLength: 60, placeholder: 'The short version (fits on the note)' });
   const det = h('textarea', { rows: 4, maxLength: 500, placeholder: 'The whole story — shows when someone hovers' });
