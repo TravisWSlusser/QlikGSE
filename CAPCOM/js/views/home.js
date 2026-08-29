@@ -373,8 +373,9 @@ function installKeys() {
 /* wire the full gesture set onto an item */
 function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
   el.style.touchAction = 'none';
-  let hold = null, dragging = false, moved = false;
-  let grabDX = 0, grabDY = 0;
+  const SLOP = 6; // px of travel from the press point before a press stops being a click
+  let hold = null, dragging = false, moved = false, dragMoved = false;
+  let grabDX = 0, grabDY = 0, downX = 0, downY = 0;
 
   const lift = () => {
     dragging = true;
@@ -388,7 +389,8 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
     if (ev.target.closest && ev.target.closest('.handle')) return; // handles own their gestures
     ev.preventDefault();
     el.setPointerCapture(ev.pointerId);
-    moved = false;
+    moved = false; dragMoved = false;
+    downX = ev.clientX; downY = ev.clientY;
     const r = el.getBoundingClientRect();
     grabDX = ev.clientX - (r.left + r.width / 2);
     grabDY = ev.clientY - (r.top + r.height / 2);
@@ -396,10 +398,17 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
   });
   el.addEventListener('pointermove', ev => {
     if (!el.hasPointerCapture || !el.hasPointerCapture(ev.pointerId)) return;
+    // Distance is measured from the press point, never per-event deltas — a
+    // real mouse jitters a pixel or two inside every click, and that jitter
+    // was reading as "moved", which killed click-to-select for real mice
+    // while synthetic (motionless) probes kept passing.
+    const far = Math.hypot(ev.clientX - downX, ev.clientY - downY) > SLOP;
     if (!dragging) {
-      if (Math.abs(ev.movementX) + Math.abs(ev.movementY) > 1) moved = true;
+      if (far) moved = true;
       return;
     }
+    if (!dragMoved && !far) return;                    // lifted but still inside the click slop
+    dragMoved = true;
     const cr = cork.getBoundingClientRect();
     n.pos_x = Math.max(0, Math.min(92, ((ev.clientX - grabDX - cr.left) / cr.width) * 100 - 4));
     n.pos_y = Math.max(0, Math.min(88, ((ev.clientY - grabDY - cr.top) / cr.height) * 100 - 4));
@@ -410,17 +419,22 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
     if (dragging) {
       dragging = false;
       el.classList.remove('lifted');
-      saveXf(n);                                       // release = confirm
-    } else if (!moved && ev.type === 'pointerup') {
-      // plain click: select / toggle — the keyboard steers the selection
-      if (selected && selected.el === el) deselect();
-      else {
-        deselect();
-        selected = { el, n, scalable };
-        el.classList.add('sel');
-        el.style.zIndex = ++zTop;
-        installKeys();
-      }
+      if (dragMoved) { saveXf(n); return; }            // release = confirm
+      // lifted but never left the slop: a slow click is still a click
+    }
+    if (moved || ev.type !== 'pointerup') return;
+    // plain click: select / toggle — the keyboard steers the selection
+    if (selected && selected.el === el) deselect();
+    else {
+      deselect();
+      selected = { el, n, scalable };
+      el.classList.add('sel');
+      el.style.zIndex = ++zTop;
+      installKeys();
+      // pointerdown's preventDefault means focus never left wherever it was;
+      // a form field still holding it would swallow every A/D/−/+ press
+      const t = document.activeElement;
+      if (t && t !== document.body && t.blur) t.blur();
     }
   };
   el.addEventListener('pointerup', settle);

@@ -788,18 +788,37 @@ Surgical edits, never full-file rewrites. Validate before shipping — render or
 screenshot to confirm visual changes, and check JS parses. Give honest tradeoff
 analysis before building. Flag gaps rather than filling them with invention.
 
-## OPEN BUG at handoff — 28 Aug 2026, end of session
+## Corkboard selection bug — FIXED 28 Aug 2026 (late session)
 
-**The Corkboard's select-then-keyboard transforms (A/D rotate, −/+ scale)
-work under synthetic events but NOT for Travis's real mouse.** Strongest
-lead, unverified: in `makeInteractive` (CAPCOM/js/views/home.js), the
-`moved` flag sets true on ANY pointermove > 1px before the 300ms hold —
-and a real human click always jiggles a pixel or two, so `settle()` sees
-`moved` and never selects. Synthetic clicks move zero pixels, which is why
-every probe passed. FIX TO TRY FIRST: accumulate real distance from the
-down point and only set `moved` past a ~6px threshold. Also verify the
-hold-timer doesn't lift mid-click for slow clickers (300ms). Selection is
-the gate to everything — if click-to-select fails, keys silently do
-nothing, which matches "not working" exactly. Test with a REAL mouse drag
-via the Chrome extension, not dispatched events — this session's probes
-were fooled twice by that gap.
+The 28 Aug handoff bug (click-to-select worked for synthetic probes, not
+for a real mouse) is fixed in `makeInteractive` (CAPCOM/js/views/home.js).
+The suspect was confirmed by reproduction with real CDP input against the
+unpatched code: a click carrying 1–2px of human jitter never selected,
+while a motionless click did. Three changes:
+
+1. **Slop, not per-event deltas.** `moved` now trips only when total
+   travel from the press point exceeds `SLOP = 6px` (`Math.hypot` from
+   `downX/downY`), replacing the `movementX+movementY > 1` per-event test
+   that a real hand defeats on every click.
+2. **A slow click is still a click.** If the 300ms hold fires but the
+   pointer never leaves the slop, release now falls through to select
+   instead of dropping the lift and saving a no-op transform. `saveXf`
+   only runs when a drag actually traveled (`dragMoved`), and drag motion
+   doesn't begin until travel passes the slop.
+3. **Selection blurs a leftover form field.** `pointerdown` calls
+   `preventDefault()`, so focus never moves on its own — a previously
+   focused input would silently eat every A/D/−/+ press.
+
+Verified against the real view code (stubbed API, real CDP mouse/keyboard,
+NOT dispatched events): jittery click selects, toggle works, selection
+transfers between items, A/D rotate + =/− scale with one debounced save
+per burst, Escape and bare-cork click deselect, a 1s hold-drag moves and
+saves exactly one transform, a quick swipe stays inert, right-click menu
+intact. The one path not machine-verifiable is the stationary >300ms
+press (CDP can't hold a button still) — verified by inspection; if slow
+clicks still misbehave for a human hand, look there first.
+
+Test-harness note for next time: the browser pane's `key` action does not
+map `plus` — it arrives as `e.key === ""`. Use `=` (the handler accepts
+it) and read real key values from a capture-phase logger before trusting
+a keyboard probe.
