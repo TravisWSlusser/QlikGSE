@@ -218,6 +218,8 @@ function placePop(e, anchor) {
 
 async function loadBoard(card, rerender) {
   hideXfPad(false); // a re-render orphans the pad's anchor; drop any preview
+  hideYarnPad();
+  setTie(null);
   let d;
   try { d = await api.stickies({ op: 'list', board: boardNo }); }
   catch (err) { clear(card).appendChild(errorState(err, () => loadBoard(card, rerender))); return; }
@@ -241,7 +243,7 @@ async function loadBoard(card, rerender) {
   if (boardNo > unlocked) { boardNo = unlocked; } // stored board can outrun a thinned wall
 
   const nextLocked = unlocked < boards && boardNo === unlocked;
-  card.appendChild(sectionTitle('The Corkboard',
+  card.appendChild(sectionTitle('The Community Board',
     h('span', { class: 'bd-fill', title: `${d.count || 0} of ${caps.items} items · next board opens at ${caps.unlockAt}` },
       `${d.count || 0}/${caps.items}`),
     h('span', { class: 'bd-nav' },
@@ -263,19 +265,65 @@ async function loadBoard(card, rerender) {
   const cork = h('div', { class: 'cork cork-free' });
   card.appendChild(cork);
   if (!notes.length) {
+    redrawYarn = () => {};
     cork.appendChild(h('p', { class: 'cork-empty' }, `Board ${boardNo} is bare. Pin something.`));
     return;
   }
 
+  // Board context the item menus read at open time: current yarn, the
+  // items by id (for labeling the other end of a string), and reload.
+  const bd = { yarn: d.yarn || [], items: {}, reload };
+  for (const n of notes) bd.items[n.id] = n;
+
   // Layering: the latest pin sits on top. Rows arrive newest-first, so the
   // base z-index descends through the list; interaction bumps ride above.
+  const itemEls = new Map();
   notes.forEach((n, i) => {
     const el = n.sticker_url
-      ? stickerItem(n, cork, reload)
-      : noteItem(n, reactsBy[n.id] || [], cork, reload);
+      ? stickerItem(n, cork, reload, bd)
+      : noteItem(n, reactsBy[n.id] || [], cork, reload, bd);
     el.style.zIndex = String(notes.length - i);
+    itemEls.set(n.id, el);
     cork.appendChild(el);
   });
+
+  // The yarn layer: an SVG sheet over the whole cork, never interactive —
+  // strings drape over the paper like the real thing. Endpoints are read
+  // from the items' live boxes, so a drag re-aims the string in real time.
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('class', 'yarn-layer');
+  cork.appendChild(svg);
+  redrawYarn = () => {
+    const cr = cork.getBoundingClientRect();
+    if (!cr.width) return; // view is gone; a stale resize tick lands here
+    svg.setAttribute('viewBox', `0 0 ${cr.width} ${cr.height}`);
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    for (const yr of bd.yarn) {
+      const a = itemEls.get(yr.from_id), b = itemEls.get(yr.to_id);
+      if (!a || !b) continue;
+      const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+      const x1 = ra.left + ra.width / 2 - cr.left, y1 = ra.top + ra.height / 2 - cr.top;
+      const x2 = rb.left + rb.width / 2 - cr.left, y2 = rb.top + rb.height / 2 - cr.top;
+      const hex = YARN_HEX[yr.color] || YARN_HEX.red;
+      const sag = Math.min(46, Math.hypot(x2 - x1, y2 - y1) * 0.16) + (yr.id % 4) * 3;
+      const path = document.createElementNS(svgNS, 'path');
+      path.setAttribute('d', `M ${x1} ${y1} Q ${(x1 + x2) / 2} ${(y1 + y2) / 2 + sag} ${x2} ${y2}`);
+      path.setAttribute('stroke', hex);
+      path.setAttribute('stroke-width', '2.5');
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(path);
+      for (const [px, py] of [[x1, y1], [x2, y2]]) {
+        const pin = document.createElementNS(svgNS, 'circle');
+        pin.setAttribute('cx', px); pin.setAttribute('cy', py); pin.setAttribute('r', '3.5');
+        pin.setAttribute('fill', hex);
+        pin.setAttribute('stroke', 'rgba(0,0,0,.4)');
+        svg.appendChild(pin);
+      }
+    }
+  };
+  redrawYarn();
 }
 
 /* ── direct manipulation: the touch-wall engine ──
@@ -335,6 +383,116 @@ function ctxMenu(x, y, entries) {
   ctxEl.style.top = Math.min(y, window.innerHeight - entries.length * 40 - 12) + 'px';
 }
 
+/* ── sounds: tiny WebAudio pops for pick up, put down, and react.
+   Synthesized on the spot — no files to load — and played through an
+   AudioContext rather than <audio>, because media elements put a phantom
+   player on the iOS lock screen (the REC Room lesson); a context has no
+   media session. Every call rides a user gesture, so autoplay is happy. */
+let audioCtx = null;
+function pop(kind) {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const t = audioCtx.currentTime;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    const [f0, f1, dur, vol] =
+      kind === 'up' ? [300, 640, 0.09, 0.2]        // plucked off the cork
+      : kind === 'down' ? [560, 260, 0.12, 0.24]   // pressed back on
+      : [520, 880, 0.07, 0.16];                    // a light tick (react, tie)
+    o.type = 'sine';
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  } catch { /* no audio device / blocked — the board works silently */ }
+}
+
+/* ── yarn: colored string tying two items together, conspiracy-wall
+   style, so ideas visibly combine. Right-click → Tie yarn… → pick a
+   color → click the other item. The string is shared state; it drapes
+   over the paper (pointer-events:none, so it never blocks the wall). */
+const YARN_HEX = { red: '#d64d4d', orange: '#e8923a', teal: '#10CFC9', purple: '#a97fe0', white: '#efe6d5' };
+let redrawYarn = () => {}; // re-bound by each board render; drags re-aim strings live
+window.addEventListener('resize', () => redrawYarn());
+
+let tieMode = null; // { fromId, color, reload } — a color picked, string in hand
+function setTie(t) {
+  tieMode = t;
+  document.body.classList.toggle('tying', !!t);
+}
+
+let yarnEl = null;
+function hideYarnPad() { if (yarnEl) yarnEl.style.display = 'none'; }
+function yarnPad(el, n, reload) {
+  hideNotePop();
+  if (!yarnEl) {
+    yarnEl = h('div', { id: 'yarn-pad' });
+    document.body.appendChild(yarnEl);
+  }
+  clear(yarnEl).append(...Object.keys(YARN_HEX).map(c =>
+    h('button', {
+      class: 'yarn-dot', 'aria-label': c + ' yarn', title: c + ' yarn',
+      style: `background:${YARN_HEX[c]}`,
+      onClick: () => {
+        hideYarnPad();
+        setTie({ fromId: n.id, color: c, reload });
+        toast('Yarn in hand — click another item to tie it. Esc puts it away');
+      },
+    })));
+  yarnEl.style.display = 'flex';
+  const r = el.getBoundingClientRect();
+  const cx = Math.max(100, Math.min(window.innerWidth - 100, r.left + r.width / 2));
+  const above = r.top - 54;
+  yarnEl.style.left = cx + 'px';
+  yarnEl.style.top = (above > 8 ? above : r.bottom + 12) + 'px';
+}
+
+function yarnLabel(item) {
+  if (!item) return 'a missing item';
+  return item.sticker_url
+    ? `${item.poster_name || 'someone'}’s sticker`
+    : `“${String(item.message).slice(0, 30)}”`;
+}
+
+/* every string touching this item — recolor or cut, row by row. Actions
+   mutate bd.yarn and redraw in place, so the dialog never goes stale. */
+function yarnDialog(n, bd) {
+  const rows = bd.yarn.filter(y => y.from_id === n.id || y.to_id === n.id).map(y => {
+    const other = bd.items[y.from_id === n.id ? y.to_id : y.from_id];
+    const dots = h('span', { class: 'yarn-row-dots' },
+      ...Object.keys(YARN_HEX).map(c => h('button', {
+        class: 'yarn-dot sm' + (y.color === c ? ' on' : ''), title: c,
+        style: `background:${YARN_HEX[c]}`,
+        onClick: async ev => {
+          try {
+            await api.stickies({ op: 'yarn_color', id: y.id, color: c });
+            y.color = c;
+            [...dots.children].forEach(d => d.classList.remove('on'));
+            ev.target.classList.add('on');
+            redrawYarn();
+          } catch (err) { toast(err.message, 'err'); }
+        },
+      })));
+    const row = h('div', { class: 'yarn-row' },
+      h('span', { class: 'yarn-row-label' }, `to ${yarnLabel(other)}`),
+      dots,
+      h('button', { class: 'btn xs danger', onClick: async () => {
+        try {
+          await api.stickies({ op: 'cut', id: y.id });
+          bd.yarn.splice(bd.yarn.indexOf(y), 1);
+          redrawYarn();
+          row.remove();
+          toast('Yarn cut');
+        } catch (err) { toast(err.message, 'err'); }
+      } }, 'Cut'));
+    return row;
+  });
+  modal('Yarn on this item', h('div', { class: 'form' }, ...rows),
+    [{ label: 'Done', kind: 'accent', onClick: c => c() }]);
+}
+
 /* The adjust pad — how rotate and scale happen now. Right-click an item,
    pick Rotate or Scale, and a small pad of real buttons appears by it:
    ‹ › spin 5° per press, − + resize 5% per press (stickers only), ✓
@@ -361,14 +519,6 @@ function xfPad(mode, el, n) {
   if (!xfEl) {
     xfEl = h('div', { id: 'xf-pad' });
     document.body.appendChild(xfEl);
-    document.addEventListener('keydown', ev => {
-      if (ev.key === 'Escape' && xfState) { ev.preventDefault(); hideXfPad(false); }
-    });
-    // clicking anywhere off the pad confirms, exactly like the ✓ —
-    // capture phase, so it lands before whatever the click was for
-    document.addEventListener('pointerdown', ev => {
-      if (xfState && !xfEl.contains(ev.target)) hideXfPad(true);
-    }, true);
   }
   xfState = { el, n, undo: { rotation: n.rotation || 0, scale: n.scale || 1 } };
   const nudge = fn => { fn(); applyXf(el, n); };
@@ -390,6 +540,25 @@ function xfPad(mode, el, n) {
   xfEl.style.top = (above > 8 ? above : r.bottom + 12) + 'px';
 }
 
+/* one pair of document listeners governs every floating state:
+   Escape puts yarn away first, then cancels an adjust preview; a
+   pointerdown off the adjust pad confirms it exactly like the ✓
+   (capture phase, so it lands before whatever the click was for),
+   closes a forgotten color pad, and drops yarn on a miss. */
+document.addEventListener('keydown', ev => {
+  if (ev.key !== 'Escape') return;
+  if (tieMode) { ev.preventDefault(); setTie(null); toast('Yarn put away'); return; }
+  if (xfState) { ev.preventDefault(); hideXfPad(false); }
+});
+document.addEventListener('pointerdown', ev => {
+  if (xfState && xfEl && !xfEl.contains(ev.target)) hideXfPad(true);
+  if (yarnEl && yarnEl.style.display !== 'none' && !yarnEl.contains(ev.target)) hideYarnPad();
+  if (tieMode && !(ev.target.closest && ev.target.closest('.note,.stk'))) {
+    setTie(null);
+    toast('Yarn put away');
+  }
+}, true);
+
 /* wire the full gesture set onto an item */
 function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
   el.style.touchAction = 'none';
@@ -402,9 +571,11 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
     n.pos_x = Math.max(0, Math.min(92, ((cx - grabDX - cr.left) / cr.width) * 100 - 4));
     n.pos_y = Math.max(0, Math.min(88, ((cy - grabDY - cr.top) / cr.height) * 100 - 4));
     applyXf(el, n);
+    redrawYarn();                                      // strings follow the item live
   };
   const lift = () => {
     dragging = true;
+    pop('up');
     hideNotePop();
     hideXfPad(false);                                  // safety only — the pointerdown that started this hold already committed any open pad
     el.classList.add('lifted');
@@ -416,6 +587,16 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
 
   el.addEventListener('pointerdown', ev => {
     if (ev.button === 2) return;                       // right-click is the menu
+    if (tieMode) {                                     // string in hand: this click ties, nothing else
+      ev.preventDefault();
+      const t = tieMode;
+      if (t.fromId === n.id) { toast('That end is already tied — click a different item'); return; }
+      setTie(null);
+      api.stickies({ op: 'tie', from_id: t.fromId, to_id: n.id, color: t.color, board: boardNo })
+        .then(() => { pop('tick'); toast('Tied'); t.reload(); })
+        .catch(err => toast(err.message, 'err'));
+      return;
+    }
     ev.preventDefault();
     el.setPointerCapture(ev.pointerId);
     dragMoved = false;
@@ -440,7 +621,7 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
     if (!dragging) return;                             // a plain click does nothing
     dragging = false;
     el.classList.remove('lifted');
-    if (dragMoved) saveXf(n);                          // release = confirm
+    if (dragMoved) { pop('down'); saveXf(n); }         // release = confirm
   };
   el.addEventListener('pointerup', settle);
   el.addEventListener('pointercancel', settle);
@@ -453,7 +634,7 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
 }
 
 /* ── a bare sticker on the cork ── */
-function stickerItem(n, cork, reload) {
+function stickerItem(n, cork, reload, bd) {
   itemPos(n);
   const el = h('div', { class: 'stk' },
     h('img', { src: n.sticker_url, alt: 'sticker', loading: 'lazy', draggable: 'false' }));
@@ -464,6 +645,9 @@ function stickerItem(n, cork, reload) {
     onMenu: () => [
       ['Scale', () => xfPad('scale', el, n), false],
       ['Rotate', () => xfPad('rotate', el, n), false],
+      ['Tie yarn…', () => yarnPad(el, n, reload), false],
+      ...(bd.yarn.some(y => y.from_id === n.id || y.to_id === n.id)
+        ? [['Yarn…', () => yarnDialog(n, bd), false]] : []),
       ['Take it down', () => confirmBox('Take this sticker down?',
         `${n.poster_name || 'Someone'}'s sticker comes off the board (it expires within 24h anyway).`, async () => {
           try { await api.stickies({ op: 'delete', id: n.id }); toast('Sticker down'); reload(); }
@@ -483,7 +667,7 @@ function stickerItem(n, cork, reload) {
 }
 
 /* ── a paper note, with corner reactions ── */
-function noteItem(n, reacts, cork, reload) {
+function noteItem(n, reacts, cork, reload, bd) {
   itemPos(n);
   const el = h('div', { class: 'note note-' + (n.color || 'yellow') },
     h('i', { class: 'note-pin' }),
@@ -508,6 +692,9 @@ function noteItem(n, reacts, cork, reload) {
       ['React…', () => reactDialog(n, reload), false],
       ...(reacts.length ? [['Reactions…', () => manageReactionsDialog(n, reacts, reload), false]] : []),
       ['Rotate', () => xfPad('rotate', el, n), false],
+      ['Tie yarn…', () => yarnPad(el, n, reload), false],
+      ...(bd.yarn.some(y => y.from_id === n.id || y.to_id === n.id)
+        ? [['Yarn…', () => yarnDialog(n, bd), false]] : []),
       ['Take it down', () => confirmBox('Take this note down?',
         `“${n.message}” comes off everyone's board. The change feed records who did it.`, async () => {
           try { await api.stickies({ op: 'delete', id: n.id }); toast('Note taken down'); reload(); }
@@ -705,6 +892,7 @@ function reactDialog(n, reload) {
         try {
           await api.stickies({ op: 'react', sticky_id: n.id, name: name.value, emoji: chosen.emoji, sticker_url: chosen.sticker_url });
           rememberName(name.value.trim());
+          pop('tick');
           c(); toast('Reaction stuck'); reload();
         } catch (err) { toast(err.message, 'err'); }
       } },

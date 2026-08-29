@@ -788,6 +788,37 @@ Surgical edits, never full-file rewrites. Validate before shipping — render or
 screenshot to confirm visual changes, and check JS parses. Give honest tradeoff
 analysis before building. Flag gaps rather than filling them with invention.
 
+## Community Board — yarn, sounds, and the rename (29 Aug 2026)
+
+The Corkboard is now titled **The Community Board** (UI string only — CSS
+classes, localStorage keys, and the API stay `cork`/`stickies`;
+renaming plumbing buys nothing).
+
+**Yarn** ties two items on a board together with a colored string —
+right-click → *Tie yarn…* → pick a color (red/orange/teal/purple/white)
+→ click the other item. Strings are shared state in a new `sticky_yarn`
+table (**re-run Setup in CAPCOM's System view to create it** — until
+then tying fails with the usual "has Setup been run?" and the board
+otherwise works, because `list` wraps its yarn query in its own
+try/catch). Server ops on `stickies`: `tie` (dup-checked both
+directions, both ends must be live on the board), `yarn_color`, `cut`
+(soft delete); tie/cut hit the change feed. The client draws the
+strings on an SVG `.yarn-layer` over the cork — sagging quadratics with
+pin dots, `pointer-events:none` so the wall stays fully interactive —
+and re-aims them live during drags (`redrawYarn`, rebound per render).
+Right-click → *Yarn…* (only shown when strings touch the item) opens a
+manager: recolor swatches and Cut per string, acting in place without a
+board reload. Esc or clicking off the wall puts an untied string away.
+One trap already hit while testing: the context menu clamps to the
+viewport bottom, so its ITEM POSITIONS SHIFT when the entry count
+changes — never reuse menu coordinates across opens.
+
+**Sounds**: `pop(kind)` in home.js synthesizes pick-up ('up'), put-down
+('down'), and react/tie ('tick') pops through one lazily-created
+AudioContext — never `new Audio()`/`<audio>` (the REC Room lock-screen
+lesson). No files, autoplay-safe (every call rides a gesture), and it
+fails silent in a try/catch.
+
 ## Corkboard transforms — the adjust pad (28 Aug 2026, third pass)
 
 Rotate and scale have been through three designs in one day: drag

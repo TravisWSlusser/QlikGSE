@@ -1010,8 +1010,9 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
   filter:drop-shadow(0 14px 22px rgba(0,0,0,.55));
 }
 .cork-free .note.lifted{box-shadow:8px 16px 30px rgba(0,0,0,.55)}
-/* the rotate/scale button pad (right-click → Scale / Rotate) */
-#xf-pad{
+/* the rotate/scale button pad (right-click → Scale / Rotate) and the
+   yarn color pad (right-click → Tie yarn…) share one look */
+#xf-pad,#yarn-pad{
   position:fixed;display:none;z-index:96;gap:6px;padding:6px;
   transform:translateX(-50%);
   background:var(--card);border:1px solid var(--line);border-radius:10px;
@@ -1025,6 +1026,24 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
 }
 .xf-btn:hover{border-color:var(--focus)}
 .xf-btn.ok{border-color:var(--focus);color:var(--link)}
+
+/* ── yarn: string over the paper ── */
+.yarn-layer{
+  position:absolute;inset:0;width:100%;height:100%;
+  pointer-events:none;z-index:500;overflow:visible;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.4));
+}
+.yarn-dot{
+  width:26px;height:26px;border-radius:50%;cursor:pointer;
+  border:2px solid rgba(255,255,255,.3);
+}
+.yarn-dot:hover{border-color:var(--focus)}
+.yarn-dot.sm{width:20px;height:20px}
+.yarn-dot.on{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.yarn-row{display:flex;align-items:center;gap:10px}
+.yarn-row-label{flex:1;font-size:.85rem;color:var(--ink);overflow-wrap:anywhere}
+.yarn-row-dots{display:flex;gap:5px}
+body.tying .cork-free .note,body.tying .cork-free .stk{cursor:crosshair}
 /* the right-click menu */
 #ctx-menu{
   position:fixed;display:none;z-index:95;min-width:170px;padding:6px;
