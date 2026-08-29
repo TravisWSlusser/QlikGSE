@@ -377,6 +377,8 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
     applyXf(el, n);
   });
   const settle = ev => {
+    // a handle's gesture must never toggle selection on its way out
+    if (ev.target && ev.target.closest && ev.target.closest('.handle')) return;
     clearTimeout(hold);
     if (dragging) {
       dragging = false;
@@ -391,54 +393,57 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
   el.addEventListener('pointerup', settle);
   el.addEventListener('pointercancel', settle);
 
+  /* Handle gestures listen on the DOCUMENT for the drag's duration — the
+     original element-capture version silently dropped every move (and its
+     bubbled pointerup deselected the item as a parting gift). Document
+     listeners survive the pointer leaving the tiny handle, which it does
+     within the first frame of any real drag. */
+  const handleDrag = (handleEl, onStart, onMove) => {
+    handleEl.addEventListener('pointerdown', ev => {
+      ev.preventDefault(); ev.stopPropagation();
+      try { handleEl.setPointerCapture(ev.pointerId); } catch { /* synthetic or stale pointer */ }
+      const ctx = onStart(ev);
+      const mv = e2 => { onMove(ctx, e2); };
+      const up = () => {
+        document.removeEventListener('pointermove', mv, true);
+        document.removeEventListener('pointerup', up, true);
+        saveXf(n);
+      };
+      document.addEventListener('pointermove', mv, true);
+      document.addEventListener('pointerup', up, true);
+    });
+  };
+
   // ── rotate handle: a lollipop above the item; drag orbits the center ──
   const rot = h('span', { class: 'handle h-rot', title: 'Drag to rotate' }, '⟳');
   el.appendChild(rot);
-  rot.addEventListener('pointerdown', ev => {
-    ev.preventDefault(); ev.stopPropagation();
-    rot.setPointerCapture(ev.pointerId);
-    const r = el.getBoundingClientRect();
-    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    const startPtr = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
-    const startRot = n.rotation || 0;
-    const move = e2 => {
-      const a = Math.atan2(e2.clientY - cy, e2.clientX - cx) * 180 / Math.PI;
-      n.rotation = Math.max(-180, Math.min(180, Math.round(startRot + (a - startPtr))));
+  handleDrag(rot,
+    ev => {
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      return { cx, cy, startPtr: Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI, startRot: n.rotation || 0 };
+    },
+    (c, e2) => {
+      const a = Math.atan2(e2.clientY - c.cy, e2.clientX - c.cx) * 180 / Math.PI;
+      n.rotation = Math.max(-180, Math.min(180, Math.round(c.startRot + (a - c.startPtr))));
       applyXf(el, n);
-    };
-    const up = () => {
-      rot.removeEventListener('pointermove', move);
-      rot.removeEventListener('pointerup', up);
-      saveXf(n);
-    };
-    rot.addEventListener('pointermove', move);
-    rot.addEventListener('pointerup', up);
-  });
+    });
 
   // ── scale handle: the corner of the bounding box (stickers only) ──
   if (scalable) {
     const cornerEl = h('span', { class: 'handle h-scale', title: 'Drag to resize' });
     el.appendChild(cornerEl);
-    cornerEl.addEventListener('pointerdown', ev => {
-      ev.preventDefault(); ev.stopPropagation();
-      cornerEl.setPointerCapture(ev.pointerId);
-      const r = el.getBoundingClientRect();
-      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      const d0 = Math.hypot(ev.clientX - cx, ev.clientY - cy) || 1;
-      const s0 = n.scale || 1;
-      const move = e2 => {
-        const d = Math.hypot(e2.clientX - cx, e2.clientY - cy);
-        n.scale = Math.max(0.5, Math.min(2, s0 * (d / d0)));
+    handleDrag(cornerEl,
+      ev => {
+        const r = el.getBoundingClientRect();
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        return { cx, cy, d0: Math.hypot(ev.clientX - cx, ev.clientY - cy) || 1, s0: n.scale || 1 };
+      },
+      (c, e2) => {
+        const d = Math.hypot(e2.clientX - c.cx, e2.clientY - c.cy);
+        n.scale = Math.max(0.5, Math.min(2, c.s0 * (d / c.d0)));
         applyXf(el, n);
-      };
-      const up = () => {
-        cornerEl.removeEventListener('pointermove', move);
-        cornerEl.removeEventListener('pointerup', up);
-        saveXf(n);
-      };
-      cornerEl.addEventListener('pointermove', move);
-      cornerEl.addEventListener('pointerup', up);
-    });
+      });
   }
 
   el.addEventListener('contextmenu', ev => {
