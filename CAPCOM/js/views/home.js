@@ -40,18 +40,19 @@ export function render(params, rerender, who) {
   const rightCol = h('div', { class: 'home-col' });
   grid.append(leftCol, rightCol);
 
+  // Left column: calendar (with actions), then the change feed under it.
   const calCard = h('div', { class: 'card' }, spinner());
   leftCol.appendChild(calCard);
   loadCalendar(calCard, scopes, acts);
+  const logCard = h('div', { class: 'card' }, spinner());
+  leftCol.appendChild(logCard);
+  loadLog(logCard);
 
-  // Right column: clock, then the corkboard, then the change feed.
+  // Right column: clock, then the corkboard with room to breathe.
   rightCol.appendChild(clockCard());
   const board = h('div', { class: 'card' }, spinner());
   rightCol.appendChild(board);
   loadBoard(board, rerender);
-  const logCard = h('div', { class: 'card' }, spinner());
-  rightCol.appendChild(logCard);
-  loadLog(logCard);
 
   // ── the Stellar-Seller widget — full width under the grid ──
   if (scopes.some(s => ['analytics', 'content', 'banners'].includes(s))) {
