@@ -172,7 +172,7 @@ html[data-theme="dark"] .nav a.on{color:#5AD68E}
 }
 .theme-btn:hover{color:var(--ink);border-color:var(--focus)}
 
-main{flex:1;min-width:0;padding:28px 32px 64px;max-width:1200px}
+main{flex:1;min-width:0;padding:28px 36px 64px;max-width:1720px} /* wide-monitor cap only — an ops board earns its width */
 .view>*+*{margin-top:18px}
 
 /* ── buttons ── */
