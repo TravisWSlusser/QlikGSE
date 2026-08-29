@@ -1008,3 +1008,51 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
 .np-rx-row{display:flex;align-items:center;gap:6px}
 .np-rx-row .rx-img{width:20px;height:20px;border-radius:50%}
 .emoji-row .emoji-btn.on{border-color:var(--accent);transform:scale(1.12)}
+
+/* ── the touch-wall ── */
+.cork-free{position:relative;display:block;overflow:hidden}
+.cork-free .note,.cork-free .stk{
+  position:absolute;margin:0;cursor:grab;user-select:none;
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.cork-free .note:hover,.cork-free .stk:hover{transform-origin:center}
+.cork-free .lifted{
+  transition:none;cursor:grabbing;
+  filter:drop-shadow(0 14px 22px rgba(0,0,0,.55));
+}
+.cork-free .note.lifted{box-shadow:8px 16px 30px rgba(0,0,0,.55)}
+/* selection: bounding box + handles */
+.cork-free .sel{outline:2px dashed rgba(16,207,201,.85);outline-offset:4px}
+.handle{
+  position:absolute;display:none;z-index:5;cursor:pointer;user-select:none;
+  align-items:center;justify-content:center;
+}
+.sel .handle{display:flex}
+.h-rot{
+  top:-34px;left:50%;transform:translateX(-50%);
+  width:24px;height:24px;border-radius:50%;
+  background:var(--card);border:1px solid var(--focus);color:var(--link);
+  font-size:.8rem;cursor:grab;box-shadow:0 2px 8px rgba(0,0,0,.45);
+}
+.h-rot::after{
+  content:"";position:absolute;top:24px;left:50%;transform:translateX(-50%);
+  width:1px;height:10px;background:rgba(16,207,201,.7);
+}
+.h-scale{
+  right:-9px;bottom:-9px;width:14px;height:14px;border-radius:3px;
+  background:var(--card);border:2px solid var(--focus);cursor:nwse-resize;
+}
+/* the right-click menu */
+#ctx-menu{
+  position:fixed;display:none;z-index:95;min-width:170px;padding:6px;
+  background:var(--card);border:1px solid var(--line);border-radius:10px;
+  box-shadow:var(--shadow);
+}
+.ctx-item{
+  display:block;width:100%;text-align:left;padding:8px 12px;border:0;
+  background:none;color:var(--ink);font-size:.86rem;font-weight:600;
+  border-radius:7px;cursor:pointer;
+}
+.ctx-item:hover{background:var(--card-2)}
+.ctx-item.danger{color:var(--danger)}
+.ctx-item.danger:hover{background:var(--danger-soft)}

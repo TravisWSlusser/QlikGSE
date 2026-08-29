@@ -242,7 +242,8 @@ async function loadBoard(card, rerender) {
   const reactsBy = {};
   for (const r of d.reactions || []) (reactsBy[r.sticky_id] = reactsBy[r.sticky_id] || []).push(r);
 
-  const cork = h('div', { class: 'cork' });
+  const cork = h('div', { class: 'cork cork-free' });
+  cork.addEventListener('pointerdown', ev => { if (ev.target === cork) deselect(); });
   card.appendChild(cork);
   if (!notes.length) {
     cork.appendChild(h('p', { class: 'cork-empty' }, `Board ${boardNo} is bare. Pin something.`));
@@ -250,70 +251,235 @@ async function loadBoard(card, rerender) {
   }
 
   for (const n of notes) cork.appendChild(n.sticker_url
-    ? stickerItem(n, reload)
-    : noteItem(n, reactsBy[n.id] || [], reload));
+    ? stickerItem(n, cork, reload)
+    : noteItem(n, reactsBy[n.id] || [], cork, reload));
 }
 
-/* shared transform helpers — the write is fire-and-forget; the local style
-   updates instantly so it feels fluid */
+/* ── direct manipulation: the touch-wall engine ──
+   The board is free space. Every item carries pos_x/pos_y (percent of the
+   cork, shared state like rotation and scale), and the interactions read
+   like a touch screen:
+
+   press-and-hold (~300ms)  lift the item, drag anywhere, release to place
+   single click             select — bounding box, rotate handle, ✕
+   drag the ◰ corner        resize (stickers only, 0.5x–2x, from center)
+   drag the ⟳ lollipop      rotate around the center
+   right-click              menu: react (notes) / take down
+   click the cork           deselect
+
+   One transform write per gesture, on release — the motion itself is
+   local and 60fps. */
+
+let zTop = 10; // interacted items float; not persisted, recency is enough
+
+function itemPos(n) {
+  // Deterministic first placement for items that predate free positioning —
+  // seeded by id so every viewer sees the same arrangement.
+  if (n.pos_x == null || n.pos_y == null) {
+    n.pos_x = 6 + (n.id * 37) % 58;
+    n.pos_y = 6 + (n.id * 53) % 52;
+  }
+  return n;
+}
+
 function applyXf(el, n) {
+  el.style.left = n.pos_x + '%';
+  el.style.top = n.pos_y + '%';
   el.style.transform = `rotate(${n.rotation || 0}deg) scale(${n.scale || 1})`;
 }
-async function nudge(n, el, dRot, fScale) {
-  n.rotation = Math.max(-180, Math.min(180, (n.rotation || 0) + dRot));
-  if (fScale) n.scale = Math.max(0.5, Math.min(2, (n.scale || 1) * fScale));
-  applyXf(el, n);
-  try { await api.stickies({ op: 'transform', id: n.id, rotation: n.rotation, scale: n.scale || 1 }); } catch {}
+
+async function saveXf(n) {
+  try {
+    await api.stickies({
+      op: 'transform', id: n.id,
+      rotation: Math.round(n.rotation || 0), scale: n.scale || 1,
+      pos_x: n.pos_x, pos_y: n.pos_y,
+    });
+  } catch { /* the next list re-syncs; a lost nudge is not an incident */ }
 }
 
-function ctl(label, title, fn) {
-  return h('button', { class: 'xf-btn', title, 'aria-label': title, onClick: e => { e.stopPropagation(); fn(); } }, label);
+/* the custom right-click menu — one shared element */
+let ctxEl = null;
+function ctxMenu(x, y, entries) {
+  if (!ctxEl) {
+    ctxEl = h('div', { id: 'ctx-menu' });
+    document.body.appendChild(ctxEl);
+    document.addEventListener('click', () => { if (ctxEl) ctxEl.style.display = 'none'; });
+  }
+  clear(ctxEl).append(...entries.map(([label, fn, danger]) =>
+    h('button', { class: 'ctx-item' + (danger ? ' danger' : ''), onClick: () => { ctxEl.style.display = 'none'; fn(); } }, label)));
+  ctxEl.style.display = 'block';
+  ctxEl.style.left = Math.min(x, window.innerWidth - 180) + 'px';
+  ctxEl.style.top = Math.min(y, window.innerHeight - entries.length * 40 - 12) + 'px';
+}
+
+let selected = null;
+function deselect() {
+  if (selected) { selected.classList.remove('sel'); selected = null; }
+}
+
+/* wire the full gesture set onto an item */
+function makeInteractive(el, n, cork, { scalable, onMenu, reload }) {
+  el.style.touchAction = 'none';
+  let hold = null, dragging = false, moved = false;
+  let grabDX = 0, grabDY = 0;
+
+  const lift = () => {
+    dragging = true;
+    hideNotePop();
+    el.classList.add('lifted');
+    el.style.zIndex = ++zTop;
+  };
+
+  el.addEventListener('pointerdown', ev => {
+    if (ev.button === 2) return;                       // right-click is the menu
+    if (ev.target.closest && ev.target.closest('.handle')) return; // handles own their gestures
+    ev.preventDefault();
+    el.setPointerCapture(ev.pointerId);
+    moved = false;
+    const r = el.getBoundingClientRect();
+    grabDX = ev.clientX - (r.left + r.width / 2);
+    grabDY = ev.clientY - (r.top + r.height / 2);
+    hold = setTimeout(lift, 300);                      // press-and-hold picks it up
+  });
+  el.addEventListener('pointermove', ev => {
+    if (!el.hasPointerCapture || !el.hasPointerCapture(ev.pointerId)) return;
+    if (!dragging) {
+      if (Math.abs(ev.movementX) + Math.abs(ev.movementY) > 1) moved = true;
+      return;
+    }
+    const cr = cork.getBoundingClientRect();
+    n.pos_x = Math.max(0, Math.min(92, ((ev.clientX - grabDX - cr.left) / cr.width) * 100 - 4));
+    n.pos_y = Math.max(0, Math.min(88, ((ev.clientY - grabDY - cr.top) / cr.height) * 100 - 4));
+    applyXf(el, n);
+  });
+  const settle = ev => {
+    clearTimeout(hold);
+    if (dragging) {
+      dragging = false;
+      el.classList.remove('lifted');
+      saveXf(n);                                       // release = confirm
+    } else if (!moved && ev.type === 'pointerup') {
+      // plain click: select / toggle
+      if (selected === el) deselect();
+      else { deselect(); selected = el; el.classList.add('sel'); el.style.zIndex = ++zTop; }
+    }
+  };
+  el.addEventListener('pointerup', settle);
+  el.addEventListener('pointercancel', settle);
+
+  // ── rotate handle: a lollipop above the item; drag orbits the center ──
+  const rot = h('span', { class: 'handle h-rot', title: 'Drag to rotate' }, '⟳');
+  el.appendChild(rot);
+  rot.addEventListener('pointerdown', ev => {
+    ev.preventDefault(); ev.stopPropagation();
+    rot.setPointerCapture(ev.pointerId);
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const startPtr = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI;
+    const startRot = n.rotation || 0;
+    const move = e2 => {
+      const a = Math.atan2(e2.clientY - cy, e2.clientX - cx) * 180 / Math.PI;
+      n.rotation = Math.max(-180, Math.min(180, Math.round(startRot + (a - startPtr))));
+      applyXf(el, n);
+    };
+    const up = () => {
+      rot.removeEventListener('pointermove', move);
+      rot.removeEventListener('pointerup', up);
+      saveXf(n);
+    };
+    rot.addEventListener('pointermove', move);
+    rot.addEventListener('pointerup', up);
+  });
+
+  // ── scale handle: the corner of the bounding box (stickers only) ──
+  if (scalable) {
+    const cornerEl = h('span', { class: 'handle h-scale', title: 'Drag to resize' });
+    el.appendChild(cornerEl);
+    cornerEl.addEventListener('pointerdown', ev => {
+      ev.preventDefault(); ev.stopPropagation();
+      cornerEl.setPointerCapture(ev.pointerId);
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const d0 = Math.hypot(ev.clientX - cx, ev.clientY - cy) || 1;
+      const s0 = n.scale || 1;
+      const move = e2 => {
+        const d = Math.hypot(e2.clientX - cx, e2.clientY - cy);
+        n.scale = Math.max(0.5, Math.min(2, s0 * (d / d0)));
+        applyXf(el, n);
+      };
+      const up = () => {
+        cornerEl.removeEventListener('pointermove', move);
+        cornerEl.removeEventListener('pointerup', up);
+        saveXf(n);
+      };
+      cornerEl.addEventListener('pointermove', move);
+      cornerEl.addEventListener('pointerup', up);
+    });
+  }
+
+  el.addEventListener('contextmenu', ev => {
+    ev.preventDefault();
+    hideNotePop();
+    ctxMenu(ev.clientX, ev.clientY, onMenu());
+  });
 }
 
 /* ── a bare sticker on the cork ── */
-function stickerItem(n, reload) {
+function stickerItem(n, cork, reload) {
+  itemPos(n);
   const el = h('div', { class: 'stk' },
-    h('img', { src: n.sticker_url, alt: 'sticker', loading: 'lazy' }),
-    h('span', { class: 'xf-ctls' },
-      ctl('⟲', 'Rotate left', () => nudge(n, el, -12)),
-      ctl('⟳', 'Rotate right', () => nudge(n, el, 12)),
-      ctl('−', 'Smaller', () => nudge(n, el, 0, 1 / 1.15)),
-      ctl('＋', 'Bigger', () => nudge(n, el, 0, 1.15))));
+    h('img', { src: n.sticker_url, alt: 'sticker', loading: 'lazy', draggable: 'false' }));
   applyXf(el, n);
+  makeInteractive(el, n, cork, {
+    scalable: true,
+    reload,
+    onMenu: () => [[
+      'Take it down', () => confirmBox('Take this sticker down?',
+        `${n.poster_name || 'Someone'}'s sticker comes off the board (it expires within 24h anyway).`, async () => {
+          try { await api.stickies({ op: 'delete', id: n.id }); toast('Sticker down'); reload(); }
+          catch (err) { toast(err.message, 'err'); }
+        }, 'Take it down'), true,
+    ]],
+  });
   el.addEventListener('mouseenter', () => {
+    if (el.classList.contains('lifted')) return;
     const e = notePop();
     clear(e).append(h('div', { class: 'np-who' }, `${n.poster_name || '?'} · ${fmt.when(n.created_at)}`));
     e.className = 'np-mini';
     placePop(e, el);
   });
   el.addEventListener('mouseleave', hideNotePop);
-  el.addEventListener('contextmenu', ev => {
-    ev.preventDefault(); hideNotePop();
-    confirmBox('Take this sticker down?', `${n.poster_name || 'Someone'}'s sticker comes off the board (it would expire on its own within 24h anyway).`, async () => {
-      try { await api.stickies({ op: 'delete', id: n.id }); toast('Sticker down'); reload(); }
-      catch (err) { toast(err.message, 'err'); }
-    }, 'Take it down');
-  });
   return el;
 }
 
 /* ── a paper note, with corner reactions ── */
-function noteItem(n, reacts, reload) {
+function noteItem(n, reacts, cork, reload) {
+  itemPos(n);
   const el = h('div', { class: 'note note-' + (n.color || 'yellow') },
     h('i', { class: 'note-pin' }),
     h('span', { class: 'note-msg' }, n.message),
     h('span', { class: 'note-by' }, '— ' + (n.author || '?')),
-    h('span', { class: 'xf-ctls' },
-      ctl('⟲', 'Rotate left', () => nudge(n, el, -8)),
-      ctl('⟳', 'Rotate right', () => nudge(n, el, 8)),
-      ctl('☺', 'React', () => reactDialog(n, reload))),
     reacts.length ? h('span', { class: 'rx-cluster' },
       reacts.slice(0, 4).map(r => r.sticker_url
         ? h('img', { class: 'rx rx-img', src: r.sticker_url, alt: '', title: `${r.name} · ${fmt.when(r.created_at)}` })
         : h('span', { class: 'rx', title: `${r.name} · ${fmt.when(r.created_at)}` }, r.emoji)),
       reacts.length > 4 ? h('span', { class: 'rx rx-more' }, '+' + (reacts.length - 4)) : null) : null);
   applyXf(el, n);
+  makeInteractive(el, n, cork, {
+    scalable: false,
+    reload,
+    onMenu: () => [
+      ['React…', () => reactDialog(n, reload), false],
+      ['Take it down', () => confirmBox('Take this note down?',
+        `“${n.message}” comes off everyone's board. The change feed records who did it.`, async () => {
+          try { await api.stickies({ op: 'delete', id: n.id }); toast('Note taken down'); reload(); }
+          catch (err) { toast(err.message, 'err'); }
+        }, 'Take it down'), true],
+    ],
+  });
   el.addEventListener('mouseenter', () => {
+    if (el.classList.contains('lifted')) return;
     const e = notePop();
     clear(e).append(...[
       h('div', { class: 'np-msg' }, n.message),
@@ -323,22 +489,14 @@ function noteItem(n, reacts, reload) {
           ? h('img', { class: 'rx-img', src: r.sticker_url, alt: '' })
           : h('b', null, r.emoji), ` ${r.name}`))) : null,
       h('div', { class: 'np-foot' }, `${n.author || '?'} · ${fmt.when(n.created_at)}`),
-      h('div', { class: 'np-hint' }, 'right-click to take it down'),
+      h('div', { class: 'np-hint' }, 'hold to move · click for handles · right-click for menu'),
     ].filter(Boolean));
     e.className = 'np-' + (n.color || 'yellow');
     placePop(e, el);
   });
   el.addEventListener('mouseleave', hideNotePop);
-  el.addEventListener('contextmenu', ev => {
-    ev.preventDefault(); hideNotePop();
-    confirmBox('Take this note down?', `“${n.message}” comes off everyone's board. The change feed records who did it.`, async () => {
-      try { await api.stickies({ op: 'delete', id: n.id }); toast('Note taken down'); reload(); }
-      catch (err) { toast(err.message, 'err'); }
-    }, 'Take it down');
-  });
   return el;
 }
-
 /* ── dialogs ── */
 function noteDialog(reload) {
   const msg = textInput({ maxLength: 60, placeholder: 'The short version (fits on the note)' });
