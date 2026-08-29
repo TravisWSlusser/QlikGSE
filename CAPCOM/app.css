@@ -913,3 +913,11 @@ html[data-theme="light"] .cp-frame .mc-up:hover{box-shadow:0 0 0 1px #006580}
 
 /* corkboard stretches now that it owns the column's lower half */
 .cork{min-height:340px;max-height:560px}
+
+/* the Corkboard fills the column so its bottom lines up with the change
+   feed's — the card flexes, the cork absorbs the slack */
+.home-cols{align-items:stretch}
+.home-col{height:100%}
+.board-card{display:flex;flex-direction:column;flex:1;min-height:0}
+.board-card .sec-title{flex:none}
+.board-card .cork{flex:1;max-height:none;min-height:220px}

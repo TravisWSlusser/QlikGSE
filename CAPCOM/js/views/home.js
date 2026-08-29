@@ -50,7 +50,7 @@ export function render(params, rerender, who) {
 
   // Right column: clock, then the corkboard with room to breathe.
   rightCol.appendChild(clockCard());
-  const board = h('div', { class: 'card' }, spinner());
+  const board = h('div', { class: 'card board-card' }, spinner());
   rightCol.appendChild(board);
   loadBoard(board, rerender);
 
