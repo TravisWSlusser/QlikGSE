@@ -186,14 +186,198 @@ async function loadHotlinks(bar, rerender) {
   }, '+ Add link'));
 }
 
-/* ── the sticker drawer: search GIPHY, pick, pin ── */
-function stickerDialog(rerender) {
-  const q = textInput({ placeholder: 'Search stickers — “high five”, “deal closed”, “facepalm”…' });
-  const cap = textInput({ maxLength: 60, placeholder: 'Optional caption (shows under the sticker)' });
+/* ── the community corkboard, v2 ──
+   Multiple boards behind ‹ › arrows. Two kinds of item with different
+   physics: paper NOTES (pinned, permanent, rotatable, collect signed
+   reactions on their corner) and bare STICKERS (no pin, no paper — signed
+   with a real name, expiring 24h after pinning, rotatable AND scalable).
+   Transforms are shared state: turn your sticker and everyone sees it
+   turned. The change feed polices pins and takedowns; nudges go unlogged. */
+
+const NAME_STORE = 'capcom.boardname';
+const rememberName = v => { try { localStorage.setItem(NAME_STORE, v); } catch {} };
+const recallName = () => { try { return localStorage.getItem(NAME_STORE) || ''; } catch { return ''; } };
+
+let boardNo = (() => { try { return Number(localStorage.getItem('capcom.board')) || 1; } catch { return 1; } })();
+
+let notePopEl = null;
+function notePop() {
+  if (!notePopEl) { notePopEl = h('div', { id: 'note-pop' }); document.body.appendChild(notePopEl); }
+  return notePopEl;
+}
+function hideNotePop() { if (notePopEl) notePopEl.style.display = 'none'; }
+function placePop(e, anchor) {
+  e.style.display = 'block';
+  const r = anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : { left: 100, bottom: 100, top: 80 };
+  const w = e.offsetWidth || 300;
+  let x = Math.min(r.left, window.innerWidth - w - 16);
+  let y = r.bottom + 8;
+  if (y + (e.offsetHeight || 160) > window.innerHeight - 8) y = Math.max(8, r.top - (e.offsetHeight || 160) - 8);
+  e.style.left = x + 'px'; e.style.top = y + 'px';
+}
+
+async function loadBoard(card, rerender) {
+  let d;
+  try { d = await api.stickies({ op: 'list', board: boardNo }); }
+  catch (err) { clear(card).appendChild(errorState(err, () => loadBoard(card, rerender))); return; }
+  clear(card);
+
+  const reload = () => loadBoard(card, rerender);
+  const boards = d.boards || 5;
+  const go = n => {
+    boardNo = ((n - 1 + boards) % boards) + 1;
+    try { localStorage.setItem('capcom.board', String(boardNo)); } catch {}
+    reload();
+  };
+
+  card.appendChild(sectionTitle('The Corkboard',
+    h('span', { class: 'bd-nav' },
+      h('button', { class: 'btn xs', 'aria-label': 'Previous board', onClick: () => go(boardNo - 1) }, '‹'),
+      h('span', { class: 'bd-no' }, `${boardNo} / ${boards}`),
+      h('button', { class: 'btn xs', 'aria-label': 'Next board', onClick: () => go(boardNo + 1) }, '›')),
+    h('button', { class: 'btn sm', onClick: () => stickerDialog(reload) }, '+ Sticker'),
+    h('button', { class: 'btn sm accent', onClick: () => noteDialog(reload) }, '+ Note')));
+
+  const notes = d.notes || [];
+  const reactsBy = {};
+  for (const r of d.reactions || []) (reactsBy[r.sticky_id] = reactsBy[r.sticky_id] || []).push(r);
+
+  const cork = h('div', { class: 'cork' });
+  card.appendChild(cork);
+  if (!notes.length) {
+    cork.appendChild(h('p', { class: 'cork-empty' }, `Board ${boardNo} is bare. Pin something.`));
+    return;
+  }
+
+  for (const n of notes) cork.appendChild(n.sticker_url
+    ? stickerItem(n, reload)
+    : noteItem(n, reactsBy[n.id] || [], reload));
+}
+
+/* shared transform helpers — the write is fire-and-forget; the local style
+   updates instantly so it feels fluid */
+function applyXf(el, n) {
+  el.style.transform = `rotate(${n.rotation || 0}deg) scale(${n.scale || 1})`;
+}
+async function nudge(n, el, dRot, fScale) {
+  n.rotation = Math.max(-180, Math.min(180, (n.rotation || 0) + dRot));
+  if (fScale) n.scale = Math.max(0.5, Math.min(2, (n.scale || 1) * fScale));
+  applyXf(el, n);
+  try { await api.stickies({ op: 'transform', id: n.id, rotation: n.rotation, scale: n.scale || 1 }); } catch {}
+}
+
+function ctl(label, title, fn) {
+  return h('button', { class: 'xf-btn', title, 'aria-label': title, onClick: e => { e.stopPropagation(); fn(); } }, label);
+}
+
+/* ── a bare sticker on the cork ── */
+function stickerItem(n, reload) {
+  const el = h('div', { class: 'stk' },
+    h('img', { src: n.sticker_url, alt: 'sticker', loading: 'lazy' }),
+    h('span', { class: 'xf-ctls' },
+      ctl('⟲', 'Rotate left', () => nudge(n, el, -12)),
+      ctl('⟳', 'Rotate right', () => nudge(n, el, 12)),
+      ctl('−', 'Smaller', () => nudge(n, el, 0, 1 / 1.15)),
+      ctl('＋', 'Bigger', () => nudge(n, el, 0, 1.15))));
+  applyXf(el, n);
+  el.addEventListener('mouseenter', () => {
+    const e = notePop();
+    clear(e).append(h('div', { class: 'np-who' }, `${n.poster_name || '?'} · ${fmt.when(n.created_at)}`));
+    e.className = 'np-mini';
+    placePop(e, el);
+  });
+  el.addEventListener('mouseleave', hideNotePop);
+  el.addEventListener('contextmenu', ev => {
+    ev.preventDefault(); hideNotePop();
+    confirmBox('Take this sticker down?', `${n.poster_name || 'Someone'}'s sticker comes off the board (it would expire on its own within 24h anyway).`, async () => {
+      try { await api.stickies({ op: 'delete', id: n.id }); toast('Sticker down'); reload(); }
+      catch (err) { toast(err.message, 'err'); }
+    }, 'Take it down');
+  });
+  return el;
+}
+
+/* ── a paper note, with corner reactions ── */
+function noteItem(n, reacts, reload) {
+  const el = h('div', { class: 'note note-' + (n.color || 'yellow') },
+    h('i', { class: 'note-pin' }),
+    h('span', { class: 'note-msg' }, n.message),
+    h('span', { class: 'note-by' }, '— ' + (n.author || '?')),
+    h('span', { class: 'xf-ctls' },
+      ctl('⟲', 'Rotate left', () => nudge(n, el, -8)),
+      ctl('⟳', 'Rotate right', () => nudge(n, el, 8)),
+      ctl('☺', 'React', () => reactDialog(n, reload))),
+    reacts.length ? h('span', { class: 'rx-cluster' },
+      reacts.slice(0, 4).map(r => r.sticker_url
+        ? h('img', { class: 'rx rx-img', src: r.sticker_url, alt: '', title: `${r.name} · ${fmt.when(r.created_at)}` })
+        : h('span', { class: 'rx', title: `${r.name} · ${fmt.when(r.created_at)}` }, r.emoji)),
+      reacts.length > 4 ? h('span', { class: 'rx rx-more' }, '+' + (reacts.length - 4)) : null) : null);
+  applyXf(el, n);
+  el.addEventListener('mouseenter', () => {
+    const e = notePop();
+    clear(e).append(...[
+      h('div', { class: 'np-msg' }, n.message),
+      n.detail ? h('div', { class: 'np-detail' }, n.detail) : null,
+      reacts.length ? h('div', { class: 'np-rx' }, reacts.map(r =>
+        h('span', { class: 'np-rx-row' }, r.sticker_url
+          ? h('img', { class: 'rx-img', src: r.sticker_url, alt: '' })
+          : h('b', null, r.emoji), ` ${r.name}`))) : null,
+      h('div', { class: 'np-foot' }, `${n.author || '?'} · ${fmt.when(n.created_at)}`),
+      h('div', { class: 'np-hint' }, 'right-click to take it down'),
+    ].filter(Boolean));
+    e.className = 'np-' + (n.color || 'yellow');
+    placePop(e, el);
+  });
+  el.addEventListener('mouseleave', hideNotePop);
+  el.addEventListener('contextmenu', ev => {
+    ev.preventDefault(); hideNotePop();
+    confirmBox('Take this note down?', `“${n.message}” comes off everyone's board. The change feed records who did it.`, async () => {
+      try { await api.stickies({ op: 'delete', id: n.id }); toast('Note taken down'); reload(); }
+      catch (err) { toast(err.message, 'err'); }
+    }, 'Take it down');
+  });
+  return el;
+}
+
+/* ── dialogs ── */
+function noteDialog(reload) {
+  const msg = textInput({ maxLength: 60, placeholder: 'The short version (fits on the note)' });
+  const det = h('textarea', { rows: 4, maxLength: 500, placeholder: 'The whole story — shows when someone hovers' });
+  const emojiRow = h('div', { class: 'emoji-row' },
+    ['🎉', '🔥', '😂', '💚', '👀', '🐛', '🏆', '☕'].map(e =>
+      h('button', { class: 'emoji-btn', onClick: () => { msg.value += e; msg.focus(); } }, e)));
+  const colors = ['yellow', 'pink', 'mint', 'blue', 'orange'];
+  let picked = colors[0];
+  const swatches = h('div', { class: 'swatch-row' }, colors.map(c => {
+    const s = h('button', { class: 'swatch sw-' + c + (c === picked ? ' on' : ''), 'aria-label': c, onClick: () => {
+      picked = c;
+      [...swatches.children].forEach(x => x.classList.remove('on'));
+      s.classList.add('on');
+    } });
+    return s;
+  }));
+  modal('Pin a note',
+    h('div', { class: 'form' },
+      field('Note', msg, 'Up to 60 characters — this is what the board shows. Emoji welcome.'),
+      emojiRow,
+      field('Detail (optional)', det, 'Up to 500 — revealed on hover.'),
+      field('Color', swatches)),
+    [
+      { label: 'Cancel', onClick: c => c() },
+      { label: 'Pin it', kind: 'accent', onClick: async c => {
+        try { await api.stickies({ op: 'save', board: boardNo, message: msg.value, detail: det.value, color: picked }); c(); toast('Pinned'); reload(); }
+        catch (err) { toast(err.message, 'err'); }
+      } },
+    ]);
+}
+
+/* GIPHY picker used by both the sticker dialog and sticker reactions.
+   onPick(url) fires when a cell is chosen. */
+function giphyGrid(onPick) {
+  const q = textInput({ placeholder: 'Search — “high five”, “deal closed”, “facepalm”…' });
   let type = 'stickers';
-  let pickedUrl = '';
   const grid = h('div', { class: 'gif-grid' },
-    h('p', { class: 'sub' }, 'Search to fill the drawer. Stickers have transparent backs; memes are full GIFs.'));
+    h('p', { class: 'sub' }, 'Search to fill the drawer.'));
   const tabs = h('div', { class: 'gif-tabs' },
     ['stickers', 'gifs'].map(t => h('button', {
       class: 'btn xs' + (t === type ? ' accent' : ''),
@@ -212,30 +396,74 @@ function stickerDialog(rerender) {
       if (!(d.results || []).length) { grid.appendChild(h('p', { class: 'sub' }, 'Nothing for that — try other words.')); return; }
       for (const g of d.results) {
         const cell = h('button', { class: 'gif-cell', title: g.title, onClick: () => {
-          pickedUrl = g.url;
           [...grid.children].forEach(x => x.classList && x.classList.remove('on'));
           cell.classList.add('on');
+          onPick(g.url);
         } }, h('img', { src: g.preview, alt: g.title, loading: 'lazy' }));
         grid.appendChild(cell);
       }
     } catch (err) { clear(grid).appendChild(h('p', { class: 'sub' }, err.message)); }
   }
   q.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+  return h('div', { class: 'form' },
+    h('div', { class: 'gif-search' }, q, h('button', { class: 'btn', onClick: run }, 'Search'), tabs),
+    grid);
+}
+
+function stickerDialog(reload) {
+  const name = textInput({ maxLength: 40, value: recallName(), placeholder: 'Your name — stickers are signed' });
+  let pickedUrl = '';
   modal('Pin a sticker',
     h('div', { class: 'form' },
-      h('div', { class: 'gif-search' }, q, h('button', { class: 'btn', onClick: run }, 'Search'), tabs),
-      grid,
-      field('Caption (optional)', cap)),
+      field('Your name', name, 'Shows when someone hovers your sticker. Stickers expire after 24 hours.'),
+      giphyGrid(url => { pickedUrl = url; })),
     [
       { label: 'Cancel', onClick: c => c() },
       { label: 'Pin it', kind: 'accent', onClick: async c => {
         if (!pickedUrl) { toast('Pick a sticker first', 'err'); return; }
-        try { await api.stickies({ op: 'save', message: cap.value, sticker_url: pickedUrl }); c(); toast('Pinned'); rerender(); }
-        catch (err) { toast(err.message, 'err'); }
+        try {
+          await api.stickies({ op: 'save', board: boardNo, sticker_url: pickedUrl, poster_name: name.value });
+          rememberName(name.value.trim());
+          c(); toast('Pinned — it rides for 24 hours'); reload();
+        } catch (err) { toast(err.message, 'err'); }
       } },
     ]);
 }
 
+function reactDialog(n, reload) {
+  const name = textInput({ maxLength: 40, value: recallName(), placeholder: 'Your name — reactions are signed' });
+  let chosen = { emoji: '', sticker_url: '' };
+  const status = h('span', { class: 'sub' }, 'Pick one below.');
+  const emojiRow = h('div', { class: 'emoji-row rx-pick' },
+    ['👍', '🎉', '🔥', '😂', '💚', '👏', '💯', '😮'].map(e =>
+      h('button', { class: 'emoji-btn', onClick: ev => {
+        chosen = { emoji: e, sticker_url: '' };
+        [...emojiRow.children].forEach(x => x.classList.remove('on'));
+        ev.target.classList.add('on');
+        status.textContent = `Reacting with ${e}`;
+      } }, e)));
+  modal('React to the note',
+    h('div', { class: 'form' },
+      h('p', { class: 'explain' }, `“${n.message}”`),
+      field('Your name', name),
+      field('Emoji', emojiRow),
+      field('…or a small sticker', giphyGrid(url => {
+        chosen = { emoji: '', sticker_url: url };
+        [...emojiRow.children].forEach(x => x.classList.remove('on'));
+        status.textContent = 'Reacting with a sticker';
+      })),
+      status),
+    [
+      { label: 'Cancel', onClick: c => c() },
+      { label: 'Stick it', kind: 'accent', onClick: async c => {
+        try {
+          await api.stickies({ op: 'react', sticky_id: n.id, name: name.value, emoji: chosen.emoji, sticker_url: chosen.sticker_url });
+          rememberName(name.value.trim());
+          c(); toast('Reaction stuck'); reload();
+        } catch (err) { toast(err.message, 'err'); }
+      } },
+    ]);
+}
 /* ── calendar widget rebuild (public feed — every key sees it) ── */
 async function loadCalendar(card, scopes, acts) {
   let d;
@@ -321,113 +549,6 @@ async function loadLog(card) {
       h('div', { class: 'feed-main' },
         h('span', { class: 'feed-summary' }, r.summary),
         h('span', { class: 'feed-actor' }, r.actor, ' · ', r.action))))));
-}
-
-/* ── the community corkboard ──
-   Digital sticky notes anyone with a key can pin: a short face on the
-   board, the longer story on hover. Removals are one click and logged —
-   the change feed is the moderation. */
-let notePopEl = null;
-function notePop() {
-  if (!notePopEl) { notePopEl = h('div', { id: 'note-pop' }); document.body.appendChild(notePopEl); }
-  return notePopEl;
-}
-function hideNotePop() { if (notePopEl) notePopEl.style.display = 'none'; }
-
-async function loadBoard(card, rerender) {
-  let d;
-  try { d = await api.stickies({ op: 'list' }); }
-  catch (err) { clear(card).appendChild(errorState(err, () => loadBoard(card, rerender))); return; }
-  clear(card);
-
-  card.appendChild(sectionTitle('The Corkboard',
-    h('span', { class: 'sec-sub' }, 'hover for the story'),
-    h('button', { class: 'btn sm', onClick: () => stickerDialog(rerender) }, '+ Sticker'),
-    h('button', {
-      class: 'btn sm accent', onClick: () => {
-        const msg = textInput({ maxLength: 60, placeholder: 'The short version (fits on the note)' });
-        const det = h('textarea', { rows: 4, maxLength: 500, placeholder: 'The whole story — shows when someone hovers' });
-        // one-tap emoji — they also just type in the field, this is the lazy row
-        const emojiRow = h('div', { class: 'emoji-row' },
-          ['🎉', '🔥', '😂', '💚', '👀', '🐛', '🏆', '☕'].map(e =>
-            h('button', { class: 'emoji-btn', onClick: () => { msg.value += e; msg.focus(); } }, e)));
-        const colors = ['yellow', 'pink', 'mint', 'blue', 'orange'];
-        let picked = colors[0];
-        const swatches = h('div', { class: 'swatch-row' }, colors.map(c => {
-          const s = h('button', { class: 'swatch sw-' + c + (c === picked ? ' on' : ''), 'aria-label': c, onClick: () => {
-            picked = c;
-            [...swatches.children].forEach(x => x.classList.remove('on'));
-            s.classList.add('on');
-          } });
-          return s;
-        }));
-        modal('Pin a note',
-          h('div', { class: 'form' },
-            field('Note', msg, 'Up to 60 characters — this is what the board shows. Emoji welcome.'),
-            emojiRow,
-            field('Detail (optional)', det, 'Up to 500 — revealed on hover.'),
-            field('Color', swatches)),
-          [
-            { label: 'Cancel', onClick: c => c() },
-            { label: 'Pin it', kind: 'accent', onClick: async c => {
-              try { await api.stickies({ op: 'save', message: msg.value, detail: det.value, color: picked }); c(); toast('Pinned'); rerender(); }
-              catch (err) { toast(err.message, 'err'); }
-            } },
-          ]);
-      },
-    }, '+ Note')));
-
-  const notes = d.notes || [];
-  if (!notes.length) {
-    card.appendChild(h('div', { class: 'cork' },
-      h('p', { class: 'cork-empty' }, 'Nothing pinned yet. Be the first — jokes, shout-outs, bug sightings, heads-ups.')));
-    return;
-  }
-
-  card.appendChild(h('div', { class: 'cork' }, notes.map(n => {
-    const tilt = ((n.id % 5) - 2) * 1.7;
-    // A sticker pins straight to the cork — no paper, just the pushpin.
-    const note = n.sticker_url
-      ? h('div', { class: 'stk', style: { transform: `rotate(${tilt}deg)` } },
-          h('i', { class: 'note-pin' }),
-          h('img', { src: n.sticker_url, alt: n.message || 'sticker', loading: 'lazy' }),
-          n.message ? h('span', { class: 'stk-cap' }, n.message) : null)
-      : h('div', {
-          class: 'note note-' + (n.color || 'yellow'),
-          style: { transform: `rotate(${tilt}deg)` },
-        },
-          h('i', { class: 'note-pin' }),
-          h('span', { class: 'note-msg' }, n.message),
-          h('span', { class: 'note-by' }, '— ' + (n.author || '?')));
-    note.addEventListener('mouseenter', () => {
-      const e = notePop();
-      clear(e).append(...[
-        n.sticker_url ? h('img', { class: 'np-stk', src: n.sticker_url, alt: '' }) : null,
-        n.message ? h('div', { class: 'np-msg' }, n.message) : null,
-        n.detail ? h('div', { class: 'np-detail' }, n.detail) : null,
-        h('div', { class: 'np-foot' }, `${n.author || '?'} · ${fmt.when(n.created_at)}`),
-        h('div', { class: 'np-hint' }, 'right-click to take it down'),
-      ].filter(Boolean));
-      e.className = 'np-' + (n.color || 'yellow');
-      e.style.display = 'block';
-      const r = note.getBoundingClientRect ? note.getBoundingClientRect() : { left: 100, bottom: 100, top: 80 };
-      const w = e.offsetWidth || 300;
-      let x = Math.min(r.left, window.innerWidth - w - 16);
-      let y = r.bottom + 8;
-      if (y + (e.offsetHeight || 200) > window.innerHeight - 8) y = Math.max(8, r.top - (e.offsetHeight || 200) - 8);
-      e.style.left = x + 'px'; e.style.top = y + 'px';
-    });
-    note.addEventListener('mouseleave', hideNotePop);
-    note.addEventListener('contextmenu', ev => {
-      ev.preventDefault();
-      hideNotePop();
-      confirmBox('Take this note down?', `“${n.message}” comes off everyone's board. The change feed records who did it.`, async () => {
-        try { await api.stickies({ op: 'delete', id: n.id }); toast('Note taken down'); rerender(); }
-        catch (err) { toast(err.message, 'err'); }
-      }, 'Take it down');
-    });
-    return note;
-  })));
 }
 
 /* ── the Stellar-Seller widget ── */
