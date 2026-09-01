@@ -1092,7 +1092,7 @@ html[data-theme="light"] .cork-empty{
 .yarn-row-dots{display:flex;gap:5px}
 body.tying .cork-free .note,body.tying .cork-free .stk{cursor:crosshair}
 /* the right-click menu */
-#ctx-menu{
+#ctx-menu,#pctx-menu{
   position:fixed;display:none;z-index:95;min-width:170px;padding:6px;
   background:var(--card);border:1px solid var(--line);border-radius:10px;
   box-shadow:var(--shadow);
@@ -1246,6 +1246,44 @@ a.gantt-label:hover{color:var(--link)}
   margin:0 0 12px;padding:8px 12px;border:1px dashed var(--line);
   border-radius:8px;
 }
+
+/* the Member Catalog dialog: read-only rows, right-click to act */
+.mem-cat-head{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.mem-cat{display:flex;flex-direction:column;gap:6px;max-height:56vh;overflow-y:auto;scrollbar-width:thin}
+.mem-row{
+  position:relative;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:8px 12px;border:1px solid var(--line);border-radius:10px;
+}
+.mem-row:hover{border-color:var(--focus)}
+.mem-row-name{font-weight:700;color:var(--heading)}
+.mem-row-tri{
+  font-size:.66rem;font-weight:800;letter-spacing:.1em;padding:1px 7px;
+  border-radius:6px;border:1px solid var(--line);color:var(--link);
+}
+.mem-row-detail{flex:1;min-width:0;font-size:.78rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mem-row-claim{font-size:.66rem;color:var(--muted)}
+.mem-row-claim.on{color:var(--accent);font-weight:700}
+/* stays hidden for mouse users (right-click is the way); the coarse-pointer
+   rule on .itm-menu shows it for touch, where right-click does not exist */
+.mem-row-menu{position:static;width:24px;height:24px;box-shadow:none;flex:none}
+
+/* the Insights Team Member Catalog: teams as columns, leader starred */
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.cat-team-name{
+  font-size:.7rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--link);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--line);
+}
+.cat-member{
+  display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  padding:7px 10px;margin-bottom:4px;border:1px solid transparent;border-radius:9px;
+  background:none;color:var(--ink);cursor:pointer;font-size:.84rem;
+}
+.cat-member:hover{border-color:var(--focus);background:var(--card-2)}
+.cat-member.cat-lead{border-color:var(--line);background:var(--card-2)}
+.cat-star{width:14px;flex:none;color:var(--warn);font-size:.8rem}
+.cat-name{font-weight:600;white-space:nowrap}
+.cat-detail{flex:1;min-width:0;font-size:.72rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-count{font-size:.7rem;color:var(--muted);white-space:nowrap}
 
 /* member chips: people tagged on a project — click one for their history */
 .mem-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}

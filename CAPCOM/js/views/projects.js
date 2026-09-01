@@ -384,13 +384,16 @@ function milestoneDialog(p, rerender) {
 
 /* ── managed lists: the editCategories row pattern ── */
 function teamsDialog(d, rerender) {
+  const activeMembers = (d.members || []).filter(m => m.active);
   const rows = d.teams.filter(t => t.active).map(t => {
     const name = textInput({ value: t.name, maxLength: 40 });
     const sort = textInput({ value: String(t.sort), style: { width: '54px' } });
-    return h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center' } },
-      name, sort,
+    const leader = select([{ value: '0', label: '— leader —' },
+      ...activeMembers.map(m => ({ value: String(m.id), label: m.name, selected: t.leader_id === m.id }))]);
+    return h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' } },
+      name, sort, leader,
       h('button', { class: 'btn xs', onClick: async () => {
-        try { await api.projectsAdmin({ op: 'saveTeam', id: t.id, name: name.value, sort: Number(sort.value) }); toast('Team saved'); rerender(); }
+        try { await api.projectsAdmin({ op: 'saveTeam', id: t.id, name: name.value, sort: Number(sort.value), leader_id: Number(leader.value) || null }); toast('Team saved'); rerender(); }
         catch (err) { toast(err.message, 'err'); }
       } }, 'Save'),
       h('button', { class: 'btn xs danger', onClick: async () => {
@@ -409,54 +412,92 @@ function teamsDialog(d, rerender) {
     [{ label: 'Done', kind: 'accent', onClick: c => c() }]);
 }
 
-/* ── the member registry manager ── */
+/* ── the member registry: a read-only list; right-click a row to act ── */
+let pctxEl = null;
+function pctx(x, y, entries) {
+  if (!pctxEl) {
+    pctxEl = h('div', { id: 'pctx-menu' });
+    document.body.appendChild(pctxEl);
+    document.addEventListener('click', () => { if (pctxEl) pctxEl.style.display = 'none'; });
+  }
+  clear(pctxEl).append(...entries.map(([label, fn, danger]) =>
+    h('button', { class: 'ctx-item' + (danger ? ' danger' : ''), onClick: () => { pctxEl.style.display = 'none'; fn(); } }, label)));
+  pctxEl.style.display = 'block';
+  pctxEl.style.left = Math.min(x, window.innerWidth - 180) + 'px';
+  pctxEl.style.top = Math.min(y, window.innerHeight - entries.length * 40 - 12) + 'px';
+}
+
 function membersDialog(d, rerender) {
-  const activeTeams = d.teams.filter(t => t.active);
-  const teamSel = (picked) => select([{ value: '0', label: '— team —' },
-    ...activeTeams.map(t => ({ value: String(t.id), label: t.name, selected: picked === t.id }))]);
+  const teamById = {};
+  for (const t of d.teams) teamById[t.id] = t;
   const rows = (d.members || []).filter(m => m.active).map(m => {
-    const name = textInput({ value: m.name, maxLength: 60 });
-    const tri = textInput({ value: m.trigram || '', maxLength: 3, placeholder: 'TRI', style: { width: '58px', textTransform: 'uppercase' } });
-    const title = textInput({ value: m.title || '', maxLength: 60, placeholder: 'Role (optional)' });
-    const email = textInput({ value: m.email || '', maxLength: 120, placeholder: 'email@qlik.com' });
-    const team = teamSel(m.team_id);
-    return h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' } },
-      name, tri, title, email, team,
-      h('button', { class: 'btn xs', onClick: async () => {
-        try {
-          await api.members({ op: 'save', id: m.id, name: name.value, trigram: tri.value, title: title.value, email: email.value, team_id: Number(team.value) || null });
-          toast('Member saved'); rerender();
-        } catch (err) { toast(err.message, 'err'); }
-      } }, 'Save'),
-      m.claimed
-        ? h('button', { class: 'btn xs', title: 'Clears their access code so they can claim a new one at the gate', onClick: () => confirmBox('Reset this access code?',
-          `${m.name}'s member sign-in stops working until they claim a new code at the gate.`, async () => {
-            try { await api.members({ op: 'resetCode', id: m.id }); toast('Code reset'); rerender(); }
-            catch (err) { toast(err.message, 'err'); }
-          }, 'Reset it') }, 'Reset code')
-        : h('span', { class: 'sub', title: 'They can claim their access code at the sign-in gate' }, 'unclaimed'),
-      h('button', { class: 'btn xs danger', onClick: async () => {
-        try { await api.members({ op: 'retire', id: m.id }); toast('Member retired — their history stays'); rerender(); }
-        catch (err) { toast(err.message, 'err'); }
-      } }, 'Retire'));
-  });
-  const newName = textInput({ maxLength: 60, placeholder: 'Full name' });
-  const newTri = textInput({ maxLength: 3, placeholder: 'TRI', style: { width: '58px', textTransform: 'uppercase' } });
-  const newEmail = textInput({ maxLength: 120, placeholder: 'email@qlik.com' });
-  modal('Team members',
-    h('div', { class: 'form' },
-      h('p', { class: 'sub' }, 'The registry behind project tagging, person history, and member sign-in. The trigram links a member to their REC Room identity, and they must be in here before they can claim an access code at the gate.'),
-      ...rows,
-      h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' } }, newName, newTri, newEmail,
-        h('button', { class: 'btn xs accent', onClick: async () => {
-          try { await api.members({ op: 'save', name: newName.value, trigram: newTri.value, email: newEmail.value }); toast('Member added'); rerender(); }
+    const menu = () => [
+      ['Edit…', () => editMemberDialog(m, d, rerender), false],
+      ...(m.claimed ? [['Reset access code', () => confirmBox('Reset this access code?',
+        `${m.name}'s member sign-in stops working until they claim a new code at the gate.`, async () => {
+          try { await api.members({ op: 'resetCode', id: m.id }); toast('Code reset'); rerender(); }
           catch (err) { toast(err.message, 'err'); }
-        } }, 'Add'))),
+        }, 'Reset it'), false]] : []),
+      ['Retire', () => confirmBox('Retire this member?',
+        `${m.name} comes off the registry — their project history stays.`, async () => {
+          try { await api.members({ op: 'retire', id: m.id }); toast('Member retired'); rerender(); }
+          catch (err) { toast(err.message, 'err'); }
+        }, 'Retire'), true],
+    ];
+    const row = h('div', { class: 'mem-row', title: 'Right-click to edit' },
+      h('span', { class: 'mem-row-name' }, m.name),
+      m.trigram ? h('span', { class: 'mem-row-tri' }, m.trigram) : null,
+      h('span', { class: 'mem-row-detail' },
+        [m.title, (teamById[m.team_id] || {}).name, m.email].filter(Boolean).join(' · ') || '—'),
+      h('span', { class: 'mem-row-claim' + (m.claimed ? ' on' : '') }, m.claimed ? 'claimed' : 'unclaimed'),
+      h('button', { class: 'itm-menu mem-row-menu', 'aria-label': 'Member menu', onClick: ev => {
+        ev.stopPropagation();
+        pctx(ev.clientX, ev.clientY, menu());
+      } }, '⋯'));
+    row.addEventListener('contextmenu', ev => { ev.preventDefault(); pctx(ev.clientX, ev.clientY, menu()); });
+    return row;
+  });
+  modal('Team Member Catalog',
+    h('div', null,
+      h('div', { class: 'mem-cat-head' },
+        h('button', { class: 'btn sm accent', onClick: () => editMemberDialog(null, d, rerender) }, '+ Add New'),
+        h('span', { class: 'sub' }, 'Right-click a member to edit, reset their code, or retire them.')),
+      rows.length ? h('div', { class: 'mem-cat' }, ...rows)
+        : emptyState('Nobody in the registry yet.', 'Add New puts the first person in.')),
     [{ label: 'Done', kind: 'accent', onClick: c => c() }]);
 }
 
-/* ── the person card: everything this member has helped with ── */
-function historyDialog(m, d) {
+function editMemberDialog(m, d, rerender) {
+  const isNew = !m;
+  const activeTeams = d.teams.filter(t => t.active);
+  const name = textInput({ value: m ? m.name : '', maxLength: 60 });
+  const tri = textInput({ value: m ? (m.trigram || '') : '', maxLength: 3, placeholder: 'TRI', style: { textTransform: 'uppercase' } });
+  const title = textInput({ value: m ? (m.title || '') : '', maxLength: 60 });
+  const email = textInput({ value: m ? (m.email || '') : '', maxLength: 120, placeholder: 'email@qlik.com' });
+  const team = select([{ value: '0', label: '— no team —' },
+    ...activeTeams.map(t => ({ value: String(t.id), label: t.name, selected: m && m.team_id === t.id }))]);
+  modal(isNew ? 'Add a team member' : `Edit — ${m.name}`,
+    h('div', { class: 'form' },
+      field('Full name', name),
+      field('Trigram', tri, 'Their REC Room identity — three letters. Needed before they can claim member access.'),
+      field('Role', title),
+      field('Email', email),
+      field('Team', team)),
+    [
+      { label: 'Cancel', onClick: c => c() },
+      { label: isNew ? 'Add them' : 'Save', kind: 'accent', onClick: async c => {
+        try {
+          await api.members({ op: 'save', id: m ? m.id : undefined, name: name.value,
+            trigram: tri.value, title: title.value, email: email.value, team_id: Number(team.value) || null });
+          c(); toast(isNew ? 'Member added' : 'Member saved'); rerender();
+        } catch (err) { toast(err.message, 'err'); }
+      } },
+    ]);
+}
+
+/* ── the person card: everything this member has helped with.
+   Exported: the Insights catalog opens it too. ── */
+export function historyDialog(m, d) {
   const statusById = {};
   for (const s of d.statuses) statusById[s.id] = s;
   const teamById = {};

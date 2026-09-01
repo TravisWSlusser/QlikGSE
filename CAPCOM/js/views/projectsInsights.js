@@ -11,6 +11,7 @@ import { h, clear, fmt, esc, isPast } from '../util.js';
 import { api } from '../api.js';
 import { sectionTitle, spinner, errorState, emptyState } from '../ui.js';
 import { donut, gantt } from '../charts.js';
+import { historyDialog } from './projects.js';
 
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
@@ -43,6 +44,11 @@ async function load(root, rerender) {
   const teamById = {}, statusById = {};
   for (const t of d.teams) teamById[t.id] = t;
   for (const s of d.statuses) statusById[s.id] = s;
+  // the person card (historyDialog) reads these off d
+  d.memberById = {};
+  for (const m of d.members || []) d.memberById[m.id] = m;
+  d.tagsByMember = {};
+  for (const t of d.tags || []) (d.tagsByMember[t.member_id] = d.tagsByMember[t.member_id] || []).push(t.project_id);
   const active = d.projects.filter(p => p.active);
   const activeStatuses = d.statuses.filter(s => s.active);
   const activeTeams = d.teams.filter(t => t.active);
@@ -104,6 +110,11 @@ async function load(root, rerender) {
   const calCard = h('div', { class: 'card' });
   buildCalendar(calCard, d, teamById, statusById);
   root.appendChild(calCard);
+
+  /* ── Team Member Catalog: everyone, by team, leaders on top ── */
+  const catCard = h('div', { class: 'card' });
+  buildCatalog(catCard, d, teamById);
+  root.appendChild(catCard);
 
   root.appendChild(reviewCard);
 
@@ -263,6 +274,47 @@ function buildCalendar(card, d, teamById, statusById) {
   card.append(
     sectionTitle('Projects calendar', h('span', { class: 'sec-sub' }, 'phase deadlines + milestones — separate from Mission Control')),
     head, gridEl, listEl);
+}
+
+/* the Team Member Catalog: active members grouped by team in sort order,
+   the team's leader (project_teams.leader_id) starred on top, everyone
+   clickable through to their person card. Unassigned members close it. */
+function buildCatalog(card, d, teamById) {
+  const members = (d.members || []).filter(m => m.active);
+  card.appendChild(sectionTitle('Team Member Catalog',
+    h('span', { class: 'sec-sub' }, `${members.length} member${members.length === 1 ? '' : 's'} — click anyone for their project history`)));
+  if (!members.length) {
+    card.appendChild(emptyState('Nobody in the registry yet.',
+      'People get added from the Project Board’s Members button.'));
+    return;
+  }
+  const memberRow = (m, isLead) => {
+    const projCount = (d.tagsByMember[m.id] || []).length;
+    return h('button', { class: 'cat-member' + (isLead ? ' cat-lead' : ''), onClick: () => historyDialog(m, d) },
+      isLead ? h('span', { class: 'cat-star', 'aria-label': 'Team leader' }, '★') : h('span', { class: 'cat-star' }, ''),
+      h('span', { class: 'cat-name' }, m.name),
+      m.trigram ? h('span', { class: 'mem-row-tri' }, m.trigram) : null,
+      h('span', { class: 'cat-detail' }, [isLead ? 'Team leader' : null, m.title || null].filter(Boolean).join(' · ')),
+      h('span', { class: 'cat-count' }, projCount ? `${projCount} project${projCount > 1 ? 's' : ''}` : ''));
+  };
+  const grid = h('div', { class: 'cat-grid' });
+  const placed = new Set();
+  for (const t of d.teams.filter(t => t.active)) {
+    const lead = t.leader_id ? d.memberById[t.leader_id] : null;
+    const crew = members.filter(m => m.team_id === t.id && (!lead || m.id !== lead.id));
+    if (!lead && !crew.length) continue;
+    const col = h('div', { class: 'cat-team' }, h('div', { class: 'cat-team-name' }, t.name));
+    if (lead && lead.active) { col.appendChild(memberRow(lead, true)); placed.add(lead.id); }
+    for (const m of crew) { col.appendChild(memberRow(m, false)); placed.add(m.id); }
+    grid.appendChild(col);
+  }
+  const loose = members.filter(m => !placed.has(m.id));
+  if (loose.length) {
+    const col = h('div', { class: 'cat-team' }, h('div', { class: 'cat-team-name' }, 'Unassigned'));
+    for (const m of loose) col.appendChild(memberRow(m, false));
+    grid.appendChild(col);
+  }
+  card.appendChild(grid);
 }
 
 /* the quarter's diary, grouped per project — deliberately print-shaped */

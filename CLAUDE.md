@@ -891,6 +891,19 @@ card), and the Board shows a how-to hint when the registry is empty —
 the "where do I add people?" question came up within the hour. Re-run
 Setup for the credential + email columns.
 
+**Catalog pass (1 Sep, later):** the Members dialog is now the **Team
+Member Catalog** — a read-only list (+ Add New up top); actions
+(Edit…/Reset access code/Retire) live on RIGHT-CLICK (`pctx`, a second
+context-menu element — `#pctx-menu` shares `#ctx-menu`'s CSS; touch
+gets the ⋯ chip via the coarse-pointer rule). Editing happens in a
+proper form modal. Teams carry a **leader_id** (picked in the Teams
+manager, validated against active members; `project_teams` SELECT is
+`SELECT *` on purpose so the pre-Setup column gap can't break the
+board). The Insights page gained a **Team Member Catalog card**: teams
+as columns in sort order, the leader starred on top, an Unassigned
+bucket, every row opening the person card (`historyDialog` is now
+exported from views/projects.js). Re-run Setup for leader_id.
+
 ## Community Board — yarn, sounds, and the rename (29 Aug 2026)
 
 The Corkboard is now titled **The Community Board** (UI string only — CSS
