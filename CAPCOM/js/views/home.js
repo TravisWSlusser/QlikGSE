@@ -31,6 +31,7 @@ export function render(params, rerender, who) {
     h('span', { class: 'qa-ic', html: ICONS[icon] || '' }), label);
   if (scopes.includes('calendar')) acts.push(act('calendar', 'New event', '#calendar/new'));
   if (scopes.includes('banners')) acts.push(act('banners', 'New headline', '#banners/highlights/new'));
+  if (scopes.includes('projects')) acts.push(act('projects', 'New project', '#projects/new'));
 
   // Two columns: calendar (with its actions) left; clock over changes right.
   const grid = h('div', { class: 'grid2 home-cols' });
@@ -40,10 +41,13 @@ export function render(params, rerender, who) {
   const rightCol = h('div', { class: 'home-col' });
   grid.append(leftCol, rightCol);
 
-  // Left column: calendar (with actions), then the change feed under it.
+  // Left column: calendar (with actions), projects at a glance, change feed.
   const calCard = h('div', { class: 'card' }, spinner());
   leftCol.appendChild(calCard);
   loadCalendar(calCard, scopes, acts);
+  const prjCard = h('div', { class: 'card' }, spinner());
+  leftCol.appendChild(prjCard);
+  loadProjectsCard(prjCard, scopes);
   const logCard = h('div', { class: 'card' }, spinner());
   leftCol.appendChild(logCard);
   loadLog(logCard);
@@ -1066,6 +1070,37 @@ async function loadCalendar(card, scopes, acts) {
 }
 
 /* ── change feed ── */
+/* ── projects at a glance: the compact Home cut — no calendar, no charts,
+   just the promises. Server-ordered: overdue first, then soonest due. ── */
+async function loadProjectsCard(card, scopes) {
+  let d;
+  try { d = await api.projects({ op: 'list' }); }
+  catch (err) { clear(card).appendChild(errorState(err, () => loadProjectsCard(card, scopes))); return; }
+  clear(card);
+  const teamById = {}, statusById = {};
+  for (const t of d.teams) teamById[t.id] = t;
+  for (const s of d.statuses) statusById[s.id] = s;
+  card.appendChild(sectionTitle('Projects',
+    h('a', { class: 'btn xs', href: '#projects' }, 'Open the board'),
+    ...(scopes.includes('projects') ? [h('a', { class: 'btn xs accent', href: '#projects/new' }, '+ New')] : [])));
+  const rows = (d.projects || []).slice(0, 6);
+  if (!rows.length) {
+    card.appendChild(emptyState('No projects posted yet.',
+      scopes.includes('projects') ? 'Post the first one from the board.' : null));
+    return;
+  }
+  card.appendChild(h('div', { class: 'prj-glance' }, rows.map(p => {
+    const st = statusById[p.status_id];
+    return h('a', { class: 'prj-glance-row', href: '#projects' },
+      h('span', { class: 'prj-glance-title' }, p.title),
+      h('span', { class: 'prj-glance-team' }, (teamById[p.team_id] || {}).name || ''),
+      st ? h('span', { class: 'prj-status-chip', style: { '--psc': `var(--ps-${st.color})` } }, st.label) : null,
+      p.overdue
+        ? h('span', { class: 'overdue-badge' }, 'OVERDUE')
+        : h('span', { class: 'prj-glance-team' }, `due ${fmt.day(p.phase_due)}`));
+  })));
+}
+
 async function loadLog(card) {
   let d;
   try { d = await api.listLog(); }

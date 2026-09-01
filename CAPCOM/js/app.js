@@ -21,6 +21,8 @@ import * as questions from './views/questions.js';
 import * as maintenance from './views/maintenance.js';
 import * as system from './views/system.js';
 import * as home from './views/home.js';
+import * as projects from './views/projects.js';
+import * as projectsInsights from './views/projectsInsights.js';
 import { ICONS } from './icons.js';
 import { mountFx } from './fx.js';
 import { hidePop } from './pop.js';
@@ -33,6 +35,12 @@ const NAV = [
     { route: 'calendar', label: 'Calendar', scope: 'calendar', mod: calendar, icon: 'calendar' },
     { route: 'banners/highlights', label: 'Focused Headlines', scope: 'banners', mod: banners, icon: 'banners' },
     { route: 'banners/stellar', label: 'Action Banner', scope: 'banners', mod: banners, icon: 'stellar' },
+  ]},
+  { group: 'Projects', items: [
+    // scope null on purpose: every key holder can SEE the board (visibility
+    // is the product); edit controls gate on the 'projects' scope inside
+    { route: 'projects', label: 'Project Board', scope: null, mod: projects, icon: 'projects' },
+    { route: 'projects/insights', label: 'Insights & Calendar', scope: null, mod: projectsInsights, icon: 'insights' },
   ]},
   { group: 'REC Room', items: [
     { route: 'dashboard', label: 'Dashboard', scope: 'analytics', mod: dashboard, icon: 'dashboard' },

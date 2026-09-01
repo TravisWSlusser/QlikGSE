@@ -10,6 +10,7 @@ const SCOPE_DESC = {
   banners: 'Hero rotators and image upload',
   content: 'Question banks (all three games)',
   analytics: 'Dashboard and player data (read-only)',
+  projects: 'Project tracker — post, status, milestones',
   system: 'Maintenance, keys, setup — full control',
 };
 

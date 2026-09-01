@@ -34,6 +34,11 @@
   --warn-soft:rgba(250,178,25,.10);
   --viz-seq:#0AA49E;          /* validated on #11304D */
   --viz-seq-hover:#10CFC9;
+  /* project status palette — six-checks validated on #11304D in this
+     adjacency order; keys mirror PALETTE in lib/admin/projectsAdmin.js */
+  --ps-violet:#9085e9; --ps-teal:#0AA49E; --ps-amber:#c98500; --ps-rose:#d55181;
+  --ps-blue:#3987e5; --ps-orange:#d95926; --ps-sky:#1e97d2;
+  --overdue:#e66767;          /* status color: always paired with the OVERDUE label */
   --shadow:0 24px 60px rgba(0,0,0,.5);
   --radius:14px;              /* Mission Control's corner radius */
 }
@@ -59,6 +64,9 @@ html[data-theme="light"]{
   --warn-soft:rgba(250,178,25,.16);
   --viz-seq:#007396;          /* validated on #FFFFFF */
   --viz-seq-hover:#006580;
+  --ps-violet:#4a3aa7; --ps-teal:#007396; --ps-amber:#b97d00; --ps-rose:#d05586;
+  --ps-blue:#2a78d6; --ps-orange:#d0491c; --ps-sky:#0e7fa5;
+  --overdue:#c73a39;
   --shadow:0 18px 44px rgba(25,66,108,.16);
 }
 
@@ -1140,6 +1148,98 @@ img.rxm-face{width:32px;height:32px;border-radius:50%;object-fit:cover;backgroun
   color:rgba(74,52,19,.6);font-weight:800;
 }
 
+/* ── the Projects tracker ── */
+.prj-status-chip{
+  display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;
+  font-size:.74rem;font-weight:700;white-space:nowrap;
+  background:color-mix(in srgb, var(--psc) 16%, transparent);
+  border:1px solid color-mix(in srgb, var(--psc) 45%, transparent);color:var(--ink);
+}
+.prj-status-chip::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--psc);flex:none}
+.overdue-badge{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;
+  font-size:.7rem;font-weight:800;letter-spacing:.06em;
+  color:var(--overdue);border:1px solid var(--overdue);
+  background:color-mix(in srgb, var(--overdue) 12%, transparent);
+}
+.prj-title{font-weight:700;color:var(--heading)}
+.prj-desc{font-size:.8rem;color:var(--muted);margin-top:2px;max-width:420px}
+.prj-people{font-size:.8rem;color:var(--ink-2)}
+.prj-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.prj-link{
+  font-size:.72rem;padding:2px 8px;border-radius:6px;border:1px solid var(--line);
+  color:var(--link);
+}
+.prj-link:hover{border-color:var(--focus)}
+.prj-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
+.prj-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.prj-filters select{width:auto}
+tr.prj-retired{opacity:.5}
+.prj-due{white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* diary */
+.diary-rows{display:flex;flex-direction:column;gap:10px;max-height:52vh;overflow-y:auto;scrollbar-width:thin}
+.diary-row{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.diary-kind{
+  display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.08em;
+  text-transform:uppercase;padding:2px 8px;border-radius:6px;margin-right:8px;
+  background:var(--card-2);color:var(--ink-2);
+}
+.diary-kind.overdue{color:var(--overdue);border:1px solid var(--overdue);background:color-mix(in srgb, var(--overdue) 10%, transparent)}
+.diary-note{margin:6px 0 2px;font-size:.86rem;white-space:pre-wrap}
+.diary-meta{font-size:.72rem;color:var(--muted)}
+.diary-dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle;margin:0 3px}
+
+/* donut */
+.donut-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.donut-face{position:relative;flex:none}
+.donut-center{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;pointer-events:none;
+}
+.donut-big{font-size:1.5rem;font-weight:800;color:var(--heading)}
+.donut-sub{font-size:.66rem;color:var(--muted)}
+.donut-legend{display:flex;flex-direction:column;gap:6px;min-width:0}
+.donut-key{display:flex;align-items:center;gap:8px;font-size:.82rem}
+.donut-dot{width:10px;height:10px;border-radius:50%;flex:none}
+.donut-key-label{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.donut-key-val{color:var(--muted);margin-left:auto;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* gantt */
+.gantt-wrap{display:grid;grid-template-columns:170px minmax(0,1fr);gap:0}
+.gantt-labels{display:flex;flex-direction:column}
+.gantt-axis-spacer{height:26px}
+.gantt-label{
+  height:30px;display:flex;align-items:center;font-size:.8rem;color:var(--ink-2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:10px;
+}
+a.gantt-label:hover{color:var(--link)}
+.gantt-scroll{overflow-x:auto;scrollbar-width:thin}
+.gantt text.gantt-tick{font-size:11px;fill:var(--muted)}
+.gantt .gantt-today{stroke:var(--focus);stroke-width:1.5;stroke-dasharray:3 3}
+.gantt .gantt-bar:hover{filter:brightness(1.15)}
+.gantt .gantt-due{fill:var(--card);stroke:var(--ink-2);stroke-width:1.5}
+.gantt .gantt-due.late{fill:var(--overdue);stroke:var(--overdue)}
+
+/* range picker + review */
+.range-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.range-row input[type=date]{width:auto}
+.rv-project{margin-bottom:14px}
+.rv-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.rv-team{font-size:.72rem;color:var(--muted)}
+.rv-entries{border-left:2px solid var(--line);padding-left:12px;display:flex;flex-direction:column;gap:8px}
+
+/* status swatch picker (Statuses manager) */
+.ps-swatches{display:flex;gap:6px}
+.ps-swatch{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer}
+.ps-swatch.on{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+
+/* Home at-a-glance card */
+.prj-glance{display:flex;flex-direction:column;gap:8px}
+.prj-glance-row{display:flex;align-items:center;gap:10px;font-size:.84rem}
+.prj-glance-title{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.prj-glance-team{font-size:.7rem;color:var(--muted);white-space:nowrap}
+
 /* ── the phone pass: under 880px the sidebar becomes a drawer behind a
    topbar burger, layouts are already single-column by the grid rules
    above, and spacing tightens to fit a hand ── */
@@ -1168,4 +1268,8 @@ img.rxm-face{width:32px;height:32px;border-radius:50%;object-fit:cover;backgroun
   /* board items are finger-sized already; give the wall a bit more height
      so a phone can actually arrange things */
   .board-card .cork{min-height:300px}
+  /* projects: the gantt keeps its own scroll; labels narrow */
+  .gantt-wrap{grid-template-columns:110px minmax(0,1fr)}
+  .prj-desc{max-width:none}
+  .donut-wrap{justify-content:center}
 }

@@ -801,6 +801,49 @@ Surgical edits, never full-file rewrites. Validate before shipping — render or
 screenshot to confirm visual changes, and check JS parses. Give honest tradeoff
 analysis before building. Flag gaps rather than filling them with invention.
 
+## The Projects tracker (1 Sep 2026)
+
+Sales Enablement's project board, in CAPCOM: nav group **Projects** →
+Project Board (`views/projects.js`) + Insights & Calendar
+(`views/projectsInsights.js`), over `lib/admin/projects.js` (lifecycle,
+diary, milestones, review — 10 ops) and `lib/admin/projectsAdmin.js`
+(managed teams + statuses). New scope **`projects`**; both nav routes
+are `scope:null` on purpose — **reads are open to every key holder
+(visibility is the product), writes gate on the scope**, and the views
+hide edit controls without it. Home gets a compact at-a-glance card
+(overdue first, then soonest due — the server's order).
+
+**The accountability mechanic** (the whole point — enforced in
+`lib/admin/projects.js`, the UI is a courtesy): every project is born
+with a status and a `phase_due` date; every status change declares a
+new date. Overdue is COMPUTED, never stored (`phase_due < todayIso()`
+anchored to America/New_York; the due day itself is not overdue; dates
+are date-only ISO strings compared lexically — never `new Date(iso)`).
+An overdue project's next `status` or `extend` is 409'd unless it
+carries a ≥10-char written note — `extend` on an overdue project files
+the `overdue_note` diary entry and moves the date. `project_log` is
+APPEND-ONLY (no active column, no edit/delete ops exist) — kinds:
+created, status_change, overdue_note, due_change, update, milestone.
+`{op:'review', from, to}` is management's quarter view, grouped per
+project on the Insights page.
+
+Teams and statuses are managed lists (retire refused while active
+projects hold them; the last one is protected; retired rows still come
+back in `list` so history renders). Status colors are palette KEYS
+(violet/teal/amber/rose/blue/orange/sky) mapped to `--ps-*` tokens in
+app.css — **both themes six-checks validated in that adjacency order
+against the real card surfaces** (dark on #11304D, light on #fff);
+`--overdue` is a status color, always paired with the OVERDUE label.
+`charts.js` gained `donut()` and `gantt()` (SVG, shared #viz-tip,
+colorVar = token names so themes just work; the Gantt scrolls in
+`.gantt-wrap` — the one sanctioned horizontal scroll). Gantt segments
+are derived client-side from the range's created/status_change entries.
+
+The projects calendar (phase deadlines + milestones) shares zero data
+with Mission Control's events. **Re-run Setup** (five new tables, five
+seeded statuses in Travis's ladder order, one seed team) and grant
+`projects` to the keys that should post — masters have it already.
+
 ## Community Board — yarn, sounds, and the rename (29 Aug 2026)
 
 The Corkboard is now titled **The Community Board** (UI string only — CSS
