@@ -85,6 +85,14 @@ async function load(root, rerender, canEdit, openNew, me) {
       h('button', { class: 'btn sm accent', onClick: () => editProject(null, d, rerender) }, '+ New project'),
     ] : [])));
 
+  // an empty registry is invisible until you know where to look — say so
+  if (canEdit && !(d.members || []).length) {
+    card.appendChild(h('p', { class: 'sub prj-hint' },
+      'No team members in the registry yet — use the ',
+      h('b', null, 'Members'),
+      ' button above to add people (name + REC Room trigram). They must be in there before you can tag them on projects or they can claim member access at the gate.'));
+  }
+
   const wrap = h('div', { class: 'table-wrap' });
   card.appendChild(wrap);
   root.appendChild(card);
@@ -410,12 +418,13 @@ function membersDialog(d, rerender) {
     const name = textInput({ value: m.name, maxLength: 60 });
     const tri = textInput({ value: m.trigram || '', maxLength: 3, placeholder: 'TRI', style: { width: '58px', textTransform: 'uppercase' } });
     const title = textInput({ value: m.title || '', maxLength: 60, placeholder: 'Role (optional)' });
+    const email = textInput({ value: m.email || '', maxLength: 120, placeholder: 'email@qlik.com' });
     const team = teamSel(m.team_id);
     return h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' } },
-      name, tri, title, team,
+      name, tri, title, email, team,
       h('button', { class: 'btn xs', onClick: async () => {
         try {
-          await api.members({ op: 'save', id: m.id, name: name.value, trigram: tri.value, title: title.value, team_id: Number(team.value) || null });
+          await api.members({ op: 'save', id: m.id, name: name.value, trigram: tri.value, title: title.value, email: email.value, team_id: Number(team.value) || null });
           toast('Member saved'); rerender();
         } catch (err) { toast(err.message, 'err'); }
       } }, 'Save'),
@@ -433,13 +442,14 @@ function membersDialog(d, rerender) {
   });
   const newName = textInput({ maxLength: 60, placeholder: 'Full name' });
   const newTri = textInput({ maxLength: 3, placeholder: 'TRI', style: { width: '58px', textTransform: 'uppercase' } });
+  const newEmail = textInput({ maxLength: 120, placeholder: 'email@qlik.com' });
   modal('Team members',
     h('div', { class: 'form' },
-      h('p', { class: 'sub' }, 'The registry behind project tagging and person history. The trigram links a member to their REC Room identity; self-set access codes (phase 2) will require being in here first.'),
+      h('p', { class: 'sub' }, 'The registry behind project tagging, person history, and member sign-in. The trigram links a member to their REC Room identity, and they must be in here before they can claim an access code at the gate.'),
       ...rows,
-      h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center' } }, newName, newTri,
+      h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' } }, newName, newTri, newEmail,
         h('button', { class: 'btn xs accent', onClick: async () => {
-          try { await api.members({ op: 'save', name: newName.value, trigram: newTri.value }); toast('Member added'); rerender(); }
+          try { await api.members({ op: 'save', name: newName.value, trigram: newTri.value, email: newEmail.value }); toast('Member added'); rerender(); }
           catch (err) { toast(err.message, 'err'); }
         } }, 'Add'))),
     [{ label: 'Done', kind: 'accent', onClick: c => c() }]);
@@ -460,7 +470,8 @@ function historyDialog(m, d) {
     h('div', null,
       h('p', { class: 'sub', style: { marginBottom: '10px' } },
         [m.title, (teamById[m.team_id] || {}).name, m.trigram ? `REC Room: ${m.trigram}` : null]
-          .filter(Boolean).join(' · ') || 'Team member'),
+          .filter(Boolean).join(' · ') || 'Team member',
+        m.email ? [' · ', h('a', { href: 'mailto:' + m.email }, m.email)] : null),
       projs.length
         ? h('div', { class: 'prj-glance' }, projs.map(p => {
           const st = statusById[p.status_id];

@@ -885,8 +885,11 @@ tag-first rule); already-claimed 409s. The accepted residual risk —
 squatting a colleague's UNCLAIMED access — is visible in the change
 feed and reversible via the Members manager's **Reset code** (op
 `resetCode`, clears hash so they re-claim). `claimed` rides back on
-the registry rows in projects `list`. Re-run Setup for the three
-credential columns.
+the registry rows in projects `list`. Members also carry an optional
+`email` (validated loosely, lowercased, shown as a mailto on the person
+card), and the Board shows a how-to hint when the registry is empty —
+the "where do I add people?" question came up within the hour. Re-run
+Setup for the credential + email columns.
 
 ## Community Board — yarn, sounds, and the rename (29 Aug 2026)
 

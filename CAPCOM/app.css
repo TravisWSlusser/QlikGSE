@@ -1242,6 +1242,11 @@ a.gantt-label:hover{color:var(--link)}
 #gate-member{margin-top:10px;width:100%}
 #gate-claim{color:var(--link)}
 
+.prj-hint{
+  margin:0 0 12px;padding:8px 12px;border:1px dashed var(--line);
+  border-radius:8px;
+}
+
 /* member chips: people tagged on a project — click one for their history */
 .mem-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
 .mem-chip{
