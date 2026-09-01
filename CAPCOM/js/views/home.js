@@ -295,10 +295,21 @@ async function loadBoard(card, rerender) {
   // The yarn layer: an SVG sheet over the whole cork, never interactive —
   // strings drape over the paper like the real thing. Endpoints are read
   // from the items' live boxes, so a drag re-aims the string in real time.
+  // A tie remembers WHERE on each item it was pinned (anchor fractions);
+  // yarn without anchors (tied before that existed) clips to the item's
+  // EDGE along the string's direction instead of skewering the center.
   const svgNS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(svgNS, 'svg');
   svg.setAttribute('class', 'yarn-layer');
   cork.appendChild(svg);
+  const edgePoint = ([cx, cy], [tx, ty], r) => {
+    const dx = tx - cx, dy = ty - cy;
+    if (!dx && !dy) return [cx, cy];
+    const sx = dx ? ((dx > 0 ? r.right : r.left) - cx) / dx : Infinity;
+    const sy = dy ? ((dy > 0 ? r.bottom : r.top) - cy) / dy : Infinity;
+    const s = Math.min(sx, sy);
+    return [cx + dx * s, cy + dy * s];
+  };
   redrawYarn = () => {
     const cr = cork.getBoundingClientRect();
     if (!cr.width) return; // view is gone; a stale resize tick lands here
@@ -308,8 +319,15 @@ async function loadBoard(card, rerender) {
       const a = itemEls.get(yr.from_id), b = itemEls.get(yr.to_id);
       if (!a || !b) continue;
       const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
-      const x1 = ra.left + ra.width / 2 - cr.left, y1 = ra.top + ra.height / 2 - cr.top;
-      const x2 = rb.left + rb.width / 2 - cr.left, y2 = rb.top + rb.height / 2 - cr.top;
+      const boxA = { left: ra.left - cr.left, top: ra.top - cr.top, right: ra.right - cr.left, bottom: ra.bottom - cr.top };
+      const boxB = { left: rb.left - cr.left, top: rb.top - cr.top, right: rb.right - cr.left, bottom: rb.bottom - cr.top };
+      const cA = [(boxA.left + boxA.right) / 2, (boxA.top + boxA.bottom) / 2];
+      const cB = [(boxB.left + boxB.right) / 2, (boxB.top + boxB.bottom) / 2];
+      const at = (box, ax, ay) => [box.left + (box.right - box.left) * ax, box.top + (box.bottom - box.top) * ay];
+      const anchA = yr.from_ax != null ? at(boxA, yr.from_ax, yr.from_ay) : null;
+      const anchB = yr.to_ax != null ? at(boxB, yr.to_ax, yr.to_ay) : null;
+      const [x1, y1] = anchA || edgePoint(cA, anchB || cB, boxA);
+      const [x2, y2] = anchB || edgePoint(cB, anchA || cA, boxB);
       const hex = YARN_HEX[yr.color] || YARN_HEX.red;
       const sag = Math.min(46, Math.hypot(x2 - x1, y2 - y1) * 0.16) + (yr.id % 4) * 3;
       const path = document.createElementNS(svgNS, 'path');
@@ -422,10 +440,22 @@ const YARN_HEX = { red: '#d64d4d', orange: '#e8923a', teal: '#10CFC9', purple: '
 let redrawYarn = () => {}; // re-bound by each board render; drags re-aim strings live
 window.addEventListener('resize', () => redrawYarn());
 
-let tieMode = null; // { fromId, color, reload } — a color picked, string in hand
+let tieMode = null; // { fromId, color, reload, fromA } — a color picked, string in hand
 function setTie(t) {
   tieMode = t;
   document.body.classList.toggle('tying', !!t);
+}
+
+// Where on an item a click landed, as 0..1 fractions of its box — the
+// yarn pins THERE. Captured when the item's menu opens (that click is the
+// from-end) and when the tie-completing click lands (the to-end).
+let menuAnchor = null;
+function anchorFrac(ev, el) {
+  const r = el.getBoundingClientRect();
+  return {
+    ax: Math.max(0, Math.min(1, (ev.clientX - r.left) / (r.width || 1))),
+    ay: Math.max(0, Math.min(1, (ev.clientY - r.top) / (r.height || 1))),
+  };
 }
 
 let yarnEl = null;
@@ -442,7 +472,7 @@ function yarnPad(el, n, reload) {
       style: `background:${YARN_HEX[c]}`,
       onClick: () => {
         hideYarnPad();
-        setTie({ fromId: n.id, color: c, reload });
+        setTie({ fromId: n.id, color: c, reload, fromA: menuAnchor });
         toast('Yarn in hand — click another item to tie it. Esc puts it away');
       },
     })));
@@ -597,7 +627,12 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload, onTap }) {
       const t = tieMode;
       if (t.fromId === n.id) { toast('That end is already tied — click a different item'); return; }
       setTie(null);
-      api.stickies({ op: 'tie', from_id: t.fromId, to_id: n.id, color: t.color, board: boardNo })
+      const toA = anchorFrac(ev, el);                  // the string pins exactly where they clicked
+      api.stickies({
+        op: 'tie', from_id: t.fromId, to_id: n.id, color: t.color, board: boardNo,
+        ...(t.fromA ? { from_ax: t.fromA.ax, from_ay: t.fromA.ay } : {}),
+        to_ax: toA.ax, to_ay: toA.ay,
+      })
         .then(() => { pop('tick'); toast('Tied'); t.reload(); })
         .catch(err => toast(err.message, 'err'));
       return;
@@ -642,6 +677,7 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload, onTap }) {
   el.addEventListener('contextmenu', ev => {
     ev.preventDefault();
     hideNotePop();
+    menuAnchor = anchorFrac(ev, el);                   // if this menu ties yarn, it pins here
     ctxMenu(ev.clientX, ev.clientY, onMenu());
   });
 
@@ -654,6 +690,7 @@ function makeInteractive(el, n, cork, { scalable, onMenu, reload, onTap }) {
   chip.addEventListener('click', ev => {
     ev.stopPropagation();
     hideNotePop();
+    menuAnchor = anchorFrac(ev, el);                   // chip sits at the top-right corner; close enough
     ctxMenu(ev.clientX, ev.clientY, onMenu());
   });
   el.appendChild(chip);

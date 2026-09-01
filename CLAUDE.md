@@ -883,6 +883,16 @@ allowed it — reactions only reject stickers). The tie-mode click-away
 canceller must list every item class — `.note,.stk,.bkm` — or tying to
 the new kind silently cancels; that bug shipped for about five minutes.
 
+**Yarn anchors (1 Sep):** strings no longer skewer item centers. A tie
+stores WHERE it was pinned on each item — 0..1 fractions of the box
+(`from_ax/from_ay/to_ax/to_ay` on sticky_yarn, nullable; re-run Setup):
+the from-end is the click that opened the item's menu (`menuAnchor`,
+captured on contextmenu and the ⋯ chip), the to-end is the
+tie-completing click. Yarn WITHOUT anchors (legacy rows) clips to the
+item's EDGE along the string's direction (`edgePoint` in redrawYarn).
+Anchors are bounding-box fractions, so heavy rotation drifts them
+slightly — accepted.
+
 **Signatures (1 Sep):** EVERYTHING on the board is now signed with a
 typed real name — notes and bookmarks joined stickers/reactions in
 requiring `poster_name` (2–40 chars, server-enforced in `save`). The
