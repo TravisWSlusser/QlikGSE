@@ -698,7 +698,7 @@ function noteItem(n, reacts, cork, reload, bd) {
   const el = h('div', { class: 'note note-' + (n.color || 'yellow') },
     h('i', { class: 'note-pin' }),
     h('span', { class: 'note-msg' }, n.message),
-    h('span', { class: 'note-by' }, '— ' + (n.author || '?')),
+    h('span', { class: 'note-by' }, '— ' + (n.poster_name || n.author || '?')),
     reacts.length ? (() => {
       const cluster = h('span', { class: 'rx-cluster', title: 'Click to manage reactions' },
         reacts.slice(0, 4).map(r => r.sticker_url
@@ -738,7 +738,7 @@ function noteItem(n, reacts, cork, reload, bd) {
         h('span', { class: 'np-rx-row' }, r.sticker_url
           ? h('img', { class: 'rx-img', src: r.sticker_url, alt: '' })
           : h('b', null, r.emoji), ` ${r.name}`))) : null,
-      h('div', { class: 'np-foot' }, `${n.author || '?'} · ${fmt.when(n.created_at)}`),
+      h('div', { class: 'np-foot' }, `${n.poster_name || n.author || '?'} · ${fmt.when(n.created_at)}`),
       h('div', { class: 'np-hint' }, 'hold to move · right-click to rotate, react, take down'),
     ].filter(Boolean));
     e.className = 'np-' + (n.color || 'yellow');
@@ -798,7 +798,7 @@ function bookmarkItem(n, reacts, cork, reload, bd) {
         h('span', { class: 'np-rx-row' }, r.sticker_url
           ? h('img', { class: 'rx-img', src: r.sticker_url, alt: '' })
           : h('b', null, r.emoji), ` ${r.name}`))) : null,
-      h('div', { class: 'np-foot' }, `${n.author || '?'} · ${fmt.when(n.created_at)}`),
+      h('div', { class: 'np-foot' }, `${n.poster_name || n.author || '?'} · ${fmt.when(n.created_at)}`),
       h('div', { class: 'np-hint' }, 'click to open · hold to move · right-click to react or tie yarn'),
     ].filter(Boolean));
     e.className = 'np-yellow';
@@ -812,17 +812,20 @@ function bookmarkItem(n, reacts, cork, reload, bd) {
 function linkDialog(reload) {
   const title = textInput({ maxLength: 60, placeholder: "What the folder says — the link's name" });
   const url = textInput({ placeholder: 'https://…' });
+  const name = textInput({ maxLength: 40, value: recallName(), placeholder: 'First and last name — bookmarks are signed' });
   modal('Pin a bookmark',
     h('div', { class: 'form' },
       field('Title', title, 'Shows on the folder — up to 60 characters.'),
-      field('Link', url, 'http(s) only. Clicking the folder opens it in a new tab.')),
+      field('Link', url, 'http(s) only. Clicking the folder opens it in a new tab.'),
+      field('Your name', name, 'Signs the bookmark — the board shows people, not keys.')),
     [
       { label: 'Cancel', onClick: c => c() },
       { label: 'Pin it', kind: 'accent', onClick: async c => {
         const u = url.value.trim();
         if (!/^https?:\/\/\S+$/i.test(u)) { toast('That link needs to start with http(s)://', 'err'); return; }
         try {
-          await api.stickies({ op: 'save', board: boardNo, message: title.value, link_url: u });
+          await api.stickies({ op: 'save', board: boardNo, message: title.value, link_url: u, poster_name: name.value });
+          rememberName(name.value.trim());
           c(); toast('Bookmark pinned'); reload();
         } catch (err) { toast(err.message, 'err'); }
       } },
@@ -845,17 +848,22 @@ function noteDialog(reload) {
     } });
     return s;
   }));
+  const name = textInput({ maxLength: 40, value: recallName(), placeholder: 'First and last name — notes are signed' });
   modal('Pin a note',
     h('div', { class: 'form' },
       field('Note', msg, 'Up to 60 characters — this is what the board shows. Emoji welcome.'),
       emojiRow,
       field('Detail (optional)', det, 'Up to 500 — revealed on hover.'),
-      field('Color', swatches)),
+      field('Color', swatches),
+      field('Your name', name, 'Signs the note — the board shows people, not keys.')),
     [
       { label: 'Cancel', onClick: c => c() },
       { label: 'Pin it', kind: 'accent', onClick: async c => {
-        try { await api.stickies({ op: 'save', board: boardNo, message: msg.value, detail: det.value, color: picked }); c(); toast('Pinned'); reload(); }
-        catch (err) { toast(err.message, 'err'); }
+        try {
+          await api.stickies({ op: 'save', board: boardNo, message: msg.value, detail: det.value, color: picked, poster_name: name.value });
+          rememberName(name.value.trim());
+          c(); toast('Pinned'); reload();
+        } catch (err) { toast(err.message, 'err'); }
       } },
     ]);
 }

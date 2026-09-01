@@ -883,6 +883,16 @@ allowed it — reactions only reject stickers). The tie-mode click-away
 canceller must list every item class — `.note,.stk,.bkm` — or tying to
 the new kind silently cancels; that bug shipped for about five minutes.
 
+**Signatures (1 Sep):** EVERYTHING on the board is now signed with a
+typed real name — notes and bookmarks joined stickers/reactions in
+requiring `poster_name` (2–40 chars, server-enforced in `save`). The
+`author` column keeps the key label for the audit trail only; display
+is `poster_name || author`, so pre-signature rows still show their key
+label ("master") until re-pinned or backfilled in Neon
+(`UPDATE stickies SET poster_name='…' WHERE …`). The name is remembered
+per browser (`recallName`/`rememberName`) and shared across all four
+dialogs.
+
 **Sounds**: `pop(kind)` in home.js synthesizes pick-up ('up'), put-down
 ('down'), and react/tie ('tick') pops through one lazily-created
 AudioContext — never `new Audio()`/`<audio>` (the REC Room lock-screen
