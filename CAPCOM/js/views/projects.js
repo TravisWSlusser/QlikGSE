@@ -40,6 +40,15 @@ async function load(root, rerender, canEdit, openNew) {
   const teamById = {}, statusById = {};
   for (const t of d.teams) teamById[t.id] = t;
   for (const s of d.statuses) statusById[s.id] = s;
+  // the member registry rides on d so every row and dialog can reach it
+  d.memberById = {};
+  for (const m of d.members || []) d.memberById[m.id] = m;
+  d.tagsByProject = {};
+  d.tagsByMember = {};
+  for (const t of d.tags || []) {
+    (d.tagsByProject[t.project_id] = d.tagsByProject[t.project_id] || []).push(t.member_id);
+    (d.tagsByMember[t.member_id] = d.tagsByMember[t.member_id] || []).push(t.project_id);
+  }
   const activeTeams = d.teams.filter(t => t.active);
   const activeStatuses = d.statuses.filter(s => s.active);
   const activeProjects = d.projects.filter(p => p.active);
@@ -69,6 +78,7 @@ async function load(root, rerender, canEdit, openNew) {
       teamSel, statusSel,
       h('label', { class: 'prj-filters', style: { fontSize: '.78rem', color: 'var(--muted)' } }, retiredCb, 'retired')),
     ...(canEdit ? [
+      h('button', { class: 'btn sm', onClick: () => membersDialog(d, rerender) }, 'Members'),
       h('button', { class: 'btn sm', onClick: () => teamsDialog(d, rerender) }, 'Teams'),
       h('button', { class: 'btn sm', onClick: () => statusesDialog(d, rerender) }, 'Statuses'),
       h('button', { class: 'btn sm accent', onClick: () => editProject(null, d, rerender) }, '+ New project'),
@@ -112,7 +122,16 @@ function projectRow(p, d, teamById, statusById, canEdit, rerender) {
       p.description ? h('div', { class: 'prj-desc' }, p.description) : null,
       (p.links || []).length ? h('div', { class: 'prj-links' }, p.links.map(l =>
         h('a', { class: 'prj-link', href: l.href, target: '_blank', rel: 'noopener' }, l.label + ' ↗'))) : null),
-    h('td', null, h('span', { class: 'prj-people' }, p.people || '—')),
+    h('td', null,
+      (() => {
+        const memberIds = d.tagsByProject[p.id] || [];
+        const chips = memberIds.map(id => d.memberById[id]).filter(Boolean).map(m =>
+          h('button', { class: 'mem-chip', title: 'See what ' + m.name + ' has helped with', onClick: () => historyDialog(m, d) }, m.name));
+        return h('div', null,
+          chips.length ? h('div', { class: 'mem-chips' }, chips) : null,
+          p.people ? h('span', { class: 'prj-people' }, p.people) : null,
+          !chips.length && !p.people ? h('span', { class: 'prj-people' }, '—') : null);
+      })()),
     h('td', null, team ? team.name : '?'),
     h('td', null, statusChip(st),
       h('div', { class: 'diary-meta', style: { marginTop: '3px' } }, `${p.days_in_phase}d in phase`)),
@@ -156,11 +175,52 @@ function editProject(p, d, rerender) {
     status: isNew ? select(activeStatuses.map(s => ({ value: String(s.id), label: s.label }))) : null,
     due: isNew ? h('input', { type: 'date' }) : null,
   };
+  // tagging registered members — live ops on an existing project; the
+  // person-history cards are built from exactly these tags
+  const tagBlock = !isNew ? (() => {
+    const wrap = h('div', { class: 'mem-chips' });
+    const drawChips = () => {
+      clear(wrap);
+      const ids = d.tagsByProject[p.id] || [];
+      wrap.append(...ids.map(mid => d.memberById[mid]).filter(Boolean).map(m =>
+        h('span', { class: 'mem-chip' }, m.name,
+          h('button', { class: 'mem-chip-x', 'aria-label': 'Untag ' + m.name, onClick: async () => {
+            try {
+              await api.members({ op: 'untag', project_id: p.id, member_id: m.id });
+              const arr = d.tagsByProject[p.id] || [];
+              arr.splice(arr.indexOf(m.id), 1);
+              toast(m.name + ' untagged');
+              drawChips();
+            } catch (err) { toast(err.message, 'err'); }
+          } }, '✕'))));
+      if (!ids.length) wrap.appendChild(h('span', { class: 'prj-people' }, 'Nobody tagged yet.'));
+    };
+    drawChips();
+    const options = (d.members || []).filter(m => m.active);
+    const sel = select([{ value: '0', label: options.length ? 'Tag a member…' : 'No members yet — add them via Members' },
+      ...options.map(m => ({ value: String(m.id), label: m.name }))]);
+    sel.addEventListener('change', async () => {
+      const mid = Number(sel.value);
+      sel.value = '0';
+      if (!mid) return;
+      try {
+        await api.members({ op: 'tag', project_id: p.id, member_id: mid });
+        (d.tagsByProject[p.id] = d.tagsByProject[p.id] || []).push(mid);
+        toast(d.memberById[mid].name + ' tagged');
+        drawChips();
+      } catch (err) { toast(err.message, 'err'); }
+    });
+    return field('Team members on this', h('div', null, wrap, sel),
+      'Tags build each person’s project history — changes apply immediately.');
+  })() : null;
+
   modal(isNew ? 'Post a project' : 'Edit project',
     h('div', { class: 'form' },
       field('Title', f.title),
       field('What is it?', f.description, 'The show-off line — what this is and why it matters.'),
-      field('Who is on it', f.people),
+      tagBlock,
+      field(isNew ? 'Who is on it' : 'Guests / externals (free text)', f.people,
+        isNew ? 'Free text for now — after posting, tag registered members from Edit.' : null),
       field('Team', f.team),
       field('Links', f.links, 'Demo, doc, repo — Label | URL, one per line, up to 6.'),
       ...(isNew ? [
@@ -333,6 +393,77 @@ function teamsDialog(d, rerender) {
           catch (err) { toast(err.message, 'err'); }
         } }, 'Add'))),
     [{ label: 'Done', kind: 'accent', onClick: c => c() }]);
+}
+
+/* ── the member registry manager ── */
+function membersDialog(d, rerender) {
+  const activeTeams = d.teams.filter(t => t.active);
+  const teamSel = (picked) => select([{ value: '0', label: '— team —' },
+    ...activeTeams.map(t => ({ value: String(t.id), label: t.name, selected: picked === t.id }))]);
+  const rows = (d.members || []).filter(m => m.active).map(m => {
+    const name = textInput({ value: m.name, maxLength: 60 });
+    const tri = textInput({ value: m.trigram || '', maxLength: 3, placeholder: 'TRI', style: { width: '58px', textTransform: 'uppercase' } });
+    const title = textInput({ value: m.title || '', maxLength: 60, placeholder: 'Role (optional)' });
+    const team = teamSel(m.team_id);
+    return h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' } },
+      name, tri, title, team,
+      h('button', { class: 'btn xs', onClick: async () => {
+        try {
+          await api.members({ op: 'save', id: m.id, name: name.value, trigram: tri.value, title: title.value, team_id: Number(team.value) || null });
+          toast('Member saved'); rerender();
+        } catch (err) { toast(err.message, 'err'); }
+      } }, 'Save'),
+      h('button', { class: 'btn xs danger', onClick: async () => {
+        try { await api.members({ op: 'retire', id: m.id }); toast('Member retired — their history stays'); rerender(); }
+        catch (err) { toast(err.message, 'err'); }
+      } }, 'Retire'));
+  });
+  const newName = textInput({ maxLength: 60, placeholder: 'Full name' });
+  const newTri = textInput({ maxLength: 3, placeholder: 'TRI', style: { width: '58px', textTransform: 'uppercase' } });
+  modal('Team members',
+    h('div', { class: 'form' },
+      h('p', { class: 'sub' }, 'The registry behind project tagging and person history. The trigram links a member to their REC Room identity; self-set access codes (phase 2) will require being in here first.'),
+      ...rows,
+      h('div', { style: { display: 'flex', gap: '8px', alignItems: 'center' } }, newName, newTri,
+        h('button', { class: 'btn xs accent', onClick: async () => {
+          try { await api.members({ op: 'save', name: newName.value, trigram: newTri.value }); toast('Member added'); rerender(); }
+          catch (err) { toast(err.message, 'err'); }
+        } }, 'Add'))),
+    [{ label: 'Done', kind: 'accent', onClick: c => c() }]);
+}
+
+/* ── the person card: everything this member has helped with ── */
+function historyDialog(m, d) {
+  const statusById = {};
+  for (const s of d.statuses) statusById[s.id] = s;
+  const teamById = {};
+  for (const t of d.teams) teamById[t.id] = t;
+  const projIds = d.tagsByMember[m.id] || [];
+  const projById = {};
+  for (const p of d.projects) projById[p.id] = p;
+  const projs = projIds.map(id => projById[id]).filter(Boolean)
+    .sort((a, z) => (z.active - a.active) || (z.id - a.id));
+  modal(m.name,
+    h('div', null,
+      h('p', { class: 'sub', style: { marginBottom: '10px' } },
+        [m.title, (teamById[m.team_id] || {}).name, m.trigram ? `REC Room: ${m.trigram}` : null]
+          .filter(Boolean).join(' · ') || 'Team member'),
+      projs.length
+        ? h('div', { class: 'prj-glance' }, projs.map(p => {
+          const st = statusById[p.status_id];
+          return h('div', { class: 'prj-glance-row' + (p.active ? '' : ' prj-retired') },
+            h('span', { class: 'prj-glance-title' }, p.title),
+            st ? h('span', { class: 'prj-status-chip', style: { '--psc': `var(--ps-${st.color})` } }, st.label) : null,
+            p.active
+              ? (p.overdue
+                ? h('span', { class: 'overdue-badge' }, 'OVERDUE')
+                : h('span', { class: 'prj-glance-team' }, `due ${fmt.day(p.phase_due)}`))
+              : h('span', { class: 'prj-glance-team' }, 'retired'));
+        }))
+        : emptyState('Not tagged on any projects yet.'),
+      h('p', { class: 'sub', style: { marginTop: '10px' } },
+        `${projs.length} project${projs.length === 1 ? '' : 's'} · open each project's Diary for the full story`)),
+    [{ label: 'Close', kind: 'accent', onClick: c => c() }]);
 }
 
 function statusesDialog(d, rerender) {

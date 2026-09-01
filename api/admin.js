@@ -37,6 +37,7 @@ import stickies from '../lib/admin/stickies.js';
 import giphySearch from '../lib/admin/giphySearch.js';
 import projects from '../lib/admin/projects.js';
 import projectsAdmin from '../lib/admin/projectsAdmin.js';
+import members from '../lib/admin/members.js';
 
 const HANDLERS = {
   migrate, whoami,
@@ -45,7 +46,7 @@ const HANDLERS = {
   listQuestions, saveQuestion, deleteQuestion,
   analytics, maintenance, keys, uploadImage,
   listLog, questionStats, secrets, systemStatus, setStaff, hotlinks, dedupeTerms, stickies, giphySearch,
-  projects, projectsAdmin,
+  projects, projectsAdmin, members,
 };
 
 export default async function handler(req, res) {

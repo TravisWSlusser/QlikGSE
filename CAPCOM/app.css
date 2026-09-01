@@ -1234,6 +1234,20 @@ a.gantt-label:hover{color:var(--link)}
 .ps-swatch{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer}
 .ps-swatch.on{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
 
+/* member chips: people tagged on a project — click one for their history */
+.mem-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
+.mem-chip{
+  display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:999px;
+  font-size:.74rem;font-weight:600;cursor:pointer;
+  background:var(--card-2);border:1px solid var(--line);color:var(--ink);
+}
+.mem-chip:hover{border-color:var(--focus);color:var(--link)}
+.mem-chip-x{
+  background:none;border:none;color:var(--muted);font-size:.7rem;
+  padding:0 0 0 2px;cursor:pointer;line-height:1;
+}
+.mem-chip-x:hover{color:var(--danger)}
+
 /* Home at-a-glance card */
 .prj-glance{display:flex;flex-direction:column;gap:8px}
 .prj-glance-row{display:flex;align-items:center;gap:10px;font-size:.84rem}

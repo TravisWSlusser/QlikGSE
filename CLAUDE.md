@@ -844,6 +844,30 @@ with Mission Control's events. **Re-run Setup** (five new tables, five
 seeded statuses in Travis's ladder order, one seed team) and grant
 `projects` to the keys that should post — masters have it already.
 
+## Team members & tagging (1 Sep 2026 — phase 1 of member access)
+
+`team_members` registry (name, optional REC Room trigram — unique among
+active, uppercased, 3 letters — team, title) + `project_members` tags,
+both in migrate (**re-run Setup**). `lib/admin/members.js`: save /
+retire / tag / untag, all 'projects'-scoped; the registry and active
+tags ride back on `projects {op:'list'}` (sub-wrapped for pre-Setup) so
+the Board renders everything from one call. Board UI: a Members manager
+beside Teams/Statuses; tagging lives in the project Edit dialog (chips
+✕ + a select, ops apply IMMEDIATELY, unlike the field edits around
+them); the People column shows member chips first, free text is
+demoted to "Guests / externals". Clicking any member chip opens their
+person card: role · team · trigram, every project they're tagged on
+with status/due/overdue, retired ones dimmed. Tags and untags write the
+project diary.
+
+**Phase 2 (agreed with Travis, not yet built): self-set member access
+codes.** A member must exist in the registry first ("tag them in"),
+then claims a code granting: read everything, Community Board writes
+under their name, and status/extend/note ONLY on projects they're
+tagged on. Credentials will be stored HASHED — never plaintext — and
+the identify() chain in auth.js is the touchpoint; build it as its own
+careful change.
+
 ## Community Board — yarn, sounds, and the rename (29 Aug 2026)
 
 The Corkboard is now titled **The Community Board** (UI string only — CSS
