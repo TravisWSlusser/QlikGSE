@@ -24,14 +24,15 @@ const KIND_LABEL = {
 
 export function render(params, rerender, who) {
   const canEdit = !!(who && who.scopes && who.scopes.includes('projects'));
+  const me = (who && who.member) || null; // member session: acts on tagged projects only
   const wantNew = params && params[0] === 'new';
   if (wantNew) history.replaceState(null, '', '#projects');
   const root = h('div', { class: 'view' }, spinner());
-  load(root, rerender, canEdit, wantNew && canEdit);
+  load(root, rerender, canEdit, wantNew && canEdit, me);
   return root;
 }
 
-async function load(root, rerender, canEdit, openNew) {
+async function load(root, rerender, canEdit, openNew, me) {
   let d;
   try { d = await api.projects({ op: 'list', all: true }); }
   catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit))); return; }
@@ -102,7 +103,7 @@ async function load(root, rerender, canEdit, openNew) {
     wrap.appendChild(h('table', null,
       h('thead', null, h('tr', null,
         ['Project', 'People', 'Team', 'Status', 'Phase due', ''].map(x => h('th', null, x)))),
-      h('tbody', null, rows.map(p => projectRow(p, d, teamById, statusById, canEdit, rerender)))));
+      h('tbody', null, rows.map(p => projectRow(p, d, teamById, statusById, canEdit, me, rerender)))));
   };
   drawRows();
 
@@ -114,8 +115,11 @@ function statusChip(s) {
   return h('span', { class: 'prj-status-chip', style: { '--psc': `var(--ps-${s.color})` } }, s.label);
 }
 
-function projectRow(p, d, teamById, statusById, canEdit, rerender) {
+function projectRow(p, d, teamById, statusById, canEdit, me, rerender) {
   const team = teamById[p.team_id], st = statusById[p.status_id];
+  // a member session can move only projects it is tagged on — mirrored
+  // here for honest buttons; lib/admin/projects.js enforces it regardless
+  const mine = !!(me && (d.tagsByProject[p.id] || []).includes(me.id));
   return h('tr', { class: p.active ? null : 'prj-retired' },
     h('td', null,
       h('div', { class: 'prj-title' }, p.title),
@@ -139,10 +143,12 @@ function projectRow(p, d, teamById, statusById, canEdit, rerender) {
       fmt.day(p.phase_due),
       p.overdue ? h('div', { style: { marginTop: '4px' } }, h('span', { class: 'overdue-badge' }, '⚠ OVERDUE')) : null),
     h('td', null, h('div', { class: 'prj-actions' },
-      h('button', { class: 'btn xs', onClick: () => diaryDialog(p, d, canEdit, rerender) }, 'Diary'),
-      ...(canEdit && p.active ? [
+      h('button', { class: 'btn xs', onClick: () => diaryDialog(p, d, canEdit || (mine && p.active), rerender) }, 'Diary'),
+      ...((canEdit || mine) && p.active ? [
         h('button', { class: 'btn xs' + (p.overdue ? ' danger' : ''), onClick: () => statusDialog(p, d, rerender) }, 'Status'),
         h('button', { class: 'btn xs', onClick: () => extendDialog(p, rerender) }, p.overdue ? 'What happened' : 'Extend'),
+      ] : []),
+      ...(canEdit && p.active ? [
         h('button', { class: 'btn xs', onClick: () => editProject(p, d, rerender) }, 'Edit'),
         h('button', { class: 'btn xs', onClick: () => confirmBox('Retire this project?',
           `“${p.title}” comes off the board. Its diary stays, and it can be restored.`, async () => {
@@ -413,6 +419,13 @@ function membersDialog(d, rerender) {
           toast('Member saved'); rerender();
         } catch (err) { toast(err.message, 'err'); }
       } }, 'Save'),
+      m.claimed
+        ? h('button', { class: 'btn xs', title: 'Clears their access code so they can claim a new one at the gate', onClick: () => confirmBox('Reset this access code?',
+          `${m.name}'s member sign-in stops working until they claim a new code at the gate.`, async () => {
+            try { await api.members({ op: 'resetCode', id: m.id }); toast('Code reset'); rerender(); }
+            catch (err) { toast(err.message, 'err'); }
+          }, 'Reset it') }, 'Reset code')
+        : h('span', { class: 'sub', title: 'They can claim their access code at the sign-in gate' }, 'unclaimed'),
       h('button', { class: 'btn xs danger', onClick: async () => {
         try { await api.members({ op: 'retire', id: m.id }); toast('Member retired — their history stays'); rerender(); }
         catch (err) { toast(err.message, 'err'); }

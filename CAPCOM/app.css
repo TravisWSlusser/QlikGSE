@@ -1234,6 +1234,14 @@ a.gantt-label:hover{color:var(--link)}
 .ps-swatch{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer}
 .ps-swatch.on{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
 
+/* the gate's member half: trigram + self-set code, and the claim link */
+.gate-or{margin:16px 0 10px;font-size:.7rem;color:var(--muted);letter-spacing:.24em}
+.gate-member-row{display:flex;gap:8px}
+.gate-member-row #gate-tri{width:76px;flex:none;text-transform:uppercase;text-align:center}
+.gate-member-row #gate-code{flex:1;min-width:0}
+#gate-member{margin-top:10px;width:100%}
+#gate-claim{color:var(--link)}
+
 /* member chips: people tagged on a project — click one for their history */
 .mem-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px}
 .mem-chip{

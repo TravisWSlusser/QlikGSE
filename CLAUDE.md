@@ -860,13 +860,33 @@ person card: role · team · trigram, every project they're tagged on
 with status/due/overdue, retired ones dimmed. Tags and untags write the
 project diary.
 
-**Phase 2 (agreed with Travis, not yet built): self-set member access
-codes.** A member must exist in the registry first ("tag them in"),
-then claims a code granting: read everything, Community Board writes
-under their name, and status/extend/note ONLY on projects they're
-tagged on. Credentials will be stored HASHED — never plaintext — and
-the identify() chain in auth.js is the touchpoint; build it as its own
-careful change.
+**Phase 2 — member access codes (SHIPPED 1 Sep 2026).** A member signs
+in with `TRI:code` (the gate's second half composes it; it travels as
+the ordinary x-admin-key). `identify()` in auth.js checks it LAST —
+after ultra/master/table keys, inside the same fail-closed envelope —
+against `team_members.code_hash` (scrypt(code, salt), helpers
+`makeSalt/hashCode/verifyCode` in auth.js, timing-safe compare; ~25ms
+a verify; NEVER stored, logged, or echoed as plaintext). A member
+session is `{label: real name, scopes: [], member: {id, name,
+trigram}}`: every `requireScope(null)` read and the Community Board
+admit it (writes there are signed with typed names anyway), the nav
+collapses to Home + Projects, and `lib/admin/projects.js` additionally
+admits `status/extend/note/saveMilestone/deleteMilestone` via
+`memberCan()` — a live check that the member is TAGGED on that project
+— while save/retire/tagging/managers stay 'projects'-scope-only. The
+Board mirrors this honestly (Status/Extend render only on tagged rows
+for a member).
+
+**Claiming** (`lib/admin/memberClaim.js`, the one deliberately
+unauthenticated admin action): "First time? Claim your member access"
+on the gate → trigram + chosen code (8–64 chars) → works only for an
+ACTIVE registry row with that trigram and NO code yet (Travis's
+tag-first rule); already-claimed 409s. The accepted residual risk —
+squatting a colleague's UNCLAIMED access — is visible in the change
+feed and reversible via the Members manager's **Reset code** (op
+`resetCode`, clears hash so they re-claim). `claimed` rides back on
+the registry rows in projects `list`. Re-run Setup for the three
+credential columns.
 
 ## Community Board — yarn, sounds, and the rename (29 Aug 2026)
 

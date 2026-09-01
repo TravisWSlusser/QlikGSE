@@ -12,7 +12,7 @@
    an SME with only `content` sees Questions and nothing else. */
 import { h, clear, $ } from './util.js';
 import { api, keyStore } from './api.js';
-import { toast } from './ui.js';
+import { toast, modal, field, textInput } from './ui.js';
 import * as dashboard from './views/dashboard.js';
 import * as players from './views/players.js';
 import * as calendar from './views/calendar.js';
@@ -151,10 +151,49 @@ function toggleTheme() {
   try { localStorage.setItem('capcom.theme', next); } catch {}
 }
 
+/* Claim-your-access: the member picks their own code, once, after an
+   admin has put them in the registry. The code goes to memberClaim and
+   is stored only as a hash server-side; on success we sign them in. */
+function claimDialog() {
+  const tri = textInput({ maxLength: 3, placeholder: 'TRI', style: { textTransform: 'uppercase' } });
+  const c1 = h('input', { type: 'password', maxLength: 64, placeholder: '8+ characters' });
+  const c2 = h('input', { type: 'password', maxLength: 64, placeholder: 'Same again' });
+  modal('Claim your member access',
+    h('div', { class: 'form' },
+      h('p', { class: 'sub' }, 'You need to be in the team registry first — if your trigram is not found, ask an admin to add you from the Project Board’s Members manager.'),
+      field('Your trigram', tri, 'The same three letters you use in the REC Room.'),
+      field('Choose an access code', c1),
+      field('Confirm it', c2)),
+    [
+      { label: 'Cancel', onClick: c => c() },
+      { label: 'Claim it', kind: 'accent', onClick: async c => {
+        if (c1.value !== c2.value) { toast('The two codes do not match', 'err'); return; }
+        try {
+          const r = await api.memberClaim({ trigram: tri.value, code: c1.value });
+          c();
+          toast(`Welcome, ${r.name} — signing you in`);
+          tryKey(`${tri.value.trim().toUpperCase()}:${c1.value}`);
+        } catch (err) { toast(err.message, 'err'); }
+      } },
+    ]);
+}
+
 export function boot() {
   mountFx();
   $('gate-go').addEventListener('click', () => tryKey($('gate-key').value));
   $('gate-key').addEventListener('keydown', e => { if (e.key === 'Enter') tryKey($('gate-key').value); });
+
+  // member sign-in: trigram + self-set code travel as one `TRI:code` key
+  // through the same tryKey/whoami path — auth.js does the verifying
+  const memberGo = () => {
+    const tri = $('gate-tri').value.trim().toUpperCase();
+    const code = $('gate-code').value;
+    if (!/^[A-Z]{3}$/.test(tri) || !code) { toast('Trigram (3 letters) and your access code', 'err'); return; }
+    tryKey(`${tri}:${code}`);
+  };
+  $('gate-member').addEventListener('click', memberGo);
+  $('gate-code').addEventListener('keydown', e => { if (e.key === 'Enter') memberGo(); });
+  $('gate-claim').addEventListener('click', e => { e.preventDefault(); claimDialog(); });
   $('theme-toggle').addEventListener('click', toggleTheme);
   $('signout').addEventListener('click', () => {
     keyStore.clear(); WHO = null;
