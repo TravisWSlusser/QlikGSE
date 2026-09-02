@@ -505,8 +505,11 @@ export function historyDialog(m, d) {
   const projIds = d.tagsByMember[m.id] || [];
   const projById = {};
   for (const p of d.projects) projById[p.id] = p;
+  // the profile lists LATEST work first — most recently touched project
+  // on top, active before retired
+  const touched = p => new Date(p.updated_at || p.created_at || 0).getTime();
   const projs = projIds.map(id => projById[id]).filter(Boolean)
-    .sort((a, z) => (z.active - a.active) || (z.id - a.id));
+    .sort((a, z) => (z.active - a.active) || (touched(z) - touched(a)));
   modal(m.name,
     h('div', null,
       h('p', { class: 'sub', style: { marginBottom: '10px' } },
@@ -516,14 +519,19 @@ export function historyDialog(m, d) {
       projs.length
         ? h('div', { class: 'prj-glance' }, projs.map(p => {
           const st = statusById[p.status_id];
-          return h('div', { class: 'prj-glance-row' + (p.active ? '' : ' prj-retired') },
-            h('span', { class: 'prj-glance-title' }, p.title),
-            st ? h('span', { class: 'prj-status-chip', style: { '--psc': `var(--ps-${st.color})` } }, st.label) : null,
-            p.active
-              ? (p.overdue
-                ? h('span', { class: 'overdue-badge' }, 'OVERDUE')
-                : h('span', { class: 'prj-glance-team' }, `due ${fmt.day(p.phase_due)}`))
-              : h('span', { class: 'prj-glance-team' }, 'retired'));
+          const when = String(p.updated_at || p.created_at || '').slice(0, 10);
+          return h('div', { class: 'prof-row' + (p.active ? '' : ' prj-retired') },
+            h('div', { class: 'prj-glance-row' },
+              h('span', { class: 'prj-glance-title' }, p.title),
+              st ? h('span', { class: 'prj-status-chip', style: { '--psc': `var(--ps-${st.color})` } }, st.label) : null,
+              p.active
+                ? (p.overdue
+                  ? h('span', { class: 'overdue-badge' }, 'OVERDUE')
+                  : h('span', { class: 'prj-glance-team' }, `due ${fmt.day(p.phase_due)}`))
+                : h('span', { class: 'prj-glance-team' }, 'retired')),
+            h('div', { class: 'diary-meta' },
+              [(teamById[p.team_id] || {}).name, when ? `last activity ${fmt.day(when)}` : null]
+                .filter(Boolean).join(' · ')));
         }))
         : emptyState('Not tagged on any projects yet.'),
       h('p', { class: 'sub', style: { marginTop: '10px' } },

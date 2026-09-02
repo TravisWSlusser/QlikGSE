@@ -1359,6 +1359,11 @@ a.gantt-label:hover{color:var(--link)}
 .inspo-row:hover .inspo-title{color:var(--link)}
 .inspo-meta{font-size:.7rem;color:var(--muted);white-space:nowrap}
 
+/* the staff profile's project rows: title line + activity line */
+.prof-row{padding:6px 0;border-bottom:1px solid var(--line)}
+.prof-row:last-child{border-bottom:none}
+.prof-row .diary-meta{margin-top:2px}
+
 /* Home at-a-glance card */
 .prj-glance{display:flex;flex-direction:column;gap:8px}
 .prj-glance-row{display:flex;align-items:center;gap:10px;font-size:.84rem}
