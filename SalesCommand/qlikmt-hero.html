@@ -16,12 +16,18 @@
   =========================================================================== -->
 <script>
 (function(){var s=new URLSearchParams(location.search).get('section');
-  if(s)document.documentElement.setAttribute('data-section',s);})();
+  if(s)document.documentElement.setAttribute('data-section',s);
+  document.documentElement.classList.add('js');})();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
+/* boot veil: the widget assembles off-stage and arrives in one piece —
+   fonts, feeds and entrance motion settle behind it. html.js guard: if
+   scripting ever fails, the page simply shows unveiled. */
+html.js body{opacity:0}
+html.js body.booted{opacity:1;transition:opacity .45s ease}
   /* Content lives in the DESTINATIONS array at the bottom.
      Mindtickle deep-links go in each "href". Layout never needs editing. */
   /* buttons and form controls do NOT inherit font-family — without this the
@@ -2153,6 +2159,16 @@ if ('IntersectionObserver' in window){
 } else {
   contrails.forEach(c => c.classList.add('draw'));
 }
+</script>
+<script>
+/* lift the boot veil once fonts settle — bounded so it can never hang */
+(function(){
+  var done=false;
+  function up(){ if(done) return; done=true; document.body.classList.add('booted'); }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(up);
+  window.addEventListener('load', function(){ setTimeout(up, 60); });
+  setTimeout(up, 1100);
+})();
 </script>
 </body>
 </html>

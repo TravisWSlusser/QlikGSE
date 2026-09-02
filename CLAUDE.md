@@ -813,6 +813,21 @@ Surgical edits, never full-file rewrites. Validate before shipping — render or
 screenshot to confirm visual changes, and check JS parses. Give honest tradeoff
 analysis before building. Flag gaps rather than filling them with invention.
 
+## The boot veil (2 Sep 2026)
+
+Travis's screen recording showed the widgets loading "jittery and
+glitchy": ~3s of blank white iframes, then cards popping in piecemeal
+with fonts swapping and entrance motion firing at different moments.
+All three SalesCommand pages (hero, hero2, stellar) now assemble
+behind a veil: `html.js body{opacity:0}` (the `js` class is set by the
+first inline script, so no-JS never blanks a widget) and a reveal
+snippet before `</body>` adds `.booted` (opacity 1, .45s fade) on
+fonts.ready / window load / a hard 1100ms timeout — whichever lands
+first. **The reveal must NOT wrap the class-add in
+requestAnimationFrame** — rAF never fires in hidden/backgrounded
+frames and the veil would simply never lift there; plain
+classList.add still transitions.
+
 ## Mobile widgets render LIGHT (2 Sep 2026)
 
 Per Travis, everything in the Mindtickle MOBILE app is light: the

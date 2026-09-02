@@ -8,6 +8,7 @@
   /* Section AND theme before styles, same as the other widget pages, so the
      first paint is already correct and nothing flashes. */
   (function(){
+    document.documentElement.classList.add('js');
     var q = new URLSearchParams(location.search);
     var s = q.get('section'); if (s) document.documentElement.setAttribute('data-section', s);
     var t = q.get('theme');   if (t === 'light') document.documentElement.setAttribute('data-theme','light');
@@ -55,6 +56,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
+/* boot veil: the widget assembles off-stage and arrives in one piece —
+   fonts, feeds and entrance motion settle behind it. html.js guard: if
+   scripting ever fails, the page simply shows unveiled. */
+html.js body{opacity:0}
+html.js body.booted{opacity:1;transition:opacity .45s ease}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
 /* Palette lifted from qlikmt-hero.html so the two pages cannot drift apart. */
@@ -474,6 +480,16 @@ if (SECTION === 'hero' || SECTION === '') {
   });
 }
 
+})();
+</script>
+<script>
+/* lift the boot veil once fonts settle — bounded so it can never hang */
+(function(){
+  var done=false;
+  function up(){ if(done) return; done=true; document.body.classList.add('booted'); }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(up);
+  window.addEventListener('load', function(){ setTimeout(up, 60); });
+  setTimeout(up, 1100);
 })();
 </script>
 </body>
