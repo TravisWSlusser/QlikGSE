@@ -1150,18 +1150,23 @@ z-index 40) covers the z-30 tab bar for the whole Play view — the
 sheet's own comment says tabs should hide only while a game is
 actually RUNNING, so the shelf hiding them contradicts the design.
 
-**Same morning, the refinement:** the room keeps no light mode, but
-its Mindtickle WIDGET cards load white on mobile — Travis: "these are
-the only dark elements on the page." The `.mcard` compact state and
-`?section=launch` in `QlikRecRoom/index.html` exist only inside the
-MT crop, so they now wear white (navy title, `#5C7185` sub, `#007396`
-pointer); `html` AND `body` both need the white override — `html`
-carried the navy and leaked a band below the card. Expanded mode
-still returns the full dark room. The second dark element on his
-screenshot — the "Install the Mobile REC Room" card — is a hand-pasted
-MT Custom HTML snippet that lives only in Mindtickle admin; its white
-replacement is now versioned at `QlikRecRoom/mt-install-widget.html`
-(inline styles only, MT strips scripts) for Travis to paste in.
+**Same morning, a wrong turn worth remembering:** Travis's screenshots
+showed two dark REC Room widgets on the white mobile Mission Control
+page (a REC ROOM logo tile and an "Install the Mobile REC Room" card)
+and asked for them white on mobile. I whitened the `.mcard` compact
+state in `QlikRecRoom/index.html` — pixel-identical to the tile — but
+Travis stopped it (commit 6bac450, reverted in 25f4d4f): his phone
+never changed, because **neither widget is served from this repo at
+all**. Both are hard-coded HTML inside Mindtickle's Custom HTML
+widget, with its own logic that swaps in that markup for the mobile
+app instead of the iframe. That is why no caption text matched
+anything in the repo or its history. Lesson: when a Mindtickle widget
+resists a deploy, suspect MT-side pasted markup before repo code —
+and a pixel-match is not provenance. **Pending: Travis will paste the
+MT widget code from his desk; the job then is white-mode versions of
+those snippets (MT strips nothing he already uses — mirror whatever
+mechanism the paste shows), leaving the room and every repo-served
+card dark.**
 
 How it works: `html[data-theme="light"]` overrides the `:root` tokens
 plus the body gradient, `.tabs`, `.conn`, field backgrounds, and the
