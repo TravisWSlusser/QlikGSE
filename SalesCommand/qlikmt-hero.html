@@ -28,6 +28,8 @@
    scripting ever fails, the page simply shows unveiled. */
 html.js body{opacity:0}
 html.js body.booted{opacity:1;transition:opacity .45s ease}
+/* the mobile app is light always — no theme to toggle there */
+html[data-section="mobile"] #themeToggle{display:none}
   /* Content lives in the DESTINATIONS array at the bottom.
      Mindtickle deep-links go in each "href". Layout never needs editing. */
   /* buttons and form controls do NOT inherit font-family — without this the
@@ -1982,9 +1984,11 @@ function repaintMasked(){
   });
 }
 function effectiveTheme(m){
-  /* collapsed mobile card always renders light — Mindtickle's app page is white
-     and a navy block reads as a foreign object sitting on it */
-  if (IS_MOBILE && document.documentElement.getAttribute('data-mode') === 'card') return 'light';
+  /* the MOBILE APP renders light always — collapsed card AND expanded.
+     Mindtickle's app chrome is white; a stored dark theme leaking into the
+     expanded view painted a navy mess inside it (seen live 2 Sep). The
+     theme toggle is hidden on mobile for the same reason. */
+  if (IS_MOBILE) return 'light';
   return m;
 }
 function paintTheme(m){
@@ -1999,7 +2003,12 @@ function paintTheme(m){
 }
 function applyTheme(m){
   m = (m==='light') ? 'light' : 'dark';
-  if(m === theme && document.documentElement.hasAttribute('data-theme') === (m==='light')) return;
+  /* compare against the EFFECTIVE theme: on mobile the page renders light
+     while the stored theme may be dark, and comparing against the stored
+     value made this "unchanged" guard never pass — so the 1.5s sync loop
+     repainted (and layer-nudged the tickers) every single tick */
+  const eff = effectiveTheme(m);
+  if(m === theme && document.documentElement.hasAttribute('data-theme') === (eff==='light')) return;
   theme = m; paintTheme(theme);
 }
 paintTheme(theme);
