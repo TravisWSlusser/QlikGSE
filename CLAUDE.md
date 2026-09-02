@@ -925,6 +925,18 @@ card), and the Board shows a how-to hint when the registry is empty —
 the "where do I add people?" question came up within the hour. Re-run
 Setup for the credential + email columns.
 
+**Staff tab (2 Sep):** the registry graduated from a dialog to a page —
+nav route `projects/staff` (`views/staff.js`, scope null; edit controls
+gate on 'projects'). Teams as columns, leaders starred, Unassigned and
+(admins only) Retired buckets with restore; right-click any person for
+Edit/Reset code/Retire (⋯ chip on touch); + Add New and the Teams
+manager in the header. The Board's Members button became a link here;
+`membersDialog` in projects.js is now unused-but-exported. The deploy
+notes system also landed: `DEPLOY_NOTES` in schemaVersion.js (bump +
+note in the same commit), a caret on the update banner listing what the
+pending update adds, and a sidebar version chip (`ver-chip`) opening
+"What is deployed" for any key holder.
+
 **Catalog pass (1 Sep, later):** the Members dialog is now the **Team
 Member Catalog** — a read-only list (+ Add New up top); actions
 (Edit…/Reset access code/Retire) live on RIGHT-CLICK (`pctx`, a second

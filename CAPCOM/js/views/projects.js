@@ -79,7 +79,7 @@ async function load(root, rerender, canEdit, openNew, me) {
       teamSel, statusSel,
       h('label', { class: 'prj-filters', style: { fontSize: '.78rem', color: 'var(--muted)' } }, retiredCb, 'retired')),
     ...(canEdit ? [
-      h('button', { class: 'btn sm', onClick: () => membersDialog(d, rerender) }, 'Members'),
+      h('a', { class: 'btn sm', href: '#projects/staff' }, 'Staff'),
       h('button', { class: 'btn sm', onClick: () => teamsDialog(d, rerender) }, 'Teams'),
       h('button', { class: 'btn sm', onClick: () => statusesDialog(d, rerender) }, 'Statuses'),
       h('button', { class: 'btn sm accent', onClick: () => editProject(null, d, rerender) }, '+ New project'),
@@ -88,9 +88,9 @@ async function load(root, rerender, canEdit, openNew, me) {
   // an empty registry is invisible until you know where to look — say so
   if (canEdit && !(d.members || []).length) {
     card.appendChild(h('p', { class: 'sub prj-hint' },
-      'No team members in the registry yet — use the ',
-      h('b', null, 'Members'),
-      ' button above to add people (name + REC Room trigram). They must be in there before you can tag them on projects or they can claim member access at the gate.'));
+      'No team members yet — the ',
+      h('a', { href: '#projects/staff' }, 'Staff tab'),
+      ' is where people get added (name + REC Room trigram). They must be in there before you can tag them on projects or they can claim member access at the gate.'));
   }
 
   const wrap = h('div', { class: 'table-wrap' });
@@ -383,7 +383,7 @@ function milestoneDialog(p, rerender) {
 }
 
 /* ── managed lists: the editCategories row pattern ── */
-function teamsDialog(d, rerender) {
+export function teamsDialog(d, rerender) {
   const activeMembers = (d.members || []).filter(m => m.active);
   const rows = d.teams.filter(t => t.active).map(t => {
     const name = textInput({ value: t.name, maxLength: 40 });
@@ -414,7 +414,7 @@ function teamsDialog(d, rerender) {
 
 /* ── the member registry: a read-only list; right-click a row to act ── */
 let pctxEl = null;
-function pctx(x, y, entries) {
+export function pctx(x, y, entries) {
   if (!pctxEl) {
     pctxEl = h('div', { id: 'pctx-menu' });
     document.body.appendChild(pctxEl);
@@ -427,7 +427,7 @@ function pctx(x, y, entries) {
   pctxEl.style.top = Math.min(y, window.innerHeight - entries.length * 40 - 12) + 'px';
 }
 
-function membersDialog(d, rerender) {
+export function membersDialog(d, rerender) {
   const teamById = {};
   for (const t of d.teams) teamById[t.id] = t;
   const rows = (d.members || []).filter(m => m.active).map(m => {
@@ -467,7 +467,7 @@ function membersDialog(d, rerender) {
     [{ label: 'Done', kind: 'accent', onClick: c => c() }]);
 }
 
-function editMemberDialog(m, d, rerender) {
+export function editMemberDialog(m, d, rerender) {
   const isNew = !m;
   const activeTeams = d.teams.filter(t => t.active);
   const name = textInput({ value: m ? m.name : '', maxLength: 60 });

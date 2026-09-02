@@ -23,6 +23,7 @@ import * as system from './views/system.js';
 import * as home from './views/home.js';
 import * as projects from './views/projects.js';
 import * as projectsInsights from './views/projectsInsights.js';
+import * as staff from './views/staff.js';
 import { ICONS } from './icons.js';
 import { mountFx } from './fx.js';
 import { hidePop } from './pop.js';
@@ -40,6 +41,7 @@ const NAV = [
     // scope null on purpose: every key holder can SEE the board (visibility
     // is the product); edit controls gate on the 'projects' scope inside
     { route: 'projects', label: 'Project Board', scope: null, mod: projects, icon: 'projects' },
+    { route: 'projects/staff', label: 'Staff', scope: null, mod: staff, icon: 'staff' },
     { route: 'projects/insights', label: 'Insights & Calendar', scope: null, mod: projectsInsights, icon: 'insights' },
   ]},
   { group: 'REC Room', items: [
