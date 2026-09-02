@@ -861,6 +861,14 @@
     stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   @keyframes lcNudge{0%,100%{transform:translate(0,0)}50%{transform:translate(3px,-3px)}}
   @media (prefers-reduced-motion:reduce){.lc-arrow{animation:none}}
+  /* Narrow iframes (the iOS app reports ~408 CSS px; Android ~1080): the
+     corner CTA's words and the wide-tracked kicker cannot share the top
+     line — seen overlapping live on an iPhone. Keep only the nudging
+     arrow there; it points straight at Mindtickle's own expand control. */
+  @media (max-width:520px){
+    .lc-cta span:first-child{display:none}
+    .lc-cta{max-width:none;top:12px;right:12px}
+  }
   .launch{position:relative}
 
   @media (prefers-reduced-motion:reduce){.beta-cone,.beta-strip::before,.beta-badge{animation:none}}
@@ -1051,6 +1059,9 @@
   html[data-section="mobile"][data-mode="card"] .launch{
     background:#ffffff;border-color:rgba(15,40,70,.18);border-radius:16px;
     box-shadow:0 1px 3px rgba(15,40,70,.07)}
+  .lc-logo-col{display:none}
+  html[data-section="mobile"][data-mode="card"] .lc-logo-rev{display:none}
+  html[data-section="mobile"][data-mode="card"] .lc-logo-col{display:block}
   html[data-section="mobile"][data-mode="card"] .lc-kicker{color:#0E9E99}
   html[data-section="mobile"][data-mode="card"] .lc-time{color:#0E2742}
   html[data-section="mobile"][data-mode="card"] .lc-greet,
@@ -1079,7 +1090,11 @@
          and the same document re-renders as the full Mission Control page. -->
     <div class="launch" id="launch">
       <div class="lc-top">
-        <img class="lc-logo" src="assets/images/logos/qlik-sales-enablement-reverse.svg" alt="Qlik Sales Enablement"
+        <!-- two logos, CSS-swapped: the reverse (white) art vanishes on the
+             collapsed card's WHITE background — seen live on the iOS app -->
+        <img class="lc-logo lc-logo-rev" src="assets/images/logos/qlik-sales-enablement-reverse.svg" alt="Qlik Sales Enablement"
+             onerror="this.style.display='none'">
+        <img class="lc-logo lc-logo-col" src="assets/images/logos/qlik-sales-enablement-color.svg" alt=""
              onerror="this.style.display='none'">
         <span class="lc-kicker">Mission Control</span>
       </div>
