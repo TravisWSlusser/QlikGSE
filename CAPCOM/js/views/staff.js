@@ -44,7 +44,9 @@ async function load(root, rerender, canEdit, canTeams) {
     ...(canEdit ? [h('button', { class: 'btn sm accent', onClick: () => editMemberDialog(null, d, rerender) }, '+ Add New')] : [])));
   if (canEdit) {
     card.appendChild(h('p', { class: 'sub org-how' },
-      'How access works: Invite on a person’s row makes their one-time code — send it to them yourself. At the gate they enter trigram + code and set their own password. Invite again any time to reset one.'));
+      h('b', null, 'This section is exclusively for adding Sales Enablement staff. '),
+      'Do not add SMEs or other content providers here — they get scoped keys from Tailored Access instead. ',
+      'For staff: Invite on a person’s row makes their one-time code — send it to them yourself; at the gate they enter trigram + code and set their own password. Invite again any time to reset one.'));
   }
 
   if (!members.length) {
@@ -146,6 +148,13 @@ async function load(root, rerender, canEdit, canTeams) {
     const bucket = h('div', { class: 'org-tree' });
     for (const m of retired) bucket.appendChild(memberRow(m, 0));
     card.appendChild(bucket);
+  }
+  // SMEs and outside contributors do not belong in the org tree — point
+  // the targeted-access cases at key generation instead
+  if (canEdit) {
+    card.appendChild(h('div', { class: 'staff-access-bar' },
+      h('span', null, 'Need to give an SME or outside contributor targeted access? That’s a scoped key, not a staff entry.'),
+      h('a', { class: 'btn sm', href: '#projects/access' }, 'Open Tailored Access →')));
   }
   root.appendChild(card);
 }

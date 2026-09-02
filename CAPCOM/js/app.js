@@ -19,7 +19,7 @@ import * as calendar from './views/calendar.js';
 import * as banners from './views/banners.js';
 import * as questions from './views/questions.js';
 import * as maintenance from './views/maintenance.js';
-import * as system from './views/system.js';
+import * as tailoredAccess from './views/tailoredAccess.js';
 import * as home from './views/home.js';
 import * as projects from './views/projects.js';
 import * as projectsInsights from './views/projectsInsights.js';
@@ -45,6 +45,8 @@ const NAV = [
     { route: 'projects', label: 'Project Board', scope: null, mod: projects, icon: 'projects' },
     { route: 'projects/insights', label: 'Insights & Calendar', scope: null, mod: projectsInsights, icon: 'insights' },
     { route: 'projects/staff', label: 'Staff', scope: null, mod: staff, icon: 'staff' },
+    // key generation for SMEs and outside contributors — NOT staff
+    { route: 'projects/access', label: 'Tailored Access', scope: 'system', mod: tailoredAccess, icon: 'system' },
   ]},
   { group: 'REC Room', items: [
     { route: 'dashboard', label: 'Dashboard', scope: 'analytics', mod: dashboard, icon: 'dashboard' },
@@ -53,9 +55,6 @@ const NAV = [
   ]},
   { group: 'System', items: [
     { route: 'maintenance', label: 'Maintenance', scope: 'system', mod: maintenance, icon: 'maintenance' },
-    { route: 'system', label: 'Access & Setup', scope: 'system', mod: system, icon: 'system' },
-  ]},
-  { group: '', items: [
     { route: 'help', label: 'Help & FAQ', scope: null, mod: help, icon: 'help' },
   ]},
 ];

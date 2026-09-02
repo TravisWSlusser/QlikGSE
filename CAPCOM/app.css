@@ -1489,6 +1489,11 @@ a.gantt-label:hover{color:var(--link)}
 .org-tree{display:flex;flex-direction:column;gap:2px;max-width:860px}
 .org-bucket{margin-top:18px}
 .org-how{margin:-6px 0 14px;max-width:76ch}
+.staff-access-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin-top:20px;padding:10px 14px;border:1px solid var(--line);
+  border-radius:10px;font-size:.78rem;color:var(--muted);flex-wrap:wrap;
+}
 .cat-invite{flex:0 0 auto;margin-left:8px}
 .invite-code{
   font-family:'Share Tech Mono',ui-monospace,monospace;font-size:1.7rem;
