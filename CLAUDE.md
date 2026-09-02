@@ -1216,6 +1216,18 @@ area blurbs, six FAQs, replay button, and bug reports (`lib/admin/
 bugs.js` + bug_reports table): anyone files, it lands in the change
 feed, managers resolve.
 
+Follow-ups the same day: the invite ISSUING UI was missing (server op
+shipped without a button — lesson: a feature is not done until both
+ends exist) — now an Invite button on every Staff row, a how-it-works
+line under the header, "no access yet" on unclaimed rows, and
+`inviteDialog` showing the code once with Copy. Schema v5: invites
+store `invited_by`; the feed reads "NAME redeemed their invite code
+sent by SENDER" (pre-v5 fallback in memberClaim). And member sessions
+sign the Community Board automatically — stickies save/react take the
+name from `who.member` server-side whatever the client sends, and the
+four board dialogs hide the Your-name field for members (key sessions
+still type one; a key label is not a person).
+
 **Same morning, a wrong turn worth remembering:** Travis's screenshots
 showed two dark REC Room widgets on the white mobile Mission Control
 page (a REC ROOM logo tile and an "Install the Mobile REC Room" card)
