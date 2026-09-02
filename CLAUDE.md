@@ -1150,6 +1150,19 @@ z-index 40) covers the z-30 tab bar for the whole Play view — the
 sheet's own comment says tabs should hide only while a game is
 actually RUNNING, so the shelf hiding them contradicts the design.
 
+**Same morning, the refinement:** the room keeps no light mode, but
+its Mindtickle WIDGET cards load white on mobile — Travis: "these are
+the only dark elements on the page." The `.mcard` compact state and
+`?section=launch` in `QlikRecRoom/index.html` exist only inside the
+MT crop, so they now wear white (navy title, `#5C7185` sub, `#007396`
+pointer); `html` AND `body` both need the white override — `html`
+carried the navy and leaked a band below the card. Expanded mode
+still returns the full dark room. The second dark element on his
+screenshot — the "Install the Mobile REC Room" card — is a hand-pasted
+MT Custom HTML snippet that lives only in Mindtickle admin; its white
+replacement is now versioned at `QlikRecRoom/mt-install-widget.html`
+(inline styles only, MT strips scripts) for Travis to paste in.
+
 How it works: `html[data-theme="light"]` overrides the `:root` tokens
 plus the body gradient, `.tabs`, `.conn`, field backgrounds, and the
 Play view's fixed backdrop (shelf chrome — the game is `#gameFrame`,
