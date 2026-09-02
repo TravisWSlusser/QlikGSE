@@ -39,7 +39,7 @@ async function load(root, rerender, canEdit, canTeams) {
   const card = h('div', { class: 'card' });
   card.appendChild(sectionTitle('Staff',
     h('span', { class: 'sec-sub' },
-      `${members.length} member${members.length === 1 ? '' : 's'} · leaders keep the app updated and top their team's column`),
+      `${members.length} member${members.length === 1 ? '' : 's'} · the org from the top down — reports sit under their leader`),
     ...(canTeams ? [h('button', { class: 'btn sm', onClick: () => teamsDialog(d, rerender) }, 'Teams')] : []),
     ...(canEdit ? [h('button', { class: 'btn sm accent', onClick: () => editMemberDialog(null, d, rerender) }, '+ Add New')] : [])));
 
@@ -65,23 +65,33 @@ async function load(root, rerender, canEdit, canTeams) {
       }, m.active ? 'Retire' : 'Restore'), m.active],
   ];
 
-  const memberRow = (m, isLead, isReport) => {
+  /* The staff view is the ORG TREE, top level down (Travis: "Nick is
+     the leader of everyone") — the reporting line (manager_id) is the
+     structure; teams become a detail on the row. Roots are the people
+     nobody above them: leaders first, so the head of the org tops the
+     page, with everyone's reports nested and indented beneath them. */
+  const leaderTeams = {};
+  for (const t of d.teams.filter(t => t.active)) {
+    if (t.leader_id) (leaderTeams[t.leader_id] = leaderTeams[t.leader_id] || []).push(t.name);
+  }
+  const teamName = id => { const t = d.teams.find(x => x.id === id); return t ? t.name : null; };
+
+  const memberRow = (m, depth) => {
     const projCount = (d.tagsByMember[m.id] || []).length;
-    const mgr = m.manager_id ? d.memberById[m.manager_id] : null;
+    const teamLead = !!leaderTeams[m.id];
     const row = h('button', {
-      class: 'cat-member' + (isLead ? ' cat-lead' : '') + (isReport ? ' cat-report' : '') + (m.active ? '' : ' prj-retired'),
+      class: 'cat-member' + (teamLead ? ' cat-lead' : '') + (depth > 0 ? ' cat-report' : '') + (m.active ? '' : ' prj-retired'),
+      style: depth > 0 ? { paddingLeft: (10 + depth * 26) + 'px' } : undefined,
       onClick: () => historyDialog(m, d),
     },
-      isLead ? h('span', { class: 'cat-star', 'aria-label': 'Team leader' }, '★') : h('span', { class: 'cat-star' }, ''),
+      teamLead ? h('span', { class: 'cat-star', 'aria-label': 'Team leader' }, '★') : h('span', { class: 'cat-star' }, ''),
       h('span', { class: 'cat-name' }, m.name),
       m.trigram ? h('span', { class: 'mem-row-tri' }, m.trigram) : null,
       h('span', { class: 'cat-detail' }, [
-        isLead ? 'Team leader' : null,
+        teamLead ? `leads ${leaderTeams[m.id].join(' + ')}` : null,
         m.is_leader ? 'People leader' : null,
         m.title || null,
-        // a report's line is shown by the nesting; name the manager only
-        // when they sit outside this leader's stack
-        !isReport && mgr ? `reports to ${mgr.name}` : null,
+        teamName(m.team_id),
       ].filter(Boolean).join(' · ')),
       h('span', { class: 'cat-count' }, projCount ? `${projCount} project${projCount > 1 ? 's' : ''}` : ''),
       canEdit ? h('span', { class: 'itm-menu mem-row-menu', role: 'button', 'aria-label': 'Member menu', onClick: ev => {
@@ -92,40 +102,39 @@ async function load(root, rerender, canEdit, canTeams) {
     return row;
   };
 
-  const grid = h('div', { class: 'cat-grid' });
+  const reportsOf = id => members.filter(x => x.manager_id === id)
+    .sort((a, b) => (b.is_leader - a.is_leader) || a.name.localeCompare(b.name));
+  const tree = h('div', { class: 'org-tree' });
   const placed = new Set();
-  for (const t of d.teams.filter(t => t.active)) {
-    const teamLead = t.leader_id ? d.memberById[t.leader_id] : null;
-    const crew = members.filter(m => m.team_id === t.id);
-    if (!(teamLead && teamLead.active) && !crew.length) continue;
-    const col = h('div', { class: 'cat-team' }, h('div', { class: 'cat-team-name' }, t.name));
-    // hierarchy inside the column: people leaders first (the team's own
-    // leader on top), each with their reports nested under them, then
-    // everyone unattached
-    const add = (m, isLead, isReport) => {
-      if (placed.has(m.id)) return;
-      col.appendChild(memberRow(m, isLead, isReport));
-      placed.add(m.id);
-      if (m.is_leader) {
-        for (const r of members.filter(x => x.manager_id === m.id && x.team_id === t.id)) add(r, false, true);
-      }
-    };
-    if (teamLead && teamLead.active) add(teamLead, true, false);
-    for (const m of crew.filter(x => x.is_leader)) add(m, false, false);
-    for (const m of crew) add(m, false, false);
-    grid.appendChild(col);
-  }
+  const walk = (m, depth) => {
+    if (placed.has(m.id) || depth > 8) return; // cycle / depth guard
+    placed.add(m.id);
+    tree.appendChild(memberRow(m, depth));
+    for (const r of reportsOf(m.id)) walk(r, depth + 1);
+  };
+  // roots: nobody above them (no manager, or the manager is gone) —
+  // leaders first so the top of the org tops the page
+  const roots = members
+    .filter(m => !m.manager_id || !d.memberById[m.manager_id] || !d.memberById[m.manager_id].active)
+    .sort((a, b) => (b.is_leader - a.is_leader) || a.name.localeCompare(b.name));
+  for (const m of roots.filter(x => x.is_leader)) walk(m, 0);
+  card.appendChild(tree);
+
+  // active people with no line into the tree yet — say so, don't hide them
   const loose = members.filter(m => !placed.has(m.id));
   if (loose.length) {
-    const col = h('div', { class: 'cat-team' }, h('div', { class: 'cat-team-name' }, 'Unassigned'));
-    for (const m of loose) col.appendChild(memberRow(m, false));
-    grid.appendChild(col);
+    card.appendChild(h('div', { class: 'cat-team-name org-bucket' }, 'No reporting line yet'));
+    const bucket = h('div', { class: 'org-tree' });
+    for (const m of loose) bucket.appendChild(memberRow(m, 0));
+    card.appendChild(bucket);
+    if (canEdit) card.appendChild(h('p', { class: 'sub' },
+      'Edit a person and set “Reports to” to place them in the tree.'));
   }
   if (canEdit && retired.length) {
-    const col = h('div', { class: 'cat-team' }, h('div', { class: 'cat-team-name' }, 'Retired'));
-    for (const m of retired) col.appendChild(memberRow(m, false));
-    grid.appendChild(col);
+    card.appendChild(h('div', { class: 'cat-team-name org-bucket' }, 'Retired'));
+    const bucket = h('div', { class: 'org-tree' });
+    for (const m of retired) bucket.appendChild(memberRow(m, 0));
+    card.appendChild(bucket);
   }
-  card.appendChild(grid);
   root.appendChild(card);
 }

@@ -1484,3 +1484,7 @@ a.gantt-label:hover{color:var(--link)}
 .bug-row{display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
 .bug-note{flex:1;font-size:.8rem;line-height:1.45}
 .bug-meta{font-size:.7rem;color:var(--muted);flex:0 0 auto}
+
+/* ── Staff org tree — one column, indent = the reporting line ───────── */
+.org-tree{display:flex;flex-direction:column;gap:2px;max-width:860px}
+.org-bucket{margin-top:18px}
