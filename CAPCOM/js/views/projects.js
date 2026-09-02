@@ -434,6 +434,7 @@ export function membersDialog(d, rerender) {
   const rows = (d.members || []).filter(m => m.active).map(m => {
     const menu = () => [
       ['Edit…', () => editMemberDialog(m, d, rerender), false],
+      ['One-time invite…', () => inviteDialog(m), false],
       ...(m.claimed ? [['Reset access code', () => confirmBox('Reset this access code?',
         `${m.name}'s member sign-in stops working until they claim a new code at the gate.`, async () => {
           try { await api.members({ op: 'resetCode', id: m.id }); toast('Code reset'); rerender(); }
@@ -468,6 +469,30 @@ export function membersDialog(d, rerender) {
       rows.length ? h('div', { class: 'mem-cat' }, ...rows)
         : emptyState('Nobody in the registry yet.', 'Add New puts the first person in.')),
     [{ label: 'Done', kind: 'accent', onClick: c => c() }]);
+}
+
+/* Issue a ONE-TIME invite code — the only way anyone gets member
+   access. Shown large, once, with a copy button; the manager sends it
+   themselves. Works for first access AND as a password reset. */
+export function inviteDialog(m) {
+  (async () => {
+    let r;
+    try { r = await api.members({ op: 'invite', id: m.id }); }
+    catch (err) { toast(err.message, 'err'); return; }
+    const codeEl = h('div', { class: 'invite-code' }, r.code);
+    modal(`One-time invite — ${m.name}`,
+      h('div', null,
+        codeEl,
+        h('p', { class: 'sub' }, `Send this to ${m.name} yourself (Slack, email, out loud). At the CAPCOM gate they choose “First time? Set up your member access”, enter their trigram + this code, and create their own password.`),
+        h('p', { class: 'sub' }, 'It works once and expires in 7 days. If they already had a password, the old one keeps working until they use this.')),
+      [
+        { label: 'Copy code', onClick: async () => {
+          try { await navigator.clipboard.writeText(r.code); toast('Copied'); }
+          catch { toast('Copy failed — select it by hand', 'err'); }
+        } },
+        { label: 'Done', kind: 'accent', onClick: c => c() },
+      ]);
+  })();
 }
 
 export function editMemberDialog(m, d, rerender) {

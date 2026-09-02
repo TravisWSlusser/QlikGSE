@@ -8,7 +8,7 @@
 import { h, clear } from '../util.js';
 import { api } from '../api.js';
 import { toast, confirmBox, sectionTitle, spinner, errorState, emptyState } from '../ui.js';
-import { pctx, editMemberDialog, teamsDialog, historyDialog } from './projects.js';
+import { pctx, editMemberDialog, teamsDialog, historyDialog, inviteDialog } from './projects.js';
 
 export function render(params, rerender, who) {
   const canTeams = !!(who && who.scopes && who.scopes.includes('projects'));
@@ -42,6 +42,10 @@ async function load(root, rerender, canEdit, canTeams) {
       `${members.length} member${members.length === 1 ? '' : 's'} · the org from the top down — reports sit under their leader`),
     ...(canTeams ? [h('button', { class: 'btn sm', onClick: () => teamsDialog(d, rerender) }, 'Teams')] : []),
     ...(canEdit ? [h('button', { class: 'btn sm accent', onClick: () => editMemberDialog(null, d, rerender) }, '+ Add New')] : [])));
+  if (canEdit) {
+    card.appendChild(h('p', { class: 'sub org-how' },
+      'How access works: Invite on a person’s row makes their one-time code — send it to them yourself. At the gate they enter trigram + code and set their own password. Invite again any time to reset one.'));
+  }
 
   if (!members.length) {
     card.appendChild(emptyState('Nobody on staff yet.',
@@ -53,6 +57,7 @@ async function load(root, rerender, canEdit, canTeams) {
 
   const menuFor = m => [
     ['Edit…', () => editMemberDialog(m, d, rerender), false],
+    ['One-time invite…', () => inviteDialog(m), false],
     ...(m.claimed ? [['Reset access code', () => confirmBox('Reset this access code?',
       `${m.name}'s member sign-in stops working until they claim a new code at the gate.`, async () => {
         try { await api.members({ op: 'resetCode', id: m.id }); toast('Code reset'); rerender(); }
@@ -92,8 +97,14 @@ async function load(root, rerender, canEdit, canTeams) {
         m.is_leader ? 'People leader' : null,
         m.title || null,
         teamName(m.team_id),
+        m.active && !m.claimed ? 'no access yet' : null,
       ].filter(Boolean).join(' · ')),
       h('span', { class: 'cat-count' }, projCount ? `${projCount} project${projCount > 1 ? 's' : ''}` : ''),
+      canEdit && m.active ? h('span', {
+        class: 'btn xs cat-invite', role: 'button',
+        title: m.claimed ? 'Issue a fresh one-time code (works as a password reset)' : 'Issue their one-time access code',
+        onClick: ev => { ev.stopPropagation(); inviteDialog(m); },
+      }, 'Invite') : null,
       canEdit ? h('span', { class: 'itm-menu mem-row-menu', role: 'button', 'aria-label': 'Member menu', onClick: ev => {
         ev.stopPropagation();
         pctx(ev.clientX, ev.clientY, menuFor(m));
