@@ -117,7 +117,9 @@ function buildNav() {
 function showApp() {
   $('gate').style.display = 'none';
   $('shell').style.display = '';
-  $('who-label').textContent = WHO.master ? 'master key' : WHO.label;
+  $('who-label').textContent = WHO.master
+    ? (WHO.label === 'ultra' ? 'Logged in using: Ultra Key' : 'Logged in using: Admin Key')
+    : WHO.member ? WHO.label : `Logged in using: ${WHO.label}`;
   buildNav();
   draw();
   maybeUpdateBar();
