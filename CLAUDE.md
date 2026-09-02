@@ -1130,3 +1130,54 @@ indefinitely while the inline style holds the target and
 transform that disagrees with the inline style is a frozen transition,
 not a stomping rule, when no `!important` rule exists. Probe twice
 (hover out and back) before believing it.
+
+## REC Room mobile light mode (2 Sep 2026)
+
+Travis: "Deploy a light mode to REC room if easily adaptable. Don't
+adjust the game content. Just the outside of the window." The mobile
+room (`QlikRecRoom/mobile.html`) qualified — fully tokenized. The
+**desktop room (`index.html`) is deferred**: its ink colors are raw
+hexes (55 var uses vs 73 hardcoded), so it needs a tokenization pass
+before a light theme is honest work rather than a regex sweep.
+
+How it works: `html[data-theme="light"]` overrides the `:root` tokens
+plus the body gradient, `.tabs`, `.conn`, field backgrounds, and the
+Play view's fixed backdrop (shelf chrome — the game is `#gameFrame`,
+its own document, untouched along with everything under `games/`).
+A pre-paint script in `<head>` reads `recroom.theme` before the
+stylesheet lands so a stored light room never flashes dark. The toggle
+is a ghost button on the badge view beside Switch Trigram. Default is
+dark — the arcade's identity. The framed Mission Control card pins
+itself white via `data-frame` rules that come later in the sheet and
+tie at specificity, so theme state can't leak into the widget.
+
+Two traps worth keeping: the VT323 display type was `color:#fff` in
+ten separate rules (dark-room assumption) — light mode re-inks them as
+a selector list, `.down`/framed excluded. And scoping CSS variables on
+an overlay (`.down{--ink:…}`) does NOT protect descendants that never
+say `var(--ink)` themselves — they inherit body's **resolved** color,
+so the overlay must set `color:var(--ink)` on itself. Rig note: the
+room locks phones to the install screen unless standalone, so the
+verify rig injects `Object.defineProperty(navigator,'standalone',
+{value:true})` at serve time and proxies `/api/*` to prod for live
+data — source untouched.
+
+## Vercel Blob quota fire (2 Sep 2026)
+
+Vercel emailed at 75% of the free tier's 2,000/month Blob **Advanced
+operations**. Cause: the dashboard status board polls
+`/api/admin/systemStatus` every 60s, and the blob probe ran
+`list({limit:1})` — an Advanced op — on essentially every poll,
+because the 60s in-memory cache dies with each cold lambda. About a
+day of an open dashboard tab ate 1,500 ops. The file's own doctrine
+("a status board that burns the day's quota checking quota is
+self-defeating") was already applied to the news probe but not here.
+
+Fix: the real `list()` runs at most every 6h (30m after a failure),
+throttled through an `api_cache` row (`key='blob_probe'`) so all
+lambdas share one clock; between pings the board serves the cached
+verdict with "verified Xh ago". Side fix: the news probe's freshness
+query read `api_cache` with no key filter (`ORDER BY fetched_at DESC
+LIMIT 1`), so any new cache row would pose as fresh news — now
+`WHERE key='news'`. **Rule: anything that counts against a paid quota
+must be throttled through the DB, never through lambda memory.**
