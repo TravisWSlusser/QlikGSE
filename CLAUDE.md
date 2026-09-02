@@ -1150,6 +1150,32 @@ z-index 40) covers the z-30 tab bar for the whole Play view — the
 sheet's own comment says tabs should hide only while a game is
 actually RUNNING, so the shelf hiding them contradicts the design.
 
+## The manager tier (2 Sep 2026, schema v3)
+
+Travis named seven managers who "control all aspects (except anything
+that can delete the site entirely — that's only allowed for the super
+admin)" and are "the only ones able to assign new keys to users and
+responsible for signing up their team": Nicholas Gregory LND, Mike
+Fawcett DKQ, Steve Smart SYK, Eric Payne RJF, Rafael Attux KYI, Barb
+Vogt QRC, Travis TVO (emails First.Last@Qlik.com).
+
+Mechanics: `team_members.is_manager`. A manager's `TRI:code` sign-in
+gets `scopes = SCOPES` from auth.js but `master:false`, so master-only
+operations (admin_keys, secrets — the site-fatal class) stay with
+ADMIN_KEY/ULTRA. Registry ops (members save/retire/resetCode) are
+manager-or-master only; tag/untag stays plain projects scope. The
+roster seeds ONCE behind a `managers_seeded` app_state marker (the
+staff_seeded pattern) so demotions survive Setup re-runs; it promotes
+existing trigram rows in place and fills only blank title/email.
+Compat rule that mattered: auth.js and the projects list both select
+`is_manager` inside a fallback (retry without the column) so member
+sign-in and the Board keep working on a pre-v3 database — deploy goes
+out before anyone runs Setup. Client: registry UI keys off
+`who.master || who.manager` (whoami now returns `manager`), rides into
+shared dialogs as `d.canManage`; the member edit dialog has a Manager
+checkbox. Note: is_leader (people-leader, org chart) and is_manager
+(access tier) are deliberately separate flags.
+
 **Same morning, a wrong turn worth remembering:** Travis's screenshots
 showed two dark REC Room widgets on the white mobile Mission Control
 page (a REC ROOM logo tile and an "Install the Mobile REC Room" card)
