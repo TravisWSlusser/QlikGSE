@@ -54,13 +54,10 @@ async function load(root, rerender, canEdit, openNew, me) {
   const activeStatuses = d.statuses.filter(s => s.active);
   const activeProjects = d.projects.filter(p => p.active);
   const overdueCount = activeProjects.filter(p => p.overdue).length;
-  const teamsShipping = new Set(activeProjects.map(p => p.team_id)).size;
 
   root.appendChild(h('div', { class: 'tiles' },
     statTile('Active projects', fmt.int(activeProjects.length)),
-    statTile('Overdue', fmt.int(overdueCount), overdueCount ? 'phases past their promise' : 'all promises holding'),
-    statTile('Teams shipping', fmt.int(teamsShipping)),
-    statTile('Statuses in play', fmt.int(new Set(activeProjects.map(p => p.status_id)).size))));
+    statTile('Overdue', fmt.int(overdueCount), overdueCount ? 'phases past their promise' : 'all promises holding')));
 
   // filters are client-side; the list is small by construction
   const flt = { team: 0, status: 0, retired: false };
