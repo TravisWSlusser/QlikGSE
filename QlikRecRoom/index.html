@@ -551,17 +551,23 @@
     html[data-mode="card"] .content { padding: 0; }
     html[data-mode="card"] .widget { min-height: 0; }
 
+    /* The card states exist only inside Mindtickle's mobile crop, and the
+       app's page there is white — so the cards wear white (2 Sep 2026,
+       Travis: the room keeps no light mode, but these load white on
+       mobile). Same treatment as the framed card in mobile.html. */
+    html[data-mode="card"], html[data-mode="card"] body,
+    html[data-section="launch"], html[data-section="launch"] body { background: #ffffff; }
     .mcard {
       position: relative; flex-direction: column; align-items: flex-start;
       justify-content: center; gap: 10px; min-height: 172px;
-      padding: 20px 22px; border: 1px solid rgba(34,224,255,.28);
-      background: linear-gradient(135deg, rgba(12,22,40,.96), rgba(8,14,26,.96));
+      padding: 20px 22px; border: 1px solid rgba(15,40,70,.16);
+      background: #ffffff;
     }
     .mcard-title {
       font-family:'Share Tech Mono',monospace; font-size: 1.05rem;
-      letter-spacing: .16em; text-transform: uppercase; color: var(--cyan);
+      letter-spacing: .16em; text-transform: uppercase; color: #0E2742;
     }
-    .mcard-sub { font-size: .95rem; line-height: 1.4; color: #9fb4d0; max-width: 78%; }
+    .mcard-sub { font-size: .95rem; line-height: 1.4; color: #5C7185; max-width: 78%; }
     .mcard-btn {
       font-family:'Share Tech Mono',monospace; font-size: .78rem; letter-spacing: .14em;
       text-transform: uppercase; padding: 12px 18px; margin-top: 4px;
@@ -580,7 +586,7 @@
     .mcard-cta {
       position: absolute; top: 12px; right: 14px; display: flex; gap: 7px;
       align-items: flex-start; max-width: 148px; text-align: right;
-      font-size: .72rem; line-height: 1.25; letter-spacing: .02em; color: var(--cyan);
+      font-size: .72rem; line-height: 1.25; letter-spacing: .02em; color: #007396;
       opacity: .95; pointer-events: none;
     }
     .mcard-cta b { font-weight: 600; display: block; }
