@@ -16,8 +16,11 @@ import { wirePop } from '../pop.js';
 
 const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
+let ME = null; // the signed-in member's name — signatures come from the credential
+
 export function render(params, rerender, who) {
   const scopes = (who && who.scopes) || [];
+  ME = (who && who.member && who.member.name) || null;
   const root = h('div', { class: 'view' });
 
   // ── the hotlinks bar — shared quick nav, any key can add to it ──
@@ -852,12 +855,12 @@ function bookmarkItem(n, reacts, cork, reload, bd) {
 function linkDialog(reload) {
   const title = textInput({ maxLength: 60, placeholder: "What the folder says — the link's name" });
   const url = textInput({ placeholder: 'https://…' });
-  const name = textInput({ maxLength: 40, value: recallName(), placeholder: 'First and last name — bookmarks are signed' });
+  const name = textInput({ maxLength: 40, value: ME || recallName(), placeholder: 'First and last name — bookmarks are signed' });
   modal('Pin a bookmark',
     h('div', { class: 'form' },
       field('Title', title, 'Shows on the folder — up to 60 characters.'),
       field('Link', url, 'http(s) only. Clicking the folder opens it in a new tab.'),
-      field('Your name', name, 'Signs the bookmark — the board shows people, not keys.')),
+      ...(ME ? [] : [field('Your name', name, 'Signs the bookmark — the board shows people, not keys.')])),
     [
       { label: 'Cancel', onClick: c => c() },
       { label: 'Pin it', kind: 'accent', onClick: async c => {
@@ -888,14 +891,14 @@ function noteDialog(reload) {
     } });
     return s;
   }));
-  const name = textInput({ maxLength: 40, value: recallName(), placeholder: 'First and last name — notes are signed' });
+  const name = textInput({ maxLength: 40, value: ME || recallName(), placeholder: 'First and last name — notes are signed' });
   modal('Pin a note',
     h('div', { class: 'form' },
       field('Note', msg, 'Up to 60 characters — this is what the board shows. Emoji welcome.'),
       emojiRow,
       field('Detail (optional)', det, 'Up to 500 — revealed on hover.'),
       field('Color', swatches),
-      field('Your name', name, 'Signs the note — the board shows people, not keys.')),
+      ...(ME ? [] : [field('Your name', name, 'Signs the note — the board shows people, not keys.')])),
     [
       { label: 'Cancel', onClick: c => c() },
       { label: 'Pin it', kind: 'accent', onClick: async c => {
@@ -948,11 +951,11 @@ function giphyGrid(onPick) {
 }
 
 function stickerDialog(reload) {
-  const name = textInput({ maxLength: 40, value: recallName(), placeholder: 'Your name — stickers are signed' });
+  const name = textInput({ maxLength: 40, value: ME || recallName(), placeholder: 'Your name — stickers are signed' });
   let pickedUrl = '';
   modal('Pin a sticker',
     h('div', { class: 'form' },
-      field('Your name', name, 'Shows when someone hovers your sticker. Stickers expire after 24 hours.'),
+      ...(ME ? [] : [field('Your name', name, 'Shows when someone hovers your sticker. Stickers expire after 24 hours.')]),
       giphyGrid(url => { pickedUrl = url; })),
     [
       { label: 'Cancel', onClick: c => c() },
@@ -1019,7 +1022,7 @@ function manageReactionsDialog(n, reacts, reload) {
 }
 
 function reactDialog(n, reload) {
-  const name = textInput({ maxLength: 40, value: recallName(), placeholder: 'Your name — reactions are signed' });
+  const name = textInput({ maxLength: 40, value: ME || recallName(), placeholder: 'Your name — reactions are signed' });
   let chosen = { emoji: '', sticker_url: '' };
   const status = h('span', { class: 'sub' }, 'Pick one below.');
   const emojiRow = h('div', { class: 'emoji-row rx-pick' },
@@ -1033,7 +1036,7 @@ function reactDialog(n, reload) {
   modal('React to the note',
     h('div', { class: 'form' },
       h('p', { class: 'explain' }, `“${n.message}”`),
-      field('Your name', name),
+      ...(ME ? [] : [field('Your name', name)]),
       field('Emoji', emojiRow),
       field('…or a small sticker', giphyGrid(url => {
         chosen = { emoji: '', sticker_url: url };
