@@ -70,6 +70,12 @@ try{ document.documentElement.dataset.theme = localStorage.getItem('capcom.theme
   <main id="main"></main>
 </div>
 
+<!-- shows only to leaders/system keys when a deploy is ahead of the DB -->
+<div id="update-bar" style="display:none">
+  <span>This deploy added new pieces — the app needs a quick update.</span>
+  <button id="update-run" class="btn sm accent">Update now</button>
+</div>
+
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

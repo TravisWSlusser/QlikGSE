@@ -597,6 +597,18 @@ scope, idempotent, seeds from the shipped literals only into empty tables)
 creates `app_state` per the runbook; the System view closes/reopens the room.
 The read side still fails open everywhere.
 
+**Setup is self-announcing now (1 Sep):** `lib/admin/schemaVersion.js`
+holds `SCHEMA_VERSION`; migrate stamps it into `app_state` on success;
+whoami compares stamp vs code and returns `setup_pending` (an
+unreadable stamp counts as pending). When it's pending, CAPCOM shows a
+bottom banner with a one-click **Update now** — visible only to the
+leadership circle: system-scope keys OR a member session that LEADS an
+active team (`project_teams.leader_id`); migrate itself accepts that
+same circle. **RULE: any change that adds DDL or seeds to migrate.js
+MUST bump SCHEMA_VERSION by one in the same commit** — that bump is
+what makes the banner appear after the deploy; forget it and the
+feature ships with silently-missing tables again.
+
 **First-run order matters:** set `ADMIN_KEY` in Vercel → create the Blob store
 → deploy → open `/CAPCOM/`, sign in with the master key → run Setup. Until
 Setup runs, both public feeds return empty and the pages keep their fallbacks —

@@ -118,6 +118,16 @@ function showApp() {
   $('who-label').textContent = WHO.master ? 'master key' : WHO.label;
   buildNav();
   draw();
+  maybeUpdateBar();
+}
+
+/* The update banner: shown only to the leadership circle (system scope,
+   or a team leader signed in as a member) when the deployed code's
+   schema version is ahead of what Setup last stamped. One click runs
+   the same idempotent Setup as the System view. */
+function maybeUpdateBar() {
+  const can = WHO && (WHO.scopes.includes('system') || WHO.leader);
+  $('update-bar').style.display = (can && WHO.setup_pending) ? 'flex' : 'none';
 }
 
 function showGate(msg) {
@@ -194,6 +204,19 @@ export function boot() {
   $('gate-member').addEventListener('click', memberGo);
   $('gate-code').addEventListener('keydown', e => { if (e.key === 'Enter') memberGo(); });
   $('gate-claim').addEventListener('click', e => { e.preventDefault(); claimDialog(); });
+
+  $('update-run').addEventListener('click', async () => {
+    const btn = $('update-run');
+    btn.disabled = true; btn.textContent = 'Updating…';
+    try {
+      const r = await api.migrate();
+      toast('Updated — ' + ((r.done || []).slice(-1)[0] || 'nothing to do'));
+      WHO = await api.whoami();
+      maybeUpdateBar();
+      draw();
+    } catch (err) { toast(err.message, 'err'); }
+    btn.disabled = false; btn.textContent = 'Update now';
+  });
   $('theme-toggle').addEventListener('click', toggleTheme);
   $('signout').addEventListener('click', () => {
     keyStore.clear(); WHO = null;

@@ -1234,6 +1234,14 @@ a.gantt-label:hover{color:var(--link)}
 .ps-swatch{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer}
 .ps-swatch.on{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
 
+/* the update banner — bottom center, above everything, hard to miss */
+#update-bar{
+  position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:105;
+  display:flex;align-items:center;gap:14px;padding:12px 18px;max-width:92vw;
+  background:var(--card);border:1px solid var(--focus);border-radius:12px;
+  box-shadow:var(--shadow);font-size:.86rem;color:var(--ink);
+}
+
 /* the gate's member half: trigram + self-set code, and the claim link */
 .gate-or{margin:16px 0 10px;font-size:.7rem;color:var(--muted);letter-spacing:.24em}
 .gate-member-row{display:flex;gap:8px}
