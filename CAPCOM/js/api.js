@@ -65,6 +65,7 @@ export const api = {
   projectsAdmin: body => call('projectsAdmin', { method: 'POST', body }),
   members: body => call('members', { method: 'POST', body }),
   memberClaim: body => call('memberClaim', { method: 'POST', body }),
+  bugs: body => call('bugs', { method: 'POST', body }),
   giphySearch: (q, type) => call('giphySearch', { query: `?q=${encodeURIComponent(q)}&type=${type}` }),
 
   /* The one non-admin fetch: the public calendar feed, so Home can rebuild

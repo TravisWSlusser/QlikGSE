@@ -1414,3 +1414,73 @@ a.gantt-label:hover{color:var(--link)}
   .prj-desc{max-width:none}
   .donut-wrap{justify-content:center}
 }
+
+/* ── password strength meter (the gate's claim dialog) ─────────────── */
+.pw-meter{display:flex;align-items:center;gap:10px;margin:-6px 0 4px}
+.pw-bars{display:flex;gap:4px;flex:0 0 auto}
+.pw-bar{width:34px;height:5px;border-radius:3px;background:var(--line);transition:background .25s}
+.pw-bar.on.s1{background:var(--overdue)}
+.pw-bar.on.s2{background:#c98500}
+.pw-bar.on.s3{background:var(--accent)}
+.pw-bar.on.s4{background:#00A651}
+.pw-label{font-size:.72rem;color:var(--muted)}
+.pw-meter[data-score="4"] .pw-label{color:#00A651}
+
+/* ── the guided walkthrough — glitch in, settle, stay legible ───────── */
+.tour-veil{position:fixed;inset:0;z-index:300;background:rgba(4,10,20,.55)}
+.tour-ring{
+  position:fixed;z-index:301;pointer-events:none;border:2px solid var(--accent);
+  border-radius:10px;box-shadow:0 0 0 4px rgba(0,152,69,.20), 0 0 26px rgba(0,152,69,.38);
+  transition:left .25s ease,top .25s ease,width .25s ease,height .25s ease;
+}
+.tour-card{
+  position:fixed;z-index:302;padding:14px 16px;border-radius:12px;
+  background:var(--card);border:1px solid var(--accent);
+  box-shadow:0 18px 50px rgba(0,0,0,.45);
+}
+.tour-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.tour-step{font-size:.68rem;letter-spacing:.14em;color:var(--accent)}
+.tour-skip{background:none;border:0;color:var(--muted);font-size:.7rem;cursor:pointer;text-decoration:underline;padding:0}
+.tour-skip:hover{color:var(--ink)}
+.tour-title{font-weight:700;font-size:1rem;margin-bottom:4px}
+.tour-blurb{font-size:.82rem;line-height:1.5;color:var(--muted);margin-bottom:12px}
+.tour-btns{display:flex;justify-content:space-between;gap:8px}
+.tour-back:disabled{opacity:.35;cursor:default}
+/* the glitch: slice + jitter + chroma flicker for ~.38s, then dead still */
+@keyframes tourGlitch{
+  0%{opacity:0;transform:translate(-6px,2px);clip-path:inset(0 0 62% 0)}
+  12%{opacity:1;transform:translate(4px,-2px);clip-path:inset(38% 0 8% 0)}
+  24%{transform:translate(-3px,1px);clip-path:inset(8% 0 44% 0)}
+  36%{transform:translate(2px,-1px);clip-path:inset(52% 0 2% 0)}
+  48%{transform:translate(-1px,0);clip-path:inset(0 0 0 0)}
+  100%{opacity:1;transform:none;clip-path:inset(0 0 0 0)}
+}
+@keyframes tourChroma{
+  0%,45%{text-shadow:2px 0 rgba(16,207,201,.55), -2px 0 rgba(255,45,155,.45)}
+  55%,100%{text-shadow:none}
+}
+.tour-in{animation:tourGlitch .38s steps(12) both}
+.tour-card.tour-in .tour-title{animation:tourChroma .5s steps(8) both}
+@keyframes tourOut{
+  0%{opacity:1;clip-path:inset(0)}
+  40%{opacity:.8;clip-path:inset(30% 0 22% 0);transform:translate(3px,0)}
+  100%{opacity:0;clip-path:inset(48% 0 48% 0);transform:translate(-6px,0)}
+}
+.tour-out{animation:tourOut .28s steps(8) both}
+@media (prefers-reduced-motion: reduce){
+  .tour-in,.tour-out{animation:none}
+  .tour-out{opacity:0}
+  .tour-card.tour-in .tour-title{animation:none}
+}
+
+/* ── Help & FAQ ────────────────────────────────────────────────────── */
+.help-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.help-item-t{font-weight:600;font-size:.85rem;margin-bottom:2px}
+.help-item-b{font-size:.78rem;line-height:1.45;color:var(--muted)}
+.faq-item{border-bottom:1px solid var(--line);padding:8px 0}
+.faq-item summary{cursor:pointer;font-size:.85rem;font-weight:600}
+.faq-a{font-size:.8rem;line-height:1.5;color:var(--muted);margin:6px 0 2px;max-width:70ch}
+.bug-list{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.bug-row{display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.bug-note{flex:1;font-size:.8rem;line-height:1.45}
+.bug-meta{font-size:.7rem;color:var(--muted);flex:0 0 auto}

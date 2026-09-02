@@ -70,11 +70,11 @@ try{ document.documentElement.dataset.theme = localStorage.getItem('capcom.theme
       <img class="tm tm-light" src="assets/typemark-color.svg" alt="Qlik Sales Enablement">
     </div>
     <div class="side-mark" title="Content, Analytics &amp; Players — Command Operations Module">CAPCOM</div>
-    <nav class="nav" id="nav-list"></nav>
+    <nav class="nav" id="nav-list" data-tour="nav"></nav>
     <div class="side-foot">
       <span id="who-label" class="who"></span>
       <button id="ver-chip" class="ver-chip" title="What is deployed" style="display:none"></button>
-      <button id="theme-toggle" class="theme-btn" title="Toggle light / dark" aria-label="Toggle light or dark mode">◐</button>
+      <button id="theme-toggle" class="theme-btn" data-tour="theme" title="Toggle light / dark" aria-label="Toggle light or dark mode">◐</button>
       <button id="signout" class="btn sm">Sign out</button>
     </div>
   </aside>

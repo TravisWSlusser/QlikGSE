@@ -24,6 +24,8 @@ import * as home from './views/home.js';
 import * as projects from './views/projects.js';
 import * as projectsInsights from './views/projectsInsights.js';
 import * as staff from './views/staff.js';
+import * as help from './views/help.js';
+import { maybeAutoStart } from './tour.js';
 import { ICONS } from './icons.js';
 import { mountFx } from './fx.js';
 import { hidePop } from './pop.js';
@@ -52,6 +54,9 @@ const NAV = [
   { group: 'System', items: [
     { route: 'maintenance', label: 'Maintenance', scope: 'system', mod: maintenance, icon: 'maintenance' },
     { route: 'system', label: 'Access & Setup', scope: 'system', mod: system, icon: 'system' },
+  ]},
+  { group: '', items: [
+    { route: 'help', label: 'Help & FAQ', scope: null, mod: help, icon: 'help' },
   ]},
 ];
 
@@ -98,6 +103,8 @@ function draw() {
   });
 
   clear(main).appendChild(item.mod.render(parts.slice(1), draw, WHO));
+  // first-timers get the walkthrough once Home has mounted
+  if (item.route === 'home') maybeAutoStart();
 }
 
 function buildNav() {
@@ -108,7 +115,8 @@ function buildNav() {
     if (!items.length) continue;
     if (g.group) nav.appendChild(h('div', { class: 'nav-group' }, g.group));
     items.forEach(it => nav.appendChild(
-      h('a', { href: '#' + it.route, dataset: { route: it.route } },
+      h('a', { href: '#' + it.route,
+        dataset: it.route === 'help' ? { route: it.route, tour: 'help' } : { route: it.route } },
         h('span', { class: 'nav-ic', html: ICONS[it.icon] || '' }),
         it.label)));
   }
@@ -187,27 +195,54 @@ function toggleTheme() {
   try { localStorage.setItem('capcom.theme', next); } catch {}
 }
 
-/* Claim-your-access: the member picks their own code, once, after an
-   admin has put them in the registry. The code goes to memberClaim and
-   is stored only as a hash server-side; on success we sign them in. */
+/* Claim-your-access — INVITE-ONLY. A manager issues a one-time code and
+   sends it to the person; that code plus a policy-passing password of
+   their own gets them in. The password never leaves here in plaintext
+   except to memberClaim, which stores only the hash. */
+function pwScore(pw) {
+  // 0 fails policy · 1 weak · 2 okay · 3 good · 4 strong
+  const num = /[0-9]/.test(pw), sym = /[^A-Za-z0-9]/.test(pw);
+  if (pw.length < 10 || !num || !sym) return 0;
+  let s = 1;
+  if (pw.length >= 12) s++;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) s++;
+  if (pw.length >= 15) s++;
+  return s;
+}
+const PW_LABEL = ['Needs 10+ characters, a number and a symbol', 'Weak — it passes, barely', 'Okay', 'Good', 'Strong'];
+
 function claimDialog() {
   const tri = textInput({ maxLength: 3, placeholder: 'TRI', style: { textTransform: 'uppercase' } });
-  const c1 = h('input', { type: 'password', maxLength: 64, placeholder: '8+ characters' });
+  const inv = textInput({ maxLength: 20, placeholder: 'XXXXX-XXXXX', style: { textTransform: 'uppercase' } });
+  const c1 = h('input', { type: 'password', maxLength: 64, placeholder: '10+ chars, a number, a symbol' });
   const c2 = h('input', { type: 'password', maxLength: 64, placeholder: 'Same again' });
-  modal('Claim your member access',
+  const bars = [0, 1, 2, 3].map(() => h('span', { class: 'pw-bar' }));
+  const meterLbl = h('span', { class: 'pw-label' }, PW_LABEL[0]);
+  const meter = h('div', { class: 'pw-meter' }, h('div', { class: 'pw-bars' }, ...bars), meterLbl);
+  c1.addEventListener('input', () => {
+    const s = pwScore(c1.value);
+    bars.forEach((b, i) => { b.className = 'pw-bar' + (i < s ? ` on s${s}` : ''); });
+    meterLbl.textContent = PW_LABEL[s];
+    meter.dataset.score = s;
+  });
+  modal('Set up your member access',
     h('div', { class: 'form' },
-      h('p', { class: 'sub' }, 'You need to be in the team registry first — if your trigram is not found, ask an admin to add you from the Project Board’s Members manager.'),
+      h('p', { class: 'sub' }, 'Access is invite-only: a manager sends you a one-time invite code. It works once and expires after 7 days.'),
       field('Your trigram', tri, 'The same three letters you use in the REC Room.'),
-      field('Choose an access code', c1),
+      field('One-time invite code', inv, 'From your manager.'),
+      field('Create your password', c1),
+      meter,
       field('Confirm it', c2)),
     [
       { label: 'Cancel', onClick: c => c() },
-      { label: 'Claim it', kind: 'accent', onClick: async c => {
-        if (c1.value !== c2.value) { toast('The two codes do not match', 'err'); return; }
+      { label: 'Set it up', kind: 'accent', onClick: async c => {
+        if (pwScore(c1.value) < 1) { toast('Passwords need 10+ characters, a number and a symbol', 'err'); return; }
+        if (c1.value !== c2.value) { toast('The two passwords do not match', 'err'); return; }
         try {
-          const r = await api.memberClaim({ trigram: tri.value, code: c1.value });
+          const r = await api.memberClaim({ trigram: tri.value, invite: inv.value, code: c1.value });
           c();
           toast(`Welcome, ${r.name} — signing you in`);
+          try { sessionStorage.setItem('capcom.tour.pending', '1'); } catch {}
           tryKey(`${tri.value.trim().toUpperCase()}:${c1.value}`);
         } catch (err) { toast(err.message, 'err'); }
       } },

@@ -42,22 +42,22 @@ export function render(params, rerender, who) {
   grid.append(leftCol, rightCol);
 
   // Left column: calendar (with actions), projects at a glance, change feed.
-  const calCard = h('div', { class: 'card' }, spinner());
+  const calCard = h('div', { class: 'card', dataset: { tour: 'calendar' } }, spinner());
   leftCol.appendChild(calCard);
   loadCalendar(calCard, scopes, acts);
-  const prjCard = h('div', { class: 'card' }, spinner());
+  const prjCard = h('div', { class: 'card', dataset: { tour: 'projects-glance' } }, spinner());
   leftCol.appendChild(prjCard);
   loadProjectsCard(prjCard, scopes);
-  const logCard = h('div', { class: 'card' }, spinner());
+  const logCard = h('div', { class: 'card', dataset: { tour: 'changes' } }, spinner());
   leftCol.appendChild(logCard);
   loadLog(logCard);
 
   // Right column: clock, the corkboard, then the Enablement News Feed.
   rightCol.appendChild(clockCard());
-  const board = h('div', { class: 'card board-card' }, spinner());
+  const board = h('div', { class: 'card board-card', dataset: { tour: 'board' } }, spinner());
   rightCol.appendChild(board);
   loadBoard(board, rerender);
-  const inspo = h('div', { class: 'card' }, spinner());
+  const inspo = h('div', { class: 'card', dataset: { tour: 'news' } }, spinner());
   rightCol.appendChild(inspo);
   loadInspoCard(inspo);
 
@@ -115,7 +115,7 @@ function clockCard() {
     el._tz = z.tz;
     return el;
   });
-  const card = h('div', { class: 'card clock-card' },
+  const card = h('div', { class: 'card clock-card', dataset: { tour: 'clock' } },
     sectionTitle('Operations clock'),
     greeting, localTime, localDate,
     h('div', { class: 'clk-grid' }, zoneEls));
