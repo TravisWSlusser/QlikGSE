@@ -11,16 +11,19 @@ import { toast, confirmBox, sectionTitle, spinner, errorState, emptyState } from
 import { pctx, editMemberDialog, teamsDialog, historyDialog } from './projects.js';
 
 export function render(params, rerender, who) {
-  const canEdit = !!(who && who.scopes && who.scopes.includes('projects'));
+  const canTeams = !!(who && who.scopes && who.scopes.includes('projects'));
+  // registry rights (add/edit members, reset codes): managers + masters only
+  const canEdit = !!(who && (who.master || who.manager));
   const root = h('div', { class: 'view' }, spinner());
-  load(root, rerender, canEdit);
+  load(root, rerender, canEdit, canTeams);
   return root;
 }
 
-async function load(root, rerender, canEdit) {
+async function load(root, rerender, canEdit, canTeams) {
   let d;
   try { d = await api.projects({ op: 'list', all: true }); }
-  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit))); return; }
+  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit, canTeams))); return; }
+  d.canManage = canEdit; // registry writes: managers + masters
   clear(root);
 
   d.memberById = {};
@@ -37,10 +40,8 @@ async function load(root, rerender, canEdit) {
   card.appendChild(sectionTitle('Staff',
     h('span', { class: 'sec-sub' },
       `${members.length} member${members.length === 1 ? '' : 's'} · leaders keep the app updated and top their team's column`),
-    ...(canEdit ? [
-      h('button', { class: 'btn sm', onClick: () => teamsDialog(d, rerender) }, 'Teams'),
-      h('button', { class: 'btn sm accent', onClick: () => editMemberDialog(null, d, rerender) }, '+ Add New'),
-    ] : [])));
+    ...(canTeams ? [h('button', { class: 'btn sm', onClick: () => teamsDialog(d, rerender) }, 'Teams')] : []),
+    ...(canEdit ? [h('button', { class: 'btn sm accent', onClick: () => editMemberDialog(null, d, rerender) }, '+ Add New')] : [])));
 
   if (!members.length) {
     card.appendChild(emptyState('Nobody on staff yet.',

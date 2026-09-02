@@ -24,18 +24,21 @@ const KIND_LABEL = {
 
 export function render(params, rerender, who) {
   const canEdit = !!(who && who.scopes && who.scopes.includes('projects'));
+  // registry rights (add/edit members, reset codes): managers + masters only
+  const canManage = !!(who && (who.master || who.manager));
   const me = (who && who.member) || null; // member session: acts on tagged projects only
   const wantNew = params && params[0] === 'new';
   if (wantNew) history.replaceState(null, '', '#projects');
   const root = h('div', { class: 'view' }, spinner());
-  load(root, rerender, canEdit, wantNew && canEdit, me);
+  load(root, rerender, canEdit, wantNew && canEdit, me, canManage);
   return root;
 }
 
-async function load(root, rerender, canEdit, openNew, me) {
+async function load(root, rerender, canEdit, openNew, me, canManage) {
   let d;
   try { d = await api.projects({ op: 'list', all: true }); }
-  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit))); return; }
+  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit, false, me, canManage))); return; }
+  d.canManage = !!canManage; // rides the bundle into the shared dialogs
   clear(root);
 
   const teamById = {}, statusById = {};
@@ -427,6 +430,7 @@ export function pctx(x, y, entries) {
 export function membersDialog(d, rerender) {
   const teamById = {};
   for (const t of d.teams) teamById[t.id] = t;
+  const canManage = !!d.canManage; // registry writes: managers + masters
   const rows = (d.members || []).filter(m => m.active).map(m => {
     const menu = () => [
       ['Edit…', () => editMemberDialog(m, d, rerender), false],
@@ -441,24 +445,26 @@ export function membersDialog(d, rerender) {
           catch (err) { toast(err.message, 'err'); }
         }, 'Retire'), true],
     ];
-    const row = h('div', { class: 'mem-row', title: 'Right-click to edit' },
+    const row = h('div', { class: 'mem-row', title: canManage ? 'Right-click to edit' : undefined },
       h('span', { class: 'mem-row-name' }, m.name),
       m.trigram ? h('span', { class: 'mem-row-tri' }, m.trigram) : null,
       h('span', { class: 'mem-row-detail' },
         [m.title, (teamById[m.team_id] || {}).name, m.email].filter(Boolean).join(' · ') || '—'),
       h('span', { class: 'mem-row-claim' + (m.claimed ? ' on' : '') }, m.claimed ? 'claimed' : 'unclaimed'),
-      h('button', { class: 'itm-menu mem-row-menu', 'aria-label': 'Member menu', onClick: ev => {
+      canManage ? h('button', { class: 'itm-menu mem-row-menu', 'aria-label': 'Member menu', onClick: ev => {
         ev.stopPropagation();
         pctx(ev.clientX, ev.clientY, menu());
-      } }, '⋯'));
-    row.addEventListener('contextmenu', ev => { ev.preventDefault(); pctx(ev.clientX, ev.clientY, menu()); });
+      } }, '⋯') : null);
+    if (canManage) row.addEventListener('contextmenu', ev => { ev.preventDefault(); pctx(ev.clientX, ev.clientY, menu()); });
     return row;
   });
   modal('Team Member Catalog',
     h('div', null,
       h('div', { class: 'mem-cat-head' },
-        h('button', { class: 'btn sm accent', onClick: () => editMemberDialog(null, d, rerender) }, '+ Add New'),
-        h('span', { class: 'sub' }, 'Right-click a member to edit, reset their code, or retire them.')),
+        canManage ? h('button', { class: 'btn sm accent', onClick: () => editMemberDialog(null, d, rerender) }, '+ Add New') : null,
+        h('span', { class: 'sub' }, canManage
+          ? 'Right-click a member to edit, reset their code, or retire them.'
+          : 'Managers sign the team up and reset codes.')),
       rows.length ? h('div', { class: 'mem-cat' }, ...rows)
         : emptyState('Nobody in the registry yet.', 'Add New puts the first person in.')),
     [{ label: 'Done', kind: 'accent', onClick: c => c() }]);
@@ -474,6 +480,7 @@ export function editMemberDialog(m, d, rerender) {
   const team = select([{ value: '0', label: '— no team —' },
     ...activeTeams.map(t => ({ value: String(t.id), label: t.name, selected: m && m.team_id === t.id }))]);
   const isLeader = h('input', { type: 'checkbox', checked: m && m.is_leader ? true : null });
+  const isManager = h('input', { type: 'checkbox', checked: m && m.is_manager ? true : null });
   const leaders = (d.members || []).filter(x => x.active && x.is_leader && (!m || x.id !== m.id));
   const mgr = select([{ value: '0', label: leaders.length ? '— nobody —' : '— no people leaders declared yet —' },
     ...leaders.map(x => ({ value: String(x.id), label: x.name, selected: m && m.manager_id === x.id }))]);
@@ -485,14 +492,15 @@ export function editMemberDialog(m, d, rerender) {
       field('Email', email),
       field('Team', team),
       field('People leader', isLeader, 'Declared leaders can have staff report to them — enablement has several.'),
-      field('Reports to', mgr, 'Their people leader. Staff sit below their leader on the Staff tab.')),
+      field('Reports to', mgr, 'Their people leader. Staff sit below their leader on the Staff tab.'),
+      field('Manager', isManager, 'Managers hold every scope when signed in, and they alone sign the team up, reset codes, and grant this.')),
     [
       { label: 'Cancel', onClick: c => c() },
       { label: isNew ? 'Add them' : 'Save', kind: 'accent', onClick: async c => {
         try {
           await api.members({ op: 'save', id: m ? m.id : undefined, name: name.value,
             trigram: tri.value, title: title.value, email: email.value, team_id: Number(team.value) || null,
-            is_leader: isLeader.checked, manager_id: Number(mgr.value) || null });
+            is_leader: isLeader.checked, is_manager: isManager.checked, manager_id: Number(mgr.value) || null });
           c(); toast(isNew ? 'Member added' : 'Member saved'); rerender();
         } catch (err) { toast(err.message, 'err'); }
       } },
