@@ -74,4 +74,9 @@ export const api = {
     if (!r.ok) throw new Error('Calendar feed unavailable');
     return r.json();
   },
+  inspiration: async () => {
+    const r = await fetch('/api/command/inspiration', { cache: 'no-store' });
+    if (!r.ok) throw new Error('The news feed is unavailable');
+    return r.json();
+  },
 };

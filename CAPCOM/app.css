@@ -1307,6 +1307,26 @@ a.gantt-label:hover{color:var(--link)}
 }
 .mem-chip-x:hover{color:var(--danger)}
 
+/* the Enablement News Feed card */
+.inspo{display:flex;flex-direction:column;gap:4px}
+.inspo-row{
+  display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+  padding:7px 10px;border-radius:9px;border:1px solid transparent;color:var(--ink);
+}
+.inspo-row:hover{border-color:var(--focus);background:var(--card-2)}
+.inspo-tags{display:inline-flex;gap:4px;flex:none}
+.inspo-tag{
+  font-size:.6rem;font-weight:800;letter-spacing:.08em;padding:1px 6px;
+  border-radius:5px;border:1px solid color-mix(in srgb, var(--it) 55%, transparent);
+  color:var(--it);background:color-mix(in srgb, var(--it) 12%, transparent);
+}
+.inspo-tag.t-ai{--it:var(--ps-violet)}
+.inspo-tag.t-se{--it:var(--ps-teal)}
+.inspo-tag.t-kapp{--it:var(--ps-amber)}
+.inspo-title{flex:1;min-width:200px;font-size:.84rem;font-weight:600}
+.inspo-row:hover .inspo-title{color:var(--link)}
+.inspo-meta{font-size:.7rem;color:var(--muted);white-space:nowrap}
+
 /* Home at-a-glance card */
 .prj-glance{display:flex;flex-direction:column;gap:8px}
 .prj-glance-row{display:flex;align-items:center;gap:10px;font-size:.84rem}

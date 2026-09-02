@@ -52,11 +52,14 @@ export function render(params, rerender, who) {
   leftCol.appendChild(logCard);
   loadLog(logCard);
 
-  // Right column: clock, then the corkboard with room to breathe.
+  // Right column: clock, the corkboard, then the Enablement News Feed.
   rightCol.appendChild(clockCard());
   const board = h('div', { class: 'card board-card' }, spinner());
   rightCol.appendChild(board);
   loadBoard(board, rerender);
+  const inspo = h('div', { class: 'card' }, spinner());
+  rightCol.appendChild(inspo);
+  loadInspoCard(inspo);
 
   // ── the Stellar-Seller widget — full width under the grid ──
   if (scopes.some(s => ['analytics', 'content', 'banners'].includes(s))) {
@@ -1115,6 +1118,36 @@ async function loadCalendar(card, scopes, acts) {
 }
 
 /* ── change feed ── */
+/* ── the Enablement News Feed: curated L&D/enablement blogs, filtered
+   server-side to the two themes the team runs on — sales enablement and
+   AI. Public feed, DB-cached; a broken feed day degrades to a quiet
+   card, never an error wall. ── */
+const INSPO_AGE = iso => {
+  const d = Math.round((Date.now() - new Date(iso || 0).getTime()) / 86400000);
+  return !isFinite(d) || d < 0 ? '' : d === 0 ? 'today' : d === 1 ? '1d' : d < 60 ? `${d}d` : '';
+};
+async function loadInspoCard(card) {
+  let d;
+  try { d = await api.inspiration(); }
+  catch { clear(card); return; } // like the hotlinks bar: not worth an error card
+  clear(card);
+  card.appendChild(sectionTitle('Enablement News',
+    h('span', { class: 'sec-sub' }, 'sales enablement × AI, from the field')));
+  const items = (d.items || []).slice(0, 7);
+  if (!items.length) {
+    card.appendChild(emptyState('The feed is warming up.', 'Fresh reads land here as the blogs publish.'));
+    return;
+  }
+  card.appendChild(h('div', { class: 'inspo' }, items.map(it =>
+    h('a', { class: 'inspo-row', href: it.url, target: '_blank', rel: 'noopener' },
+      h('span', { class: 'inspo-tags' },
+        it.starred ? h('span', { class: 'inspo-tag t-kapp' }, '★ KAPP') : null,
+        it.themes.includes('ai') ? h('span', { class: 'inspo-tag t-ai' }, 'AI') : null,
+        it.themes.includes('enablement') ? h('span', { class: 'inspo-tag t-se' }, 'SE') : null),
+      h('span', { class: 'inspo-title' }, it.title),
+      h('span', { class: 'inspo-meta' }, [it.source, INSPO_AGE(it.published)].filter(Boolean).join(' · '))))));
+}
+
 /* ── projects at a glance: the compact Home cut — no calendar, no charts,
    just the promises. Server-ordered: overdue first, then soonest due. ── */
 async function loadProjectsCard(card, scopes) {

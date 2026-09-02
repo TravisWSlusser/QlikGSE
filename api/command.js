@@ -7,6 +7,7 @@ import onthisday from '../lib/command/onthisday.js';
 import status from '../lib/command/status.js';
 import events from '../lib/command/events.js';
 import banners from '../lib/command/banners.js';
+import inspiration from '../lib/command/inspiration.js';
 
 const HANDLERS = {
   market,
@@ -14,7 +15,8 @@ const HANDLERS = {
   onthisday,
   status,
   events,
-  banners
+  banners,
+  inspiration
 };
 
 export default async function handler(req, res) {

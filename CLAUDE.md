@@ -813,6 +813,26 @@ Surgical edits, never full-file rewrites. Validate before shipping — render or
 screenshot to confirm visual changes, and check JS parses. Give honest tradeoff
 analysis before building. Flag gaps rather than filling them with invention.
 
+## The Enablement News Feed (1 Sep 2026)
+
+`/api/command/inspiration` — public, keyless: aggregates a CURATED
+list of reputable L&D/enablement RSS feeds (each verified live 1 Sep
+2026; the list is `FEEDS` in `lib/command/inspiration.js`) and serves
+only items matching the two themes (AI_RE / SE_RE regexes) — except
+**starred voices** (Karl Kapp — Travis studied under him), whose every
+post is included, badged ★, and floated to the top while under 30 days
+old. No deps: RSS/Atom parsed with regexes (CDATA/entity-tolerant),
+6.5s abort per fetch, per-source cap 4, total 30. Caching copies
+news.js's DB-row pattern (api_cache key 'inspiration', TTL 180min,
+stale to 48h, never cache an empty result) — read news.js's header for
+why edge caching alone fails per-region. The neon import is LAZY so
+the module runs standalone under plain node for testing (no DB = no
+cache, never an error). CAPCOM Home renders it as the "Enablement
+News" card (right column; a failed feed clears the card quietly, like
+the hotlinks bar). Dead feeds checked and excluded: ATD, Learning
+Guild, Cathy Moore, Tim Slade, Articulate community. Highspot has a
+live feed but is a Mindtickle competitor — Travis's call, left out.
+
 ## The Projects tracker (1 Sep 2026)
 
 Sales Enablement's project board, in CAPCOM: nav group **Projects** →
