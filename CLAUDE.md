@@ -1176,6 +1176,13 @@ shared dialogs as `d.canManage`; the member edit dialog has a Manager
 checkbox. Note: is_leader (people-leader, org chart) and is_manager
 (access tier) are deliberately separate flags.
 
+Later same day: the Staff tab became the ORG TREE, top level down —
+manager_id is the structure, teams are a row detail. Setup seeds the
+leadership org once (`org_seeded`): Nick (LND) tops the tree, the
+other six leadership members report to him (only where no line
+exists), and LND/DKQ/KYI/SYK are people leaders — per Travis, Mike,
+Rafael and Steve have people under them; he does not.
+
 ## Invite-only access + walkthrough + Help (2 Sep 2026, schema v4)
 
 Travis: "I don't want ANYONE to be able to become a member. Invite
