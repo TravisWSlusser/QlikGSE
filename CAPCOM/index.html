@@ -2,9 +2,19 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CAPCOM — Qlik Sales Enablement</title>
 <meta name="robots" content="noindex">
+<!-- installable: Add to Home Screen opens CAPCOM standalone, no browser
+     chrome. Note iOS gives an installed app its OWN storage container,
+     so the key must be entered once inside the installed copy. -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0B1F33">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="CAPCOM">
+<link rel="apple-touch-icon" href="assets/capcom-180.png">
 <!-- Theme before first paint, or light-mode users get a navy flash -->
 <script>
 try{ document.documentElement.dataset.theme = localStorage.getItem('capcom.theme') || 'dark'; }catch(e){}

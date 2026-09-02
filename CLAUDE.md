@@ -925,6 +925,16 @@ card), and the Board shows a how-to hint when the registry is empty —
 the "where do I add people?" question came up within the hour. Re-run
 Setup for the credential + email columns.
 
+**CAPCOM is installable (2 Sep):** `CAPCOM/manifest.json`
+(standalone, scope+start_url `/CAPCOM/`, navy theme) + apple metas and
+icons (`assets/capcom-{512,192,180}.png`, ffmpeg-generated placeholders
+— Travis owns the real art). Android: browser menu → Install app /
+Add to Home screen; iPhone: Share → Add to Home Screen. No service
+worker on purpose — an admin app must never serve stale cached data.
+Remember the REC Room lesson: an installed iOS app has its OWN storage
+container, so each person signs in once inside the installed copy
+(their key/member code then persists there).
+
 **Staff tab (2 Sep):** the registry graduated from a dialog to a page —
 nav route `projects/staff` (`views/staff.js`, scope null; edit controls
 gate on 'projects'). Teams as columns, leaders starred, Unassigned and
