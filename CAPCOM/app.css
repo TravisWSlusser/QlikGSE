@@ -1298,6 +1298,7 @@ a.gantt-label:hover{color:var(--link)}
 .cat-member:hover{border-color:var(--focus);background:var(--card-2)}
 .cat-member.cat-lead{border-color:var(--line);background:var(--card-2)}
 .cat-star{width:14px;flex:none;color:var(--warn);font-size:.8rem}
+.cat-report{margin-left:22px;width:calc(100% - 22px);border-left:2px solid var(--line);border-radius:0 9px 9px 0}
 .cat-name{font-weight:600;white-space:nowrap}
 .cat-detail{flex:1;min-width:0;font-size:.72rem;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cat-count{font-size:.7rem;color:var(--muted);white-space:nowrap}

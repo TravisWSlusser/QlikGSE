@@ -935,6 +935,16 @@ Remember the REC Room lesson: an installed iOS app has its OWN storage
 container, so each person signs in once inside the installed copy
 (their key/member code then persists there).
 
+**People leaders (2 Sep, v2):** members carry `is_leader` (the
+declaration — enablement has several) and `manager_id` (reports-to,
+validated server-side: must be an active declared leader, never self;
+stepping down as leader releases your reports' lines). The edit form
+gains the checkbox + a Reports-to select of declared leaders. The
+Staff tab nests same-team reports under their leader (`.cat-report`
+indent); cross-team reports stay in their own column with "reports to
+NAME" in the detail line. SCHEMA_VERSION bumped to 2 — the update
+banner's first real firing.
+
 **Staff tab (2 Sep):** the registry graduated from a dialog to a page —
 nav route `projects/staff` (`views/staff.js`, scope null; edit controls
 gate on 'projects'). Teams as columns, leaders starred, Unassigned and

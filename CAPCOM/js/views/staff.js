@@ -64,13 +64,24 @@ async function load(root, rerender, canEdit) {
       }, m.active ? 'Retire' : 'Restore'), m.active],
   ];
 
-  const memberRow = (m, isLead) => {
+  const memberRow = (m, isLead, isReport) => {
     const projCount = (d.tagsByMember[m.id] || []).length;
-    const row = h('button', { class: 'cat-member' + (isLead ? ' cat-lead' : '') + (m.active ? '' : ' prj-retired'), onClick: () => historyDialog(m, d) },
+    const mgr = m.manager_id ? d.memberById[m.manager_id] : null;
+    const row = h('button', {
+      class: 'cat-member' + (isLead ? ' cat-lead' : '') + (isReport ? ' cat-report' : '') + (m.active ? '' : ' prj-retired'),
+      onClick: () => historyDialog(m, d),
+    },
       isLead ? h('span', { class: 'cat-star', 'aria-label': 'Team leader' }, '★') : h('span', { class: 'cat-star' }, ''),
       h('span', { class: 'cat-name' }, m.name),
       m.trigram ? h('span', { class: 'mem-row-tri' }, m.trigram) : null,
-      h('span', { class: 'cat-detail' }, [isLead ? 'Team leader' : null, m.title || null, m.email || null].filter(Boolean).join(' · ')),
+      h('span', { class: 'cat-detail' }, [
+        isLead ? 'Team leader' : null,
+        m.is_leader ? 'People leader' : null,
+        m.title || null,
+        // a report's line is shown by the nesting; name the manager only
+        // when they sit outside this leader's stack
+        !isReport && mgr ? `reports to ${mgr.name}` : null,
+      ].filter(Boolean).join(' · ')),
       h('span', { class: 'cat-count' }, projCount ? `${projCount} project${projCount > 1 ? 's' : ''}` : ''),
       canEdit ? h('span', { class: 'itm-menu mem-row-menu', role: 'button', 'aria-label': 'Member menu', onClick: ev => {
         ev.stopPropagation();
@@ -83,12 +94,24 @@ async function load(root, rerender, canEdit) {
   const grid = h('div', { class: 'cat-grid' });
   const placed = new Set();
   for (const t of d.teams.filter(t => t.active)) {
-    const lead = t.leader_id ? d.memberById[t.leader_id] : null;
-    const crew = members.filter(m => m.team_id === t.id && (!lead || m.id !== lead.id));
-    if (!lead && !crew.length) continue;
+    const teamLead = t.leader_id ? d.memberById[t.leader_id] : null;
+    const crew = members.filter(m => m.team_id === t.id);
+    if (!(teamLead && teamLead.active) && !crew.length) continue;
     const col = h('div', { class: 'cat-team' }, h('div', { class: 'cat-team-name' }, t.name));
-    if (lead && lead.active) { col.appendChild(memberRow(lead, true)); placed.add(lead.id); }
-    for (const m of crew) { col.appendChild(memberRow(m, false)); placed.add(m.id); }
+    // hierarchy inside the column: people leaders first (the team's own
+    // leader on top), each with their reports nested under them, then
+    // everyone unattached
+    const add = (m, isLead, isReport) => {
+      if (placed.has(m.id)) return;
+      col.appendChild(memberRow(m, isLead, isReport));
+      placed.add(m.id);
+      if (m.is_leader) {
+        for (const r of members.filter(x => x.manager_id === m.id && x.team_id === t.id)) add(r, false, true);
+      }
+    };
+    if (teamLead && teamLead.active) add(teamLead, true, false);
+    for (const m of crew.filter(x => x.is_leader)) add(m, false, false);
+    for (const m of crew) add(m, false, false);
     grid.appendChild(col);
   }
   const loose = members.filter(m => !placed.has(m.id));

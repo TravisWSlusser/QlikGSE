@@ -476,19 +476,26 @@ export function editMemberDialog(m, d, rerender) {
   const email = textInput({ value: m ? (m.email || '') : '', maxLength: 120, placeholder: 'email@qlik.com' });
   const team = select([{ value: '0', label: '— no team —' },
     ...activeTeams.map(t => ({ value: String(t.id), label: t.name, selected: m && m.team_id === t.id }))]);
+  const isLeader = h('input', { type: 'checkbox', checked: m && m.is_leader ? true : null });
+  const leaders = (d.members || []).filter(x => x.active && x.is_leader && (!m || x.id !== m.id));
+  const mgr = select([{ value: '0', label: leaders.length ? '— nobody —' : '— no people leaders declared yet —' },
+    ...leaders.map(x => ({ value: String(x.id), label: x.name, selected: m && m.manager_id === x.id }))]);
   modal(isNew ? 'Add a team member' : `Edit — ${m.name}`,
     h('div', { class: 'form' },
       field('Full name', name),
       field('Trigram', tri, 'Their REC Room identity — three letters. Needed before they can claim member access.'),
       field('Role', title),
       field('Email', email),
-      field('Team', team)),
+      field('Team', team),
+      field('People leader', isLeader, 'Declared leaders can have staff report to them — enablement has several.'),
+      field('Reports to', mgr, 'Their people leader. Staff sit below their leader on the Staff tab.')),
     [
       { label: 'Cancel', onClick: c => c() },
       { label: isNew ? 'Add them' : 'Save', kind: 'accent', onClick: async c => {
         try {
           await api.members({ op: 'save', id: m ? m.id : undefined, name: name.value,
-            trigram: tri.value, title: title.value, email: email.value, team_id: Number(team.value) || null });
+            trigram: tri.value, title: title.value, email: email.value, team_id: Number(team.value) || null,
+            is_leader: isLeader.checked, manager_id: Number(mgr.value) || null });
           c(); toast(isNew ? 'Member added' : 'Member saved'); rerender();
         } catch (err) { toast(err.message, 'err'); }
       } },
@@ -513,7 +520,10 @@ export function historyDialog(m, d) {
   modal(m.name,
     h('div', null,
       h('p', { class: 'sub', style: { marginBottom: '10px' } },
-        [m.title, (teamById[m.team_id] || {}).name, m.trigram ? `REC Room: ${m.trigram}` : null]
+        [m.is_leader ? 'People leader' : null, m.title,
+          (teamById[m.team_id] || {}).name,
+          m.manager_id && d.memberById && d.memberById[m.manager_id] ? `reports to ${d.memberById[m.manager_id].name}` : null,
+          m.trigram ? `REC Room: ${m.trigram}` : null]
           .filter(Boolean).join(' · ') || 'Team member',
         m.email ? [' · ', h('a', { href: 'mailto:' + m.email }, m.email)] : null),
       projs.length
