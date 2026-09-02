@@ -1176,6 +1176,39 @@ shared dialogs as `d.canManage`; the member edit dialog has a Manager
 checkbox. Note: is_leader (people-leader, org chart) and is_manager
 (access tier) are deliberately separate flags.
 
+## Invite-only access + walkthrough + Help (2 Sep 2026, schema v4)
+
+Travis: "I don't want ANYONE to be able to become a member. Invite
+only." Claiming now requires a ONE-TIME invite code a manager issues
+(members `op:'invite'`, manager/master only) and sends themselves —
+plaintext returned exactly once, stored scrypt-hashed, 7-day expiry,
+burned on use. memberClaim takes {trigram, invite, code} and enforces
+the password policy server-side: 10+ chars, ≥1 number, ≥1 symbol. A
+fresh invite doubles as password reset; the old password works until
+the new one lands. The gate's claim dialog grew a live 4-bar strength
+meter (pwScore in app.js — 0 fails policy, then weak/okay/good/strong).
+
+First-run walkthrough: `CAPCOM/js/tour.js`. Spotlight ring + card
+glitch in over each `[data-tour]` hook (9 stops on Home + sidebar +
+theme + Help), synth blip per step, Back/Next/"Skip all tutorials"
+(localStorage `capcom.tour` = done/off). Auto-starts once right after
+an invite is redeemed (sessionStorage `capcom.tour.pending` handoff
+from the gate); replays from Help. Hard-won placement rules: content
+is set BEFORE measuring the card; placement tries below → above →
+beside with viewport clamping (a tall target like the sidebar fits
+neither above nor below); targets that exist but are not really on
+screen (the drawer nav under 880px) are SKIPPED via a visibility
+check, or the ring spotlights nothing. The glitch settles in .38s and
+never animates text someone is reading; reduced-motion drops to a
+fade. In the hidden browser pane CSS ANIMATIONS freeze mid-keyframe
+just like transitions — a card stuck half-clipped in a screenshot is
+the harness, not the code (set animation:none to verify layout).
+
+Help & FAQ: `views/help.js`, nav item for every key holder — twelve
+area blurbs, six FAQs, replay button, and bug reports (`lib/admin/
+bugs.js` + bug_reports table): anyone files, it lands in the change
+feed, managers resolve.
+
 **Same morning, a wrong turn worth remembering:** Travis's screenshots
 showed two dark REC Room widgets on the white mobile Mission Control
 page (a REC ROOM logo tile and an "Install the Mobile REC Room" card)
