@@ -1322,7 +1322,6 @@ a.gantt-label:hover{color:var(--link)}
 }
 .inspo-tag.t-ai{--it:var(--ps-violet)}
 .inspo-tag.t-se{--it:var(--ps-teal)}
-.inspo-tag.t-kapp{--it:var(--ps-amber)}
 .inspo-title{flex:1;min-width:200px;font-size:.84rem;font-weight:600}
 .inspo-row:hover .inspo-title{color:var(--link)}
 .inspo-meta{font-size:.7rem;color:var(--muted);white-space:nowrap}

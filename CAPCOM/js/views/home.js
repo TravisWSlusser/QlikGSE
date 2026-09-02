@@ -1141,7 +1141,6 @@ async function loadInspoCard(card) {
   card.appendChild(h('div', { class: 'inspo' }, items.map(it =>
     h('a', { class: 'inspo-row', href: it.url, target: '_blank', rel: 'noopener' },
       h('span', { class: 'inspo-tags' },
-        it.starred ? h('span', { class: 'inspo-tag t-kapp' }, '★ KAPP') : null,
         it.themes.includes('ai') ? h('span', { class: 'inspo-tag t-ai' }, 'AI') : null,
         it.themes.includes('enablement') ? h('span', { class: 'inspo-tag t-se' }, 'SE') : null),
       h('span', { class: 'inspo-title' }, it.title),

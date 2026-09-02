@@ -818,10 +818,12 @@ analysis before building. Flag gaps rather than filling them with invention.
 `/api/command/inspiration` — public, keyless: aggregates a CURATED
 list of reputable L&D/enablement RSS feeds (each verified live 1 Sep
 2026; the list is `FEEDS` in `lib/command/inspiration.js`) and serves
-only items matching the two themes (AI_RE / SE_RE regexes) — except
-**starred voices** (Karl Kapp — Travis studied under him), whose every
-post is included, badged ★, and floated to the top while under 30 days
-old. No deps: RSS/Atom parsed with regexes (CDATA/entity-tolerant),
+only items matching the two themes (AI_RE / SE_RE regexes). Karl Kapp
+(Travis studied under him) skips the theme gate so all his posts are
+in the stream — but with NO special display treatment: Travis
+explicitly wants a flat feed, no emphasis on anything, so items sort
+purely by date and wear only their theme chips. Do not re-add badges
+or floating. No deps: RSS/Atom parsed with regexes (CDATA/entity-tolerant),
 6.5s abort per fetch, per-source cap 4, total 30. Caching copies
 news.js's DB-row pattern (api_cache key 'inspiration', TTL 180min,
 stale to 48h, never cache an empty result) — read news.js's header for
