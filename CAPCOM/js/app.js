@@ -258,7 +258,7 @@ export function boot() {
   const memberGo = () => {
     const tri = $('gate-tri').value.trim().toUpperCase();
     const code = $('gate-code').value;
-    if (!/^[A-Z]{3}$/.test(tri) || !code) { toast('Trigram (3 letters) and your access code', 'err'); return; }
+    if (!/^[A-Z]{3}$/.test(tri) || !code) { toast('Trigram (3 letters) and your staff password — new users redeem their invite code below', 'err'); return; }
     tryKey(`${tri}:${code}`);
   };
   $('gate-member').addEventListener('click', memberGo);
