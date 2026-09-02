@@ -1139,9 +1139,16 @@ room (`QlikRecRoom/mobile.html`) qualified — fully tokenized. The
 **desktop room (`index.html`) is deferred**: its ink colors are raw
 hexes (55 var uses vs 73 hardcoded), so it needs a tokenization pass
 before a light theme is honest work rather than a regex sweep.
-**2 Sep 2026: Travis paused light-mode dev entirely** — do not start
-the desktop pass or extend the mobile theme unless he asks. What
-shipped stays live.
+**2 Sep 2026: Travis paused light-mode dev entirely and had the
+mobile light mode reverted** (commit e6c9b15, reverted in 4d09c4e) —
+he judged it not complete. Do not rebuild it or start the desktop
+pass unless he asks; the write-up above stays as the record of how.
+The two symptoms he reported alongside the revert are pre-existing
+dark-room issues, still open: the badge view leaves a large empty gap
+above the tab bar on tall phones, and `#viewPlay.on` (fixed, inset 0,
+z-index 40) covers the z-30 tab bar for the whole Play view — the
+sheet's own comment says tabs should hide only while a game is
+actually RUNNING, so the shelf hiding them contradicts the design.
 
 How it works: `html[data-theme="light"]` overrides the `:root` tokens
 plus the body gradient, `.tabs`, `.conn`, field backgrounds, and the
