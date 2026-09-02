@@ -813,6 +813,20 @@ Surgical edits, never full-file rewrites. Validate before shipping — render or
 screenshot to confirm visual changes, and check JS parses. Give honest tradeoff
 analysis before building. Flag gaps rather than filling them with invention.
 
+## Mobile widgets render LIGHT (2 Sep 2026)
+
+Per Travis, everything in the Mindtickle MOBILE app is light: the
+Mission Control card already was; now `stellar.html` forces
+`data-theme=light` whenever `?compact=1` is set (compact IS the mobile
+app — both the Systems Watch banner and the hero rotator widgets ask
+for it by name), and `QlikRecRoom/mobile.html`'s framed installer card
+went from the dark continuity gradient to the same white card
+treatment (the continuity argument flipped when the rotator above it
+went light). Also fixed from a live iOS screenshot: the hero mobile
+card's Expand-words/kicker overlap (≤520px keeps only the arrow) and
+the invisible reverse logo on the white card (CSS-swapped color
+variant). iOS iframes report ~408 CSS px; Android ~1080.
+
 ## The Enablement News Feed (1 Sep 2026)
 
 `/api/command/inspiration` — public, keyless: aggregates a CURATED
