@@ -63,6 +63,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
 
+<script>
+  /* theme before styles, so a stored light room never flashes dark */
+  try { if (localStorage.getItem('recroom.theme') === 'light')
+    document.documentElement.setAttribute('data-theme','light'); } catch(e){}
+</script>
+
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
@@ -76,6 +82,41 @@
   --safe-l:env(safe-area-inset-left); --safe-r:env(safe-area-inset-right);
   --tabh:60px;
 }
+
+/* ---- light mode: the room's CHROME only. The game iframe is its own
+   document and stays space-dark — per Travis, the window frame lightens,
+   never what's inside it. Toggle lives on the badge view; stored as
+   recroom.theme; default is dark (the arcade's identity). ---- */
+html[data-theme="light"]{
+  --bg:#eef3f9; --bg-dark:#ffffff; --panel:rgba(255,255,255,.92);
+  --ink:#0E2742; --muted:#5b7088; --dim:#c3d0e2;
+  --line:rgba(15,40,70,.16);
+}
+html[data-theme="light"] body{
+  background:radial-gradient(120% 80% at 50% 0%, #ffffff 0%, #eef3f9 55%, #dde7f2 100%) #eef3f9;
+}
+html[data-theme="light"] .tabs{background:rgba(255,255,255,.95);}
+html[data-theme="light"] .field input,
+html[data-theme="light"] .field select{background:#ffffff}
+html[data-theme="light"] .conn{background:rgba(255,255,255,.9)}
+/* the VT323 display type is hardcoded #fff for the dark room; re-ink it.
+   .down h1 and the framed card are excluded — they keep their own colors. */
+html[data-theme="light"] .hero h1,
+html[data-theme="light"] .tri,
+html[data-theme="light"] .stat .v,
+html[data-theme="light"] .trow .pts,
+html[data-theme="light"] .gm .nm,
+html[data-theme="light"] .welcome h1,
+html[data-theme="light"] .pick .lb,
+html[data-theme="light"] .shead,
+html[data-theme="light"] .signin-head h1,
+html[data-theme="light"] .cart .nm{color:var(--ink)}
+/* the Play view's fixed backdrop is shelf chrome, not the game — the game
+   itself is #gameFrame, which keeps its own dark body either way */
+html[data-theme="light"] #viewPlay.on{background:var(--bg)}
+/* the downtime overlay keeps its own dark drama in either theme — scope
+   its inks so light-mode tokens can't strand light text on it */
+.down{--ink:#dbe8f6;--muted:#7f93b8;color:var(--ink)}
 
 html,body{height:100%}
 html{-webkit-text-size-adjust:100%}
@@ -647,6 +688,7 @@ html[data-down="1"] .tabs{display:none}
                 no address bar, about double the play area. <b>Show me &rarr;</b></span>
         </button>
 
+        <button class="btn ghost" id="themeBtn">Light mode</button>
         <button class="btn ghost" id="signOut">Not you? Switch trigram</button>
         <div class="foot">Qlik Global Sales Enablement</div>
       </div>
@@ -1244,6 +1286,20 @@ $('signOut').addEventListener('click', function () {
   gameStarted = false; gameReady = false; $('gameFrame').removeAttribute('src');
   paintBadge();
 });
+
+/* Light mode for the room chrome — the game inside the frame stays dark. */
+function paintThemeBtn () {
+  var light = document.documentElement.getAttribute('data-theme') === 'light';
+  $('themeBtn').textContent = light ? 'Dark mode' : 'Light mode';
+}
+$('themeBtn').addEventListener('click', function () {
+  var toLight = document.documentElement.getAttribute('data-theme') !== 'light';
+  if (toLight) document.documentElement.setAttribute('data-theme', 'light');
+  else document.documentElement.removeAttribute('data-theme');
+  try { localStorage.setItem('recroom.theme', toLight ? 'light' : 'dark'); } catch (e) {}
+  paintThemeBtn();
+});
+paintThemeBtn();
 
 /* Hide the add-to-home-screen nudge once they have already done it. */
 (function () {
