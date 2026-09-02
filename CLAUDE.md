@@ -1139,6 +1139,9 @@ room (`QlikRecRoom/mobile.html`) qualified — fully tokenized. The
 **desktop room (`index.html`) is deferred**: its ink colors are raw
 hexes (55 var uses vs 73 hardcoded), so it needs a tokenization pass
 before a light theme is honest work rather than a regex sweep.
+**2 Sep 2026: Travis paused light-mode dev entirely** — do not start
+the desktop pass or extend the mobile theme unless he asks. What
+shipped stays live.
 
 How it works: `html[data-theme="light"]` overrides the `:root` tokens
 plus the body gradient, `.tabs`, `.conn`, field backgrounds, and the
