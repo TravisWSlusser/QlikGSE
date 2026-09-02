@@ -128,6 +128,28 @@ function showApp() {
 function maybeUpdateBar() {
   const can = WHO && (WHO.scopes.includes('system') || WHO.leader);
   $('update-bar').style.display = (can && WHO.setup_pending) ? 'flex' : 'none';
+  // the banner's dropdown: what the PENDING versions add
+  const pending = (WHO && WHO.deploy_notes || [])
+    .filter(e => WHO.schema_stamp == null || e.v > WHO.schema_stamp);
+  clear($('update-notes')).append(...pending.map(e =>
+    h('ul', { class: 'update-list' }, e.notes.map(n => h('li', null, n)))));
+  // the sidebar chip: what is deployed, for anyone
+  const chip = $('ver-chip');
+  chip.style.display = WHO ? '' : 'none';
+  chip.textContent = WHO ? `v${WHO.code_version}` : '';
+}
+
+function deployedDialog() {
+  const notes = (WHO && WHO.deploy_notes) || [];
+  modal('What is deployed',
+    h('div', null,
+      h('p', { class: 'sub' }, WHO.setup_pending
+        ? `The app is running deploy v${WHO.code_version}, but the database is ${WHO.schema_stamp == null ? 'not set up yet' : 'at v' + WHO.schema_stamp} — an update is waiting.`
+        : `Deploy v${WHO.code_version}, database in step. All current.`),
+      ...notes.map(e => h('div', null,
+        h('p', { class: 'sub', style: { margin: '10px 0 4px', fontWeight: '700' } }, `v${e.v}`),
+        h('ul', { class: 'update-list' }, e.notes.map(n => h('li', null, n)))))),
+    [{ label: 'Close', kind: 'accent', onClick: c => c() }]);
 }
 
 function showGate(msg) {
@@ -205,6 +227,12 @@ export function boot() {
   $('gate-code').addEventListener('keydown', e => { if (e.key === 'Enter') memberGo(); });
   $('gate-claim').addEventListener('click', e => { e.preventDefault(); claimDialog(); });
 
+  $('update-what').addEventListener('click', () => {
+    const n = $('update-notes');
+    n.hidden = !n.hidden;
+    $('update-what').textContent = n.hidden ? '▾' : '▴';
+  });
+  $('ver-chip').addEventListener('click', deployedDialog);
   $('update-run').addEventListener('click', async () => {
     const btn = $('update-run');
     btn.disabled = true; btn.textContent = 'Updating…';

@@ -63,6 +63,7 @@ try{ document.documentElement.dataset.theme = localStorage.getItem('capcom.theme
     <nav class="nav" id="nav-list"></nav>
     <div class="side-foot">
       <span id="who-label" class="who"></span>
+      <button id="ver-chip" class="ver-chip" title="What is deployed" style="display:none"></button>
       <button id="theme-toggle" class="theme-btn" title="Toggle light / dark" aria-label="Toggle light or dark mode">◐</button>
       <button id="signout" class="btn sm">Sign out</button>
     </div>
@@ -72,8 +73,12 @@ try{ document.documentElement.dataset.theme = localStorage.getItem('capcom.theme
 
 <!-- shows only to leaders/system keys when a deploy is ahead of the DB -->
 <div id="update-bar" style="display:none">
-  <span>This deploy added new pieces — the app needs a quick update.</span>
-  <button id="update-run" class="btn sm accent">Update now</button>
+  <div class="update-row">
+    <span>This deploy added new pieces — the app needs a quick update.</span>
+    <button id="update-what" class="inspo-caret" aria-label="What is in this update">▾</button>
+    <button id="update-run" class="btn sm accent">Update now</button>
+  </div>
+  <div id="update-notes" hidden></div>
 </div>
 
 <script type="module" src="js/app.js"></script>

@@ -1237,10 +1237,19 @@ a.gantt-label:hover{color:var(--link)}
 /* the update banner — bottom center, above everything, hard to miss */
 #update-bar{
   position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:105;
-  display:flex;align-items:center;gap:14px;padding:12px 18px;max-width:92vw;
+  display:flex;flex-direction:column;gap:8px;padding:12px 18px;max-width:92vw;
   background:var(--card);border:1px solid var(--focus);border-radius:12px;
   box-shadow:var(--shadow);font-size:.86rem;color:var(--ink);
 }
+.update-row{display:flex;align-items:center;gap:14px}
+#update-notes{max-height:200px;overflow-y:auto;scrollbar-width:thin}
+.update-list{margin:0;padding-left:18px;font-size:.8rem;color:var(--ink-2)}
+.update-list li{margin:3px 0}
+.ver-chip{
+  flex:none;background:none;border:1px solid var(--line);border-radius:7px;
+  color:var(--muted);font-size:.68rem;font-weight:700;padding:3px 8px;cursor:pointer;
+}
+.ver-chip:hover{border-color:var(--focus);color:var(--ink)}
 
 /* the gate's member half: trigram + self-set code, and the claim link */
 .gate-or{margin:16px 0 10px;font-size:.7rem;color:var(--muted);letter-spacing:.24em}
