@@ -1307,7 +1307,31 @@ a.gantt-label:hover{color:var(--link)}
 }
 .mem-chip-x:hover{color:var(--danger)}
 
-/* the Enablement News Feed card */
+/* the Enablement News Feed — one quiet line that fades through the
+   stream; the caret drops the fuller list. Small on purpose. */
+.inspo-card{padding:10px 14px}
+.inspo-bar{display:flex;align-items:center;gap:10px;min-width:0}
+.inspo-label{
+  flex:none;font-size:.6rem;font-weight:800;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--link);
+}
+.inspo-line{
+  flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;
+  color:var(--ink);opacity:1;transition:opacity .5s ease;
+}
+.inspo-line.fading{opacity:0}
+.inspo-line .inspo-title{
+  flex:0 1 auto;min-width:0;font-size:.82rem;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.inspo-line:hover .inspo-title{color:var(--link)}
+.inspo-caret{
+  flex:none;width:26px;height:26px;border:1px solid var(--line);border-radius:7px;
+  background:none;color:var(--muted);font-size:.7rem;line-height:1;cursor:pointer;
+}
+.inspo-caret:hover{border-color:var(--focus);color:var(--ink)}
+.inspo-drawer{max-height:0;overflow:hidden;transition:max-height .25s ease}
+.inspo-card.open .inspo-drawer{max-height:420px;margin-top:8px;overflow-y:auto;scrollbar-width:thin}
 .inspo{display:flex;flex-direction:column;gap:4px}
 .inspo-row{
   display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
@@ -1368,6 +1392,8 @@ a.gantt-label:hover{color:var(--link)}
   /* board items are finger-sized already; give the wall a bit more height
      so a phone can actually arrange things */
   .board-card .cork{min-height:300px}
+  /* the news line stays one line: the source/age lives in the drawer */
+  .inspo-line .inspo-meta{display:none}
   /* projects: the gantt keeps its own scroll; labels narrow */
   .gantt-wrap{grid-template-columns:110px minmax(0,1fr)}
   .prj-desc{max-width:none}

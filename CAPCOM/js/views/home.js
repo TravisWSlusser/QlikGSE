@@ -1129,22 +1129,59 @@ const INSPO_AGE = iso => {
 async function loadInspoCard(card) {
   let d;
   try { d = await api.inspiration(); }
-  catch { clear(card); return; } // like the hotlinks bar: not worth an error card
+  catch { card.remove(); return; } // extra content for free — absent silently
+  const items = d.items || [];
+  if (!items.length) { card.remove(); return; }
   clear(card);
-  card.appendChild(sectionTitle('Enablement News',
-    h('span', { class: 'sec-sub' }, 'sales enablement × AI, from the field')));
-  const items = (d.items || []).slice(0, 7);
-  if (!items.length) {
-    card.appendChild(emptyState('The feed is warming up.', 'Fresh reads land here as the blogs publish.'));
-    return;
-  }
-  card.appendChild(h('div', { class: 'inspo' }, items.map(it =>
-    h('a', { class: 'inspo-row', href: it.url, target: '_blank', rel: 'noopener' },
-      h('span', { class: 'inspo-tags' },
-        it.themes.includes('ai') ? h('span', { class: 'inspo-tag t-ai' }, 'AI') : null,
-        it.themes.includes('enablement') ? h('span', { class: 'inspo-tag t-se' }, 'SE') : null),
+  card.classList.add('inspo-card');
+
+  const tagsFor = it => h('span', { class: 'inspo-tags' },
+    it.themes.includes('ai') ? h('span', { class: 'inspo-tag t-ai' }, 'AI') : null,
+    it.themes.includes('enablement') ? h('span', { class: 'inspo-tag t-se' }, 'SE') : null);
+  const metaFor = it => [it.source, INSPO_AGE(it.published)].filter(Boolean).join(' · ');
+
+  // the one line, cross-fading through the stream
+  const line = h('a', { class: 'inspo-line', target: '_blank', rel: 'noopener' });
+  const renderLine = it => {
+    line.href = it.url;
+    clear(line).append(tagsFor(it),
       h('span', { class: 'inspo-title' }, it.title),
-      h('span', { class: 'inspo-meta' }, [it.source, INSPO_AGE(it.published)].filter(Boolean).join(' · '))))));
+      h('span', { class: 'inspo-meta' }, metaFor(it)));
+  };
+  let idx = 0;
+  renderLine(items[0]);
+
+  // the drop-down: the fuller stream, for when someone wants to browse
+  const drawer = h('div', { class: 'inspo-drawer' },
+    h('div', { class: 'inspo' }, items.slice(0, 10).map(it =>
+      h('a', { class: 'inspo-row', href: it.url, target: '_blank', rel: 'noopener' },
+        tagsFor(it),
+        h('span', { class: 'inspo-title' }, it.title),
+        h('span', { class: 'inspo-meta' }, metaFor(it))))));
+  const caret = h('button', { class: 'inspo-caret', 'aria-label': 'More enablement news', onClick: () => {
+    card.classList.toggle('open');
+    caret.textContent = card.classList.contains('open') ? '▴' : '▾';
+  } }, '▾');
+
+  card.append(h('div', { class: 'inspo-bar' },
+    h('span', { class: 'inspo-label' }, 'News'), line, caret), drawer);
+
+  // rotate gently; a hover means someone is reading, an open drawer means
+  // they're browsing — both hold the line still
+  let hover = false;
+  card.addEventListener('mouseenter', () => { hover = true; });
+  card.addEventListener('mouseleave', () => { hover = false; });
+  const timer = setInterval(() => {
+    if (!card.isConnected) { clearInterval(timer); return; }
+    if (hover || card.classList.contains('open')) return;
+    line.classList.add('fading');
+    setTimeout(() => {
+      if (!card.isConnected) return;
+      idx = (idx + 1) % items.length;
+      renderLine(items[idx]);
+      line.classList.remove('fading');
+    }, 500);
+  }, 8000);
 }
 
 /* ── projects at a glance: the compact Home cut — no calendar, no charts,
