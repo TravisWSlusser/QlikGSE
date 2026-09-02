@@ -1332,6 +1332,14 @@ a.gantt-label:hover{color:var(--link)}
 .prj-glance-title{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
 .prj-glance-team{font-size:.7rem;color:var(--muted);white-space:nowrap}
 
+/* Stacked Home (the grid2 collapse point): flatten the two columns so
+   the cards can be reordered, and lead with the operations clock. */
+@media (max-width:980px){
+  .home-cols{display:flex;flex-direction:column;gap:18px}
+  .home-cols .home-col{display:contents}
+  .clock-card{order:-1}
+}
+
 /* ── the phone pass: under 880px the sidebar becomes a drawer behind a
    topbar burger, layouts are already single-column by the grid rules
    above, and spacing tightens to fit a hand ── */

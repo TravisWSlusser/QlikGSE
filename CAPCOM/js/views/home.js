@@ -115,7 +115,7 @@ function clockCard() {
     el._tz = z.tz;
     return el;
   });
-  const card = h('div', { class: 'card' },
+  const card = h('div', { class: 'card clock-card' },
     sectionTitle('Operations clock'),
     greeting, localTime, localDate,
     h('div', { class: 'clk-grid' }, zoneEls));
