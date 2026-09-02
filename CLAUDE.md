@@ -1216,6 +1216,18 @@ area blurbs, six FAQs, replay button, and bug reports (`lib/admin/
 bugs.js` + bug_reports table): anyone files, it lands in the change
 feed, managers resolve.
 
+Also same day: **Access & Setup split in two.** `views/system.js` is
+gone — key generation + the key list moved to **Tailored Access**
+(`views/tailoredAccess.js`, Projects group below Staff, system scope),
+which is for SMEs and outside contributors ONLY; Keys & Services and
+the Setup button moved into **Maintenance** (the machine room). The
+System nav group is now just Maintenance + Help & FAQ. The Staff tab
+leads with Travis's exclusivity rule (staff only, no SMEs) and a bar
+at the bottom points targeted-access cases at Tailored Access. Nav
+routing note: nested routes like `#projects/access/param` head-match
+to the Board, so new Projects-group pages get exact two-segment
+routes and no deep-link params.
+
 Follow-ups the same day: the invite ISSUING UI was missing (server op
 shipped without a button — lesson: a feature is not done until both
 ends exist) — now an Invite button on every Staff row, a how-it-works
