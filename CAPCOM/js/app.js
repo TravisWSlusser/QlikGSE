@@ -41,8 +41,8 @@ const NAV = [
     // scope null on purpose: every key holder can SEE the board (visibility
     // is the product); edit controls gate on the 'projects' scope inside
     { route: 'projects', label: 'Project Board', scope: null, mod: projects, icon: 'projects' },
-    { route: 'projects/staff', label: 'Staff', scope: null, mod: staff, icon: 'staff' },
     { route: 'projects/insights', label: 'Insights & Calendar', scope: null, mod: projectsInsights, icon: 'insights' },
+    { route: 'projects/staff', label: 'Staff', scope: null, mod: staff, icon: 'staff' },
   ]},
   { group: 'REC Room', items: [
     { route: 'dashboard', label: 'Dashboard', scope: 'analytics', mod: dashboard, icon: 'dashboard' },
