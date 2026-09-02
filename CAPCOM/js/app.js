@@ -165,9 +165,25 @@ function deployedDialog() {
 
 function showGate(msg) {
   $('shell').style.display = 'none';
-  $('gate').style.display = '';
-  if (msg) { const e = $('gate-err'); e.textContent = msg; e.style.display = ''; }
-  $('gate-key').focus();
+  const reveal = () => {
+    $('gate').style.display = '';
+    $('gate').classList.add('gate-in');
+    if (msg) { const e = $('gate-err'); e.textContent = msg; e.style.display = ''; }
+    $('gate-key').focus();
+  };
+  // first load of a session: a beat of Welcome, then the gate animates in
+  let seen = false;
+  try { seen = sessionStorage.getItem('capcom.hello') === '1'; } catch {}
+  if (seen) { reveal(); return; }
+  try { sessionStorage.setItem('capcom.hello', '1'); } catch {}
+  $('gate').style.display = 'none';
+  const hello = h('div', { id: 'hello' }, h('div', { class: 'hello-word' }, 'Welcome'));
+  document.body.appendChild(hello);
+  setTimeout(() => {
+    hello.classList.add('gone');
+    reveal();
+    setTimeout(() => hello.remove(), 750);
+  }, 1500);
 }
 
 async function tryKey(key) {

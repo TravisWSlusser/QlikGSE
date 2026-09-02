@@ -1494,6 +1494,48 @@ a.gantt-label:hover{color:var(--link)}
   margin-top:20px;padding:10px 14px;border:1px solid var(--line);
   border-radius:10px;font-size:.78rem;color:var(--muted);flex-wrap:wrap;
 }
+
+/* Titles and subtitles wear Title Case (Travis, 2 Sep 2026) — CSS so
+   every present and future string complies without a copy sweep.
+   capitalize only uppercases first letters; FAQ/REC stay intact. */
+.sec-title > h2, .sec-sub, .modal-head h2{text-transform:capitalize}
+
+/* the shell's right column: the view plus the credit footer */
+.main-wrap{flex:1;min-width:0;display:flex;flex-direction:column}
+.main-wrap main{flex:1}
+
+/* app footer — credit, always visible under the view */
+.app-foot{
+  margin:26px 36px 8px;padding:12px 4px 12px;border-top:1px solid var(--line);
+  font-size:.72rem;color:var(--muted);text-align:center;
+}
+.app-foot b{color:var(--ink);font-weight:600}
+.app-foot a{color:var(--muted)}
+.about-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.about-item-t{font-weight:600;font-size:.82rem}
+.about-item-b{font-size:.75rem;color:var(--muted);line-height:1.4}
+.about-credit{margin-top:16px;font-size:.8rem}
+
+/* first-load Welcome, then the gate animates in */
+#hello{
+  position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;
+  background:var(--page);transition:opacity .65s ease;
+}
+#hello.gone{opacity:0;pointer-events:none}
+.hello-word{
+  font-size:clamp(42px,8vw,88px);font-weight:700;letter-spacing:.04em;color:var(--ink);
+  animation:helloIn .9s ease both;
+}
+@keyframes helloIn{
+  0%{opacity:0;transform:translateY(16px) scale(.96);letter-spacing:.3em}
+  100%{opacity:1;transform:none;letter-spacing:.04em}
+}
+.gate-in{animation:gateIn .7s ease both}
+@keyframes gateIn{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){
+  .hello-word,.gate-in{animation:none}
+  #hello{transition:none}
+}
 .cat-invite{flex:0 0 auto;margin-left:8px}
 .invite-code{
   font-family:'Share Tech Mono',ui-monospace,monospace;font-size:1.7rem;

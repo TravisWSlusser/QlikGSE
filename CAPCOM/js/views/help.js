@@ -72,6 +72,29 @@ export function render(params, rerender, who) {
   bugCard.appendChild(bugList);
   root.appendChild(bugCard);
 
+  // ── about ──
+  const TOOLS = [
+    ['Hand-written HTML / CSS / JavaScript', 'Zero build step, no framework — every page is exactly what ships.'],
+    ['Vercel', 'Hosting and the serverless functions behind /api. Push to main, live in a minute.'],
+    ['Neon', 'Serverless Postgres — projects, staff, scores, the board, all of it.'],
+    ['Mindtickle', 'Where Mission Control lives — the widgets embed there as custom HTML.'],
+    ['GIPHY API', 'The Community Board’s stickers and sticker reactions.'],
+    ['Web Audio API', 'The pops, blips and walkthrough sounds — synthesized, no audio files.'],
+    ['Google Fonts', 'Inter for the interface; the arcade pages add Share Tech Mono and VT323.'],
+    ['Qlik brand icon set', 'The sidebar icons, adapted to follow the theme.'],
+    ['Claude Code (Anthropic)', 'AI pair-builder for the engineering, directed and designed by Travis.'],
+  ];
+  const about = h('div', { class: 'card' }, sectionTitle('About CAPCOM'));
+  about.appendChild(h('p', { class: 'sub' },
+    'The Command Operations Module — administration for Mission Control, the Project Board and the REC Room. Built on:'));
+  about.appendChild(h('div', { class: 'about-list' },
+    ...TOOLS.map(([t, b]) => h('div', null,
+      h('div', { class: 'about-item-t' }, t), h('div', { class: 'about-item-b' }, b)))));
+  about.appendChild(h('p', { class: 'about-credit' },
+    'Designed & developed by ', h('b', null, 'Travis Slusser'),
+    ' — Senior Learning Strategist, Qlik Global Sales Enablement.'));
+  root.appendChild(about);
+
   async function loadBugs() {
     try {
       const r = await api.bugs({ op: 'list' });
