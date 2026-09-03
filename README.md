@@ -15,7 +15,7 @@ ES modules, served as-is.
 | **Mission Control** | `SalesCommand/` | The Mindtickle home-page widgets: rotating headline banners, the team calendar and key-date chips, glossary, market ticker, and the Stellar-Seller action banner. Content is served from the database, edited in CAPCOM. |
 | **The REC Room** | `QlikRecRoom/` | The team arcade — badge, scoreboard, live territory map, and the game cabinet. Ships desktop (`index.html`) and mobile-first (`mobile.html`) front ends over the same API. |
 | **Side-Qlik Blitz** | `QlikRecRoom/games/SideQlik_Blitz/` | The game itself: an arcade shooter wired to real enablement content — knowledge questions, methodology coins, and glossary Brain Blasts feed scoring, with territory-based color unlocks and a global leaderboard. |
-| **CAPCOM** | `CAPCOM/` | *Content, Analytics & Players — Command Operations Module.* The admin console: calendar and banner editors, question banks, player analytics, maintenance switch, scoped access keys, and the Community Board — sticky notes, stickers, website bookmarks, and colored yarn tying ideas together. Responsive down to a phone. |
+| **CAPCOM** | `CAPCOM/` | *Content, Analytics & Planning — Command Operations Module.* The admin console: calendar and banner editors, question banks, player analytics, maintenance switch, scoped access keys, and the Community Board — sticky notes, stickers, website bookmarks, and colored yarn tying ideas together. Responsive down to a phone. |
 
 ## Architecture in one paragraph
 

@@ -506,7 +506,8 @@ can close the room by breaking is worse than having no switch.
 
 ## CAPCOM — `CAPCOM/` + `/api/admin/*` (added 28 Aug 2026)
 
-**The name is an acronym, chosen by Travis: Content, Analytics & Players —
+**The name is an acronym, chosen by Travis (updated 3 Sep 2026, the
+"players" angle retired): Content, Analytics & Planning —
 Command Operations Module.** The CAP is the app's own three nav pillars; the
 COM carries the Apollo nod (the Command Module was the capsule Mission
 Control's CAPCOM talked to — and this app is the one voice authorized to

@@ -1,7 +1,7 @@
 {
   "name": "CAPCOM — Qlik Sales Enablement",
   "short_name": "CAPCOM",
-  "description": "Content, Analytics & Players — Command Operations Module",
+  "description": "Content, Analytics & Planning — Command Operations Module",
   "start_url": "/CAPCOM/",
   "scope": "/CAPCOM/",
   "display": "standalone",
