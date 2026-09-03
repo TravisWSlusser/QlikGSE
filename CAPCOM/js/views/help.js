@@ -25,8 +25,8 @@ const AREAS = [
 ];
 
 const FAQ = [
-  ['How do I get access?', 'It is invite-only. A manager adds you to Staff and sends you a one-time invite code; at the gate you redeem it and set your own password (10+ characters, a number, a symbol).'],
-  ['I forgot my password.', 'Ask a manager for a fresh one-time invite — redeeming it sets a new password. Your old one keeps working until the moment the new one lands.'],
+  ['How do I get access?', 'By activation key. A manager adds you to Staff and sends you a one-time activation code; at the gate you choose Activate Your Account, enter it with your trigram, and set your own password (10+ characters, a number, a symbol).'],
+  ['I forgot my password.', 'Ask a manager for a fresh activation key — activating with it sets a new password. Your old one keeps working until the moment the new one lands.'],
   ['Why is a project marked OVERDUE?', 'Its current status promised a date and the date passed. The next status change requires a short written note about what happened — that is the accountability mechanic, not a punishment.'],
   ['What is the update banner?', 'When a deploy adds new pieces, managers and team leaders see a one-click banner to run Setup. Nobody has to remember it.'],
   ['Who are the managers?', 'The leadership circle Travis named. They hold every scope, sign the team up, and are the only ones who issue invites or reset codes.'],

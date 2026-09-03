@@ -246,17 +246,17 @@ function claimDialog() {
     meterLbl.textContent = PW_LABEL[s];
     meter.dataset.score = s;
   });
-  modal('Set up your member access',
+  modal('Activate Your CAPCOM Account',
     h('div', { class: 'form' },
-      h('p', { class: 'sub' }, 'Access is invite-only: a manager sends you a one-time invite code. It works once and expires after 7 days.'),
+      h('p', { class: 'sub' }, 'Enter the activation code your manager sent you, then create your password. The code works once and expires after 7 days.'),
       field('Your trigram', tri, 'The same three letters you use in the REC Room.'),
-      field('One-time invite code', inv, 'From your manager.'),
+      field('Activation code', inv),
       field('Create your password', c1),
       meter,
       field('Confirm it', c2)),
     [
       { label: 'Cancel', onClick: c => c() },
-      { label: 'Set it up', kind: 'accent', onClick: async c => {
+      { label: 'Activate', kind: 'accent', onClick: async c => {
         if (pwScore(c1.value) < 1) { toast('Passwords need 10+ characters, a number and a symbol', 'err'); return; }
         if (c1.value !== c2.value) { toast('The two passwords do not match', 'err'); return; }
         try {
@@ -280,7 +280,7 @@ export function boot() {
   const memberGo = () => {
     const tri = $('gate-tri').value.trim().toUpperCase();
     const code = $('gate-code').value;
-    if (!/^[A-Z]{3}$/.test(tri) || !code) { toast('Trigram (3 letters) and your staff password — new users redeem their invite code below', 'err'); return; }
+    if (!/^[A-Z]{3}$/.test(tri) || !code) { toast('Trigram (3 letters) and your staff password. First time? Use the activation button below — your activation code is not a password.', 'err'); return; }
     tryKey(`${tri}:${code}`);
   };
   $('gate-member').addEventListener('click', memberGo);

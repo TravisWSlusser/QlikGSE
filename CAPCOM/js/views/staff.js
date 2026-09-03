@@ -14,16 +14,18 @@ export function render(params, rerender, who) {
   const canTeams = !!(who && who.scopes && who.scopes.includes('projects'));
   // registry rights (add/edit members, reset codes): managers + masters only
   const canEdit = !!(who && (who.master || who.manager));
+  // logins (activation keys, resets) are people-leader territory
+  const canInvite = !!(who && (who.master || (who.manager && who.people_leader)));
   const meId = (who && who.member && who.member.id) || 0;
   const root = h('div', { class: 'view' }, spinner());
-  load(root, rerender, canEdit, canTeams, meId);
+  load(root, rerender, canEdit, canTeams, meId, canInvite);
   return root;
 }
 
-async function load(root, rerender, canEdit, canTeams, meId) {
+async function load(root, rerender, canEdit, canTeams, meId, canInvite) {
   let d;
   try { d = await api.projects({ op: 'list', all: true }); }
-  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit, canTeams, meId))); return; }
+  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit, canTeams, meId, canInvite))); return; }
   d.canManage = canEdit; // registry writes: managers + masters
   d.meId = meId || 0;    // the signed-in member, for self-service OOO
   d.recByTri = {};
@@ -50,7 +52,7 @@ async function load(root, rerender, canEdit, canTeams, meId) {
     card.appendChild(h('p', { class: 'sub org-how' },
       h('b', null, 'This section is exclusively for adding Sales Enablement staff. '),
       'Do not add SMEs or other content providers here — they get scoped keys from Tailored Access instead. ',
-      'For staff: Invite on a person’s row makes their one-time code — send it to them yourself; at the gate they enter trigram + code and set their own password. Invite again any time to reset one.'));
+      'For staff: people leaders click Invite on a person’s row to create their activation key, then send it to them to begin their CAPCOM onboarding. At the gate they choose Activate, enter trigram + key, and set their own password. Invite again any time to reset one.'));
   }
 
   if (!members.length) {
@@ -63,8 +65,8 @@ async function load(root, rerender, canEdit, canTeams, meId) {
 
   const menuFor = m => [
     ['Edit…', () => editMemberDialog(m, d, rerender), false],
-    ['One-time invite…', () => inviteDialog(m), false],
-    ...(m.claimed ? [['Reset access code', () => confirmBox('Reset this access code?',
+    ...(canInvite ? [['Activation key…', () => inviteDialog(m), false]] : []),
+    ...(canInvite && m.claimed ? [['Reset access code', () => confirmBox('Reset this access code?',
       `${m.name}'s member sign-in stops working until they claim a new code at the gate.`, async () => {
         try { await api.members({ op: 'resetCode', id: m.id }); toast('Code reset'); rerender(); }
         catch (err) { toast(err.message, 'err'); }
@@ -137,9 +139,9 @@ async function load(root, rerender, canEdit, canTeams, meId) {
         m.active && !m.claimed ? 'no access yet' : null,
       ].filter(Boolean).join(' · ')),
       h('span', { class: 'cat-count' }, projCount ? `${projCount} project${projCount > 1 ? 's' : ''}` : ''),
-      canEdit && m.active ? h('span', {
+      canInvite && m.active ? h('span', {
         class: 'btn xs cat-invite', role: 'button',
-        title: m.claimed ? 'Issue a fresh one-time code (works as a password reset)' : 'Issue their one-time access code',
+        title: m.claimed ? 'Issue a fresh activation key (also works as a password reset)' : 'Issue their activation key',
         onClick: ev => { ev.stopPropagation(); inviteDialog(m); },
       }, 'Invite') : null,
       canEdit ? h('span', { class: 'itm-menu mem-row-menu', role: 'button', 'aria-label': 'Member menu', onClick: ev => {

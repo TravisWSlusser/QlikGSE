@@ -45,7 +45,7 @@ export const TOURS = {
   ],
   'projects/staff': [
     { card: 'Staff', title: 'The Org Tree', blurb: 'Sales Enablement, top level down — every report under their leader, with out-of-office notes and everyone’s informal status. Open your profile to post yours; tap + on anyone’s to react.' },
-    { sel: '.cat-invite', title: 'Invite', blurb: 'Makes a one-time access code for that person — send it to them yourself. It also works as a password reset.' },
+    { sel: '.cat-invite', title: 'Invite', blurb: 'Creates that person’s one-time activation key — copy it and send it to them to begin their CAPCOM onboarding. It also works as a password reset.' },
     { sel: '.staff-access-bar', title: 'Not Staff?', blurb: 'SMEs and outside contributors get a scoped key from Tailored Access, not a staff entry.' },
   ],
   'projects/access': [

@@ -26,19 +26,21 @@ export function render(params, rerender, who) {
   const canEdit = !!(who && who.scopes && who.scopes.includes('projects'));
   // registry rights (add/edit members, reset codes): managers + masters only
   const canManage = !!(who && (who.master || who.manager));
+  const canInvite = !!(who && (who.master || (who.manager && who.people_leader)));
   const me = (who && who.member) || null; // member session: acts on tagged projects only
   const wantNew = params && params[0] === 'new';
   if (wantNew) history.replaceState(null, '', '#projects');
   const root = h('div', { class: 'view' }, spinner());
-  load(root, rerender, canEdit, wantNew && canEdit, me, canManage);
+  load(root, rerender, canEdit, wantNew && canEdit, me, canManage, canInvite);
   return root;
 }
 
-async function load(root, rerender, canEdit, openNew, me, canManage) {
+async function load(root, rerender, canEdit, openNew, me, canManage, canInvite) {
   let d;
   try { d = await api.projects({ op: 'list', all: true }); }
   catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit, false, me, canManage))); return; }
   d.canManage = !!canManage; // rides the bundle into the shared dialogs
+  d.canInvite = !!canInvite; // people leaders (+ masters): activation keys
   d.meId = me ? me.id : 0;   // the signed-in member, for self-service OOO
   d.recByTri = {};
   for (const r of d.recs || []) d.recByTri[(r.trigram || '').toUpperCase()] = r;
@@ -437,8 +439,8 @@ export function membersDialog(d, rerender) {
   const rows = (d.members || []).filter(m => m.active).map(m => {
     const menu = () => [
       ['Edit…', () => editMemberDialog(m, d, rerender), false],
-      ['One-time invite…', () => inviteDialog(m), false],
-      ...(m.claimed ? [['Reset access code', () => confirmBox('Reset this access code?',
+      ...(d.canInvite ? [['Activation key…', () => inviteDialog(m), false]] : []),
+      ...(d.canInvite && m.claimed ? [['Reset access code', () => confirmBox('Reset this access code?',
         `${m.name}'s member sign-in stops working until they claim a new code at the gate.`, async () => {
           try { await api.members({ op: 'resetCode', id: m.id }); toast('Code reset'); rerender(); }
           catch (err) { toast(err.message, 'err'); }
@@ -483,11 +485,11 @@ export function inviteDialog(m) {
     try { r = await api.members({ op: 'invite', id: m.id }); }
     catch (err) { toast(err.message, 'err'); return; }
     const codeEl = h('div', { class: 'invite-code' }, r.code);
-    modal(`One-time invite — ${m.name}`,
+    modal(`Activation Key — ${m.name}`,
       h('div', null,
         codeEl,
-        h('p', { class: 'sub' }, `Send this to ${m.name} yourself (Slack, email, out loud). At the CAPCOM gate they choose “First time? Set up your member access”, enter their trigram + this code, and create their own password.`),
-        h('p', { class: 'sub' }, 'It works once and expires in 7 days. If they already had a password, the old one keeps working until they use this.')),
+        h('p', { class: 'sub' }, `Copy this activation key and send it to ${m.name} to begin their CAPCOM onboarding.`),
+        h('p', { class: 'sub' }, 'It works once and expires in 7 days. If they already have a password, it keeps working until they activate with this key.')),
       [
         { label: 'Copy code', onClick: async () => {
           try { await navigator.clipboard.writeText(r.code); toast('Copied'); }
