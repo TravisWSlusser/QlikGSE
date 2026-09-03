@@ -1211,6 +1211,29 @@ fade. In the hidden browser pane CSS ANIMATIONS freeze mid-keyframe
 just like transitions — a card stuck half-clipped in a screenshot is
 the harness, not the code (set animation:none to verify layout).
 
+## Leadership Brief + staff profiles (2 Sep 2026, schema v6)
+
+**The Brief** (`lib/admin/brief.js`, `views/brief.js`, Projects group,
+projects scope): week/month/quarter compiled deterministically from
+projects/project_log/milestones — movement, milestones hit/ahead,
+overdue with the written notes, new projects, LULLS (active projects
+and teams with zero window activity) — Copy As Text for the update
+Nick/Mike send upward, plus a manager-only Home teaser. Narrative
+layer: ANTHROPIC_API_KEY slot in Keys & Services; when set, a button
+sends the COMPILED digest (never raw DB) to claude-opus-5 via the
+official @anthropic-ai/sdk (new npm dep) for 2–3 exec paragraphs,
+cached 6h per window in api_cache (`brief_<window>`). Design rule:
+facts never depend on the AI layer — no third-party single point of
+failure in leadership reporting.
+
+**Profiles**: team_members + avatar_url (uploaded via the banner-art
+Blob pipeline, shown on Staff rows + profile head) and ooo_note
+(members set their OWN via members op:'ooo' — the one op a member
+session may run, self-only; managers set anyone's). The profile
+dialog shows REC Room performance joined from players by trigram
+(recs in the projects list bundle, sub-wrapped). Members select now
+has THREE fallback tiers (v6 → v3 → v2 columns).
+
 Later: tours went PER-PAGE. `TOURS` maps route → steps; steps resolve
 by [data-tour] hook, by CARD TITLE match on `.sec-title h2` (titles
 are stable; nth-child is not), or by selector. Each page tours the
