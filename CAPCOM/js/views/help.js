@@ -18,7 +18,7 @@ const AREAS = [
   ['Tailored Access', 'Scoped keys for SMEs and other outside contributors — a key opens exactly the areas it names and nothing else.'],
   ['Maintenance', 'The machine room: the REC Room maintenance switch, the service keys the apps run on, and the Setup button.'],
   ['Dashboard', 'REC Room health: who is playing, scores, and how the systems behind it are doing.'],
-  ['Players', 'Every player the arcade has seen, with their runs and territory.'],
+  ['MT Roster', 'Every player the arcade has seen — all of them, with names, runs and territory. Staff-tagged people play but never appear on a leaderboard.'],
   ['Questions', 'The three question banks the games draw from — knowledge, methodology, glossary.'],
   ['Community Board', 'The corkboard on Home. Notes, bookmarks, pictures, yarn. Signed with real names.'],
   ['Enablement News', 'A one-line rotating feed of sales-enablement and AI reading, cached server-side.'],

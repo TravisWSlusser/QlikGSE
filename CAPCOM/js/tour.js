@@ -68,7 +68,7 @@ export const TOURS = {
     { card: 'Recent runs', title: 'Recent Runs', blurb: 'The latest scores as they land, newest first.' },
   ],
   players: [
-    { sel: '.view .card', title: 'Players', blurb: 'Everyone the arcade has seen, with runs, accuracy and territory. The filter box narrows by trigram or country.' },
+    { sel: '.view .card', title: 'MT Roster', blurb: 'Everyone the arcade has seen — names, runs, accuracy, territory. The filter matches names too, and the Staff column keeps the SE team off every leaderboard.' },
   ],
   questions: [
     { sel: '.view .tabs', title: 'Three Banks', blurb: 'Knowledge, methodology and glossary — the pools every game draws from.' },

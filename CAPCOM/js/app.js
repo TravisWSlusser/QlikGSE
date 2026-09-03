@@ -54,7 +54,7 @@ const NAV = [
   ]},
   { group: 'REC Room', items: [
     { route: 'dashboard', label: 'Dashboard', scope: 'analytics', mod: dashboard, icon: 'dashboard' },
-    { route: 'players', label: 'Players', scope: 'analytics', mod: players, icon: 'players' },
+    { route: 'players', label: 'MT Roster', scope: 'analytics', mod: players, icon: 'players' },
     { route: 'questions', label: 'Questions', scope: 'content', mod: questions, icon: 'questions' },
   ]},
   { group: 'System', items: [

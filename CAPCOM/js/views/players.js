@@ -73,7 +73,7 @@ async function load(root, rerender, who) {
   });
   const wrap = h('div', { class: 'table-wrap players-table' });
   root.appendChild(h('div', { class: 'card' },
-    sectionTitle('Players — top 50 by lifetime points', filterBox), wrap));
+    sectionTitle('MT Roster — every player, by lifetime points', filterBox), wrap));
 
   function draw() {
     const q = filterBox.value.trim().toUpperCase();
