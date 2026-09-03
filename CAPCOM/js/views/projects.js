@@ -26,7 +26,7 @@ export function render(params, rerender, who) {
   const canEdit = !!(who && who.scopes && who.scopes.includes('projects'));
   // registry rights (add/edit members, reset codes): managers + masters only
   const canManage = !!(who && (who.master || who.manager));
-  const canInvite = !!(who && (who.master || (who.manager && who.people_leader)));
+  const canInvite = !!(who && (who.master || who.manager)); // core leadership + masters
   const me = (who && who.member) || null; // member session: acts on tagged projects only
   const wantNew = params && params[0] === 'new';
   if (wantNew) history.replaceState(null, '', '#projects');

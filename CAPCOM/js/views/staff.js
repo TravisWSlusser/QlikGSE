@@ -14,8 +14,8 @@ export function render(params, rerender, who) {
   const canTeams = !!(who && who.scopes && who.scopes.includes('projects'));
   // registry rights (add/edit members, reset codes): managers + masters only
   const canEdit = !!(who && (who.master || who.manager));
-  // logins (activation keys, resets) are people-leader territory
-  const canInvite = !!(who && (who.master || (who.manager && who.people_leader)));
+  // logins (activation keys, resets): core leadership + masters
+  const canInvite = !!(who && (who.master || who.manager));
   const meId = (who && who.member && who.member.id) || 0;
   const root = h('div', { class: 'view' }, spinner());
   load(root, rerender, canEdit, canTeams, meId, canInvite);
