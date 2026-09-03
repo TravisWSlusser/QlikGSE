@@ -51,6 +51,12 @@ export function render(params, rerender, who) {
   const prjCard = h('div', { class: 'card', dataset: { tour: 'projects-glance' } }, spinner());
   leftCol.appendChild(prjCard);
   loadProjectsCard(prjCard, scopes);
+  // the Leadership Brief teaser — managers and masters only
+  if (who && (who.master || who.manager)) {
+    const briefCard = h('div', { class: 'card' }, spinner());
+    leftCol.appendChild(briefCard);
+    loadBriefCard(briefCard);
+  }
   const logCard = h('div', { class: 'card', dataset: { tour: 'changes' } }, spinner());
   leftCol.appendChild(logCard);
   loadLog(logCard);
@@ -1189,6 +1195,23 @@ async function loadInspoCard(card) {
 
 /* ── projects at a glance: the compact Home cut — no calendar, no charts,
    just the promises. Server-ordered: overdue first, then soonest due. ── */
+/* the Leadership Brief teaser — this week's counts and a door in */
+async function loadBriefCard(card) {
+  let r;
+  try { r = await api.brief({ op: 'digest', window: 'week' }); }
+  catch { card.remove(); return; } // pre-Setup or no access: no teaser
+  const c = r.digest.counts;
+  clear(card);
+  card.appendChild(sectionTitle('Leadership Brief',
+    h('a', { class: 'btn sm', href: '#projects/brief' }, 'Open The Brief')));
+  card.appendChild(h('p', { class: 'brief-home-counts' },
+    `This week: ${c.moved} status move${c.moved === 1 ? '' : 's'} · ` +
+    `${r.digest.milestonesHit.length} milestone${r.digest.milestonesHit.length === 1 ? '' : 's'} hit · ` +
+    `${c.overdue} overdue · ${c.lulls} project${c.lulls === 1 ? '' : 's'} without activity`));
+  card.appendChild(h('p', { class: 'sub' },
+    'Week, month and quarter — compiled from the board, copy-ready for the update you send upward.'));
+}
+
 async function loadProjectsCard(card, scopes) {
   let d;
   try { d = await api.projects({ op: 'list' }); }

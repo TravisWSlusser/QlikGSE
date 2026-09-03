@@ -40,6 +40,9 @@ export const TOURS = {
     { card: 'Projects calendar', title: 'Projects Calendar', blurb: 'Phase deadlines and milestones on their own calendar — deliberately separate from Mission Control’s.' },
     { card: 'Diary review', title: 'Diary Review', blurb: 'The append-only project diary, filterable by quarter — what management reads to see how the quarter actually went.' },
   ],
+  'projects/brief': [
+    { card: 'Leadership Brief', title: 'The Leadership Brief', blurb: 'Week, month or quarter — movement, milestones, overdue items with their written explanations, and lulls. Copy As Text and it is ready for the update you send upward.' },
+  ],
   'projects/staff': [
     { card: 'Staff', title: 'The Org Tree', blurb: 'Sales Enablement, top level down — every report indented under their leader. Staff only; SMEs get keys instead.' },
     { sel: '.cat-invite', title: 'Invite', blurb: 'Makes a one-time access code for that person — send it to them yourself. It also works as a password reset.' },

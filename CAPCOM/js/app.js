@@ -20,6 +20,7 @@ import * as banners from './views/banners.js';
 import * as questions from './views/questions.js';
 import * as maintenance from './views/maintenance.js';
 import * as tailoredAccess from './views/tailoredAccess.js';
+import * as brief from './views/brief.js';
 import * as home from './views/home.js';
 import * as projects from './views/projects.js';
 import * as projectsInsights from './views/projectsInsights.js';
@@ -44,6 +45,7 @@ const NAV = [
     // is the product); edit controls gate on the 'projects' scope inside
     { route: 'projects', label: 'Project Board', scope: null, mod: projects, icon: 'projects' },
     { route: 'projects/insights', label: 'Insights & Calendar', scope: null, mod: projectsInsights, icon: 'insights' },
+    { route: 'projects/brief', label: 'Leadership Brief', scope: 'projects', mod: brief, icon: 'insights' },
     { route: 'projects/staff', label: 'Staff', scope: null, mod: staff, icon: 'staff' },
     // key generation for SMEs and outside contributors — NOT staff
     { route: 'projects/access', label: 'Tailored Access', scope: 'system', mod: tailoredAccess, icon: 'system' },

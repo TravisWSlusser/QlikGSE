@@ -1516,6 +1516,18 @@ a.gantt-label:hover{color:var(--link)}
 .about-item-b{font-size:.75rem;color:var(--muted);line-height:1.4}
 .about-credit{margin-top:16px;font-size:.8rem}
 
+/* ── Leadership Brief ──────────────────────────────────────────────── */
+.brief-tabs{display:inline-flex;gap:6px}
+.brief-counts{font-size:.82rem;color:var(--muted);margin:2px 0 12px}
+.brief-ai{margin:0 0 16px;padding:12px 14px;border:1px dashed var(--line);border-radius:10px}
+.brief-ai-text{white-space:pre-wrap;font-size:.86rem;line-height:1.6;max-width:78ch}
+.brief-sec-t{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin:16px 0 6px}
+.brief-sec{display:flex;flex-direction:column;gap:4px}
+.brief-row{font-size:.82rem;line-height:1.5}
+.brief-row.over b{color:var(--overdue)}
+.brief-row.lull b{color:var(--muted)}
+.brief-home-counts{font-size:.8rem;color:var(--muted);margin:4px 0 10px}
+
 /* first-load Welcome, then the gate animates in */
 #hello{
   position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center;
