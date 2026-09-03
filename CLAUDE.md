@@ -1211,6 +1211,23 @@ fade. In the hidden browser pane CSS ANIMATIONS freeze mid-keyframe
 just like transitions — a card stuck half-clipped in a screenshot is
 the harness, not the code (set animation:none to verify layout).
 
+## REC roster + scoreboard who-pop (3 Sep 2026, schema v7)
+
+`rec_roster` (trigram PK → name, title, country, iso2, active),
+imported through Maintenance's REC Roster card from the Mindtickle
+user export converted to JSON (chunked upserts, managers only). RULE:
+the roster is employee data and this repo is PUBLIC — it never gets
+committed; the conversion (xlsx → rec-roster.json with a country→iso2
+map) runs locally and the file goes to Travis, not to git.
+getLeaderboard/getRecentScores decorate rows per-trigram-shown
+(sub-wrapped) so the full roster is never served. Desktop scoreboard:
+`#whoPop` hover card (delegated mouseover on `[data-tri]`, flips at
+the viewport edge, hidden on touch, hidden on segment rotation).
+Roster notes from the 3 Sep export: 856 unique trigram holders, six
+duplicate trigrams in the sheet (CAF ENW LEW SVW UVX PQL — last row
+wins), 5 marked "Did not Sign up" (kept, active=false), all seven
+leadership trigrams verified with matching names.
+
 ## Leadership Brief + staff profiles (2 Sep 2026, schema v6)
 
 **The Brief** (`lib/admin/brief.js`, `views/brief.js`, Projects group,
