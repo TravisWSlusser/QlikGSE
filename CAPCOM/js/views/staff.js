@@ -14,16 +14,20 @@ export function render(params, rerender, who) {
   const canTeams = !!(who && who.scopes && who.scopes.includes('projects'));
   // registry rights (add/edit members, reset codes): managers + masters only
   const canEdit = !!(who && (who.master || who.manager));
+  const meId = (who && who.member && who.member.id) || 0;
   const root = h('div', { class: 'view' }, spinner());
-  load(root, rerender, canEdit, canTeams);
+  load(root, rerender, canEdit, canTeams, meId);
   return root;
 }
 
-async function load(root, rerender, canEdit, canTeams) {
+async function load(root, rerender, canEdit, canTeams, meId) {
   let d;
   try { d = await api.projects({ op: 'list', all: true }); }
-  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit, canTeams))); return; }
+  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit, canTeams, meId))); return; }
   d.canManage = canEdit; // registry writes: managers + masters
+  d.meId = meId || 0;    // the signed-in member, for self-service OOO
+  d.recByTri = {};
+  for (const r of d.recs || []) d.recByTri[(r.trigram || '').toUpperCase()] = r;
   clear(root);
 
   d.memberById = {};
@@ -92,6 +96,8 @@ async function load(root, rerender, canEdit, canTeams) {
       onClick: () => historyDialog(m, d),
     },
       teamLead ? h('span', { class: 'cat-star', 'aria-label': 'Team leader' }, '★') : h('span', { class: 'cat-star' }, ''),
+      m.avatar_url ? h('img', { class: 'cat-avatar', src: m.avatar_url, alt: '' })
+        : h('span', { class: 'cat-avatar cat-avatar-blank' }, (m.name || '?').slice(0, 1)),
       h('span', { class: 'cat-name' }, m.name),
       m.trigram ? h('span', { class: 'mem-row-tri' }, m.trigram) : null,
       h('span', { class: 'cat-detail' }, [
@@ -99,6 +105,7 @@ async function load(root, rerender, canEdit, canTeams) {
         m.is_leader ? 'People leader' : null,
         m.title || null,
         teamName(m.team_id),
+        m.ooo_note ? `OOO — ${m.ooo_note}` : null,
         m.active && !m.claimed ? 'no access yet' : null,
       ].filter(Boolean).join(' · ')),
       h('span', { class: 'cat-count' }, projCount ? `${projCount} project${projCount > 1 ? 's' : ''}` : ''),

@@ -39,6 +39,9 @@ async function load(root, rerender, canEdit, openNew, me, canManage) {
   try { d = await api.projects({ op: 'list', all: true }); }
   catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit, false, me, canManage))); return; }
   d.canManage = !!canManage; // rides the bundle into the shared dialogs
+  d.meId = me ? me.id : 0;   // the signed-in member, for self-service OOO
+  d.recByTri = {};
+  for (const r of d.recs || []) d.recByTri[(r.trigram || '').toUpperCase()] = r;
   clear(root);
 
   const teamById = {}, statusById = {};
@@ -506,6 +509,29 @@ export function editMemberDialog(m, d, rerender) {
     ...activeTeams.map(t => ({ value: String(t.id), label: t.name, selected: m && m.team_id === t.id }))]);
   const isLeader = h('input', { type: 'checkbox', checked: m && m.is_leader ? true : null });
   const isManager = h('input', { type: 'checkbox', checked: m && m.is_manager ? true : null });
+  // the brand avatar — upload one of Travis's cartoon set (or any image)
+  let avatarUrl = m ? (m.avatar_url || '') : '';
+  const avPreview = h('img', { class: 'prof-avatar av-edit', alt: '', src: avatarUrl || undefined, hidden: avatarUrl ? null : true });
+  const avFile = h('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp,image/gif' });
+  const avClear = h('button', { class: 'btn xs', hidden: avatarUrl ? null : true, onClick: e => {
+    e.preventDefault(); avatarUrl = ''; avPreview.hidden = true; avClear.hidden = true;
+  } }, 'Remove');
+  avFile.addEventListener('change', () => {
+    const file = avFile.files && avFile.files[0];
+    if (!file) return;
+    const rd = new FileReader();
+    rd.onload = async () => {
+      try {
+        const b64 = String(rd.result).split(',')[1] || '';
+        const r = await api.uploadImage({ name: file.name, type: file.type, data: b64 });
+        avatarUrl = r.url;
+        avPreview.src = r.url; avPreview.hidden = false; avClear.hidden = false;
+        toast('Avatar uploaded — save the member to keep it');
+      } catch (err) { toast(err.message, 'err'); }
+    };
+    rd.readAsDataURL(file);
+  });
+  const avatarRow = h('div', { class: 'av-row' }, avPreview, avFile, avClear);
   const leaders = (d.members || []).filter(x => x.active && x.is_leader && (!m || x.id !== m.id));
   const mgr = select([{ value: '0', label: leaders.length ? '— nobody —' : '— no people leaders declared yet —' },
     ...leaders.map(x => ({ value: String(x.id), label: x.name, selected: m && m.manager_id === x.id }))]);
@@ -516,6 +542,7 @@ export function editMemberDialog(m, d, rerender) {
       field('Role', title),
       field('Email', email),
       field('Team', team),
+      field('Avatar', avatarRow, 'The brand cartoon for their profile and the Staff page.'),
       field('People leader', isLeader, 'Declared leaders can have staff report to them — enablement has several.'),
       field('Reports to', mgr, 'Their people leader. Staff sit below their leader on the Staff tab.'),
       field('Manager', isManager, 'Managers hold every scope when signed in, and they alone sign the team up, reset codes, and grant this.')),
@@ -525,7 +552,8 @@ export function editMemberDialog(m, d, rerender) {
         try {
           await api.members({ op: 'save', id: m ? m.id : undefined, name: name.value,
             trigram: tri.value, title: title.value, email: email.value, team_id: Number(team.value) || null,
-            is_leader: isLeader.checked, is_manager: isManager.checked, manager_id: Number(mgr.value) || null });
+            is_leader: isLeader.checked, is_manager: isManager.checked, manager_id: Number(mgr.value) || null,
+            avatar_url: avatarUrl });
           c(); toast(isNew ? 'Member added' : 'Member saved'); rerender();
         } catch (err) { toast(err.message, 'err'); }
       } },
@@ -547,15 +575,50 @@ export function historyDialog(m, d) {
   const touched = p => new Date(p.updated_at || p.created_at || 0).getTime();
   const projs = projIds.map(id => projById[id]).filter(Boolean)
     .sort((a, z) => (z.active - a.active) || (touched(z) - touched(a)));
+  const rec = m.trigram ? (d.recByTri || {})[m.trigram.toUpperCase()] : null;
+  const acc = rec && Number(rec.attempted) > 0
+    ? Math.round((Number(rec.correct) / Number(rec.attempted)) * 100) : null;
+  const canOoo = !!(d.canManage || (d.meId && d.meId === m.id));
+  const oooLine = h('p', { class: 'prof-ooo' + (m.ooo_note ? ' on' : '') },
+    m.ooo_note ? `Out of office — ${m.ooo_note}` : (canOoo ? 'In office (no OOO note)' : ''));
+  const setOoo = () => {
+    const note = textInput({ maxLength: 140, value: m.ooo_note || '', placeholder: 'e.g. Out until Sep 15 — ping Barb for anything urgent' });
+    modal(`Out of office — ${m.name}`,
+      h('div', { class: 'form' }, field('Note', note, 'Shows on the profile and the Staff page. Leave empty to clear it.')),
+      [
+        { label: 'Cancel', onClick: c => c() },
+        { label: 'Save', kind: 'accent', onClick: async c => {
+          try {
+            await api.members({ op: 'ooo', id: m.id, note: note.value });
+            m.ooo_note = note.value.trim();
+            oooLine.textContent = m.ooo_note ? `Out of office — ${m.ooo_note}` : 'In office (no OOO note)';
+            oooLine.className = 'prof-ooo' + (m.ooo_note ? ' on' : '');
+            c(); toast('Saved');
+          } catch (err) { toast(err.message, 'err'); }
+        } },
+      ]);
+  };
   modal(m.name,
     h('div', null,
-      h('p', { class: 'sub', style: { marginBottom: '10px' } },
-        [m.is_leader ? 'People leader' : null, m.title,
-          (teamById[m.team_id] || {}).name,
-          m.manager_id && d.memberById && d.memberById[m.manager_id] ? `reports to ${d.memberById[m.manager_id].name}` : null,
-          m.trigram ? `REC Room: ${m.trigram}` : null]
-          .filter(Boolean).join(' · ') || 'Team member',
-        m.email ? [' · ', h('a', { href: 'mailto:' + m.email }, m.email)] : null),
+      h('div', { class: 'prof-head' },
+        m.avatar_url ? h('img', { class: 'prof-avatar', src: m.avatar_url, alt: '' })
+          : h('span', { class: 'prof-avatar prof-avatar-blank' }, (m.name || '?').slice(0, 1)),
+        h('div', null,
+          h('p', { class: 'sub', style: { marginBottom: '4px' } },
+            [m.is_leader ? 'People leader' : null, m.title,
+              (teamById[m.team_id] || {}).name,
+              m.manager_id && d.memberById && d.memberById[m.manager_id] ? `reports to ${d.memberById[m.manager_id].name}` : null,
+              m.trigram ? `REC Room: ${m.trigram}` : null]
+              .filter(Boolean).join(' · ') || 'Team member',
+            m.email ? [' · ', h('a', { href: 'mailto:' + m.email }, m.email)] : null),
+          h('div', { class: 'prof-ooo-row' }, oooLine,
+            canOoo ? h('button', { class: 'btn xs', onClick: setOoo }, 'Set OOO') : null))),
+      rec ? h('div', { class: 'prof-rec' },
+        h('span', { class: 'prof-rec-t' }, 'REC Room'),
+        h('span', null, `${fmt.int(Number(rec.total_score))} lifetime pts`),
+        h('span', null, `${fmt.int(Number(rec.games_played))} runs`),
+        Number(rec.blitz_personal_high) > 0 ? h('span', null, `high ${fmt.int(Number(rec.blitz_personal_high))}`) : null,
+        acc != null ? h('span', null, `${acc}% accuracy`) : null) : null,
       projs.length
         ? h('div', { class: 'prj-glance' }, projs.map(p => {
           const st = statusById[p.status_id];

@@ -1516,6 +1516,36 @@ a.gantt-label:hover{color:var(--link)}
 .about-item-b{font-size:.75rem;color:var(--muted);line-height:1.4}
 .about-credit{margin-top:16px;font-size:.8rem}
 
+/* ── staff profiles: avatars, REC Room stats, OOO ──────────────────── */
+.cat-avatar{
+  width:24px;height:24px;border-radius:50%;object-fit:cover;flex:0 0 auto;
+  border:1px solid var(--line);background:var(--card);
+}
+.cat-avatar-blank{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:700;color:var(--muted);
+}
+.prof-head{display:flex;gap:14px;align-items:flex-start;margin-bottom:10px}
+.prof-avatar{
+  width:64px;height:64px;border-radius:50%;object-fit:cover;flex:0 0 auto;
+  border:1px solid var(--line);background:var(--card);
+}
+.prof-avatar-blank{
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:1.6rem;font-weight:700;color:var(--muted);
+}
+.prof-avatar.av-edit{width:44px;height:44px}
+.av-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.prof-ooo-row{display:flex;align-items:center;gap:10px}
+.prof-ooo{font-size:.76rem;color:var(--muted);margin:0}
+.prof-ooo.on{color:var(--warn, #F5CF7A)}
+.prof-rec{
+  display:flex;gap:14px;flex-wrap:wrap;align-items:baseline;
+  font-size:.8rem;margin:0 0 12px;padding:8px 12px;
+  border:1px solid var(--line);border-radius:10px;
+}
+.prof-rec-t{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+
 /* ── Leadership Brief ──────────────────────────────────────────────── */
 .brief-tabs{display:inline-flex;gap:6px}
 .brief-counts{font-size:.82rem;color:var(--muted);margin:2px 0 12px}
