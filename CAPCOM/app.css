@@ -1516,6 +1516,10 @@ a.gantt-label:hover{color:var(--link)}
 .about-item-b{font-size:.75rem;color:var(--muted);line-height:1.4}
 .about-credit{margin-top:16px;font-size:.8rem}
 
+/* the person line on the player stat card — from the REC roster */
+.pp-who{font-size:.74rem;color:var(--muted);margin:2px 0 8px;line-height:1.4}
+.pp-who b{color:var(--ink);font-weight:600}
+
 /* ── staff profiles: avatars, REC Room stats, OOO ──────────────────── */
 .cat-avatar{
   width:24px;height:24px;border-radius:50%;object-fit:cover;flex:0 0 auto;

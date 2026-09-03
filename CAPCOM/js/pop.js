@@ -31,8 +31,12 @@ export function showPop(anchor, p, excluded) {
   e.append(
     h('div', { class: 'pp-head' },
       h('span', { class: 'pp-trig mono' }, p.trigram),
-      h('span', { class: 'pp-terr' }, `${p.territory} · ${(p.country_code || '').toUpperCase()}`),
+      h('span', { class: 'pp-terr' }, `${p.territory} · ${((p.iso2 || p.country_code) || '').toUpperCase()}`),
       excluded.includes(p.trigram) ? chip('staff', 'muted') : null),
+    // the person behind the trigram — from the REC roster, when imported
+    p.name ? h('div', { class: 'pp-who' },
+      h('b', null, p.name), p.title ? h('span', null, ` · ${p.title}`) : null,
+      p.country ? h('span', null, ` · ${p.country}`) : null) : null,
     h('div', { class: 'pp-stats' },
       h('div', { class: 'pp-stat' }, h('b', null, fmt.int(p.total_score)), h('i', null, 'points')),
       h('div', { class: 'pp-stat' }, h('b', null, fmt.int(p.games_played)), h('i', null, 'games')),

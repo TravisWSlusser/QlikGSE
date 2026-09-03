@@ -394,6 +394,10 @@
       font-family: 'Share Tech Mono', monospace; color: #dbe8f6;
     }
     #whoPop.on { display: block; }
+    /* hovering a scoreboard row raises a card - the arrow stays an arrow,
+       never the I-beam that suggests editable text */
+    .rank-row[data-tri], .recent-row[data-tri],
+    .rank-row[data-tri] *, .recent-row[data-tri] * { cursor: default; user-select: none; }
     #whoPop .wp-name { font-size: 15px; letter-spacing: 0.04em; margin-bottom: 2px; }
     #whoPop .wp-title { font-size: 11px; color: #7f93b8; line-height: 1.35; margin-bottom: 6px; }
     #whoPop .wp-geo { display: flex; align-items: center; gap: 7px; font-size: 11px; color: #7f93b8; margin-bottom: 6px; }
@@ -1652,7 +1656,8 @@ document.addEventListener('mouseover', e => {
   const row = e.target.closest ? e.target.closest('[data-tri]') : null;
   if (!row) { hideWhoPop(); return; }
   const w = hoverWho[row.dataset.tri];
-  if (!w || !w.name) { hideWhoPop(); return; }
+  if (!w) { hideWhoPop(); return; }
+  // no roster match: the card still answers, with what the room knows
   const flag = (w.iso2 || w.country_code) ? `<img src="${flagUrl(w.iso2 || w.country_code)}" onerror="this.style.display='none'">` : '';
   const stats = [
     w.score != null ? `${fmt(w.score)} pts` : null,
@@ -1660,7 +1665,7 @@ document.addEventListener('mouseover', e => {
     w.accuracy != null ? `${w.accuracy}% acc` : null,
     w.territory || null,
   ].filter(Boolean).join(' · ');
-  whoPop.innerHTML = `<div class="wp-name">${w.name}</div>`
+  whoPop.innerHTML = `<div class="wp-name">${w.name || row.dataset.tri}</div>`
     + (w.title ? `<div class="wp-title">${w.title}</div>` : '')
     + ((flag || w.country) ? `<div class="wp-geo">${flag}<span>${w.country || ''}</span></div>` : '')
     + (stats ? `<div class="wp-stats">${stats}</div>` : '');

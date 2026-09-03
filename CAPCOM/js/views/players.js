@@ -10,6 +10,7 @@ import { wirePop } from '../pop.js';
    show the day — the card carries the exact timestamps. */
 const COLS = [
   ['trigram', 'Trigram', r => r.trigram],
+  ['name', 'Name', r => r.name || '—'],
   ['territory', 'Territory', r => r.territory],
   ['country_code', 'Country', r => (r.country_code || '').toUpperCase()],
   ['total_score', 'Points', r => fmt.int(r.total_score), true],
@@ -77,7 +78,7 @@ async function load(root, rerender, who) {
   function draw() {
     const q = filterBox.value.trim().toUpperCase();
     const shown = rows
-      .filter(r => !q || r.trigram.includes(q) || (r.territory || '').includes(q)
+      .filter(r => !q || r.trigram.includes(q) || (r.name || '').toUpperCase().includes(q) || (r.territory || '').includes(q)
         || (r.country_code || '').toUpperCase().includes(q))
       .sort((a, b) => {
         const av = sortVal(a, sortKey), bv = sortVal(b, sortKey);
@@ -98,13 +99,14 @@ async function load(root, rerender, who) {
         canTag ? h('th', null, 'Staff') : null].filter(Boolean))),
       h('tbody', null, shown.map(r => {
         const tds = COLS.map(([key, , get], i) =>
-          h('td', { class: (i === 0 ? 'mono' : '') + (i >= 3 && i <= 7 ? ' num' : '') },
+          h('td', { class: (i === 0 ? 'mono' : '') + (i >= 4 && i <= 8 ? ' num' : '') },
             get(r),
             i === 0 && excluded.includes(r.trigram) ? chip('staff', 'muted') : null));
-        // trigram and Accuracy both raise the full stat card — the per-stream
-        // bars folded from the old columns live there
+        // trigram, Name and Accuracy all raise the full stat card — the
+        // per-stream bars folded from the old columns live there
         wirePop(tds[0], r, excluded);
-        wirePop(tds[5], r, excluded);
+        wirePop(tds[1], r, excluded);
+        wirePop(tds[6], r, excluded);
         return h('tr', excluded.includes(r.trigram) ? { class: 'staff' } : null,
           tds, canTag ? h('td', null, staffBtn(r)) : null);
       }))));
