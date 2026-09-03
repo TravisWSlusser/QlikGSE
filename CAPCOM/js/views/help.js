@@ -4,7 +4,7 @@
 import { h, clear, esc, fmt } from '../util.js';
 import { api } from '../api.js';
 import { toast, field, textInput, textArea, sectionTitle, spinner, confirmBox } from '../ui.js';
-import { startTour } from '../tour.js';
+import { startTour, resetTours } from '../tour.js';
 
 const AREAS = [
   ['Home', 'The glance page: calendar, projects at a glance, the change feed, clocks, the Community Board and the news line.'],
@@ -29,7 +29,7 @@ const FAQ = [
   ['Why is a project marked OVERDUE?', 'Its current status promised a date and the date passed. The next status change requires a short written note about what happened — that is the accountability mechanic, not a punishment.'],
   ['What is the update banner?', 'When a deploy adds new pieces, managers and team leaders see a one-click banner to run Setup. Nobody has to remember it.'],
   ['Who are the managers?', 'The leadership circle Travis named. They hold every scope, sign the team up, and are the only ones who issue invites or reset codes.'],
-  ['Can I turn the walkthrough back on?', 'Right here — Replay the walkthrough below. "Skip all tutorials" only silences the automatic one.'],
+  ['Can I turn the walkthroughs back on?', 'Right here — Replay the walkthroughs below resets all of them, and each page tours again the next time you open it. "Skip all tutorials" silences every page at once.'],
 ];
 
 export function render(params, rerender, who) {
@@ -37,9 +37,12 @@ export function render(params, rerender, who) {
   const root = h('div', { class: 'view' });
 
   const tourCard = h('div', { class: 'card' },
-    sectionTitle('The walkthrough',
-      h('span', { class: 'sec-sub' }, 'a guided lap of the Home page, one widget at a time'),
-      h('button', { class: 'btn sm accent', onClick: () => { location.hash = '#home'; setTimeout(() => startTour(true), 700); } }, 'Replay the walkthrough')));
+    sectionTitle('The walkthroughs',
+      h('span', { class: 'sec-sub' }, 'every page has one — it plays the first time you open that page'),
+      h('button', { class: 'btn sm accent', onClick: () => {
+        resetTours(); toast('Walkthroughs reset — each page will tour again on your next visit');
+        location.hash = '#home'; setTimeout(() => startTour('home', true), 700);
+      } }, 'Replay the walkthroughs')));
   root.appendChild(tourCard);
 
   const areas = h('div', { class: 'card' }, sectionTitle('What each area is'));

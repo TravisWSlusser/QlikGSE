@@ -25,7 +25,7 @@ import * as projects from './views/projects.js';
 import * as projectsInsights from './views/projectsInsights.js';
 import * as staff from './views/staff.js';
 import * as help from './views/help.js';
-import { maybeAutoStart } from './tour.js';
+import { maybeAutoStart, killTour } from './tour.js';
 import { ICONS } from './icons.js';
 import { mountFx } from './fx.js';
 import { hidePop } from './pop.js';
@@ -101,9 +101,10 @@ function draw() {
     a.classList.toggle('on', r === raw || (r === item.route && item.route.split('/')[0] === head));
   });
 
+  killTour(); // a route change mid-tour tears the overlay down, no state write
   clear(main).appendChild(item.mod.render(parts.slice(1), draw, WHO));
-  // first-timers get the walkthrough once Home has mounted
-  if (item.route === 'home') maybeAutoStart();
+  // every page's walkthrough runs the first time that page is opened
+  maybeAutoStart(item.route);
 }
 
 function buildNav() {
