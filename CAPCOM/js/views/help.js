@@ -13,7 +13,7 @@ const AREAS = [
   ['Action Banner', 'The Stellar-Seller action banner set — same mechanics, different stage.'],
   ['Project Board', 'Every project, its team, its status, and the date that status promised. Overdue rows demand a written what-happened before they move.'],
   ['Insights & Calendar', 'The board as charts: Gantt, status donuts, the projects calendar and the quarter review.'],
-  ['Leadership Brief', 'Week, month or quarter compiled from the board — movement, milestones, overdue, lulls — copy-ready for the update leadership sends upward. Add a Claude key for a written executive summary.'],
+  ['Leadership Brief', 'Week, month or quarter compiled from the board — movement, milestones, overdue, lulls — copy-ready for the update leadership sends upward. Core leadership team only. Add a Claude key for a written executive summary.'],
   ['Staff', 'The Sales Enablement org tree — people, trigrams, leaders and their reports. Managers add staff and issue invites here. SMEs and outside contributors do NOT go here.'],
   ['Tailored Access', 'Scoped keys for SMEs and other outside contributors — a key opens exactly the areas it names and nothing else.'],
   ['Maintenance', 'The machine room: the REC Room maintenance switch, the service keys the apps run on, and the Setup button.'],

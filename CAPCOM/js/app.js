@@ -45,7 +45,9 @@ const NAV = [
     // is the product); edit controls gate on the 'projects' scope inside
     { route: 'projects', label: 'Project Board', scope: null, mod: projects, icon: 'projects' },
     { route: 'projects/insights', label: 'Insights & Calendar', scope: null, mod: projectsInsights, icon: 'insights' },
-    { route: 'projects/brief', label: 'Leadership Brief', scope: 'projects', mod: brief, icon: 'insights' },
+    // core leadership team only — the manager tier, plus masters
+    { route: 'projects/brief', label: 'Leadership Brief', scope: 'projects', mod: brief, icon: 'insights',
+      gate: w => w.master || w.manager },
     { route: 'projects/staff', label: 'Staff', scope: null, mod: staff, icon: 'staff' },
     // key generation for SMEs and outside contributors — NOT staff
     { route: 'projects/access', label: 'Tailored Access', scope: 'system', mod: tailoredAccess, icon: 'system' },
@@ -64,7 +66,8 @@ const NAV = [
 let WHO = null; // {label, scopes, master}
 
 const allItems = () => NAV.flatMap(g => g.items);
-const allowed = it => !!WHO && (!it.scope || WHO.scopes.includes(it.scope));
+const allowed = it => !!WHO && (!it.scope || WHO.scopes.includes(it.scope))
+  && (!it.gate || it.gate(WHO));
 
 /* Route → nav item. An exact match wins (banners/stellar); otherwise the
    first item whose head segment matches (questions/glossary_terms →
