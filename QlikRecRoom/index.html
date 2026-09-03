@@ -383,6 +383,23 @@
 
     .recent-row { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
     .recent-row .flag { width: 22px; height: 15px; object-fit: cover; border: 1px solid rgba(255,255,255,0.15); flex-shrink: 0; }
+
+    /* who-pop: hover a scoreboard trigram, meet the person behind it.
+       Trigrams still dictate everything - this is a courtesy card. */
+    #whoPop {
+      position: fixed; z-index: 60; display: none; pointer-events: none;
+      min-width: 210px; max-width: 300px; padding: 10px 12px;
+      background: rgba(10, 16, 32, 0.97); border: 1px solid var(--cyan, #10CFC9);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.55), 0 0 18px rgba(16,207,201,0.25);
+      font-family: 'Share Tech Mono', monospace; color: #dbe8f6;
+    }
+    #whoPop.on { display: block; }
+    #whoPop .wp-name { font-size: 15px; letter-spacing: 0.04em; margin-bottom: 2px; }
+    #whoPop .wp-title { font-size: 11px; color: #7f93b8; line-height: 1.35; margin-bottom: 6px; }
+    #whoPop .wp-geo { display: flex; align-items: center; gap: 7px; font-size: 11px; color: #7f93b8; margin-bottom: 6px; }
+    #whoPop .wp-geo img { width: 20px; height: 13px; object-fit: cover; border: 1px solid rgba(255,255,255,0.15); }
+    #whoPop .wp-stats { font-size: 12px; color: var(--cyan, #10CFC9); }
+    @media (hover: none) { #whoPop { display: none !important; } }
     .recent-tri   { font-size: 1.5rem; min-width: 58px; }
     .recent-score { font-size: 1.5rem; margin-left: auto; }
 
@@ -1551,6 +1568,7 @@ function buildSegments() {
 }
 
 function renderSegment() {
+  if (typeof hideWhoPop === 'function') hideWhoPop();
   const seg = segments[segIdx];
   document.getElementById('rankTitle').textContent = seg.title;
   const el = document.getElementById('userRanking');
@@ -1559,7 +1577,9 @@ function renderSegment() {
     const p = seg.players[i];
     if (p) {
       const key = (p.territory || '').toLowerCase();
-      html += `<div class="rank-row" style="--i:${i}">`
+      hoverWho[p.trigram] = { name: p.name, title: p.title, country: p.country, iso2: p.iso2,
+        country_code: p.country_code, score: p.total_score, accuracy: p.accuracy, territory: p.territory };
+      html += `<div class="rank-row" data-tri="${p.trigram}" style="--i:${i}">`
         + `<img class="medal" src="assets/images/icons/awards/${medalImg[i]}.png" alt="${i + 1}">`
         + `<span class="cell rank-tri ${key}">${p.trigram}</span>`
         + `<span class="cell rank-score">${fmt(p.total_score)}</span>`
@@ -1616,9 +1636,44 @@ function renderRecent(scores) {
   const RECENT_ROWS = 12;                      // fixed render count -> deterministic panel height
   recentEl.innerHTML = (scores || []).slice(0, RECENT_ROWS).map(s => {
     const key = (s.territory || 'nam').toLowerCase();
-    return `<div class="recent-row"><img class="flag" src="${flagUrl(s.country_code)}" onerror="this.style.visibility='hidden'"><span class="recent-tri ${key}">${s.trigram}</span><span class="recent-score ${key}">${fmt(s.last_score)}</span></div>`;
+    hoverWho[s.trigram] = { name: s.name, title: s.title, country: s.country, iso2: s.iso2,
+      country_code: s.country_code, score: s.total_score, last: s.last_score, territory: s.territory };
+    return `<div class="recent-row" data-tri="${s.trigram}"><img class="flag" src="${flagUrl(s.country_code)}" onerror="this.style.visibility='hidden'"><span class="recent-tri ${key}">${s.trigram}</span><span class="recent-score ${key}">${fmt(s.last_score)}</span></div>`;
   }).join('');
 }
+
+/* ---- who-pop: the person behind the trigram (roster-fed, hover only) ---- */
+const hoverWho = {};
+const whoPop = document.createElement('div');
+whoPop.id = 'whoPop';
+document.body.appendChild(whoPop);
+function hideWhoPop() { whoPop.classList.remove('on'); }
+document.addEventListener('mouseover', e => {
+  const row = e.target.closest ? e.target.closest('[data-tri]') : null;
+  if (!row) { hideWhoPop(); return; }
+  const w = hoverWho[row.dataset.tri];
+  if (!w || !w.name) { hideWhoPop(); return; }
+  const flag = (w.iso2 || w.country_code) ? `<img src="${flagUrl(w.iso2 || w.country_code)}" onerror="this.style.display='none'">` : '';
+  const stats = [
+    w.score != null ? `${fmt(w.score)} pts` : null,
+    w.last != null ? `last run ${fmt(w.last)}` : null,
+    w.accuracy != null ? `${w.accuracy}% acc` : null,
+    w.territory || null,
+  ].filter(Boolean).join(' · ');
+  whoPop.innerHTML = `<div class="wp-name">${w.name}</div>`
+    + (w.title ? `<div class="wp-title">${w.title}</div>` : '')
+    + ((flag || w.country) ? `<div class="wp-geo">${flag}<span>${w.country || ''}</span></div>` : '')
+    + (stats ? `<div class="wp-stats">${stats}</div>` : '');
+  const r = row.getBoundingClientRect();
+  whoPop.classList.add('on');
+  const pw = whoPop.offsetWidth, ph = whoPop.offsetHeight;
+  let x = r.right + 12, y = r.top + r.height / 2 - ph / 2;
+  if (x + pw > window.innerWidth - 8) x = Math.max(8, r.left - pw - 12);
+  y = Math.max(8, Math.min(y, window.innerHeight - ph - 8));
+  whoPop.style.left = x + 'px';
+  whoPop.style.top = y + 'px';
+});
+document.addEventListener('scroll', hideWhoPop, true);
 
 /* ---- particle burst engine (canvas) ---- */
 const fxCanvas = document.getElementById('fxCanvas');

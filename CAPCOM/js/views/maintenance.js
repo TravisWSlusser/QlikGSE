@@ -11,10 +11,49 @@ export function render(params, rerender) {
   const root = h('div', { class: 'view' });
   const card = h('div', { class: 'card' }, spinner());
   const secrets = h('div', { class: 'card' }, spinner());
-  root.append(card, secrets, setupCard(rerender));
+  const roster = h('div', { class: 'card' }, spinner());
+  root.append(card, secrets, roster, setupCard(rerender));
   load(card, rerender);
   loadSecrets(secrets, rerender);
+  loadRoster(roster, rerender);
   return root;
+}
+
+/* ── the REC roster: trigram → real identity, for scoreboard hovers ── */
+async function loadRoster(card, rerender) {
+  let s = null;
+  try { s = await api.roster({ op: 'stats' }); } catch { /* pre-v7 */ }
+  clear(card);
+  card.appendChild(sectionTitle('REC Roster',
+    h('span', { class: 'sec-sub' }, s && s.count
+      ? `${s.count} people · updated ${String(s.updated || '').slice(0, 10)}`
+      : 'not imported yet')));
+  card.appendChild(h('p', { class: 'explain' },
+    'Trigram → real name, title and country, from the Mindtickle user export. Powers the scoreboard hover '
+    + 'cards in the REC Room. Import the converted JSON (ask for rec-roster.json from the latest '
+    + 'UserRoster export) — re-importing upserts, so a fresh export just updates in place.'));
+  const file = h('input', { type: 'file', accept: 'application/json,.json' });
+  file.addEventListener('change', () => {
+    const f = file.files && file.files[0];
+    if (!f) return;
+    const rd = new FileReader();
+    rd.onload = async () => {
+      let rows;
+      try { rows = JSON.parse(String(rd.result)); } catch { toast('That is not valid JSON', 'err'); return; }
+      if (!Array.isArray(rows) || !rows.length) { toast('Expected an array of roster rows', 'err'); return; }
+      let done = 0;
+      try {
+        for (let i = 0; i < rows.length; i += 400) {
+          const r = await api.roster({ op: 'import', rows: rows.slice(i, i + 400) });
+          done += r.imported || 0;
+        }
+        toast(`Roster imported — ${done} people`);
+        rerender();
+      } catch (err) { toast(`${err.message} (${done} imported before the error)`, 'err'); }
+    };
+    rd.readAsText(f);
+  });
+  card.appendChild(file);
 }
 
 async function load(card, rerender) {

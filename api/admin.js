@@ -41,6 +41,7 @@ import members from '../lib/admin/members.js';
 import memberClaim from '../lib/admin/memberClaim.js';
 import bugs from '../lib/admin/bugs.js';
 import brief from '../lib/admin/brief.js';
+import roster from '../lib/admin/roster.js';
 
 const HANDLERS = {
   migrate, whoami,
@@ -49,7 +50,7 @@ const HANDLERS = {
   listQuestions, saveQuestion, deleteQuestion,
   analytics, maintenance, keys, uploadImage,
   listLog, questionStats, secrets, systemStatus, setStaff, hotlinks, dedupeTerms, stickies, giphySearch,
-  projects, projectsAdmin, members, memberClaim, bugs, brief,
+  projects, projectsAdmin, members, memberClaim, bugs, brief, roster,
 };
 
 export default async function handler(req, res) {
