@@ -1291,7 +1291,7 @@ a.gantt-label:hover{color:var(--link)}
   color:var(--link);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--line);
 }
 .cat-member{
-  display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+  display:flex;align-items:center;gap:8px;width:100%;text-align:left;flex-wrap:wrap;
   padding:7px 10px;margin-bottom:4px;border:1px solid transparent;border-radius:9px;
   background:none;color:var(--ink);cursor:pointer;font-size:.84rem;
 }
@@ -1515,6 +1515,20 @@ a.gantt-label:hover{color:var(--link)}
 .about-item-t{font-weight:600;font-size:.82rem}
 .about-item-b{font-size:.75rem;color:var(--muted);line-height:1.4}
 .about-credit{margin-top:16px;font-size:.8rem}
+
+/* the informal staff status + reactions on the org tree */
+.cat-status{
+  flex-basis:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:2px 0 2px 34px;font-size:.76rem;
+}
+.cat-status-q{font-style:italic;color:var(--muted)}
+.cat-react{
+  display:inline-flex;align-items:center;gap:3px;padding:1px 7px;
+  border:1px solid var(--line);border-radius:999px;font-size:.72rem;font-style:normal;
+}
+.cat-react-add{cursor:pointer;color:var(--muted)}
+.cat-react-add:hover{border-color:var(--accent);color:var(--ink)}
+.prof-status{font-size:.76rem;font-style:italic;color:var(--muted);margin:0}
 
 /* the person line on the player stat card — from the REC roster */
 .pp-who{font-size:.74rem;color:var(--muted);margin:2px 0 8px;line-height:1.4}

@@ -612,7 +612,25 @@ export function historyDialog(m, d) {
               .filter(Boolean).join(' · ') || 'Team member',
             m.email ? [' · ', h('a', { href: 'mailto:' + m.email }, m.email)] : null),
           h('div', { class: 'prof-ooo-row' }, oooLine,
-            canOoo ? h('button', { class: 'btn xs', onClick: setOoo }, 'Set OOO') : null))),
+            canOoo ? h('button', { class: 'btn xs', onClick: setOoo }, 'Set OOO') : null),
+          h('div', { class: 'prof-ooo-row' },
+            h('p', { class: 'prof-status' }, m.status_text ? `“${m.status_text}”` : (canOoo ? 'No status posted' : '')),
+            canOoo ? h('button', { class: 'btn xs', onClick: () => {
+              const st = textInput({ maxLength: 180, value: m.status_text || '', placeholder: 'A quote, a joke, what you’re into this week…' });
+              modal(`Status — ${m.name}`,
+                h('div', { class: 'form' }, field('Status', st,
+                  'Informal, on the Staff board. Changing or clearing it deletes the old post AND its reactions — forever.')),
+                [
+                  { label: 'Cancel', onClick: c => c() },
+                  { label: 'Post it', kind: 'accent', onClick: async c => {
+                    try {
+                      await api.members({ op: 'status', id: m.id, text: st.value });
+                      m.status_text = st.value.trim();
+                      c(); toast(m.status_text ? 'Posted' : 'Status cleared');
+                    } catch (err) { toast(err.message, 'err'); }
+                  } },
+                ]);
+            } }, m.status_text ? 'Change' : 'Post Status') : null))),
       rec ? h('div', { class: 'prof-rec' },
         h('span', { class: 'prof-rec-t' }, 'REC Room'),
         h('span', null, `${fmt.int(Number(rec.total_score))} lifetime pts`),

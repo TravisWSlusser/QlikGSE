@@ -14,7 +14,7 @@ const AREAS = [
   ['Project Board', 'Every project, its team, its status, and the date that status promised. Overdue rows demand a written what-happened before they move.'],
   ['Insights & Calendar', 'The board as charts: Gantt, status donuts, the projects calendar and the quarter review.'],
   ['Leadership Brief', 'Week, month or quarter compiled from the board — movement, milestones, overdue, lulls — copy-ready for the update leadership sends upward. Core leadership team only. Add a Claude key for a written executive summary.'],
-  ['Staff', 'The Sales Enablement org tree — people, trigrams, leaders and their reports. Managers add staff and issue invites here. SMEs and outside contributors do NOT go here.'],
+  ['Staff', 'The Sales Enablement org tree — people, trigrams, leaders and their reports, who is out of office, and everyone’s informal status post (react to those!). Managers add staff and issue invites here. SMEs and outside contributors do NOT go here.'],
   ['Tailored Access', 'Scoped keys for SMEs and other outside contributors — a key opens exactly the areas it names and nothing else.'],
   ['Maintenance', 'The machine room: the REC Room maintenance switch, the service keys the apps run on, and the Setup button.'],
   ['Dashboard', 'REC Room health: who is playing, scores, and how the systems behind it are doing.'],

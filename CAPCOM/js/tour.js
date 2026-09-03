@@ -44,7 +44,7 @@ export const TOURS = {
     { card: 'Leadership Brief', title: 'The Leadership Brief', blurb: 'Week, month or quarter — movement, milestones, overdue items with their written explanations, and lulls. Copy As Text and it is ready for the update you send upward.' },
   ],
   'projects/staff': [
-    { card: 'Staff', title: 'The Org Tree', blurb: 'Sales Enablement, top level down — every report indented under their leader. Staff only; SMEs get keys instead.' },
+    { card: 'Staff', title: 'The Org Tree', blurb: 'Sales Enablement, top level down — every report under their leader, with out-of-office notes and everyone’s informal status. Open your profile to post yours; tap + on anyone’s to react.' },
     { sel: '.cat-invite', title: 'Invite', blurb: 'Makes a one-time access code for that person — send it to them yourself. It also works as a password reset.' },
     { sel: '.staff-access-bar', title: 'Not Staff?', blurb: 'SMEs and outside contributors get a scoped key from Tailored Access, not a staff entry.' },
   ],

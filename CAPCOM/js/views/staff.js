@@ -87,6 +87,34 @@ async function load(root, rerender, canEdit, canTeams, meId) {
   }
   const teamName = id => { const t = d.teams.find(x => x.id === id); return t ? t.name : null; };
 
+  // reactions on status posts, grouped per member
+  const reactsBy = {};
+  for (const r of d.staffReacts || []) {
+    (reactsBy[r.member_id] = reactsBy[r.member_id] || []).push(r);
+  }
+  const REACT_SET = ['👍', '🎉', '🔥', '😂', '💚', '👏'];
+  const react = async (m, emoji) => {
+    try { await api.members({ op: 'statusReact', id: m.id, emoji }); rerender(); }
+    catch (err) { toast(err.message, 'err'); }
+  };
+  const statusLine = m => {
+    if (!m.status_text || !m.active) return null;
+    const groups = {};
+    for (const r of reactsBy[m.id] || []) groups[r.emoji] = (groups[r.emoji] || 0) + 1;
+    return h('span', { class: 'cat-status' },
+      h('span', { class: 'cat-status-q' }, `“${m.status_text}”`),
+      ...Object.entries(groups).map(([e, n]) =>
+        h('span', { class: 'cat-react', title: (reactsBy[m.id] || []).filter(r => r.emoji === e).map(r => r.name).join(', ') },
+          `${e}${n > 1 ? ' ' + n : ''}`)),
+      h('span', {
+        class: 'cat-react cat-react-add', role: 'button', title: 'React',
+        onClick: ev => {
+          ev.stopPropagation();
+          pctx(ev.clientX, ev.clientY, REACT_SET.map(e => [e, () => react(m, e), false]));
+        },
+      }, '+'));
+  };
+
   const memberRow = (m, depth) => {
     const projCount = (d.tagsByMember[m.id] || []).length;
     const teamLead = !!leaderTeams[m.id];
@@ -117,7 +145,8 @@ async function load(root, rerender, canEdit, canTeams, meId) {
       canEdit ? h('span', { class: 'itm-menu mem-row-menu', role: 'button', 'aria-label': 'Member menu', onClick: ev => {
         ev.stopPropagation();
         pctx(ev.clientX, ev.clientY, menuFor(m));
-      } }, '⋯') : null);
+      } }, '⋯') : null,
+      statusLine(m));
     if (canEdit) row.addEventListener('contextmenu', ev => { ev.preventDefault(); pctx(ev.clientX, ev.clientY, menuFor(m)); });
     return row;
   };
