@@ -52,7 +52,7 @@ async function load(root, rerender, canEdit, canTeams, meId, canInvite) {
     card.appendChild(h('p', { class: 'sub org-how' },
       h('b', null, 'This section is exclusively for adding Sales Enablement staff. '),
       'Do not add SMEs or other content providers here — they get scoped keys from Tailored Access instead. ',
-      'For staff: people leaders click Invite on a person’s row to create their activation key, then send it to them to begin their CAPCOM onboarding. At the gate they choose Activate, enter trigram + key, and set their own password. Invite again any time to reset one.'));
+      'For staff: Sales Enablement leaders click Invite on a person’s row to create their activation key, then send it to them to begin their CAPCOM onboarding. At the gate they choose Activate, enter trigram + key, and set their own password. Invite again any time to reset one.'));
   }
 
   if (!members.length) {
