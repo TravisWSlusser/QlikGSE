@@ -1211,6 +1211,21 @@ fade. In the hidden browser pane CSS ANIMATIONS freeze mid-keyframe
 just like transitions — a card stuck half-clipped in a screenshot is
 the harness, not the code (set animation:none to verify layout).
 
+## SE team staff-tagged + MT Roster (3 Sep 2026, schema v9)
+
+One-time seed (se_staff_seeded): the seven leaders + nine team
+members (OTQ IHK BPX QZO UCY under DKQ; SKJ RZQ under KYI; QPE RVL
+under SYK) get zeroed players rows with staff=true — created even for
+people with no MT access, so exclusion holds from their first-ever
+run (every board, in-game game-over included, reads getExcluded) —
+plus team_members rows under their leaders (Laurel OTQ keeps her
+talend.com email; Jochem is ZwiEnenberg per the MT export, not
+Travis's spelling). Untagging via MT Roster is never undone by Setup.
+"Players" is now "MT Roster" (route unchanged) and lists every
+player — the top-50 LIMIT is gone. Phase-2 note from Travis: the
+non-MT folks will get room access later ("keep scores valid while
+opening access").
+
 ## Staff status posts (3 Sep 2026, schema v8)
 
 `team_members.status_text/status_at` + `staff_status_reactions`. A
