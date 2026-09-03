@@ -1211,6 +1211,23 @@ fade. In the hidden browser pane CSS ANIMATIONS freeze mid-keyframe
 just like transitions — a card stuck half-clipped in a screenshot is
 the harness, not the code (set animation:none to verify layout).
 
+## Staff status posts (3 Sep 2026, schema v8)
+
+`team_members.status_text/status_at` + `staff_status_reactions`. A
+member posts their own informal status from their profile (server
+checks member id; managers can clear anyone's); it renders in italics
+under their org-tree row with grouped emoji reaction chips (`+` opens
+a pctx picker; chip tooltip lists reactors). LIFECYCLE RULE from
+Travis: editing or clearing the text deletes the post AND all its
+reactions forever — the status op wipes staff_status_reactions in the
+same call, statusReact 409s if the post is gone. Self-service ops a
+plain member session may run: ooo, status (own row), statusReact
+(anyone's post). The members select fallback became a walk-back list
+(v8→v6→v3→v2) — add a tier per schema bump, never nest deeper.
+Also: hover cards got a fallback (unknown trigram still answers),
+roster names reach CAPCOM's player pops + a Players Name column, and
+scoreboard rows force cursor:default (no I-beam over names).
+
 ## REC roster + scoreboard who-pop (3 Sep 2026, schema v7)
 
 `rec_roster` (trigram PK → name, title, country, iso2, active),
