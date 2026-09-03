@@ -1211,6 +1211,15 @@ fade. In the hidden browser pane CSS ANIMATIONS freeze mid-keyframe
 just like transitions — a card stuck half-clipped in a screenshot is
 the harness, not the code (set animation:none to verify layout).
 
+Later: tours went PER-PAGE. `TOURS` maps route → steps; steps resolve
+by [data-tour] hook, by CARD TITLE match on `.sec-title h2` (titles
+are stable; nth-child is not), or by selector. Each page tours the
+first time it is opened (localStorage JSON `{off, done:{route}}`,
+legacy strings migrate); `killTour()` in draw() tears an overlay down
+on route change WITHOUT marking done. Harness trap: a hidden pane
+with no viewport emulation reports `innerWidth 0`, which fails every
+visibility check — emulate a size before concluding the tour broke.
+
 Help & FAQ: `views/help.js`, nav item for every key holder — twelve
 area blurbs, six FAQs, replay button, and bug reports (`lib/admin/
 bugs.js` + bug_reports table): anyone files, it lands in the change
