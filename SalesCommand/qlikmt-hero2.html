@@ -452,6 +452,7 @@ html.js body.booted{opacity:1;transition:opacity .45s ease}
   .cal-modal.open{display:flex}
   .cal-modal-back{position:absolute;inset:0;background:rgba(6,16,28,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
   .cal-modal-panel{position:relative;z-index:1;width:100%;max-width:440px;background:var(--navy-1);
+    max-height:calc(100% - 24px);overflow-y:auto;
     border:1px solid var(--line);border-radius:16px;padding:24px 24px 22px;box-shadow:0 40px 90px -30px rgba(0,0,0,.7)}
   .cal-modal-close{position:absolute;top:14px;right:14px;width:30px;height:30px;border-radius:8px;
     border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;display:grid;place-items:center}
@@ -462,6 +463,10 @@ html.js body.booted{opacity:1;transition:opacity .45s ease}
   .cm-date{font-family:'Barlow Condensed';font-weight:500;letter-spacing:.16em;text-transform:uppercase;font-size:12px;color:var(--sky)}
   .cm-title{font-family:'Barlow Condensed';font-weight:600;font-size:25px;margin:4px 0 11px;color:var(--ink)}
   .cm-desc{font-size:14px;line-height:1.6;color:var(--muted)}
+  .cm-desc.lead{color:var(--ink);font-weight:500}
+  .cm-full{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);
+    font-size:13.5px;line-height:1.7;color:var(--muted);white-space:pre-wrap}
+  .cm-full[hidden]{display:none}
   .cm-link{margin-top:15px;display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:9px;
     background:var(--sky);color:#04222b;text-decoration:none;font-family:'Barlow Condensed';font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
   .cm-link[hidden]{display:none}
@@ -1238,6 +1243,7 @@ html.js body.booted{opacity:1;transition:opacity .45s ease}
           <div class="cm-date" id="cmDate"></div>
           <h4 class="cm-title" id="cmTitle"></h4>
           <p class="cm-desc" id="cmDesc"></p>
+          <div class="cm-full" id="cmFull" hidden></div>
           <a class="cm-link" id="cmLink" target="_top" rel="noopener" hidden>Open &#8599;</a>
         </div>
       </div>
@@ -1512,7 +1518,13 @@ function openCalModal(ev){
   document.getElementById('cmCat').innerHTML = '<span class="cdot" style="background:'+calCatColor(ev.category)+'"></span>'+(cat.label||'');
   document.getElementById('cmDate').textContent = CAL_MONTHS[parseInt(p[1],10)-1]+' '+parseInt(p[2],10)+', '+p[0];
   document.getElementById('cmTitle').textContent = ev.title;
-  document.getElementById('cmDesc').textContent = ev.detail||'';
+  var desc = document.getElementById('cmDesc');
+  desc.textContent = ev.detail||'';
+  /* the long-form copy from CAPCOM — the short line becomes the lead
+     and the full story sits beneath it */
+  var full = document.getElementById('cmFull');
+  if(ev.full){ full.textContent = ev.full; full.hidden = false; desc.classList.add('lead'); }
+  else { full.textContent = ''; full.hidden = true; desc.classList.remove('lead'); }
   var link = document.getElementById('cmLink');
   if(ev.link){ link.href = ev.link; link.hidden = false; } else { link.hidden = true; }
   calModalOpen = true; stopBB();

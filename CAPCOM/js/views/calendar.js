@@ -230,7 +230,7 @@ function editEvent(e, cats, rerender) {
       field('Category', f.category),
       field('Title', f.title, 'Up to 80 characters.'),
       field('Detail', f.detail, 'One or two sentences, up to 600 characters — shows when someone expands the chip or clicks the event on the calendar.'),
-      field('Long-form copy (optional)', f.full_copy, 'Stored for the future long-form view. Not shown anywhere yet.'),
+      field('Long-form copy (optional)', f.full_copy, 'The full story - shown when a learner opens this event on the Mission Control calendar.'),
       field('Link (optional)', f.link, 'Shown as a clickable link on the pop-up card that opens from the calendar — e.g. the session’s Zoom link.'),
       h('div', { class: 'check-row' },
         h('label', null, f.pin, ' Pin to a chip slot'),
