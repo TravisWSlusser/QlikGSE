@@ -448,7 +448,7 @@ html.js body.booted{opacity:1;transition:opacity .45s ease}
   .cal-bb-dots .d{width:8px;height:8px;border-radius:50%;border:0;padding:0;background:var(--line);cursor:pointer;transition:background .2s,transform .2s}
   .cal-bb-dots .d:hover{background:var(--muted)}
   .cal-bb-dots .d.on{background:var(--sky);transform:scale(1.2)}
-  .cal-modal{position:absolute;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:24px}
+  .cal-modal{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:16px}
   .cal-modal.open{display:flex}
   .cal-modal-back{position:absolute;inset:0;background:rgba(6,16,28,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
   .cal-modal-panel{position:relative;z-index:1;width:100%;max-width:640px;background:var(--navy-1);
@@ -473,6 +473,14 @@ html.js body.booted{opacity:1;transition:opacity .45s ease}
   .cm-links-label{font-family:'Barlow Condensed';font-weight:600;font-size:11px;letter-spacing:.16em;
     text-transform:uppercase;color:var(--muted);margin-bottom:9px}
   .cm-links-row{display:flex;gap:10px;flex-wrap:wrap}
+  .cal-modal-panel.wide{max-width:min(840px, calc(100vw - 32px))}
+  .cal-modal-panel.wide .cm-desc{max-width:none}
+  .cal-modal-panel.wide .cm-full{max-width:none;column-gap:34px}
+  .cal-modal-panel.compact .cm-title{font-size:20px;margin:3px 0 8px}
+  .cal-modal-panel.compact .cm-desc{font-size:13px;line-height:1.5}
+  .cal-modal-panel.compact .cm-full{font-size:12.5px;line-height:1.55;margin-top:11px;padding-top:11px}
+  .cal-modal-panel.compact .cm-links{margin-top:12px;padding-top:10px}
+  .cal-modal-panel.overflow{max-height:calc(100% - 8px);overflow-y:auto}
   .cm-link{display:inline-flex;align-items:center;gap:6px;padding:8px 15px;border-radius:9px;
     background:var(--sky);color:#04222b;text-decoration:none;font-family:'Barlow Condensed';font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
   .cm-link[hidden]{display:none}
@@ -1564,6 +1572,14 @@ function openCalModal(ev){
   linksBox.hidden = !urls.length;
   calModalOpen = true; stopBB();
   var m = document.getElementById('calModal'); m.classList.add('open'); m.setAttribute('aria-hidden','false');
+  /* fit ladder - Travis: widen first; lower the font only when required;
+     never cut content off. Synchronous measures, no rAF. */
+  var panel = m.querySelector('.cal-modal-panel');
+  panel.classList.remove('wide','compact','overflow');
+  var avail = m.clientHeight - 32;
+  if (panel.offsetHeight > avail) panel.classList.add('wide');
+  if (panel.offsetHeight > avail) panel.classList.add('compact');
+  if (panel.offsetHeight > avail) panel.classList.add('overflow');
 }
 function closeCalModal(){
   var m = document.getElementById('calModal'); m.classList.remove('open'); m.setAttribute('aria-hidden','true');
