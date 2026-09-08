@@ -1150,6 +1150,9 @@ above the tab bar on tall phones, and `#viewPlay.on` (fixed, inset 0,
 z-index 40) covers the z-30 tab bar for the whole Play view — the
 sheet's own comment says tabs should hide only while a game is
 actually RUNNING, so the shelf hiding them contradicts the design.
+**FIXED 8 Sep 2026** (Travis hit the trap live): tabs at z-index 45,
+conn chip at 46 with explicit data-playing/data-down hides. The badge
+view's tall-phone gap remains open.
 
 ## The manager tier (2 Sep 2026, schema v3)
 
