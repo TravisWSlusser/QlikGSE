@@ -467,7 +467,7 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
 /* Was a full-width SCORING LIVE bar at the top of the badge. It is diagnostic,
    not something a player needs to read every time, so it is a dot now. */
 .conn{
-  position:fixed;z-index:31;left:calc(var(--safe-l) + 10px);
+  position:fixed;z-index:46;left:calc(var(--safe-l) + 10px);
   bottom:calc(var(--safe-b) + var(--tabh) + 10px);
   display:flex;align-items:center;gap:7px;padding:6px 10px;
   background:rgba(8,14,28,.9);border:1px solid var(--dim);
@@ -480,6 +480,8 @@ html[data-view="play"] body{min-height:calc(100svh + 90px)}
 .conn.dead{border-color:rgba(255,107,53,.5);color:var(--warn)}
 html[data-view="play"] .conn,
 html[data-locked="1"] .conn{display:none}
+html[data-playing="1"] .conn{display:none}
+html[data-down="1"] .conn{display:none}
 
 /* ---- the room held sideways ----------------------------------------------
    Previously this rotated the whole room -90° so it would read as portrait.
@@ -514,7 +516,7 @@ html[data-locked="1"] .conn{display:none}
 
 /* ------------------------------- tab bar ------------------------------- */
 .tabs{
-  position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;
+  position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;
   background:rgba(8,14,28,.95);border-top:1px solid var(--line);
   padding-bottom:var(--safe-b);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
