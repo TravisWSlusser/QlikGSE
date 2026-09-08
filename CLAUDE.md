@@ -1154,6 +1154,24 @@ actually RUNNING, so the shelf hiding them contradicts the design.
 conn chip at 46 with explicit data-playing/data-down hides. The badge
 view's tall-phone gap remains open.
 
+## Staff org CHART (8 Sep 2026)
+
+Travis's vision replaced the indented list: person CARDS with
+connector wires — the root (Nick) on top, a stem to a rail across the
+leadership tier (.org-cell ::before stem + ::after rail, halved on
+first/last, hidden on only-child), and each leader's reports in a
+vertical column beneath (.org-vcell stems, recursive). Cards carry
+avatar, trigram chip, title, OOO, the status post + reactions, Invite
+and ⋯ for leaders; tap/Enter opens the profile. The chart lives in
+.org-chart-scroll (overflow-x) so the page never scrolls sideways.
+TEAM NAMES ARE GONE from Staff — Travis: "we don't really have
+separate team names, we are just Global Sales Enablement; people
+leaders just handle different projects." Teams manager stays on the
+Board toolbar only. Org color from Travis: he is "a hand to the king"
+(creative lens, new tech, assists Barb on certifications); Barb owns
+quarterly certifications, no reports anymore — neither carries the
+people-leader flag, both sit directly under Nick.
+
 ## The manager tier (2 Sep 2026, schema v3)
 
 Travis named seven managers who "control all aspects (except anything
