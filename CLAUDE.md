@@ -1154,6 +1154,25 @@ actually RUNNING, so the shelf hiding them contradicts the design.
 conn chip at 46 with explicit data-playing/data-down hides. The badge
 view's tall-phone gap remains open.
 
+## Mission Control calendar event modal (8–10 Sep 2026)
+
+The learner-facing calendar (qlikmt-hero2.html) now shows EVERYTHING
+the editor entered. `full_copy` — whose CAPCOM hint literally said
+"not shown anywhere yet" — renders as the body (pre-wrap paragraphs)
+with the short `detail` as a bold lead above a rule. Links, both
+ways: URLs typed inside the copy become inline anchors (escape THEN
+linkify — hand-typed copy stays injection-safe), and a labeled LINKS
+row gathers the event's `link` (Open) plus every URL found in the
+text as hostname chips. Layout per Travis: wider, not scrollier —
+base 640px; a FIT LADDER in openCalModal runs synchronous measures
+(no rAF) after populating: too tall → `wide` (840px), still →
+`compact` (smaller type), still → `overflow` scroll capped to the
+CONTAINER (100%, never 100vh — the page's mobile scale transform
+makes vh lie, and fixed-position is relative to the transformed
+ancestor). Modal anchors `position:fixed` for max headroom. Short
+events never engage the ladder. All three doors (pills, month list,
+billboard) go through openCalModal, so one fix covers all.
+
 ## Staff org CHART (8 Sep 2026)
 
 Travis's vision replaced the indented list: person CARDS with
