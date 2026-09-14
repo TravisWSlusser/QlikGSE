@@ -1484,6 +1484,19 @@ is ignored and the tool may launch whatever config the session root
 holds (it started Travis's crawler-io once before this was
 understood).
 
+## Q3 cert hero: Training Center button removed (14 Sep 2026)
+
+Travis, reviewing the Built-to-Win experience: the cert page's hero CTA
+"Open the Qlik Training Center" is gone —
+`Certifications/2026/FY26_Q3/index.html`, the only `[data-cfg]` user, so
+`CONFIG.links.certApp` (the replit URL) went with it; the links object
+stays, empty, for future buttons. The cohort-windows copy now leads the
+CTA row and the layout holds (verified on the rig at `?s=hero`). The
+seven other "Training Center" mentions are instructional body copy
+(module steps, sync note, FAQ) and were deliberately left. Note the
+button's target — training-center-gse.replit.app — is only unreferenced,
+not decommissioned.
+
 ## Vercel Blob quota fire (2 Sep 2026)
 
 Vercel emailed at 75% of the free tier's 2,000/month Blob **Advanced
