@@ -1525,14 +1525,27 @@ const UE_SHOW = 3;
    anywhere west of Greenwich it lands on the evening of 31 Aug and an event
    reads as past a day early. `new Date(y, m-1, d)` is local midnight, which is
    what "has today passed it" actually means to the person reading the page. */
-function isPastEvent(iso){
+function isPastEvent(iso, endIso){
   if (!iso) return false;
-  const p = String(iso).split('-');
+  const p = String(endIso || iso).split('-');
   if (p.length !== 3) return false;
   const ev = new Date(+p[0], +p[1] - 1, +p[2]);
   const today = new Date(); today.setHours(0, 0, 0, 0);
   return ev < today;
 }
+
+/* Multi-day events: the feed may carry `end` (last day, inclusive) plus
+   end_month/end_day render strings — absent on single-day events, so the
+   fallback array needs nothing. 'SEP 14', 'SEP 14–18', 'SEP 29–OCT 2'.
+   The calendar in qlikmt-hero2.html carries its own richer versions of
+   these — duplicated on purpose, no build step. */
+function ueDateLabel(d){
+  let lab = d.month + ' ' + d.day;
+  if (d.end) lab += d.end_month === d.month ? '–' + d.end_day : '–' + d.end_month + ' ' + d.end_day;
+  return lab;
+}
+/* the date a "has this happened yet" comparison should use */
+function ueEndDate(d){ return new Date((d.end || d.date) + 'T00:00:00'); }
 
 /* ---- shared events source --------------------------------------------------
    KEY_DATES and CATEGORIES above are the offline fallback. The live values come
@@ -1568,17 +1581,18 @@ if (IS_MOBILE){
     const sorted = KEY_DATES.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
     const pinned = sorted.filter(function(d){ return d.pin; }).slice(0,3);
     const rest   = sorted.filter(function(d){ return !d.pin; });
-    const ahead  = rest.filter(function(d){ return new Date(d.date+'T00:00:00') >= today; });
-    const behind = rest.filter(function(d){ return new Date(d.date+'T00:00:00') <  today; });
+    /* a multi-day event stays "ahead" until its whole span is over */
+    const ahead  = rest.filter(function(d){ return ueEndDate(d) >= today; });
+    const behind = rest.filter(function(d){ return ueEndDate(d) <  today; });
     const list = pinned.concat(ahead, behind.slice(-1)).slice(0,3)
                        .sort(function(a,b){ return a.date < b.date ? -1 : 1; });
     lcDates.innerHTML = '';
     list.forEach(function(d){
       const c = document.createElement('span');
       const days = (new Date(d.date+'T00:00:00') - today) / 86400000;
-      c.className = 'lc-date-chip' + (days >= 0 && days <= 7 ? ' soon' : '') + (isPastEvent(d.date) ? ' past' : '');
+      c.className = 'lc-date-chip' + (days >= 0 && days <= 7 ? ' soon' : '') + (isPastEvent(d.date, d.end) ? ' past' : '');
       c.style.setProperty('--uec', (CATEGORIES[d.category]||{}).color || 'var(--sky)');
-      c.innerHTML = '<i></i>' + d.month + ' ' + d.day;
+      c.innerHTML = '<i></i>' + ueDateLabel(d);
       lcDates.appendChild(c);
     });
   }
@@ -1618,8 +1632,9 @@ if (SHOW_HL){
        The rest fill up with the next upcoming, then the most recent past. */
     const pinned = sorted.filter(function(d){ return d.pin; }).slice(0, UE_SHOW);
     const rest   = sorted.filter(function(d){ return !d.pin; });
-    const ahead  = rest.filter(function(d){ return new Date(d.date+'T00:00:00') >= today; });
-    const behind = rest.filter(function(d){ return new Date(d.date+'T00:00:00') <  today; });
+    /* a multi-day event keeps its slot until its whole span is over */
+    const ahead  = rest.filter(function(d){ return ueEndDate(d) >= today; });
+    const behind = rest.filter(function(d){ return ueEndDate(d) <  today; });
     const fill   = ahead.concat(behind.slice(-Math.max(0, UE_SHOW - pinned.length - ahead.length)));
     list = pinned.concat(fill).slice(0, UE_SHOW)
                  .sort(function(a,b){ return a.date < b.date ? -1 : 1; });
@@ -1638,9 +1653,9 @@ if (SHOW_HL){
         b.innerHTML='<span class="ue-date">&nbsp;</span>';
         ueRow.appendChild(b); continue;
       }
-      b.className='ue-chip' + (isPastEvent(d.date) ? ' past' : '');
+      b.className='ue-chip' + (isPastEvent(d.date, d.end) ? ' past' : '');
       b.style.setProperty('--uec', (CATEGORIES[d.category]||{}).color || 'var(--sky)');
-      b.innerHTML='<span class="ue-date">'+d.month+' '+d.day+'</span>'
+      b.innerHTML='<span class="ue-date">'+ueDateLabel(d)+'</span>'
                  +'<span class="ue-title"><span>'+d.title+'</span></span>'
                  +(IS_MOBILE ? '<span class="ue-more">'+d.detail+'</span>' : '');
       /* Desktop swaps the row for one wide chip so the fixed-height widget
@@ -1664,9 +1679,9 @@ if (SHOW_HL){
     ueRow.className='ue-row open';
     ueRow.innerHTML='';
     const w=document.createElement('div');
-    w.className='ue-chip' + (isPastEvent(d.date) ? ' past' : ''); w.style.cursor='default';
+    w.className='ue-chip' + (isPastEvent(d.date, d.end) ? ' past' : ''); w.style.cursor='default';
     w.style.setProperty('--uec', (CATEGORIES[d.category]||{}).color || 'var(--sky)');
-    w.innerHTML='<span class="ue-date">'+d.month+' '+d.day+'</span>'
+    w.innerHTML='<span class="ue-date">'+ueDateLabel(d)+'</span>'
                +'<span class="ue-title">'+d.title+'</span>'
                +'<span class="ue-detail"><span>'+d.detail+'</span></span>';
     const x=document.createElement('button');

@@ -1402,6 +1402,79 @@ verify rig injects `Object.defineProperty(navigator,'standalone',
 {value:true})` at serve time and proxies `/api/*` to prod for live
 data — source untouched.
 
+## Multi-day events + click-to-create (14 Sep 2026, schema v10)
+
+Huw's sticky on the Community Board (11 Sep) asked for two calendar
+things; Travis scoped out any special category — "protected seller
+time" was a for-instance, not a taxonomy request. Both shipped in one
+commit.
+
+**Click-to-create (CAPCOM only):** every day cell in the Calendar
+view's Live Preview now creates. Empty days take the click directly
+(`.mc-free`); occupied days wear a small `+` (`.mc-add`, hover-shown,
+faintly always-on under `pointer:coarse` per the ⋯-chip precedent; its
+click stops propagation so it cannot fight the spotlight cycle). Both
+open the editor with the date prefilled — the whole point: the date
+can no longer be mistyped. `#calendar/new/<iso>` deep-links the same
+way. The occupied-day click still cycles that day's events; the cycle
+key is now the CLICKED iso (`litKey`), not the event's start date, so
+cycling works from any day a span covers.
+
+**Multi-day:** `events.end_date` (date, null = single day) — ALTER in
+migrate, SCHEMA_VERSION 10. `saveEvent` validates it like the start
+(real date, end strictly after start, span ≤ 31 days as a typo guard)
+and falls back to the legacy statement on a pre-Setup database; a save
+WITH an end date on one gets "run Setup under Maintenance first"
+instead of a 500. Both reads (`listEvents`, `/api/command/events`) try
+the rich select and retry without the column — the public feed
+degrading to `{events:[]}` would silently pin both hero pages on their
+stale hardcoded fallbacks, which is exactly the failure mode the
+fallback-select rule exists for. The feed emits `end` /` end_month` /
+`end_day` ONLY when set, so single-day events are byte-identical to
+before and every hardcoded fallback stays valid unchanged.
+
+**Rendering rules, applied everywhere:**
+- An event belongs to EVERY day its span covers. The expansion helper
+  is deliberately duplicated per file (no build step): `spanDays` in
+  CAPCOM calendar.js, `feedSpanDays` in home.js (the public feed calls
+  the column `end`), `evSpanDays` in qlikmt-hero2.html. All cap at 62
+  iterations defensively.
+- "Past" means the END has passed: `isPast(iso, endIso)` in CAPCOM
+  util.js and `isPastEvent(iso, endIso)` in both hero pages grew an
+  optional second argument — an in-progress Connect must not dim on
+  its own day two. Chip-slot filling (`buildList`/`lcBuildDates` in
+  qlikmt-hero.html) keys ahead/behind on the same end date, so a
+  running event holds its slot.
+- Month lists intersect the SPAN (lexical compare, `'-31'` as a safe
+  month cap in `calMonthEvents`), so Sep 29–Oct 2 appears in September
+  AND October — labeled from the event's own dates, not the viewed
+  month. (`calLiHTML` used to print `CAL_MONTHS[calM]`, which was
+  already wrong for a spillover pill; deriving from the event fixed
+  both.)
+- Labels: `fmt.span` (CAPCOM), `evDayLabel`/`evDateLine` (hero2, short
+  and modal-with-year forms), `ueDateLabel` (hero, from the feed's
+  denormalised month/day strings): 'Sep 14–18' same month,
+  'Sep 29 – Oct 2' across months, years added in the modal line.
+- The Spotlight/preview glow lights the WHOLE span (`light` in
+  CAPCOM's preview takes an iso array now; `fillBB` in hero2 clears
+  `.cal-cell--spot` with querySelectorAll and lights each covered
+  cell).
+
+**Verified on a fresh stub rig** (`capcom-stub/stub.js` in the session
+scratchpad — serves the repo statically with canned admin+command
+APIs, records saveEvent bodies at `/__saves`; five seed events cover
+single-day, in-progress, past-multi-day, same-month and cross-month
+spans). Click-through: empty-day create arrived at the API with the
+clicked date and typed end date; edit round-tripped both dates; hero2
+grid/list/modal/spotlight and hero chips all rendered every case.
+`node --check` on all 8 touched JS + both extracted inline scripts,
+mojibake 0, dash counts up-only. **Rig gotcha for next time:**
+`preview_start` reads `launch.json` from the SESSION root's `.claude`
+(`D:\.claude\`), not the repo's — a repo-level `.claude/launch.json`
+is ignored and the tool may launch whatever config the session root
+holds (it started Travis's crawler-io once before this was
+understood).
+
 ## Vercel Blob quota fire (2 Sep 2026)
 
 Vercel emailed at 75% of the free tier's 2,000/month Blob **Advanced

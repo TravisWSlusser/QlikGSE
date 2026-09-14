@@ -1373,13 +1373,54 @@ function calIso(d){ var m=d.getMonth()+1, day=d.getDate(); return d.getFullYear(
    west of Greenwich it lands on the evening of 31 Aug and the event reads as
    past a day early. `new Date(y, m-1, d)` is local midnight, which is what
    "has today passed it" means to the person looking at the page. */
-function isPastEvent(iso){
+function isPastEvent(iso, endIso){
   if(!iso) return false;
-  var p = String(iso).split('-');
+  var p = String(endIso || iso).split('-');
   if(p.length !== 3) return false;
   var ev = new Date(+p[0], +p[1]-1, +p[2]);
   var t = new Date(); t.setHours(0,0,0,0);
   return ev < t;
+}
+/* ---- multi-day events -----------------------------------------------------
+   The feed may carry `end` (the LAST day, inclusive) plus end_month/end_day
+   render strings. A single-day event has none of them, so the old fallback
+   data needs no change. These three helpers are duplicated in
+   qlikmt-hero.html's smaller form on purpose — no build step, no shared JS. */
+function evSpanDays(e){
+  var out = [e.date];
+  if(!e.end || e.end <= e.date) return out;
+  var p = e.date.split('-');
+  var dt = new Date(+p[0], +p[1]-1, +p[2]);
+  for(var i=0;i<62;i++){
+    dt.setDate(dt.getDate()+1);
+    var m = dt.getMonth()+1, d = dt.getDate();
+    var iso = dt.getFullYear()+'-'+(m<10?'0'+m:m)+'-'+(d<10?'0'+d:d);
+    out.push(iso);
+    if(iso >= e.end) break;
+  }
+  return out;
+}
+/* 'Sep 14', 'Sep 14–18', 'Sep 29 – Oct 2' (full=true spells the month out) */
+function evDayLabel(ev, full){
+  var mn = function(mi){ var n = CAL_MONTHS[mi] || ''; return full ? n : n.slice(0,3); };
+  var p = ev.date.split('-');
+  var lab = mn(+p[1]-1)+' '+(+p[2]);
+  if(ev.end && ev.end > ev.date){
+    var q = ev.end.split('-');
+    lab += (q[0]===p[0] && q[1]===p[1]) ? '–'+(+q[2])
+         : ' – '+mn(+q[1]-1)+' '+(+q[2]);
+  }
+  return lab;
+}
+/* the modal's full date line, year included */
+function evDateLine(ev){
+  var p = ev.date.split('-');
+  var s = CAL_MONTHS[+p[1]-1]+' '+(+p[2]);
+  if(!ev.end || ev.end <= ev.date) return s+', '+p[0];
+  var q = ev.end.split('-');
+  if(q[0]!==p[0]) return s+', '+p[0]+' – '+CAL_MONTHS[+q[1]-1]+' '+(+q[2])+', '+q[0];
+  if(q[1]!==p[1]) return s+' – '+CAL_MONTHS[+q[1]-1]+' '+(+q[2])+', '+p[0];
+  return s+'–'+(+q[2])+', '+p[0];
 }
 function calCatColor(k){ return (CATEGORIES[k]||{}).color || 'var(--muted)'; }
 var calNow = new Date(), calY = calNow.getFullYear(), calM = calNow.getMonth();
@@ -1395,7 +1436,9 @@ var calGrid = document.getElementById('calGrid'), calMonthEl = document.getEleme
 var calByDate = {};
 function rebuildCalIndex(){
   calByDate = {};
-  KEY_DATES.forEach(function(e){ if(e.date){ (calByDate[e.date] = calByDate[e.date] || []).push(e); } });
+  KEY_DATES.forEach(function(e){ if(e.date){
+    evSpanDays(e).forEach(function(iso){ (calByDate[iso] = calByDate[iso] || []).push(e); });
+  } });
 }
 rebuildCalIndex();
 function renderCal(){
@@ -1414,7 +1457,7 @@ function renderCal(){
     var num = document.createElement('span'); num.className='cal-num'; num.textContent = d.getDate(); cell.appendChild(num);
     var evs = calByDate[ds] || [];
     evs.slice(0,3).forEach(function(ev){
-      var p = document.createElement('button'); p.type='button'; p.className='cal-pill' + (isPastEvent(ev.date) ? ' past' : '');
+      var p = document.createElement('button'); p.type='button'; p.className='cal-pill' + (isPastEvent(ev.date, ev.end) ? ' past' : '');
       p.innerHTML = '<span class="cdot" style="background:'+calCatColor(ev.category)+'"></span><span class="ct">'+ev.title+'</span>';
       p.addEventListener('click', function(){ openCalModal(ev); });
       cell.appendChild(p);
@@ -1427,15 +1470,18 @@ function renderCal(){
 }
 var LIST_PER_PAGE = 3, calListPage = 0;
 function calMonthEvents(){
+  /* an event belongs to every month its SPAN touches — Aug 31–Sep 2 shows in
+     both August and September. Lexical compare; '-31' is a safe month cap. */
   var pre = calY + '-' + (calM+1<10?'0'+(calM+1):(calM+1));
-  return KEY_DATES.filter(function(e){ return e.date && e.date.indexOf(pre)===0; })
-                  .sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; });
+  var mStart = pre+'-01', mEnd = pre+'-31';
+  return KEY_DATES.filter(function(e){
+    return e.date && e.date <= mEnd && (e.end || e.date) >= mStart;
+  }).sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:0; });
 }
 function calLiHTML(ev){
-  var p = ev.date.split('-');
   return '<span class="cdot" style="background:'+calCatColor(ev.category)+'"></span>'+
     '<span class="cal-li-body"><span class="cal-li-t">'+ev.title+'</span>'+
-    '<span class="cal-li-s">'+CAL_MONTHS[calM].slice(0,3)+' '+parseInt(p[2],10)+' &middot; '+((CATEGORIES[ev.category]||{}).label||'')+'</span></span>';
+    '<span class="cal-li-s">'+evDayLabel(ev)+' &middot; '+((CATEGORIES[ev.category]||{}).label||'')+'</span></span>';
 }
 function renderCalList(){
   var track = document.getElementById('calListTrack');
@@ -1452,7 +1498,7 @@ function renderCalList(){
   for(var pg=0; pg<pages; pg++){
     var page = document.createElement('div'); page.className = 'cal-list-page';
     evs.slice(pg*LIST_PER_PAGE, pg*LIST_PER_PAGE+LIST_PER_PAGE).forEach(function(ev){
-      var row = document.createElement('button'); row.type='button'; row.className='cal-li' + (isPastEvent(ev.date) ? ' past' : '');
+      var row = document.createElement('button'); row.type='button'; row.className='cal-li' + (isPastEvent(ev.date, ev.end) ? ' past' : '');
       row.innerHTML = calLiHTML(ev);
       row.addEventListener('click', function(){ openCalModal(ev); });
       page.appendChild(row);
@@ -1480,7 +1526,7 @@ function buildBB(){
      worse than showing nothing. The grid and the list still show past events,
      dimmed, because those are a record; this one is a recommendation. */
   var all = calMonthEvents();
-  var evs = all.filter(function(e){ return !isPastEvent(e.date); });
+  var evs = all.filter(function(e){ return !isPastEvent(e.date, e.end); });
   if(!evs.length){
     /* Two different empty states. "Nothing scheduled" and "everything has
        already happened" look identical to the old single message, and the
@@ -1505,22 +1551,26 @@ function buildBB(){
 }
 function fillBB(){
   var ev = bbEvents[bbIndex]; if(!ev) return;
-  var p = ev.date.split('-');
   document.getElementById('calBBMedia').style.backgroundImage = ev.image ? 'url("'+ev.image+'")' : 'linear-gradient(135deg, '+calCatColor(ev.category)+', rgba(11,31,51,.92))';
   document.getElementById('calBBCat').innerHTML = '<span class="cdot" style="background:'+calCatColor(ev.category)+'"></span>'+((CATEGORIES[ev.category]||{}).label||'');
-  document.getElementById('calBBDate').textContent = CAL_MONTHS[calM]+' '+parseInt(p[2],10);
+  document.getElementById('calBBDate').textContent = evDayLabel(ev, true);
   document.getElementById('calBBTitle').textContent = ev.title;
   document.getElementById('calBBDesc').textContent = ev.detail||'';
   var dots = document.getElementById('calBBDots');
-  dots.innerHTML = bbEvents.map(function(ev,i){ var p=ev.date.split('-'); return '<button type="button" class="d'+(i===bbIndex?' on':'')+'" aria-label="'+CAL_MONTHS[calM].slice(0,3)+' '+parseInt(p[2],10)+' &middot; '+ev.title+'"></button>'; }).join('');
+  dots.innerHTML = bbEvents.map(function(ev,i){ return '<button type="button" class="d'+(i===bbIndex?' on':'')+'" aria-label="'+evDayLabel(ev)+' &middot; '+ev.title+'"></button>'; }).join('');
   Array.prototype.forEach.call(dots.children, function(btn,i){ btn.addEventListener('click', function(e){ e.stopPropagation(); if(i!==bbIndex){ bbIndex=i; fillBB(); } }); });
   var desc = document.getElementById('calBBDesc');
   var bb = document.getElementById('calBB');
   if(desc && bb){ bb.classList.toggle('cal-bb--exp', desc.scrollHeight > desc.clientHeight + 1); }
-  var prevSpot = document.querySelector('.cal-cell--spot');
-  if(prevSpot){ prevSpot.classList.remove('cal-cell--spot'); prevSpot.style.removeProperty('--spot'); }
-  var spotCell = document.querySelector('.cal-cell[data-date="'+ev.date+'"]');
-  if(spotCell){ spotCell.style.setProperty('--spot', calCatColor(ev.category)); spotCell.classList.add('cal-cell--spot'); }
+  /* glow every cell the featured event covers — a multi-day span lights its
+     whole run, single days behave exactly as before */
+  document.querySelectorAll('.cal-cell--spot').forEach(function(c){
+    c.classList.remove('cal-cell--spot'); c.style.removeProperty('--spot');
+  });
+  evSpanDays(ev).forEach(function(iso){
+    var c = document.querySelector('.cal-cell[data-date="'+iso+'"]');
+    if(c){ c.style.setProperty('--spot', calCatColor(ev.category)); c.classList.add('cal-cell--spot'); }
+  });
 }
 function advanceBB(){
   if(!bbEvents || bbEvents.length<2) return;
@@ -1540,10 +1590,9 @@ function linkifyCal(text){
 }
 function openCalModal(ev){
   if(!ev) return;
-  var p = ev.date.split('-');
   var cat = (CATEGORIES[ev.category]||{});
   document.getElementById('cmCat').innerHTML = '<span class="cdot" style="background:'+calCatColor(ev.category)+'"></span>'+(cat.label||'');
-  document.getElementById('cmDate').textContent = CAL_MONTHS[parseInt(p[1],10)-1]+' '+parseInt(p[2],10)+', '+p[0];
+  document.getElementById('cmDate').textContent = evDateLine(ev);
   document.getElementById('cmTitle').textContent = ev.title;
   var desc = document.getElementById('cmDesc');
   desc.textContent = ev.detail||'';

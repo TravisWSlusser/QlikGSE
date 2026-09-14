@@ -1063,6 +1063,21 @@ function reactDialog(n, reload) {
     ]);
 }
 /* ── calendar widget rebuild (public feed — every key sees it) ── */
+/* Every ISO day a feed event covers — the public feed calls the last day
+   `end` (the admin list calls it end_date). Capped defensively. */
+function feedSpanDays(e) {
+  const out = [e.date];
+  if (!e.end || e.end <= e.date) return out;
+  const [y, m, d] = e.date.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  for (let i = 0; i < 62; i++) {
+    dt.setDate(dt.getDate() + 1);
+    const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+    out.push(iso);
+    if (iso >= e.end) break;
+  }
+  return out;
+}
 async function loadCalendar(card, scopes, acts) {
   let d;
   try { d = await api.publicEvents(); }
@@ -1072,7 +1087,7 @@ async function loadCalendar(card, scopes, acts) {
   const events = d.events || [];
   const cats = d.categories || {};
   const byDate = {};
-  for (const e of events) (byDate[e.date] = byDate[e.date] || []).push(e);
+  for (const e of events) for (const iso of feedSpanDays(e)) (byDate[iso] = byDate[iso] || []).push(e);
 
   let view = new Date(); view.setDate(1);
   const head = h('div', { class: 'mc-head' });
@@ -1110,13 +1125,14 @@ async function loadCalendar(card, scopes, acts) {
   };
   draw();
 
-  const upcoming = events.filter(e => !isPast(e.date)).slice(0, 3);
+  const upcoming = events.filter(e => !isPast(e.date, e.end)).slice(0, 3);
   if (upcoming.length) {
     listEl.append(...upcoming.map(e => h('a', {
       class: 'mc-up', href: scopes.includes('calendar') ? '#calendar' : null,
       style: { '--evc': (cats[e.category] || {}).color || 'var(--muted)' },
     },
-      h('span', { class: 'mc-up-date' }, `${e.month} ${e.day}`),
+      h('span', { class: 'mc-up-date' },
+        `${e.month} ${e.day}` + (e.end ? (e.end_month === e.month ? `–${e.end_day}` : ` – ${e.end_month} ${e.end_day}`) : '')),
       h('span', { class: 'mc-up-title' }, e.title))));
   } else {
     listEl.appendChild(h('p', { class: 'sub' }, 'Nothing upcoming on the calendar.'));

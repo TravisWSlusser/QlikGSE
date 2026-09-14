@@ -47,15 +47,24 @@ export const fmt = {
     return new Date(y, m - 1, d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   },
   dur: s => { s = Number(s || 0); const m = Math.floor(s / 60); return m ? `${m}m ${s % 60}s` : `${s}s`; },
+  // Date or date range: 'Sep 14', 'Sep 14–18', 'Sep 29 – Oct 2'.
+  // end is the last day, inclusive; null/absent means a single day.
+  span: (iso, endIso) => {
+    if (!endIso || endIso === iso) return fmt.day(iso);
+    const sameMonth = iso.slice(0, 7) === endIso.slice(0, 7);
+    return sameMonth ? `${fmt.day(iso)}–${Number(endIso.slice(8))}` : `${fmt.day(iso)} – ${fmt.day(endIso)}`;
+  },
   // ISO timestamp → the VIEWER's local time, AM/PM — so the same change
   // reads as 3:30 PM in Philadelphia and 9:30 PM in Amsterdam.
   when: iso => iso ? new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '',
 };
 
 /* Past-date check, same parts-based construction as the calendar pages —
-   new Date('2026-09-01') parses UTC and shifts a day west of Greenwich. */
-export function isPast(iso) {
-  const [y, m, d] = iso.split('-').map(Number);
+   new Date('2026-09-01') parses UTC and shifts a day west of Greenwich.
+   A multi-day event passes its END date second and stays current until
+   the whole span is over. */
+export function isPast(iso, endIso) {
+  const [y, m, d] = String(endIso || iso).split('-').map(Number);
   const dt = new Date(y, m - 1, d);
   const today = new Date(); today.setHours(0, 0, 0, 0);
   return dt < today;

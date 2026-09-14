@@ -7,16 +7,35 @@ import { toast, modal, confirmBox, field, textInput, textArea, select, spinner, 
 
 export function render(params, rerender) {
   const root = h('div', { class: 'view' }, spinner());
-  // '#calendar/new' (a Home quick action) lands here with the editor open.
-  // The hash is rewritten back to '#calendar' so closing or saving the
-  // dialog doesn't re-open it on the next redraw.
+  // '#calendar/new' (a Home quick action) lands here with the editor open;
+  // '#calendar/new/2026-09-14' opens it with that date filled in. The hash
+  // is rewritten back to '#calendar' so closing or saving the dialog
+  // doesn't re-open it on the next redraw.
   const wantNew = params && params[0] === 'new';
+  const presetDate = wantNew && /^\d{4}-\d{2}-\d{2}$/.test(params[1] || '') ? params[1] : '';
   if (wantNew) history.replaceState(null, '', '#calendar');
-  load(root, rerender, wantNew);
+  load(root, rerender, wantNew, presetDate);
   return root;
 }
 
-async function load(root, rerender, wantNew) {
+/* Every ISO day an event covers — just the start for a single-day event,
+   the whole inclusive range when end_date is set. Capped defensively; the
+   server already rejects spans over 31 days. */
+function spanDays(e) {
+  const out = [e.date];
+  if (!e.end_date || e.end_date <= e.date) return out;
+  const [y, m, d] = e.date.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  for (let i = 0; i < 62; i++) {
+    dt.setDate(dt.getDate() + 1);
+    const iso = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+    out.push(iso);
+    if (iso >= e.end_date) break;
+  }
+  return out;
+}
+
+async function load(root, rerender, wantNew, presetDate) {
   let d;
   try { d = await api.listEvents(); }
   catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender))); return; }
@@ -27,7 +46,7 @@ async function load(root, rerender, wantNew) {
   const events = d.events || [];
   const pins = events.filter(e => e.pin && e.active).length;
 
-  root.appendChild(calendarPreview(events.filter(e => e.active), cats));
+  root.appendChild(calendarPreview(events.filter(e => e.active), cats, rerender));
 
   root.appendChild(sectionTitle('Calendar',
     h('button', { class: 'btn accent', onClick: () => editEvent(null, cats, rerender) }, '+ New event'),
@@ -37,8 +56,8 @@ async function load(root, rerender, wantNew) {
     `⚠ ${pins} pinned events. There are only three chip slots on the homepage — every pin permanently claims one `
     + 'and stays after its date passes. One pin is the practical maximum.'));
 
-  const upcoming = events.filter(e => e.active && !isPast(e.date));
-  const past = events.filter(e => e.active && isPast(e.date));
+  const upcoming = events.filter(e => e.active && !isPast(e.date, e.end_date));
+  const past = events.filter(e => e.active && isPast(e.date, e.end_date));
   const retired = events.filter(e => !e.active);
 
   const section = (title, list, mutedNote) => {
@@ -53,7 +72,7 @@ async function load(root, rerender, wantNew) {
   root.appendChild(section('Past', past, 'Dimmed on the pages, excluded from the Spotlight.') || h('span'));
   root.appendChild(section('Retired', retired, 'Off the public feed entirely. Restore from the edit dialog.') || h('span'));
 
-  if (wantNew) editEvent(null, cats, rerender);
+  if (wantNew) editEvent(null, cats, rerender, presetDate);
 }
 
 /* ── the Mission Control calendar widget, recreated — month grid, upcoming
@@ -61,10 +80,10 @@ async function load(root, rerender, wantNew) {
    spotlighted event's day cell glows in its category color, same as the
    page. Rotates every 8s through upcoming events; past ones never feature
    (the Spotlight is a recommendation, not a record). ── */
-function calendarPreview(events, cats) {
+function calendarPreview(events, cats, rerender) {
   const byDate = {};
-  for (const e of events) (byDate[e.date] = byDate[e.date] || []).push(e);
-  const upcoming = events.filter(e => !isPast(e.date));
+  for (const e of events) for (const iso of spanDays(e)) (byDate[iso] = byDate[iso] || []).push(e);
+  const upcoming = events.filter(e => !isPast(e.date, e.end_date));
   const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   const head = h('div', { class: 'mc-head' });
@@ -73,24 +92,26 @@ function calendarPreview(events, cats) {
 
   let view = new Date(); view.setDate(1);
   let cellByIso = {};
-  let lit = null, litIso = null;
+  let lit = [], litIsos = [], litColor = '', litKey = null;
   let si = 0, dayCycle = 0;
   let pinnedUntil = 0; // a clicked date holds the Spotlight; rotation resumes after
 
-  const light = iso => {
-    if (lit) { lit.classList.remove('mc-spotlit'); lit.style.removeProperty('--spot'); lit = null; }
-    litIso = iso;
-    const cell = iso && cellByIso[iso];
-    if (cell) {
-      const e = (byDate[iso] || [])[0];
-      const color = e ? ((cats[e.category] || {}).color || '#10CFC9') : '#10CFC9';
+  // Glow every cell an event covers — one cell for a single day, the whole
+  // run for a multi-day. Re-applied by draw() after a month change, so the
+  // state (isos + color) outlives the cells.
+  const light = (isos, color) => {
+    for (const c of lit) { c.classList.remove('mc-spotlit'); c.style.removeProperty('--spot'); }
+    lit = []; litIsos = isos || []; litColor = color || '#10CFC9';
+    for (const iso of litIsos) {
+      const cell = cellByIso[iso];
+      if (!cell) continue;
       cell.classList.add('mc-spotlit');
-      cell.style.setProperty('--spot', color);
-      lit = cell;
+      cell.style.setProperty('--spot', litColor);
+      lit.push(cell);
     }
   };
 
-  const feature = (e, extraCount) => {
+  const feature = (e, extraCount, clickIso) => {
     const color = (cats[e.category] || {}).color || '#10CFC9';
     // NB: native append() stringifies null into a literal "null" on the page
     // (unlike h(), which skips it) — hence the filter. Seen live.
@@ -98,12 +119,13 @@ function calendarPreview(events, cats) {
       h('div', { class: 'cp-eyebrow' }, h('i', { class: 'cp-pulse', style: { background: color } }), 'SPOTLIGHT'),
       h('div', { class: 'cp-cat' }, h('i', { class: 'cp-cdot', style: { background: color } }),
         (cats[e.category] || {}).label || e.category),
-      h('div', { class: 'cp-date' }, fmt.day(e.date), isPast(e.date) ? ' — past' : ''),
+      h('div', { class: 'cp-date' }, fmt.span(e.date, e.end_date), isPast(e.date, e.end_date) ? ' — past' : ''),
       h('div', { class: 'cp-title' }, e.title),
       h('div', { class: 'cp-detail' }, e.detail),
       extraCount ? h('div', { class: 'cp-more' }, `+${extraCount} more this day — click the date again`) : null,
     ].filter(Boolean));
-    light(e.date);
+    litKey = clickIso || e.date;
+    light(spanDays(e), color);
   };
 
   const draw = () => {
@@ -134,17 +156,30 @@ function calendarPreview(events, cats) {
         cell.style.cursor = 'pointer';
         cell.addEventListener('click', () => {
           // clicking the same date again cycles through that day's events
-          dayCycle = litIso === iso ? dayCycle + 1 : 0;
+          dayCycle = litKey === iso ? dayCycle + 1 : 0;
           const e = evs[dayCycle % evs.length];
-          feature(e, evs.length - 1);
+          feature(e, evs.length - 1, iso);
           pinnedUntil = Date.now() + 25_000; // hold before rotation resumes
         });
+        // Huw's request: create FROM the calendar, so the date can't be
+        // mistyped. Occupied days get a small + that doesn't fight the
+        // spotlight click; empty days just take the click directly.
+        const add = h('button', {
+          class: 'mc-add', type: 'button', title: `New event on ${fmt.day(iso)}`,
+          'aria-label': `New event on ${fmt.day(iso)}`,
+          onClick: ev => { ev.stopPropagation(); editEvent(null, cats, rerender, iso); },
+        }, '+');
+        cell.appendChild(add);
+      } else {
+        cell.classList.add('mc-free');
+        cell.title = `Click to create an event on ${fmt.day(iso)}`;
+        cell.addEventListener('click', () => editEvent(null, cats, rerender, iso));
       }
       cellByIso[iso] = cell;
       gridEl.appendChild(cell);
     }
-    // re-glow the featured date if it lives in this month
-    light(litIso);
+    // re-glow the featured span where it lives in this month
+    light(litIsos, litColor);
   };
   draw();
 
@@ -153,7 +188,7 @@ function calendarPreview(events, cats) {
       const row = h('div', {
         class: 'mc-up', style: { '--evc': (cats[e.category] || {}).color || 'var(--muted)', cursor: 'pointer' },
       },
-        h('span', { class: 'mc-up-date' }, fmt.day(e.date)),
+        h('span', { class: 'mc-up-date' }, fmt.span(e.date, e.end_date)),
         h('span', { class: 'mc-up-title' }, e.title));
       row.addEventListener('click', () => { feature(e, 0); pinnedUntil = Date.now() + 25_000; });
       return row;
@@ -188,8 +223,8 @@ function calendarPreview(events, cats) {
 
 function evRow(e, cats, rerender) {
   const cat = cats[e.category] || { label: e.category, color: '#888' };
-  return h('div', { class: 'ev-row' + (e.active ? '' : ' retired') + (isPast(e.date) ? ' past' : '') },
-    h('span', { class: 'ev-date', style: { '--evc': cat.color } }, fmt.day(e.date), h('i', null, e.date.slice(0, 4))),
+  return h('div', { class: 'ev-row' + (e.active ? '' : ' retired') + (isPast(e.date, e.end_date) ? ' past' : '') },
+    h('span', { class: 'ev-date', style: { '--evc': cat.color } }, fmt.span(e.date, e.end_date), h('i', null, e.date.slice(0, 4))),
     h('div', { class: 'ev-main' },
       h('div', { class: 'ev-title' }, e.title,
         e.pin ? chip('pinned', 'pin') : null,
@@ -210,11 +245,12 @@ function evRow(e, cats, rerender) {
       : null);
 }
 
-function editEvent(e, cats, rerender) {
+function editEvent(e, cats, rerender, presetDate) {
   const isNew = !e;
-  e = e || { date: '', category: 'event', title: '', detail: '', full_copy: '', link: '', pin: false, active: true };
+  e = e || { date: presetDate || '', end_date: '', category: 'event', title: '', detail: '', full_copy: '', link: '', pin: false, active: true };
   const f = {
     date: textInput({ value: e.date, placeholder: 'YYYY-MM-DD', maxLength: 10 }),
+    end_date: textInput({ value: e.end_date || '', placeholder: 'YYYY-MM-DD', maxLength: 10 }),
     category: select(Object.keys(cats).map(k => ({ value: k, label: cats[k].label, selected: k === e.category }))),
     title: textInput({ value: e.title, maxLength: 80, placeholder: 'Short — the homepage chip has limited width' }),
     detail: textArea({ value: e.detail, rows: 3, maxLength: 600 }),
@@ -227,6 +263,7 @@ function editEvent(e, cats, rerender) {
   modal(isNew ? 'New event' : 'Edit event',
     h('div', { class: 'form' },
       field('Date', f.date, 'Include the timezone in the detail text if you give a time — the org spans NAM to APAC.'),
+      field('End date (optional)', f.end_date, 'The LAST day of a multi-day event — Connect, SKO, protected seller time. Leave blank for a single day.'),
       field('Category', f.category),
       field('Title', f.title, 'Up to 80 characters.'),
       field('Detail', f.detail, 'One or two sentences, up to 600 characters — shows when someone expands the chip or clicks the event on the calendar.'),
@@ -243,7 +280,8 @@ function editEvent(e, cats, rerender) {
         label: isNew ? 'Create' : 'Save', kind: 'accent', onClick: async c => {
           try {
             await api.saveEvent({
-              id: e.id, date: f.date.value.trim(), category: f.category.value,
+              id: e.id, date: f.date.value.trim(), end_date: f.end_date.value.trim(),
+              category: f.category.value,
               title: f.title.value.trim(), detail: f.detail.value,
               full_copy: f.full_copy.value, link: f.link.value.trim(),
               pin: f.pin.checked, active: f.active.checked,
