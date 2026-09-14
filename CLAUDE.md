@@ -1460,6 +1460,15 @@ before and every hardcoded fallback stays valid unchanged.
   `.cal-cell--spot` with querySelectorAll and lights each covered
   cell).
 
+**Same day, follow-up:** Home's calendar widget composes with the deep
+link — with the calendar scope, EVERY day cell there is clickable now:
+occupied days go to `#calendar`, empty days go to
+`#calendar/new/<iso>` (Calendar view, editor open, date prefilled).
+Without the scope nothing changed (cells stay inert). Verify note: a
+`navigate` back to `#home` on the rig is a fragment jump that reloads
+nothing — dialog state from the previous probe survives it; bump a
+query param to genuinely reload.
+
 **Verified on a fresh stub rig** (`capcom-stub/stub.js` in the session
 scratchpad — serves the repo statically with canned admin+command
 APIs, records saveEvent bodies at `/__saves`; five seed events cover

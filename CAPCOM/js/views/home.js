@@ -1116,9 +1116,15 @@ async function loadCalendar(card, scopes, acts) {
       }, String(day),
         evs.length ? h('span', { class: 'mc-dots' }, evs.slice(0, 3).map(e =>
           h('i', { style: { background: (cats[e.category] || {}).color || 'var(--muted)' } }))) : null);
-      if (evs.length && scopes.includes('calendar')) {
+      // With the calendar scope, every day is a door: occupied days open
+      // the Calendar view, empty days deep-link straight into "new event
+      // on this date" (the #calendar/new/<iso> route).
+      if (scopes.includes('calendar')) {
         cell.style.cursor = 'pointer';
-        cell.addEventListener('click', () => { location.hash = '#calendar'; });
+        if (!evs.length) cell.title = `Create an event on ${fmt.day(iso)}`;
+        cell.addEventListener('click', () => {
+          location.hash = evs.length ? '#calendar' : `#calendar/new/${iso}`;
+        });
       }
       gridEl.appendChild(cell);
     }
