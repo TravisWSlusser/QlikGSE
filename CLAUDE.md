@@ -1493,9 +1493,9 @@ Travis, reviewing the Built-to-Win experience: the cert page's hero CTA
 stays, empty, for future buttons. The cohort-windows copy now leads the
 CTA row and the layout holds (verified on the rig at `?s=hero`). The
 seven other "Training Center" mentions are instructional body copy
-(module steps, sync note, FAQ) and were deliberately left. Note the
+(module steps, sync note, FAQ) and were deliberately left. WHY it went (from Travis): a hero-level button reads as "click here first," and the Training Center is NOT the first step — people were starting there instead of where the flow actually begins, so the entry point came off the header. Do not re-add a hero CTA to it. Also note the
 button's target — training-center-gse.replit.app — is only unreferenced,
-not decommissioned.
+not decommissioned — and it is NOT OURS to decommission (an external site Qlik doesn't own); it remains reachable through the flow the instructional copy describes.
 
 ## Vercel Blob quota fire (2 Sep 2026)
 
