@@ -241,6 +241,9 @@ html[data-compact="1"] .ssb-watch{margin-top:9px}
 html[data-compact="1"] .ssb-kicker{display:none}
 html[data-compact="1"] .svc{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 html[data-compact="1"] .svc-item{padding:6px 9px;gap:6px;border-radius:11px;justify-content:center}
+/* An odd service count (5 as of Qlik Cloud) leaves the last item alone in the
+   left column otherwise — span both and let it center on its own row. */
+html[data-compact="1"] .svc-item:last-child:nth-child(odd){grid-column:1/-1;justify-self:center;width:fit-content}
 html[data-compact="1"] .svc-name{font-size:11.5px}
 html[data-compact="1"] .svc-state{font-size:9.5px;letter-spacing:.08em}
 html[data-compact="1"] .ssh{padding:12px}
@@ -255,6 +258,7 @@ html[data-compact="1"] .ssh-dots{margin-top:10px}
   .ssb-kicker{display:none}
   .svc{display:grid;grid-template-columns:1fr 1fr;gap:6px}
   .svc-item{padding:6px 9px;gap:6px;border-radius:11px;justify-content:center}
+  .svc-item:last-child:nth-child(odd){grid-column:1/-1;justify-self:center;width:fit-content}
   .svc-name{font-size:11.5px}
   .svc-state{font-size:9.5px;letter-spacing:.08em}
   .ssh{padding:12px}
@@ -284,6 +288,7 @@ html[data-compact="1"] .ssh-dots{margin-top:10px}
           <div class="svc-item unk"><span class="svc-dot"></span><span class="svc-name">ChatGPT</span><span class="svc-state">&middot;&middot;&middot;</span></div>
           <div class="svc-item unk"><span class="svc-dot"></span><span class="svc-name">Gemini</span><span class="svc-state">&middot;&middot;&middot;</span></div>
           <div class="svc-item unk"><span class="svc-dot"></span><span class="svc-name">Mindtickle</span><span class="svc-state">&middot;&middot;&middot;</span></div>
+          <div class="svc-item unk"><span class="svc-dot"></span><span class="svc-name">Qlik Cloud</span><span class="svc-state">&middot;&middot;&middot;</span></div>
         </div>
       </div>
     </div>
@@ -312,8 +317,8 @@ function esc(s) {
 /* ======================================================================
    SYSTEMS WATCH
 
-   /api/status covers Claude, ChatGPT, Gemini and Mindtickle and caches for
-   five minutes server-side, so polling here is cheap.
+   /api/status covers Claude, ChatGPT, Gemini, Mindtickle and Qlik Cloud and
+   caches for five minutes server-side, so polling here is cheap.
 
      operational / none          -> ONLINE
      minor / degraded / partial  -> POTENTIAL DORC ACTIVITY
@@ -325,7 +330,7 @@ function esc(s) {
    fetch failed would burn the alert the first time someone checked and found
    it fine.
    ====================================================================== */
-var SERVICES = ['Claude', 'ChatGPT', 'Gemini', 'Mindtickle'];
+var SERVICES = ['Claude', 'ChatGPT', 'Gemini', 'Mindtickle', 'Qlik Cloud'];
 
 function classify(raw) {
   var s = (raw || '').toString().trim().toLowerCase();

@@ -1516,3 +1516,34 @@ query read `api_cache` with no key filter (`ORDER BY fetched_at DESC
 LIMIT 1`), so any new cache row would pose as fresh news — now
 `WHERE key='news'`. **Rule: anything that counts against a paid quota
 must be throttled through the DB, never through lambda memory.**
+
+## Systems Watch: Qlik Cloud added (16 Sep 2026)
+
+Rafael asked for Qlik Cloud's Operational Health in the Stellar-Seller
+banner's Systems Watch lineup (`SalesCommand/stellar.html`, fed by
+`/api/status` → `lib/command/status.js`), alongside Claude, ChatGPT,
+Gemini and Mindtickle. Both `SERVICES` (stellar.html) and the
+`Promise.allSettled` + `names` pair (status.js, positional — see the
+existing NOTE above it) grew a fifth entry.
+
+**The public page is not the API.** `https://status.qlikcloud.com/`
+is a custom Qlik-branded wrapper — its own `/api/v2/status.json` 404s.
+It embeds the real Atlassian Statuspage instance in an iframe at
+`https://statusp-pb8g4h.qlikcloud.com/`, and *that* domain has the
+standard `{status:{indicator,description}}` shape the other three
+services use, so it reuses `fetchAtlassian` with no new fetcher code.
+**If Qlik ever rotates that generated subdomain, find the new one via
+the iframe `src` on the public page before assuming the endpoint
+moved or broke.**
+
+Five services broke the desktop-mobile `.svc` grid's assumption of an
+even count: the compact/mobile view (`html[data-compact="1"] .svc` and
+the `max-width:700px` twin) is a fixed 2-column grid, so a 5th item
+landed alone in the left column. Fixed with `.svc-item:last-child:
+nth-child(odd){grid-column:1/-1;justify-self:center;width:fit-content}`
+in both places — a lone trailing item on an odd count now spans and
+centers itself instead. The desktop row (`flex-wrap`) already handled
+any count without changes. Verified with a local static server and an
+injected mock response (all five states, including a live "major"
+DORC ATTACK for Qlik Cloud — the current real status, coincidentally)
+at both full width and `data-compact="1"`.
