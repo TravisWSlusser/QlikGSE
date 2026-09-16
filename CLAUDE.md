@@ -1531,10 +1531,12 @@ is a custom Qlik-branded wrapper — its own `/api/v2/status.json` 404s.
 It embeds the real Atlassian Statuspage instance in an iframe at
 `https://statusp-pb8g4h.qlikcloud.com/`, and *that* domain has the
 standard `{status:{indicator,description}}` shape the other three
-services use, so it reuses `fetchAtlassian` with no new fetcher code.
-**If Qlik ever rotates that generated subdomain, find the new one via
-the iframe `src` on the public page before assuming the endpoint
-moved or broke.**
+services use. (Superseded below, same day: it now also pulls
+`components.json` from the same instance, so it has its own fetcher,
+`fetchQlikCloud`, rather than reusing `fetchAtlassian`.) **If Qlik ever
+rotates that generated subdomain, find the new one via the iframe
+`src` on the public page before assuming the endpoint moved or
+broke.**
 
 Five services broke the desktop-mobile `.svc` grid's assumption of an
 even count: the compact/mobile view (`html[data-compact="1"] .svc` and
@@ -1547,3 +1549,53 @@ any count without changes. Verified with a local static server and an
 injected mock response (all five states, including a live "major"
 DORC ATTACK for Qlik Cloud — the current real status, coincidentally)
 at both full width and `data-compact="1"`.
+
+## Systems Watch: Qlik Cloud regional callout (16 Sep 2026)
+
+Same day, same feature, extended: Travis saw a live UAE-only outage
+and asked for per-region granularity on Qlik Cloud specifically, with
+a small callout showing which areas are affected — the flat "major"
+indicator alone can't say that only one of thirteen regions is down.
+
+**`fetchQlikCloud` replaced Qlik Cloud's `fetchAtlassian` call** in
+`lib/command/status.js`. It still fetches `status.json` for the
+aggregate (unchanged shape/behavior for everyone downstream), then
+best-effort fetches the same Statuspage instance's `components.json`
+and filters to components named `Qlik Cloud <dash> AWS <dash> ...`
+that are not `operational` — the `<dash>` in that pattern really is
+two different characters in the wild (`–` vs `-`) depending on which
+region was added when; the regex handles both explicitly rather than
+trusting one. **Deliberately excluded:** the Government/FedRAMP/DOD
+components and the Talend Cloud components that live on the same
+Statuspage page — not this widget's audience. If the components fetch
+fails, the whole entry still returns fine with no `regions` key; that
+failure is swallowed on purpose, per the file's existing "a bonus
+data point failing is not fatal to the aggregate" pattern.
+
+**Client side:** `stellar.html` gained `paintRegions()`, called
+alongside `paintServices()` from the same `loadStatus()` fetch. It
+flattens any `regions` arrays found across the whole response (today
+only Qlik Cloud can have one) into a single callout box (`#svcRegions`,
+`.svr`), hidden via the `hidden` attribute when there is nothing to
+show. `classify()` grew the raw Statuspage component vocabulary
+(`degraded_performance`, `partial_outage`, `major_outage`,
+`under_maintenance`) alongside the indicator vocabulary it already
+handled, since regions carry the former and the top-level aggregate
+carries the latter — same function, same DORC-themed labels, both
+inputs. The box's border/kicker color is the WORST region's severity,
+not the first one, so one major regional outage next to a merely
+degraded one still reads red.
+
+**Hit the `[hidden]`-loses-to-`display` trap again** (see Gotchas,
+the `.mcard [hidden]` precedent) — `.svr{display:flex}` as an author
+rule beat the browser's default `[hidden]{display:none}`, so the
+empty-state callout rendered as a visible empty bordered box instead
+of vanishing. Fixed the same way: `.svr[hidden]{display:none
+!important}`. Caught by testing the *empty* case explicitly, not just
+the outage case — the outage screenshot alone would have looked
+correct and shipped the bug.
+
+Verified locally (temporary `api/status` mock file, deleted after,
+never committed) across: no regions (box absent, zero layout cost),
+single region, two regions at different severities, `data-compact="1"`,
+and `data-theme="light"`.
