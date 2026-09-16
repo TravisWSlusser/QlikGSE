@@ -156,6 +156,7 @@ html[data-section] .wrap > *{display:none}
 /* Centred row that wraps evenly rather than left-packing on the last line. */
 .svc{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 .svc-item{
+  position:relative;
   display:inline-flex;align-items:center;gap:8px;padding:8px 13px;min-width:0;
   border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
@@ -174,54 +175,40 @@ html[data-section] .wrap > *{display:none}
 .svc-item.down .svc-state{color:var(--bad)}
 .svc-item.unk  .svc-state{color:var(--muted)}
 
-/* Regional-impact callout. Hidden by default (the `hidden` attribute on the
-   element); paintRegions() only reveals it when at least one region is
-   non-operational, so it costs zero layout the vast majority of the time.
-   Border/kicker color takes the WORST region's severity via .warn/.down on
-   the box itself — a mix of degraded and major regions still reads as an
-   attack, not a shrug.
+/* Regional-impact tooltip. Only a chip carrying a `regions` list (currently
+   only Qlik Cloud, when at least one AWS region isn't fully operational)
+   gets a nested .svc-tip — every other chip has none, so hovering it does
+   nothing. Pure CSS show/hide on :hover, no JS toggling needed, and
+   critically: position:absolute takes it out of flow entirely, so it costs
+   ZERO layout at rest. It opens UPWARD over already-visible content rather
+   than adding height below the row.
 
-   NEVER shown in compact mode, and never below 900px viewport width either
-   — see the dedicated `@media (max-width:900px)` rule further down, kept
-   separate from the page's own 700px compact-layout breakpoint on purpose.
-   The two numbers protect different things. Read from the ACTUAL Mindtickle
-   widget source (Travis pasted the live admin builder's CSS, 16 Sep 2026):
-
-     .qlik-ss-banner{ height:300px; }                    (>900px: fixed)
-     @media(max-width:900px){ height:auto; min-height:200px; }
-
-   300px desktop has real headroom (measured: full stack incl. this box is
-   ~230px at 900px width, ~300px stays clear even at 1400px). But 700-900px
-   is a trap: Mindtickle's OWN breakpoint already drops the budget toward
-   the ~200px floor there, while this page's internal compact-layout
-   breakpoint doesn't fire until 700px — so a "desktop" render of this page
-   between 700 and 900px thinks it has room and doesn't, and gets silently
-   clipped by the outer iframe (confirmed on the rig: content reaches ~340px
-   at 850px width against a real ~200px budget). The regions box has to
-   disappear across that whole gap, not just under 700px, or it becomes the
-   thing that tips an already-tight band over. The Qlik Cloud chip's own
-   aggregate state (still accurate) is what a squeezed width gets; the
-   regional breakdown is full-desktop-only (>900px). */
-html[data-compact="1"] #svcRegions{display:none !important}
-@media (max-width:900px){ #svcRegions{display:none !important} }
-.svr{
-  margin-top:10px;padding:7px 14px;border-radius:14px;display:flex;flex-wrap:wrap;
-  align-items:center;justify-content:center;gap:5px 10px;max-width:92%;
-  margin-left:auto;margin-right:auto;
-  border:1px solid var(--warn);background:rgba(255,255,255,.03);
+   That upward direction is deliberate, not cosmetic: this widget's iframe
+   inside Mindtickle is a fixed height:300px above 900px viewport width,
+   height:auto with only a 200px floor below it (read from the real admin
+   builder CSS, 16 Sep 2026) — it neither scrolls nor grows. An earlier
+   version of this feature was a permanent bar BELOW the row and it clipped
+   inside that fixed box (mobile crop, and a 700-900px gap where this page's
+   own 700px compact breakpoint doesn't line up with Mindtickle's real
+   900px one). A hover popover anchored above the trigger sidesteps that
+   whole class of problem — it never reserves space, so there's no budget
+   to run out of. */
+.svc-tip{
+  position:absolute;left:50%;bottom:100%;transform:translate(-50%,-8px);
+  width:max-content;max-width:220px;padding:8px 11px;border-radius:12px;
+  background:var(--navy-1);border:1px solid var(--warn);
+  box-shadow:0 8px 20px rgba(0,0,0,.35);
+  opacity:0;pointer-events:none;transition:opacity .15s ease;
+  z-index:5;text-align:left;
 }
-/* [hidden] loses to any author display rule (same trap as .mcard elsewhere in
-   this repo) — the flex rule above would otherwise win and show an empty box. */
-.svr[hidden]{display:none !important}
-.svr.down{border-color:var(--bad)}
-[data-theme="light"] .svr{background:rgba(255,255,255,.42)}
-.svr-kicker{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--warn)}
-.svr.down .svr-kicker{color:var(--bad)}
-.svr-item{font-size:11.5px;font-weight:600;white-space:nowrap}
-.svr-item.warn{color:var(--warn)}
-.svr-item.down{color:var(--bad)}
-html[data-compact="1"] .svr{max-width:100%}
-@media (max-width:700px){.svr{max-width:100%}}
+.svc-item.down .svc-tip{border-color:var(--bad)}
+.svc-item:hover .svc-tip{opacity:1}
+[data-theme="light"] .svc-tip{background:#fff;box-shadow:0 8px 20px rgba(15,40,70,.18)}
+.svc-tip-kicker{display:block;font-size:9.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--warn);margin-bottom:4px}
+.svc-item.down .svc-tip-kicker{color:var(--bad)}
+.svc-tip-item{display:block;font-size:11.5px;font-weight:600;white-space:nowrap;line-height:1.5}
+.svc-tip-item.warn{color:var(--warn)}
+.svc-tip-item.down{color:var(--bad)}
 
 /* ========== HERO — the homepage rotator's card, minus the wordmark ========== */
 .ssh{
@@ -339,9 +326,6 @@ html[data-compact="1"] .ssh-dots{margin-top:10px}
           <div class="svc-item unk"><span class="svc-dot"></span><span class="svc-name">Mindtickle</span><span class="svc-state">&middot;&middot;&middot;</span></div>
           <div class="svc-item unk"><span class="svc-dot"></span><span class="svc-name">Qlik Cloud</span><span class="svc-state">&middot;&middot;&middot;</span></div>
         </div>
-        <!-- Hidden until a service reports a `regions` breakdown (currently
-             only Qlik Cloud can). Built wholesale by paintRegions(). -->
-        <div class="svr" id="svcRegions" hidden aria-live="polite"></div>
       </div>
     </div>
   </div>
@@ -386,8 +370,9 @@ function esc(s) {
    AWS region granularity — see lib/command/status.js) when something in it
    is not fully operational. classify() also recognises Statuspage's raw
    component vocabulary (degraded_performance / partial_outage /
-   major_outage / under_maintenance) for those entries; paintRegions() below
-   renders them as a small callout, hidden whenever the list is empty.
+   major_outage / under_maintenance) for those entries; paintServices()
+   below renders them as a hover tooltip nested inside that chip — see the
+   .svc-tip CSS comment for why hover-only rather than a permanent element.
    ====================================================================== */
 var SERVICES = ['Claude', 'ChatGPT', 'Gemini', 'Mindtickle', 'Qlik Cloud'];
 
@@ -402,23 +387,13 @@ function classify(raw) {
   return { cls:'unk', label:'No Signal' };
 }
 
-function paintRegions(list) {
-  var host = document.getElementById('svcRegions');
-  if (!host) return;
-  var bad = [];
-  (list || []).forEach(function (s) {
-    (s.regions || []).forEach(function (r) { bad.push(r); });
-  });
-  if (!bad.length) { host.hidden = true; host.innerHTML = ''; return; }
-  var worst = 'warn';
-  var items = bad.map(function (r) {
+function regionTip(regions) {
+  if (!regions || !regions.length) return '';
+  var items = regions.map(function (r) {
     var st = classify(r.status);
-    if (st.cls === 'down') worst = 'down';
-    return '<span class="svr-item ' + st.cls + '">' + esc(r.name) + ' &middot; ' + esc(st.label) + '</span>';
+    return '<span class="svc-tip-item ' + st.cls + '">' + esc(r.name) + ' &middot; ' + esc(st.label) + '</span>';
   }).join('');
-  host.className = 'svr ' + worst;
-  host.innerHTML = '<span class="svr-kicker">Qlik Cloud &mdash; regional impact</span>' + items;
-  host.hidden = false;
+  return '<span class="svc-tip"><span class="svc-tip-kicker">Regional impact</span>' + items + '</span>';
 }
 
 function paintServices(list) {
@@ -427,13 +402,18 @@ function paintServices(list) {
   var by = {};
   (list || []).forEach(function (s) { if (s && s.name) by[s.name] = s; });
   host.innerHTML = SERVICES.map(function (name) {
-    var rec = by[name];
-    var st  = rec ? classify(rec.status) : { cls:'unk', label:'No Signal' };
-    return '<div class="svc-item ' + st.cls + '" title="' +
-             esc((rec && rec.description) || st.label) + '">' +
+    var rec     = by[name];
+    var st      = rec ? classify(rec.status) : { cls:'unk', label:'No Signal' };
+    var regions = rec && rec.regions;
+    // Skip the native title when the custom hover tooltip is present —
+    // both firing at once is clutter, not clarity.
+    var titleAttr = regions && regions.length ? '' :
+      ' title="' + esc((rec && rec.description) || st.label) + '"';
+    return '<div class="svc-item ' + st.cls + '"' + titleAttr + '>' +
              '<span class="svc-dot"></span>' +
              '<span class="svc-name">'  + esc(name)     + '</span>' +
              '<span class="svc-state">' + esc(st.label) + '</span>' +
+             regionTip(regions) +
            '</div>';
   }).join('');
 }
@@ -441,7 +421,7 @@ function paintServices(list) {
 function loadStatus() {
   fetch('/api/status', { cache:'no-store' })
     .then(function (r) { return r.ok ? r.json() : null; })
-    .then(function (d) { if (Array.isArray(d)) { paintServices(d); paintRegions(d); } })
+    .then(function (d) { if (Array.isArray(d)) paintServices(d); })
     .catch(function () { /* leave the placeholders — No Signal is honest */ });
 }
 

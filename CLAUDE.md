@@ -1638,3 +1638,31 @@ lands around 230px at 900px, nowhere near the 300px ceiling.
 with the regions box now gone, the base 5-chip row sits right at the
 ~200px edge in that same 700-900px band — worth a look if anyone
 revisits this widget's breakpoints, but out of scope for this change.
+
+**Third pass, same day: wrong UI entirely.** Travis: he never wanted
+a permanent bar under the row — he wanted a hover popover on the Qlik
+Cloud chip itself. Everything above (the `#svcRegions` element, `.svr`
+CSS, `paintRegions()`, both breakpoint-hiding rules) was removed. The
+replacement is a `.svc-tip` nested INSIDE the chip's own markup
+(`regionTip()` in `paintServices()`, only when `rec.regions.length`),
+shown via plain `.svc-item:hover .svc-tip{opacity:1}` — no JS toggling
+at all.
+
+This redesign also retroactively obsoletes the entire second pass
+above: a `position:absolute` element with nothing reserving space for
+it costs zero layout when hidden, and it opens UPWARD (`bottom:100%`)
+over already-visible content rather than downward past the iframe's
+fixed height. There is no width where it can clip, so the 700-900px
+gap and the compact-mode exclusion aren't needed — kept the prior
+write-up anyway, because "we measured the real iframe CSS and found a
+breakpoint mismatch" is exactly the kind of thing worth being able to
+find again if a future permanent-element idea resurfaces here. The
+native `title` attribute is suppressed on any chip that has a
+`.svc-tip`, so hovering Qlik Cloud during an incident doesn't fire two
+overlapping tooltips (the browser's plus this one).
+
+Verified: hovering Qlik Cloud during the live UAE incident shows
+"Regional impact — Middle East (UAE) · DORC Attack"; every other chip
+is inert on hover (no empty popover); compact mode unaffected (chips
+render, nothing pops — hover doesn't fire on touch anyway, so this
+was never really a mobile concern).
