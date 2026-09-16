@@ -179,7 +179,31 @@ html[data-section] .wrap > *{display:none}
    non-operational, so it costs zero layout the vast majority of the time.
    Border/kicker color takes the WORST region's severity via .warn/.down on
    the box itself — a mix of degraded and major regions still reads as an
-   attack, not a shrug. */
+   attack, not a shrug.
+
+   NEVER shown in compact mode, and never below 900px viewport width either
+   — see the dedicated `@media (max-width:900px)` rule further down, kept
+   separate from the page's own 700px compact-layout breakpoint on purpose.
+   The two numbers protect different things. Read from the ACTUAL Mindtickle
+   widget source (Travis pasted the live admin builder's CSS, 16 Sep 2026):
+
+     .qlik-ss-banner{ height:300px; }                    (>900px: fixed)
+     @media(max-width:900px){ height:auto; min-height:200px; }
+
+   300px desktop has real headroom (measured: full stack incl. this box is
+   ~230px at 900px width, ~300px stays clear even at 1400px). But 700-900px
+   is a trap: Mindtickle's OWN breakpoint already drops the budget toward
+   the ~200px floor there, while this page's internal compact-layout
+   breakpoint doesn't fire until 700px — so a "desktop" render of this page
+   between 700 and 900px thinks it has room and doesn't, and gets silently
+   clipped by the outer iframe (confirmed on the rig: content reaches ~340px
+   at 850px width against a real ~200px budget). The regions box has to
+   disappear across that whole gap, not just under 700px, or it becomes the
+   thing that tips an already-tight band over. The Qlik Cloud chip's own
+   aggregate state (still accurate) is what a squeezed width gets; the
+   regional breakdown is full-desktop-only (>900px). */
+html[data-compact="1"] #svcRegions{display:none !important}
+@media (max-width:900px){ #svcRegions{display:none !important} }
 .svr{
   margin-top:10px;padding:7px 14px;border-radius:14px;display:flex;flex-wrap:wrap;
   align-items:center;justify-content:center;gap:5px 10px;max-width:92%;

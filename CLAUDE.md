@@ -1599,3 +1599,42 @@ Verified locally (temporary `api/status` mock file, deleted after,
 never committed) across: no regions (box absent, zero layout cost),
 single region, two regions at different severities, `data-compact="1"`,
 and `data-theme="light"`.
+
+**Second pass, same day: the box can clip inside Mindtickle's real
+iframe.** Travis had the actual admin builder open and pasted the
+banner widget's own CSS:
+
+```css
+.qlik-ss-banner{ width:100%; height:300px; border:0; display:block; }
+@media (max-width:900px){ .qlik-ss-banner{ height:auto; min-height:200px; } }
+```
+
+Two things followed from that ground truth. **First**, the compact/
+mobile path (`compact=1`) was already confirmed clipping against a
+real fixed-height iframe rig — the wordmark + Systems Watch row alone
+already use nearly the full ~200px budget, so any extra content there
+is invisible, not wrapped or scrolled. The box is now hidden outright
+in compact mode: `html[data-compact="1"] #svcRegions{display:none
+!important}`. Mobile keeps the Qlik Cloud chip's own accurate
+aggregate state, just without the regional breakdown.
+
+**Second, easier to miss:** this page's own compact-layout breakpoint
+(`@media(max-width:700px)`) and Mindtickle's real height breakpoint
+(900px) don't line up. Between 700 and 900px viewport width, this page
+still renders its full "desktop" layout (thinks it has room) while the
+OUTER iframe has already dropped toward its 200px floor — confirmed on
+the rig: full content reached ~340px at 850px width against a real
+~200px budget, silently clipped by the iframe boundary with no
+scrollbar to reveal it. The box's hide rule therefore lives in its own
+dedicated `@media(max-width:900px)`, deliberately NOT folded into the
+existing 700px compact-layout block — the two breakpoints protect
+different things and widening the existing one would have also
+changed the chip grid layout at widths where that isn't broken.
+Regional breakdown is now strictly >900px-only. Full desktop (900px
+and 1400px tested) has real headroom: complete stack including the box
+lands around 230px at 900px, nowhere near the 300px ceiling.
+
+**Pre-existing, not caused by this feature, flagged not fixed:** even
+with the regions box now gone, the base 5-chip row sits right at the
+~200px edge in that same 700-900px band — worth a look if anyone
+revisits this widget's breakpoints, but out of scope for this change.
