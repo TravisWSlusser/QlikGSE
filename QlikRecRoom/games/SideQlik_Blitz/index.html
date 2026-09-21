@@ -803,14 +803,34 @@ function stopVoice(){
   try{ if(AUDIO.voiceSrc){ AUDIO.voiceSrc.stop(); AUDIO.voiceSrc=null; } }catch(e){ AUDIO.voiceSrc=null; }
   try{ if(AUDIO.voice){ AUDIO.voice.pause(); AUDIO.voice.currentTime=0; } }catch(e){}
 }
+/* ---- voice line bags ------------------------------------------------------
+   Draw without replacement so a quip cannot repeat inside a round. The bag is
+   reshuffled only once it runs dry, so the order differs every game and no clip
+   is pinned to a fixed slot. On a refill the first draw is swapped away from the
+   clip we just played, so nothing is heard twice across the seam.
+   Reset per playthrough by resetVoiceBags() in startGame. */
+function makeBag(count){ return { count, pool:[], last:0 }; }
+function bagNext(bag){
+  if (!bag.pool.length){
+    bag.pool = Array.from({length:bag.count}, (_,i)=>i+1);
+    for (let i=bag.pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [bag.pool[i],bag.pool[j]]=[bag.pool[j],bag.pool[i]]; }
+    if (bag.count>1 && bag.pool[bag.pool.length-1]===bag.last){
+      const k=Math.floor(Math.random()*(bag.pool.length-1));
+      [bag.pool[bag.pool.length-1],bag.pool[k]]=[bag.pool[k],bag.pool[bag.pool.length-1]];
+    }
+  }
+  bag.last = bag.pool.pop();
+  return bag.last;
+}
+const BAGS = { multipop:makeBag(MULTIPOP_COUNT), freeze:makeBag(FREEZE_QUIP_COUNT), dzone:makeBag(DZONE_COUNT) };
+function resetVoiceBags(){ for (const b of Object.values(BAGS)){ b.pool.length=0; b.last=0; } }
+
 function sideQlikLine(){
   if (HZ.inZone) return;   // quiet during a hazard alert
-  const n=1+Math.floor(Math.random()*MULTIPOP_COUNT);
-  playVoice(`side-qlik/multi-pop/Side-Qlik${n}.mp3`);
+  playVoice(`side-qlik/multi-pop/Side-Qlik${bagNext(BAGS.multipop)}.mp3`);
 }
 function freezeQuip(){
-  const n=1+Math.floor(Math.random()*FREEZE_QUIP_COUNT);
-  playVoice(`side-qlik/freeze-power-up/side-qlik-freeze-${n}.mp3`);
+  playVoice(`side-qlik/freeze-power-up/side-qlik-freeze-${bagNext(BAGS.freeze)}.mp3`);
 }
 
 /* ---- freeze power-up audio: ambience layer + duck the music ---- */
@@ -895,14 +915,14 @@ function switchSfx(){ const n=String((switchSfxIdx++ % 3)+1).padStart(2,'0'); pl
 /* ============================================================================
    HAZARD ZONE audio  (SFX channel)
    When the lowest DORC crosses HAZARD_Y the player is "in the zone".
-     - first entry this playthrough -> d-zone1
-     - every later entry           -> random d-zone2..DZONE_COUNT
+     - every entry -> next line from the shuffled d-zone bag, so no alert
+       repeats inside a round and the order differs every game
      - when that numbered alert ENDS, if still in zone -> d-zone-loop until clear
      - d-zone-heartbeat plays low underneath the whole time
      - clearing the zone -> relief SFX (real file TBD; synth chime for now)
-   All counters reset each playthrough (resetHazard in startGame).
+   Bags reset each playthrough (resetVoiceBags in startGame).
    ============================================================================ */
-const HZ = { inZone:false, entries:0, alert:null, loop:null, heart:null };
+const HZ = { inZone:false, alert:null, loop:null, heart:null };
 const DZONE = 'alerts/danger_zone/';
 function hzStop(a){ try{ if(a){ a.pause(); a.currentTime=0; } }catch(e){} }
 function hzNew(file, loop, rel){ const a=new Audio(AUDIO.base+DZONE+file); a.loop=!!loop; a.volume=AUDIO.sfxVol*(rel==null?1:rel); return a; }
@@ -914,13 +934,12 @@ function startHazardLoop(){
   HZ.loop.play().catch(()=>{});
 }
 function enterHazard(){
-  HZ.entries++;
   // heartbeat bed (low) under everything
   hzStop(HZ.heart);
   HZ.heart = hzNew('d-zone-heartbeat.mp3', true, 0.4);
   HZ.heart.play().catch(()=>{});
-  // first alert is always d-zone1; later entries pick a random 2..DZONE_COUNT
-  const n = (HZ.entries === 1) ? 1 : (2 + Math.floor(Math.random()*(DZONE_COUNT-1)));
+  // next from the shuffled bag: no fixed opener, no repeat inside a round
+  const n = bagNext(BAGS.dzone);
   hzStop(HZ.loop);
   HZ.alert = hzNew(`d-zone${n}.mp3`, false, 1.0);
   HZ.alert.onended = () => { if(HZ.inZone) startHazardLoop(); };  // sustain into loop if still in zone
@@ -933,7 +952,7 @@ function exitHazard(){
 }
 function resetHazard(){
   hzStop(HZ.alert); hzStop(HZ.loop); hzStop(HZ.heart);
-  HZ.inZone = false; HZ.entries = 0; HZ.alert = HZ.loop = HZ.heart = null;
+  HZ.inZone = false; HZ.alert = HZ.loop = HZ.heart = null;
 }
 function hzSetVol(){ try{
   if(HZ.alert) HZ.alert.volume = AUDIO.sfxVol;
@@ -2316,7 +2335,7 @@ function startGame(){
   unlockBar = (player.territoryHigh && player.territoryHigh > 0) ? player.territoryHigh : UNLOCK_FLOOR;
   activeCount = BASE_COLORS; lastUnlockColors = BASE_COLORS;
   rowsSpawned=0; ballsFired=0; lastPop=0; paused=false; menuOpen=false;
-  freezeUntil=0; freezeAmt=0; wasFrozen=false; curQ=null; answering=false; resetHazard(); resetCoin(); coinQIdx=0;
+  freezeUntil=0; freezeAmt=0; wasFrozen=false; curQ=null; answering=false; resetHazard(); resetVoiceBags(); resetCoin(); coinQIdx=0;
   stopFreezeAudio(); setMenuMuffle(false); resetBlast();
   cur=randColorIdx(); nxt=randColorIdx(); hold=null;
   seedGrid(4);
