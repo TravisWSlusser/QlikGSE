@@ -676,7 +676,7 @@ const API_BASE = '/api/blitz/';   // consolidated QlikGSE root api, blitz namesp
 const AUDIO = { base: ASSET_BASE + 'audio/', musicVol: 0.35, sfxVol: 0.8, bgm:null, voice:null };
 const MUSIC_SRC      = AUDIO.base + 'music/Blitz_BG_Music_01.mp3';
 const FREEZE_BG_SRC  = AUDIO.base + 'other/power_up_fx/freeze/freeze_bg_10s.mp3';
-const MULTIPOP_COUNT = 26, FREEZE_QUIP_COUNT = 6;
+const MULTIPOP_COUNT = 30, FREEZE_QUIP_COUNT = 6, DZONE_COUNT = 14;
 
 function loadVols(){ try{
   const m=localStorage.getItem('blitz_music2'), s=localStorage.getItem('blitz_sfx2');
@@ -896,7 +896,7 @@ function switchSfx(){ const n=String((switchSfxIdx++ % 3)+1).padStart(2,'0'); pl
    HAZARD ZONE audio  (SFX channel)
    When the lowest DORC crosses HAZARD_Y the player is "in the zone".
      - first entry this playthrough -> d-zone1
-     - every later entry           -> random d-zone2..6
+     - every later entry           -> random d-zone2..DZONE_COUNT
      - when that numbered alert ENDS, if still in zone -> d-zone-loop until clear
      - d-zone-heartbeat plays low underneath the whole time
      - clearing the zone -> relief SFX (real file TBD; synth chime for now)
@@ -919,8 +919,8 @@ function enterHazard(){
   hzStop(HZ.heart);
   HZ.heart = hzNew('d-zone-heartbeat.mp3', true, 0.4);
   HZ.heart.play().catch(()=>{});
-  // first alert is always d-zone1; later entries pick a random 2..6
-  const n = (HZ.entries === 1) ? 1 : (2 + Math.floor(Math.random()*5));
+  // first alert is always d-zone1; later entries pick a random 2..DZONE_COUNT
+  const n = (HZ.entries === 1) ? 1 : (2 + Math.floor(Math.random()*(DZONE_COUNT-1)));
   hzStop(HZ.loop);
   HZ.alert = hzNew(`d-zone${n}.mp3`, false, 1.0);
   HZ.alert.onended = () => { if(HZ.inZone) startHazardLoop(); };  // sustain into loop if still in zone
@@ -1672,9 +1672,10 @@ const PRELOAD = (() => {
   add(a+'other/power_up_fx/freeze/freeze_bg_10s.mp3', 2);
   for (let i=1;i<=5;i++) add(a+`other/ball_fx/Ball_0${i}.mp3`, 1);
   for (let i=1;i<=3;i++) add(a+`other/ball_fx/Switch_0${i}.mp3`, 1);
-  for (const n of ['1','2','3','4','5','6','-loop','-heartbeat']) add(a+`alerts/danger_zone/d-zone${n}.mp3`, 1);
-  for (let i=1;i<=26;i++) add(a+`side-qlik/multi-pop/Side-Qlik${i}.mp3`, 1);
-  for (let i=1;i<=6;i++)  add(a+`side-qlik/freeze-power-up/side-qlik-freeze-${i}.mp3`, 1);
+  for (let i=1;i<=DZONE_COUNT;i++) add(a+`alerts/danger_zone/d-zone${i}.mp3`, 1);
+  for (const n of ['-loop','-heartbeat']) add(a+`alerts/danger_zone/d-zone${n}.mp3`, 1);
+  for (let i=1;i<=MULTIPOP_COUNT;i++) add(a+`side-qlik/multi-pop/Side-Qlik${i}.mp3`, 1);
+  for (let i=1;i<=FREEZE_QUIP_COUNT;i++) add(a+`side-qlik/freeze-power-up/side-qlik-freeze-${i}.mp3`, 1);
   return list;
 })();
 const preloadTotal = SPRITE_COUNT*SPRITE_W + PRELOAD.reduce((s,x)=>s+x.w, 0);
