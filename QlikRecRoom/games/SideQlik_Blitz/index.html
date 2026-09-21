@@ -908,9 +908,8 @@ function blastDing(){
 }
 
 /* real ball SFX (cycle in order) */
-let ballSfxIdx=0, switchSfxIdx=0;
+let ballSfxIdx=0;
 function ballLaunchSfx(){ const n=String((ballSfxIdx++ % 5)+1).padStart(2,'0'); playSfxFile(`other/ball_fx/Ball_${n}.mp3`); }
-function switchSfx(){ const n=String((switchSfxIdx++ % 3)+1).padStart(2,'0'); playSfxFile(`other/ball_fx/Switch_${n}.mp3`); }
 
 /* ============================================================================
    HAZARD ZONE audio  (SFX channel)
@@ -1690,7 +1689,7 @@ const PRELOAD = (() => {
   add(a+'music/Blitz_BG_Music_01.mp3', 12);
   add(a+'other/power_up_fx/freeze/freeze_bg_10s.mp3', 2);
   for (let i=1;i<=5;i++) add(a+`other/ball_fx/Ball_0${i}.mp3`, 1);
-  for (let i=1;i<=3;i++) add(a+`other/ball_fx/Switch_0${i}.mp3`, 1);
+  add(a+'other/ball_fx/Switch_01.mp3', 1);   // game-over sting (see gameOver)
   for (let i=1;i<=DZONE_COUNT;i++) add(a+`alerts/danger_zone/d-zone${i}.mp3`, 1);
   for (const n of ['-loop','-heartbeat']) add(a+`alerts/danger_zone/d-zone${n}.mp3`, 1);
   for (let i=1;i<=MULTIPOP_COUNT;i++) add(a+`side-qlik/multi-pop/Side-Qlik${i}.mp3`, 1);
@@ -2064,7 +2063,6 @@ function fire(){
   ball = { x:LAUNCH_X, y:LAUNCH_Y, vx:Math.cos(a)*BALL_SPEED, vy:Math.sin(a)*BALL_SPEED, color:cur };
   cur = nxt; nxt = randColorIdx(); ballsFired++; ballLaunchSfx();
 }
-function swap(){ /* ball-swap mechanic removed */ }
 
 /* ============================================================================
    METHODOLOGY MADNESS  —  collect 3 coins -> weighted wheel (1-5) -> that many

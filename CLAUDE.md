@@ -376,7 +376,7 @@ the list restores the old behaviour exactly — the filter cannot half-apply.
 - **`new Audio()` per sound effect puts a media control on the iOS lock screen
   and in the UI** — one per clip. SFX and voice go through the game's existing
   `AudioContext` instead, which has no media session. Decoded buffers are cached
-  (there are 57 clips); do not go back to `<audio>` elements for one-shots.
+  (there are 72 clips); do not go back to `<audio>` elements for one-shots.
 - **Deployment weight is `.vercelignore`'s job, not the bin.** ~540MB of source
   masters and unreferenced media are kept in git and excluded from the CDN.
   Before adding a line, grep every html/js/json for the filename — a file that
