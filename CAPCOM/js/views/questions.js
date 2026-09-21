@@ -69,14 +69,46 @@ async function load(body, table, rerender, wantNew) {
     const shown = rows.filter(r => !q || matches(r, q));
     clear(listWrap);
     if (!shown.length) { listWrap.appendChild(emptyState('Nothing matches.')); return; }
-    listWrap.appendChild(h('div', { class: 'q-list' }, shown.map(r => qRow(r, table, rerender))));
+    listWrap.appendChild(h('div', { class: 'q-list' },
+      shown.map(r => qRow(r, table, rerender, d.retire_hours))));
   }
   draw();
+
+  // Repaint the countdowns so a ring does not sit frozen on an open tab.
+  // draw() re-reads filterBox rather than rebuilding it, so the filter (and
+  // focus) survive the tick. Dies with the view, like the other CAPCOM timers.
+  if (rows.some(r => !r.active && r.retired_at) && d.retire_hours) {
+    const tick = setInterval(() => {
+      if (!listWrap.isConnected) { clearInterval(tick); return; }
+      draw();
+    }, RETIRE_TICK_MS);
+  }
 
   if (wantNew) edit(null, table, rerender);
 }
 
-function qRow(r, table, rerender) {
+/* ---- retirement countdown ----------------------------------------------
+   Retiring is a soft delete with a grace period: listQuestions sweeps
+   anything past the window on the next load. `hours` comes from that same
+   payload (retire_hours) rather than a second copy of the number here.
+   Past zero the row is still listed — it goes on the next load, and the
+   label says so rather than pretending it is already gone. */
+const RETIRE_TICK_MS = 60000;
+
+function retireLeft(retiredAt, hours) {
+  const span = hours * 3600e3;
+  const gone = Date.now() - new Date(retiredAt).getTime();
+  const pct = Math.max(0, Math.min(100, (gone / span) * 100));
+  const leftMs = Math.max(0, span - gone);
+  const hh = Math.floor(leftMs / 3600e3);
+  const mm = Math.floor((leftMs % 3600e3) / 60000);
+  const label = leftMs <= 0 ? 'goes on the next load'
+              : hh >= 1 ? `${hh}h ${mm}m left`
+              : `${mm}m left`;
+  return { pct, label };
+}
+
+function qRow(r, table, rerender, retireHours) {
   let title, sub, tags = [];
   if (table === 'questions') {
     title = r.prompt;
@@ -90,11 +122,25 @@ function qRow(r, table, rerender) {
     title = r.term;
     sub = r.definition;
   }
+  const countdown = (!r.active && r.retired_at && retireHours)
+    ? retireLeft(r.retired_at, retireHours) : null;
+
+  const editBtn = h('button', { class: 'btn sm', onClick: () => edit(r, table, rerender) }, 'Edit');
+  // The ring sits ON the Edit button because Edit is the way back: opening a
+  // retired row is where the Restore button lives.
+  const editCell = countdown
+    ? h('span', { class: 'edit-wrap', style: `--pct:${countdown.pct.toFixed(1)}` },
+        editBtn,
+        h('span', { class: 'retire-pie',
+          title: `Deleted for good in ${countdown.label}. Open it and hit Restore to keep it.` }))
+    : editBtn;
+
   return h('div', { class: 'q-row' + (r.active ? '' : ' retired') },
     h('div', { class: 'q-main' },
-      h('div', { class: 'q-title' }, `#${r.id} — ${title}`, ...tags, r.active ? null : chip('retired', 'muted')),
+      h('div', { class: 'q-title' }, `#${r.id} — ${title}`, ...tags,
+        r.active ? null : chip(countdown ? `retired · ${countdown.label}` : 'retired', 'muted')),
       h('div', { class: 'q-sub' }, sub)),
-    h('button', { class: 'btn sm', onClick: () => edit(r, table, rerender) }, 'Edit'),
+    editCell,
     r.active
       ? h('button', {
           class: 'btn sm danger', onClick: () =>

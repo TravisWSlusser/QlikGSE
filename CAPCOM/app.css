@@ -399,6 +399,19 @@ html[data-theme="dark"] .bn-title .ac,html[data-theme="dark"] .bn-preview .ac{co
   background:var(--card-2);border-radius:10px;
 }
 .q-row.retired{opacity:.45}
+/* Retirement countdown. A retired row is a soft delete with a grace period,
+   so the pie on its Edit button fills as the window closes — Edit is the way
+   back, since Restore lives inside it. --pct (0-100, unitless) is set per row
+   by js/views/questions.js and repainted each minute. The row already sits at
+   .45 opacity and child opacity cannot exceed its parent, so the arc uses
+   full-strength --danger over a light track to stay legible through the fade. */
+.edit-wrap{position:relative;display:inline-flex}
+.retire-pie{
+  position:absolute;top:-7px;right:-7px;width:18px;height:18px;border-radius:50%;
+  background:conic-gradient(var(--danger) calc(var(--pct) * 1%), rgba(255,255,255,.22) 0);
+  box-shadow:0 0 0 2px var(--card-2), 0 0 0 3px rgba(255,107,107,.40);
+  cursor:help;
+}
 .q-main{flex:1;min-width:0}
 .q-title{font-weight:600;font-size:.9rem}
 .q-sub{color:var(--muted);font-size:.8rem;margin-top:2px}

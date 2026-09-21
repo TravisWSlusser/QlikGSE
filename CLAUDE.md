@@ -1666,3 +1666,44 @@ Verified: hovering Qlik Cloud during the live UAE incident shows
 is inert on hover (no empty popover); compact mode unaffected (chips
 render, nothing pops — hover doesn't fire on touch anyway, so this
 was never really a mobile concern).
+
+## Retired questions expire after 48h (21 Sep 2026, schema v11)
+
+Retiring used to be an archive: `deleteQuestion` set `active = false` and the
+row sat in the bank forever, out of the game but still in the Control Room
+list. After the Brain Freeze bank was replaced that left 36 dead Q3 rows in
+the view, which is what prompted this.
+
+Retire is now a **soft delete with a grace period**. `retired_at timestamptz`
+on all three banks; `deleteQuestion` stamps it, `saveQuestion` clears it on
+restore and `COALESCE`s it on an edit so fixing a typo on an already-retired
+row does not buy it another 48 hours. `listQuestions` DELETEs anything past
+the window before it lists.
+
+**The purge is lazy, on purpose.** There is no cron. `listQuestions` is the
+only thing that deletes, so rows can outlive the window until someone opens
+the Questions view — which costs nothing, because a retired row is already
+out of the game. This keeps the "no third infra provider" line and adds no
+scheduled invocation.
+
+**The window lives in ONE place**, `lib/admin/retireWindow.js`, and reaches
+the client as `retire_hours` in the listQuestions payload. The countdown ring
+reads it from there rather than keeping a second copy — the same drift that
+let the Blitz preloader fall out of step with its clip counts.
+
+The ring is a `conic-gradient` pie on the row's **Edit** button (Edit is the
+way back: Restore lives inside it), repainted each minute by a `setInterval`
+that dies with the view. `.q-row.retired` is already `opacity:.45` and a child
+cannot exceed its parent's opacity, so the arc uses full-strength `--danger`
+over a light track to stay legible through the fade.
+
+**This is destructive and it is not reversible.** Past the window the row and
+its `attempted`/`correct` counters are gone, so the question drops out of the
+most-missed readout. Nothing outside a bank references a question id, so
+nothing is left dangling. Rows retired before v11 have no stamp; migrate
+backfills them to `now()` rather than treating null as expired, so nothing
+vanished the moment this shipped.
+
+Pre-Setup databases have no `retired_at`. Every touch of it is wrapped and
+falls back to the pre-v11 statement, same shape as `saveEvent`'s `end_date`
+guard — the ring simply does not render until Setup has run.
