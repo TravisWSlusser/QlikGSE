@@ -1019,10 +1019,14 @@ async function checkAnswerRemote(q, key){
     try{
       const r = await fetch(API_BASE+'checkAnswer', { method:'POST',
         headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:q.id, choice:key }) });
-      if (r.ok){ const d = await r.json(); return !!d.correct; }
+      if (r.ok){ const d = await r.json(); return { correct:!!d.correct, correct_option:d.correct_option||'' }; }
     }catch(e){}
   }
-  return q && q.correct ? key === q.correct : false;   // offline fallback
+  // Same shape as checkCoinRemote. It used to return a bare boolean, which
+  // threw away the correct_option the endpoint already sends — that is why a
+  // missed Brain Freeze never showed the right answer while a missed coin did.
+  return { correct: (q && q.correct ? key === q.correct : false),
+           correct_option: (q && q.correct) || '' };   // offline fallback
 }
 
 function applyFreeze(){ freezeUntil = performance.now() + FREEZE_MS; startFreezeAudio(); }
@@ -1131,18 +1135,50 @@ async function openQuestion(){
   const opts = document.getElementById('qOpts'); opts.innerHTML = '';
   curQ.options.forEach(o => {
     const b = document.createElement('div'); b.className = 'opt';
+    b.dataset.key = o.key;                 // flashCorrect() finds the row by this
     b.innerHTML = `<b>${o.key.toUpperCase()}</b>${o.text}`;
     b.onclick = () => answerQuestion(o.key, b);
     opts.appendChild(b);
   });
 }
+/* Missing a Brain Freeze used to end at "WRONG \u2014 DORCS INCOMING", which told
+   the player nothing. Now the right answer pulses ERR_FLASHES times with a
+   descending sawtooth on each pulse \u2014 err, err, err \u2014 then holds lit until the
+   card closes. Synthesized through blip() rather than a clip: no new asset, no
+   preload weight, and the pitch is tunable here. Swapping in a recorded alert
+   later means replacing the blip() call and nothing else. */
+const ERR_FLASHES = 4, ERR_GAP_MS = 260, QUIZ_CLOSE_MS = 1000;
+
+function flashCorrect(letter){
+  if (!letter) return QUIZ_CLOSE_MS;
+  const hit = document.querySelector('#quiz .opt[data-key="' + letter + '"]');
+  if (!hit) return QUIZ_CLOSE_MS;
+  for (let i = 0; i < ERR_FLASHES; i++){
+    setTimeout(() => {
+      // Abandoning the run (BLITZ_ABANDON from the room) closes the card while
+      // pulses are still queued; without this the alert blips would carry on
+      // over live gameplay.
+      if (document.getElementById('quiz').style.display === 'none') return;
+      hit.classList.add('correct');
+      blip(300 - i * 40, 0.14, 'sawtooth');     // each pulse lands a step lower
+      // the last pulse stays lit, so the answer is still on screen at close
+      if (i < ERR_FLASHES - 1){
+        setTimeout(() => hit.classList.remove('correct'), ERR_GAP_MS * 0.55);
+      }
+    }, 240 + i * ERR_GAP_MS);
+  }
+  return 240 + ERR_FLASHES * ERR_GAP_MS + 520;
+}
+
 async function answerQuestion(key, el){
   if (answering) return; answering = true;
   qAtt++;
-  const ok = await checkAnswerRemote(curQ, key);
+  const verdict = await checkAnswerRemote(curQ, key);
+  const ok = verdict.correct;
   const res = document.getElementById('qResult');
   document.querySelectorAll('#quiz .opt').forEach(o => o.style.pointerEvents = 'none');
   let pendingFreeze = false;
+  let closeIn = QUIZ_CLOSE_MS;
   if (ok){
     qCor++; el.classList.add('correct');
     res.style.color = '#10CFC9'; res.textContent = 'CORRECT \u2014 DORCS FROZEN';
@@ -1152,12 +1188,14 @@ async function answerQuestion(key, el){
     el.classList.add('wrong');
     res.style.color = '#B83131'; res.textContent = 'WRONG \u2014 DORCS INCOMING';
     addBottomRow(); blip(150,0.18,'sawtooth');
+    // Only a miss holds the card open longer; a good run stays snappy.
+    closeIn = flashCorrect(verdict.correct_option);
   }
   setTimeout(() => {
     document.getElementById('quiz').style.display = 'none';
     paused = false; answering = false; curQ = null;
     if (pendingFreeze) applyFreeze();   // fires exactly as gameplay resumes
-  }, 1000);
+  }, closeIn);
 }
 
 /* ============================================================================
