@@ -1707,3 +1707,40 @@ vanished the moment this shipped.
 Pre-Setup databases have no `retired_at`. Every touch of it is wrapped and
 falls back to the pre-v11 statement, same shape as `saveEvent`'s `end_date`
 guard — the ring simply does not render until Setup has run.
+
+## Per-member scopes (22 Sep 2026, schema v12)
+
+Juan (UCY) tried to add a calendar event and was refused. Not a widget bug —
+`auth.js` read `scopes: manager ? SCOPES.slice() : []`, so a member session was
+**all-or-nothing**: every scope if `is_manager`, none otherwise. There was no
+way to say "Juan edits questions" short of making him a manager, which would
+also hand him `system` — the maintenance switch and key minting, the site-fatal
+class this codebase deliberately reserves for master/ULTRA.
+
+`team_members.scopes text[]` closes the gap. A manager still gets everything;
+everyone else gets exactly what was ticked on their Staff row (⋯ → **Access…**,
+manager/master only, `members op:'setScopes'`).
+
+**`GRANTABLE` is narrower than `SCOPES` on purpose** — calendar, banners,
+content, analytics. `system` is out for the reason above. `projects` is out
+because reads there are already open to every key holder and a tagged member
+can already move their own projects, so granting it would only add
+create/retire/tagging, which is a manager call. The list is enforced three
+times: `setScopes` rejects anything outside it, `identify()` re-filters on
+every read, and the client's `AREAS` mirrors it — so a hand-edited row still
+cannot smuggle `system` through.
+
+**The walk-back select needed a real third tier, not a new top one.** auth.js
+had two: rich, then pre-v3. Adding `scopes` to the rich select alone would mean
+a deployed-but-not-yet-Setup database throws on the missing column and drops to
+the pre-v3 tier — which also drops `is_manager`, **silently demoting every
+manager** until someone ran Setup. The middle tier (v3..v11: managers yes,
+scopes no) exists entirely to prevent that. Same reason `MEMBER_SELECTS` in
+projects.js gained a v12 entry above v8 rather than editing v8.
+
+Setting scopes on a manager 409s rather than silently doing nothing — they
+already hold everything, and a checkbox that appears to work but changes
+nothing is worse than a refusal.
+
+`whoami` already returned `who.scopes`, so the nav filters itself with no
+client change; the Access dialog is the only new UI.

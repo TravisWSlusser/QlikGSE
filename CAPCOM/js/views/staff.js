@@ -8,8 +8,49 @@
    every key — the org chart is for everyone. */
 import { h, clear } from '../util.js';
 import { api } from '../api.js';
-import { toast, confirmBox, sectionTitle, spinner, errorState, emptyState } from '../ui.js';
+import { toast, confirmBox, sectionTitle, spinner, errorState, emptyState, modal } from '../ui.js';
 import { pctx, editMemberDialog, historyDialog, inviteDialog } from './projects.js';
+
+/* Areas a non-manager can be granted (v12). Must match GRANTABLE in
+   lib/admin/auth.js — the server re-filters on write AND on read, so a
+   mismatch here is a cosmetic bug, never a privilege one. Maintenance and
+   key minting are deliberately absent: those ride the Manager checkbox. */
+const AREAS = [
+  ['calendar',  'Calendar',      'Mission Control events'],
+  ['banners',   'Hero Banners',  'the homepage rotators'],
+  ['content',   'Questions',     'all three REC Room banks'],
+  ['analytics', 'Analytics',     'player and game data, read-only'],
+];
+
+function accessDialog(m, rerender) {
+  if (m.is_manager) {
+    return modal(`${m.name}'s access`,
+      h('p', { class: 'confirm-msg' },
+        `${m.name} is a manager and already holds every area. Clear the Manager checkbox in Edit first if they should only have specific ones.`),
+      [{ label: 'Close', onClick: c => c() }]);
+  }
+  const have = new Set(m.scopes || []);
+  const boxes = AREAS.map(([key, label, hint]) => {
+    const cb = h('input', { type: 'checkbox', checked: have.has(key) });
+    return { key, cb, row: h('label', { class: 'field access-row' }, cb,
+      h('span', null, h('b', null, label), ' — ', hint)) };
+  });
+  modal(`${m.name}'s access`,
+    h('div', null,
+      h('p', { class: 'field-hint' },
+        'Tick the areas they can work in. They sign in with their usual trigram and code — nothing extra to paste. Leave everything unticked and they keep Home and Projects only.'),
+      ...boxes.map(b => b.row)),
+    [
+      { label: 'Cancel', onClick: c => c() },
+      { label: 'Save access', kind: 'accent', onClick: async c => {
+        const scopes = boxes.filter(b => b.cb.checked).map(b => b.key);
+        try {
+          await api.members({ op: 'setScopes', id: m.id, scopes });
+          c(); toast(scopes.length ? 'Access updated' : 'Access removed'); rerender();
+        } catch (err) { toast(err.message, 'err'); }
+      } },
+    ]);
+}
 
 export function render(params, rerender, who) {
   // registry rights (add/edit members, reset codes): managers + masters only
@@ -63,6 +104,7 @@ async function load(root, rerender, canEdit, meId, canInvite) {
 
   const menuFor = m => [
     ['Edit…', () => editMemberDialog(m, d, rerender), false],
+    ...(canEdit ? [['Access…', () => accessDialog(m, rerender), false]] : []),
     ...(canInvite ? [['Activation key…', () => inviteDialog(m), false]] : []),
     ...(canInvite && m.claimed ? [['Reset access code', () => confirmBox('Reset this access code?',
       `${m.name}'s member sign-in stops working until they claim a new code at the gate.`, async () => {
