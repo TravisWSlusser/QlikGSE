@@ -1142,32 +1142,144 @@ async function openQuestion(){
   });
 }
 /* Missing a Brain Freeze used to end at "WRONG \u2014 DORCS INCOMING", which told
-   the player nothing. Now the right answer pulses ERR_FLASHES times with a
-   descending sawtooth on each pulse \u2014 err, err, err \u2014 then holds lit until the
-   card closes. Synthesized through blip() rather than a clip: no new asset, no
-   preload weight, and the pitch is tunable here. Swapping in a recorded alert
-   later means replacing the blip() call and nothing else. */
-const ERR_FLASHES = 4, ERR_GAP_MS = 260, QUIZ_CLOSE_MS = 1000;
+   the player nothing. Now the right answer lights up while a game-show losing
+   horn plays over it \u2014 four descending stabs and a long sagging note, the
+   doo-doo-doo-doo bahhhh figure.
+
+   Synthesized, not a clip: no new asset, nothing added to a preload already
+   near 25MB, and every note is tunable right here.
+
+   The whole phrase is SCHEDULED ON THE AUDIOCONTEXT IN ONE GO rather than
+   fired from a chain of setTimeouts, so the notes stay in time with each
+   other even if the main thread stutters mid-frame. The flashes ride the same
+   millisecond table, so they cannot drift out of sync with what you hear. */
+// The real figure is a CHROMATIC WALK DOWN -- D, C#, C, B, each a semitone
+// below the last. Published transcriptions put it just above middle C (D4).
+// These are those notes dropped an octave and then a further three
+// semitones, which is where Travis tuned it by ear: B2, Bb2, A2, then Ab2
+// held and sagging. Low enough to read as a horn rather than a beep.
+const HORN_NOTES = [123.47, 116.54, 109.99];   // B2  Bb2  A2  -- the stabs
+const HORN_START_MS = 320;     // beat between the wrong click and the first stab
+const HORN_NOTE_MS  = 280;     // length of each short stab
+const HORN_PAUSE_MS = 360;     // the breath before the last note
+const HORN_TAIL_MS  = 1950;    // the long "bahhhh"
+const HORN_TAIL_HZ  = 103.83;  // Ab2 -- the fourth note of the figure...
+const HORN_TAIL_END = 46.25;   // ...sagging most of an octave and a half
+const QUIZ_HOLD_MS  = 1150;    // silence AFTER the horn, before play resumes
+const QUIZ_CLOSE_MS = 1000;    // a correct answer stays snappy
+
+/* MIX NOTES -- why the numbers below are what they are.
+
+   HORN_GAIN is the level of a WHOLE note, not of one oscillator. The two
+   detuned saws share a single gain node; giving each its own (the first
+   cut did) means they sum to roughly double, and the horn arrived about
+   twice as hot as every other sound in the game.
+
+   It sits UNDER blip()'s 0.22 rather than at it. A blip is a click; this
+   is a two-and-a-half second sustained phrase, and the ear integrates
+   sustained sound as louder than a transient at the same peak. Matching
+   the numbers would not match the loudness.
+
+   The music ducks instead. Making room is what stops it feeling
+   overbearing -- the alternative is turning the horn up until it wins,
+   which is how a mix gets loud and tiring. Same musicDuck the freeze
+   power-up uses, so the two can never fight for the music channel.
+
+   HORN_HP_HZ trims everything under the lowest note. Sub-bass that no
+   laptop or phone can reproduce still costs headroom and can rattle a
+   small speaker, so removing it makes the audible part cleaner and leaves
+   what you actually hear unchanged.
+
+   The 1700Hz lowpass stays exactly where it was tuned. At these pitches
+   the harmonics are what carry the phrase on small speakers -- the
+   fundamental of the sag (46Hz) is below what a phone can produce at all,
+   and the note still reads, because the ear reconstructs it from them. */
+const HORN_GAIN  = 0.105;   // per NOTE, both oscillators together
+const HORN_DUCK  = 0.18;    // music drops to this while the horn plays
+const HORN_HP_HZ = 40;      // below the 46Hz sag, so it only trims sub-bass
+
+/* Live oscillators, so an abandoned run can cut the horn off mid-phrase —
+   scheduled audio ignores DOM guards, it has to be stopped by hand. */
+let hornNodes = [], hornUnduck = null;
+
+function hornDuckMusic(on){
+  // Guard: the freeze power-up owns musicDuck too. A wrong answer never
+  // starts a freeze, so they cannot overlap in practice, but restoring
+  // blindly would stomp it if that ever changed.
+  if (on){ musicDuck = HORN_DUCK; applyMusicGain(0.18); }
+  else if (musicDuck === HORN_DUCK){ musicDuck = 1; applyMusicGain(0.7); }
+}
+
+function stopHorn(){
+  for (const n of hornNodes){ try { n.stop(); } catch (e) {} }
+  hornNodes = [];
+  if (hornUnduck){ clearTimeout(hornUnduck); hornUnduck = null; }
+  hornDuckMusic(false);
+}
+
+/* One brass-ish note: two detuned saws beating against each other through a
+   shared lowpass, so it reads as an instrument rather than a test tone.
+   bendTo slides the pitch down for the final held note. */
+function hornNote(c, at, freq, dur, bendTo){
+  const vol = HORN_GAIN * AUDIO.sfxVol;
+  const g = c.createGain(), lp = c.createBiquadFilter(), hp = c.createBiquadFilter();
+  lp.type = 'lowpass';  lp.frequency.value = 1700;
+  hp.type = 'highpass'; hp.frequency.value = HORN_HP_HZ;
+  lp.connect(hp); hp.connect(g); g.connect(c.destination);
+  // one envelope for the note, both voices inside it
+  // (exponential ramps cannot touch zero, hence the 0.0001 floor)
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(vol, at + 0.045);
+  g.gain.setValueAtTime(vol, Math.max(at + 0.05, at + dur - 0.12));
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  for (const detune of [-6, 6]){
+    const o = c.createOscillator();
+    o.type = 'sawtooth'; o.detune.value = detune;
+    o.frequency.setValueAtTime(freq, at);
+    if (bendTo) o.frequency.exponentialRampToValueAtTime(bendTo, at + dur * 0.92);
+    o.connect(lp);
+    o.start(at); o.stop(at + dur + 0.03);
+    hornNodes.push(o);
+  }
+}
+
+function loserHorn(){
+  const c = ac(); if (!c || AUDIO.sfxVol <= 0) return;
+  if (c.state === 'suspended') c.resume().catch(()=>{});
+  try {
+    stopHorn();
+    hornDuckMusic(true);
+    const t0 = c.currentTime + HORN_START_MS / 1000;
+    HORN_NOTES.forEach((f, i) =>
+      hornNote(c, t0 + i * HORN_NOTE_MS / 1000, f, (HORN_NOTE_MS / 1000) * 0.88));
+    const tailAt = t0 + (HORN_NOTES.length * HORN_NOTE_MS + HORN_PAUSE_MS) / 1000;
+    hornNote(c, tailAt, HORN_TAIL_HZ, HORN_TAIL_MS / 1000, HORN_TAIL_END);
+    // bring the music back as the last note dies, not after the card closes
+    const phraseMs = HORN_START_MS + HORN_NOTES.length * HORN_NOTE_MS
+                   + HORN_PAUSE_MS + HORN_TAIL_MS;
+    hornUnduck = setTimeout(() => { hornUnduck = null; hornDuckMusic(false); },
+                            phraseMs - 250);
+  } catch (e) { hornDuckMusic(false); }
+}
 
 function flashCorrect(letter){
-  if (!letter) return QUIZ_CLOSE_MS;
-  const hit = document.querySelector('#quiz .opt[data-key="' + letter + '"]');
-  if (!hit) return QUIZ_CLOSE_MS;
-  for (let i = 0; i < ERR_FLASHES; i++){
+  const phrase = HORN_START_MS + HORN_NOTES.length * HORN_NOTE_MS + HORN_PAUSE_MS + HORN_TAIL_MS;
+  const hit = letter ? document.querySelector('#quiz .opt[data-key="' + letter + '"]') : null;
+  loserHorn();                       // plays whether or not the row was found
+  if (!hit) return phrase + QUIZ_HOLD_MS;
+  HORN_NOTES.forEach((_, i) => {
     setTimeout(() => {
       // Abandoning the run (BLITZ_ABANDON from the room) closes the card while
-      // pulses are still queued; without this the alert blips would carry on
-      // over live gameplay.
+      // flashes are still queued; stopHorn() handles the audio side.
       if (document.getElementById('quiz').style.display === 'none') return;
       hit.classList.add('correct');
-      blip(300 - i * 40, 0.14, 'sawtooth');     // each pulse lands a step lower
-      // the last pulse stays lit, so the answer is still on screen at close
-      if (i < ERR_FLASHES - 1){
-        setTimeout(() => hit.classList.remove('correct'), ERR_GAP_MS * 0.55);
+      if (i < HORN_NOTES.length - 1){
+        setTimeout(() => hit.classList.remove('correct'), HORN_NOTE_MS * 0.55);
       }
-    }, 240 + i * ERR_GAP_MS);
-  }
-  return 240 + ERR_FLASHES * ERR_GAP_MS + 520;
+    }, HORN_START_MS + i * HORN_NOTE_MS);
+  });
+  // the answer stays lit under the long note, then a beat of silence
+  return phrase + QUIZ_HOLD_MS;
 }
 
 async function answerQuestion(key, el){
@@ -1187,7 +1299,7 @@ async function answerQuestion(key, el){
   } else {
     el.classList.add('wrong');
     res.style.color = '#B83131'; res.textContent = 'WRONG \u2014 DORCS INCOMING';
-    addBottomRow(); blip(150,0.18,'sawtooth');
+    addBottomRow();          // the horn IS the wrong-answer sound now
     // Only a miss holds the card open longer; a good run stays snappy.
     closeIn = flashCorrect(verdict.correct_option);
   }
@@ -2344,7 +2456,7 @@ function abandonRun(){
   if (state !== 'play' && state !== 'fly' && state !== 'pop') return;
   state = 'start';
   paused = false; menuOpen = false;
-  stopMusic(); stopVoice(); stopFreezeAudio();
+  stopMusic(); stopVoice(); stopFreezeAudio(); stopHorn();
   resetHazard(); resetCoin(); resetBlast();
   ball = null; falling = []; sparks = [];
   ['pause','quiz','over'].forEach(id => { const e=document.getElementById(id); if(e) e.style.display='none'; });
