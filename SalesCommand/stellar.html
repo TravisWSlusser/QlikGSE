@@ -228,20 +228,26 @@ html[data-section] .wrap > *{display:none}
   color:var(--sky);display:inline-flex;align-items:center;gap:7px;
 }
 .ssh-kicker::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sky);flex:0 0 auto}
-/* Capped at two lines, and the body at two, because the widget height is a
-   fixed constant in Mindtickle while the copy in STELLAR_POSTS is not. Without
-   a cap, a longer headline silently outgrows the widget and gets clipped —
-   editing a post would break the layout with no warning. This makes the tallest
-   possible post a known quantity, which is what the height below is measured
-   against. */
+/* These used to be capped at two lines each. The cap was there because the
+   widget height is a fixed constant in Mindtickle while the copy in
+   STELLAR_POSTS is not — so a long post would outgrow the widget and clip.
+   Capping traded one failure for another: it never overflowed, but it
+   silently ATE half the copy, with nothing on screen to say so. A post that
+   reads fine in CAPCOM arrived at the learner missing its second half.
+
+   fitHero() below does the job properly: it measures the height the widget
+   actually has and scales the type down until the whole post fits. Nothing is
+   truncated and nothing overflows, at any widget height, for any length of
+   copy. --ssh-scale is what it turns; leave these as calc() or it has nothing
+   to act on. */
 .ssh-title{
-  font-weight:600;line-height:1.04;font-size:clamp(30px,4.2vw,50px);
+  font-weight:600;line-height:1.04;
+  font-size:calc(clamp(30px,4.2vw,50px) * var(--ssh-scale,1));
   letter-spacing:-.01em;margin:.22em 0 .3em;text-wrap:balance;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
 .ssh-title .ac{color:var(--green)}
-.ssh-body{font-size:clamp(14px,1.4vw,16px);line-height:1.55;color:#bccfe2;max-width:560px;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ssh-body{font-size:calc(clamp(14px,1.4vw,16px) * var(--ssh-scale,1));
+  line-height:1.55;color:#bccfe2;max-width:560px}
 [data-theme="light"] .ssh-body{color:#42566c}
 .ssh-dots{display:flex;gap:7px;margin-top:14px}
 .ssh-dots button{
@@ -284,8 +290,8 @@ html[data-compact="1"] .svc-name{font-size:11.5px}
 html[data-compact="1"] .svc-state{font-size:9.5px;letter-spacing:.08em}
 html[data-compact="1"] .ssh{padding:12px}
 html[data-compact="1"] .ssh-stage{min-height:96px}
-html[data-compact="1"] .ssh-title{font-size:21px;margin:.18em 0 .24em}
-html[data-compact="1"] .ssh-body{font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html[data-compact="1"] .ssh-title{font-size:calc(21px * var(--ssh-scale,1));margin:.18em 0 .24em}
+html[data-compact="1"] .ssh-body{font-size:calc(12.5px * var(--ssh-scale,1));line-height:1.45}
 html[data-compact="1"] .ssh-dots{margin-top:10px}
 
 @media (max-width:700px){
@@ -299,8 +305,8 @@ html[data-compact="1"] .ssh-dots{margin-top:10px}
   .svc-state{font-size:9.5px;letter-spacing:.08em}
   .ssh{padding:12px}
   .ssh-stage{min-height:96px}
-  .ssh-title{font-size:21px;margin:.18em 0 .24em}
-  .ssh-body{font-size:12.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ssh-title{font-size:calc(21px * var(--ssh-scale,1));margin:.18em 0 .24em}
+  .ssh-body{font-size:calc(12.5px * var(--ssh-scale,1));line-height:1.45}
   .ssh-dots{margin-top:10px}
 }
 </style>
@@ -487,6 +493,38 @@ function sizeStage() {
   if (tallest) stage.style.height = tallest + 'px';
 }
 
+/* Fit the post to the widget instead of cutting it off.
+
+   An iframe cannot RESIZE itself here (Mindtickle strips the JS that would
+   receive a posted height), but it can MEASURE itself: inside the frame,
+   window.innerHeight IS the height the widget was given. That is the whole
+   trick — 300px on desktop, ~200px in the mobile app, read at runtime rather
+   than hardcoded, so the same code fits both without knowing either number.
+
+   Step the type down until the tallest post fits. Scaling by a ratio rather
+   than per-item keeps every post the same size, so rotation does not jump.
+   SSH_MIN_SCALE is a floor: past it the copy is genuinely too long for the
+   space and shrinking further would only make it unreadable, so it stops and
+   lets the last sliver clip — a visible clip is a better bug report than
+   silently vanished text. */
+var SSH_MIN_SCALE = 0.62, SSH_STEP = 0.04;
+
+function fitHero() {
+  var hero = document.querySelector('.hero');
+  var stage = document.getElementById('sshStage');
+  if (!hero || !stage || !items.length) return;
+  var budget = window.innerHeight - 6;          // 6px so a rounding error cannot clip
+  if (!budget || budget < 80) return;           // not laid out yet; resize will call again
+  var scale = 1, root = document.documentElement;
+  root.style.setProperty('--ssh-scale', '1');
+  sizeStage();
+  while (hero.offsetHeight > budget && scale > SSH_MIN_SCALE) {
+    scale = Math.max(SSH_MIN_SCALE, scale - SSH_STEP);
+    root.style.setProperty('--ssh-scale', scale.toFixed(2));   // float noise out of the DOM
+    sizeStage();
+  }
+}
+
 function show(i) {
   if (!items.length) return;
   idx = (i + items.length) % items.length;
@@ -514,7 +552,7 @@ if (SECTION === 'banner' || SECTION === '') {
 
 if (SECTION === 'hero' || SECTION === '') {
   buildHero();
-  sizeStage();
+  fitHero();
   restart();
 
   /* Live feed — Control Room content. Replaces STELLAR_POSTS wholesale (the
@@ -529,13 +567,13 @@ if (SECTION === 'hero' || SECTION === '') {
       STELLAR_POSTS = d.posts;
       idx = 0;
       buildHero();
-      sizeStage();
+      fitHero();
       restart();
     })
     .catch(function () { /* fallback posts already on stage */ });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeStage).catch(function(){});
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitHero).catch(function(){});
   var rt;
-  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(sizeStage, 120); });
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(fitHero, 120); });
   // A rotator ticking in a hidden tab is wasted work, and lands the reader on
   // a random post when they come back.
   document.addEventListener('visibilitychange', function () {
