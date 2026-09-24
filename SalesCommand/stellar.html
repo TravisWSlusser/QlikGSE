@@ -240,10 +240,18 @@ html[data-section] .wrap > *{display:none}
    truncated and nothing overflows, at any widget height, for any length of
    copy. --ssh-scale is what it turns; leave these as calc() or it has nothing
    to act on. */
+/* Smaller than the Mission Control hero's 50px even though that card uses a
+   bigger number, because the two carry different copy. The hero's headlines
+   are short ("Value Proposition Guide.") and sit on one line at 50px; these
+   are sentences ("Nick Ward Shatters Highest Score with 5000 Point Run") and
+   at 50px they ran the full 1200px of the widget, which read as stretched
+   rather than large. max-width makes a long headline WRAP into a block
+   instead of spanning the card - the body already caps at 560px for the
+   same reason. */
 .ssh-title{
-  font-weight:600;line-height:1.04;
-  font-size:calc(clamp(30px,4.2vw,50px) * var(--ssh-scale,1));
-  letter-spacing:-.01em;margin:.22em 0 .3em;text-wrap:balance;
+  font-weight:600;line-height:1.12;
+  font-size:calc(clamp(22px,2.3vw,32px) * var(--ssh-scale,1));
+  letter-spacing:-.01em;margin:.22em 0 .32em;text-wrap:balance;max-width:24ch;
 }
 .ssh-title .ac{color:var(--green)}
 .ssh-body{font-size:calc(clamp(14px,1.4vw,16px) * var(--ssh-scale,1));
