@@ -674,7 +674,18 @@ const API_BASE = '/api/blitz/';   // consolidated QlikGSE root api, blitz namesp
    SFX/voice/hazard are one-shot elements scaled by sfxVol; blips are synthesized.
    ============================================================================ */
 const AUDIO = { base: ASSET_BASE + 'audio/', musicVol: 0.35, sfxVol: 0.8, bgm:null, voice:null };
-const MUSIC_SRC      = AUDIO.base + 'music/Blitz_BG_Music_01.mp3';
+/* Three BG tracks instead of one looping forever. Drawn from a shuffled bag
+   (makeBag/bagNext, the same helper the Side-Qlik voice lines use): the
+   session opens on a RANDOM track, all three play before any repeats, then
+   it reshuffles and goes again for as long as the tab is open. One looping
+   song for a whole session was maddening. */
+const MUSIC_TRACKS = ['Blitz_BG_Music_01.mp3', 'Blitz_BG_Music_02.mp3', 'Blitz_BG_Music_03.mp3'];
+let musicBag = null, musicWired = false;
+
+function nextTrackSrc(){
+  if (!musicBag) musicBag = makeBag(MUSIC_TRACKS.length);   // shuffles on first draw
+  return AUDIO.base + 'music/' + MUSIC_TRACKS[bagNext(musicBag) - 1];
+}
 const FREEZE_BG_SRC  = AUDIO.base + 'other/power_up_fx/freeze/freeze_bg_10s.mp3';
 const MULTIPOP_COUNT = 30, FREEZE_QUIP_COUNT = 6, DZONE_COUNT = 16;
 
@@ -746,8 +757,25 @@ function setMenuMuffle(on){
 }
 
 function startMusic(){ try{
-  if(!MUSIC_SRC) return;
-  if(!AUDIO.bgm){ AUDIO.bgm=new Audio(MUSIC_SRC); AUDIO.bgm.loop=true; }
+  if(!MUSIC_TRACKS.length) return;
+  /* ONE element for the whole session, and the track swaps by changing .src.
+     It cannot be a fresh Audio() per track: ensureMusicGraph() calls
+     createMediaElementSource(AUDIO.bgm), which may only ever be called ONCE
+     per element, and the node it returns is what carries volume, freeze
+     ducking and the menu muffle. A new element would be a second graph the
+     rest of the game has no handle on - silent music that ignores the
+     volume slider. Changing .src on an element already in the graph keeps
+     every one of those working. */
+  if(!AUDIO.bgm){
+    AUDIO.bgm = new Audio(nextTrackSrc());
+    AUDIO.bgm.loop = false;          // the playlist advances; looping would trap track one
+  }
+  if(!musicWired){                   // bind once, not per track
+    musicWired = true;
+    AUDIO.bgm.addEventListener('ended', function(){
+      try{ AUDIO.bgm.src = nextTrackSrc(); AUDIO.bgm.play().catch(function(){}); }catch(e){}
+    });
+  }
   ensureMusicGraph();
   const c=ac(); if(c && c.state==='suspended') c.resume();   // PRESS START is a user gesture
   if(musicGain) applyMusicGain(0); else AUDIO.bgm.volume=AUDIO.musicVol;
@@ -1836,7 +1864,9 @@ const PRELOAD = (() => {
   const add = (url,w)=>list.push({url,w});
   add(v+'BlitzStartScreen.webm', 40);
   add(v+'freeze_frame_overlay.webm', 40);
-  add(a+'music/Blitz_BG_Music_01.mp3', 12);
+  // all three: the session opens on a RANDOM one, so preloading only the
+  // first would leave a cold start two times out of three
+  MUSIC_TRACKS.forEach(function(f){ add(a+'music/'+f, 12); });
   add(a+'other/power_up_fx/freeze/freeze_bg_10s.mp3', 2);
   for (let i=1;i<=5;i++) add(a+`other/ball_fx/Ball_0${i}.mp3`, 1);
   add(a+'other/ball_fx/Switch_01.mp3', 1);   // game-over sting (see gameOver)
