@@ -1900,7 +1900,7 @@ body.previewing{padding-top:38px}
 .av-link:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 /* avatar + name, for PROSE (the change feed) */
-.av-row{display:inline-flex;align-items:center;gap:7px;min-width:0}
+.av-line{display:inline-flex;align-items:center;gap:7px;min-width:0}
 .av-nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* a stack of chips - board posts, project owners */
@@ -2027,12 +2027,23 @@ body.previewing{padding-top:38px}
   font-size:.72rem;color:var(--link);
 }
 
-/* ── your face beside the Operations clock ── */
-.clock-me{display:flex;flex-direction:column;align-items:center;gap:3px;margin-left:auto}
-.clock-me-nm{font-size:.8rem;font-weight:600;color:var(--ink);text-align:center}
-.clock-me-nm:hover{color:var(--link)}
-.clock-me-sub{font-size:.64rem;color:var(--muted)}
-@media (max-width:520px){.clock-me{margin-left:0}}
+/* ── your face, top right of Home ──
+   Its own column on the hotlinks line, so the pills can wrap freely
+   underneath without ever shoving the avatar around. align-items:center
+   is what "middle aligned with the hotlinks row" means once those pills
+   wrap onto a second line. */
+.home-top{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+.home-top .hlk-bar{flex:1 1 auto;min-width:0;margin-bottom:0}
+.home-me{display:flex;align-items:center;gap:11px;flex:0 0 auto}
+.home-me-tx{display:flex;flex-direction:column;align-items:flex-end;gap:1px;line-height:1.25}
+.home-me-nm{font-size:.86rem;font-weight:600;color:var(--ink);text-align:right}
+.home-me-nm:hover{color:var(--link)}
+.home-me-sub{font-size:.68rem;color:var(--muted)}
+/* on a phone the words go and the face stays — it still reads */
+@media (max-width:560px){
+  .home-top{gap:10px}
+  .home-me-tx{display:none}
+}
 
 /* a corkboard signature is a face; a sticker reaction shows whole */
 .note-by-av{display:inline-flex;align-items:center}

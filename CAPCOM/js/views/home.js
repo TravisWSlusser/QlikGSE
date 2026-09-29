@@ -36,9 +36,16 @@ export function render(params, rerender, who) {
     .catch(() => null);
   const root = h('div', { class: 'view' });
 
-  // ── the hotlinks bar — shared quick nav, any key can add to it ──
+  /* ── the top line: hotlinks left, you on the right ──
+     The avatar lived in the Operations clock's title row, which put it
+     halfway down the page and made it look like a property OF the clock.
+     It belongs where an account always belongs — the top right corner —
+     and it rides the hotlinks line rather than claiming a row of its own.
+
+     It is a SIBLING of .hlk-bar, never a child: loadHotlinks() clears that
+     element to repaint the pills and would take the avatar with it. */
   const linkBar = h('div', { class: 'hlk-bar' }, spinner());
-  root.appendChild(linkBar);
+  root.appendChild(h('div', { class: 'home-top' }, linkBar, meCorner(who)));
   loadHotlinks(linkBar, rerender);
 
   // Quick actions live under the calendar now, not in a top row.
@@ -75,8 +82,8 @@ export function render(params, rerender, who) {
      Latest Changes moved to Maintenance - a change feed is an audit trail,
      and the machine room is where you go looking for one. */
 
-  // Right column: clock (with your face), the corkboard, the News Feed.
-  rightCol.appendChild(clockCard(who));
+  // Right column: the clock, the corkboard, the News Feed.
+  rightCol.appendChild(clockCard());
   const board = h('div', { class: 'card board-card', dataset: { tour: 'board' } }, spinner());
   rightCol.appendChild(board);
   loadBoard(board, rerender);
@@ -123,13 +130,7 @@ function tzOffsetMin(tz) {
   return Math.round((loc - utc) / 60000);
 }
 
-/* clockCard(who) - the Operations clock, and to its right the signed-in
-   person's avatar in the oval. Hovering it raises "Update Avatar"; there
-   is no other affordance because there does not need to be one, and this
-   is the only place on Home that is about YOU rather than the team.
-   A scoped key (no member) gets the clock alone - there is no one to
-   photograph. */
-function clockCard(who) {
+function clockCard() {
   const greeting = h('div', { class: 'lk-greet' });
   const localTime = h('div', { class: 'lk-time' });
   const localDate = h('div', { class: 'lk-date' });
@@ -144,16 +145,8 @@ function clockCard(who) {
     el._tz = z.tz;
     return el;
   });
-  const me = (who && who.member) || null;
-  const face = me
-    ? h('div', { class: 'clock-me' },
-      avatarEditor(me, 'lg', () => { /* the element repaints itself */ }),
-      h('button', { class: 'clock-me-nm lnk', onClick: () => { location.hash = '#profile'; } },
-        me.name),
-      h('span', { class: 'clock-me-sub' }, 'Your profile \u2192'))
-    : null;
   const card = h('div', { class: 'card clock-card', dataset: { tour: 'clock' } },
-    sectionTitle('Operations clock', face),
+    sectionTitle('Operations clock'),
     greeting, localTime, localDate,
     h('div', { class: 'clk-grid' }, zoneEls));
 
@@ -191,6 +184,22 @@ function clockCard(who) {
   }, 1000);
   tick();
   return card;
+}
+
+/* meCorner(who) — the signed-in person, top right.
+   A scoped key gets nothing here: there is no one to photograph, and an
+   empty oval beside "Your profile" would be a dead end for the SMEs and
+   contractors who hold those keys.
+   The face carries the Update Avatar affordance on hover; at this size
+   only the camera fits, so the button carries a title as well. */
+function meCorner(who) {
+  const me = (who && who.member) || null;
+  if (!me) return null;
+  return h('div', { class: 'home-me' },
+    h('div', { class: 'home-me-tx' },
+      h('button', { class: 'home-me-nm lnk', onClick: () => { location.hash = '#profile'; } }, me.name),
+      h('span', { class: 'home-me-sub' }, 'Your profile →')),
+    avatarEditor(me, 'md', () => { /* the element repaints itself */ }));
 }
 
 /* ── the hotlinks bar ── */

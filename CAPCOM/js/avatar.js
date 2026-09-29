@@ -95,7 +95,10 @@ export function avatar(m, { size = 'sm', link = true } = {}) {
 /* avatarName(member, opts) → avatar + name, for PROSE. */
 export function avatarName(m, opts = {}) {
   const who = m || {};
-  return h('span', { class: 'av-row' }, avatar(who, { size: 'xs', ...opts }),
+  // .av-line, NOT .av-row — that one was already taken by the avatar
+  // upload row in editMemberDialog, and a later rule here would have
+  // silently squashed it
+  return h('span', { class: 'av-line' }, avatar(who, { size: 'xs', ...opts }),
     h('span', { class: 'av-nm' }, who.name || who.actor || 'Unknown'));
 }
 

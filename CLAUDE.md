@@ -1990,7 +1990,13 @@ signature** — never a blank face for someone we simply do not know.
   on the shortest trip.
 - **Latest Changes moved to Maintenance.** A change feed is an audit trail,
   and the machine room is where you go looking for one.
-- **Your face beside the Operations clock**, hover for Update Avatar.
+- **Your face top right**, on the hotlinks line, hover for Update Avatar.
+  It went into the Operations clock's title row first, which put it
+  halfway down the page and read as a property OF the clock. An account
+  belongs in the top right corner. It is a SIBLING of `.hlk-bar`, never a
+  child: `loadHotlinks()` clears that element to repaint the pills and
+  would take the avatar with it. At 44px only the camera fits, so the
+  button carries a `title` as well.
 - **Projects and REC Room now find YOUR rows.** Travis was explicit that
   this is *not* a page per person: "its the same home page for everyone…
   Their info just populates the widgets when they log in." There is no
@@ -2019,6 +2025,11 @@ everywhere; a nav row would make it a destination instead.
 assuming that. The hover peek built its panel with `e.append(...)` and
 printed "null" where an absent OOO note went. `put()` in avatar.js is the
 filtered append; use it any time children are appended outside `h()`.
+
+**`.av-row` was already taken.** The avatar upload row in
+`editMemberDialog` has used that class since v6; a new rule further down
+the sheet silently squashed it. The prose avatar+name row is `.av-line`.
+Grep the stylesheet before naming a class in a file this long.
 
 **A route change never fires `mouseleave`.** The card that raised the hover
 panel is simply gone, and the panel floats over the next page forever —
