@@ -8,12 +8,14 @@ import { startTour, resetTours } from '../tour.js';
 
 const AREAS = [
   ['Home', 'The glance page: both calendars, your projects, your REC Room and the leaders, clocks, Learning Insights, the Community Board and the score ticker.'],
-  ['Calendar', 'The enablement calendar behind the Mission Control pages — events and categories, editable with the calendar scope.'],
+  ['Mindtickle Calendar', 'The learner-facing calendar behind the Mission Control pages — events and categories, editable with the calendar scope. The TEAM calendar is a tab on Home and a card on GSE Central.'],
   ['Focused Headlines', 'The rotating hero banners on Mission Control. What sellers see first.'],
   ['AI Highlights', 'The rotating AI Highlights set — same mechanics as Focused Headlines, different stage.'],
   ['Project Board', 'Every project, its team, its status, and the date that status promised. Overdue rows demand a written what-happened before they move.'],
-  ['Insights & Calendar', 'The board as charts: Gantt, status donuts, the projects calendar and the quarter review.'],
-  ['Leadership Brief', 'Week, month or quarter compiled from the board — movement, milestones, overdue, lulls — copy-ready for the update leadership sends upward. Core leadership team only. Add a Claude key for a written executive summary.'],
+  ['GSE Central', 'The front door to projects: the counts, status split, team calendar, who is carrying what, every project as a link, the phase timeline and the diary review.'],
+  ['A project page', 'Every project has its own page — status, milestones and the full history. Click a project name anywhere, or Open on a board row.'],
+  ['Leadership Access', 'A sidebar group only managers and masters see. It holds the Leadership Brief and Maintenance — everything in it was already manager-gated, just scattered.'],
+  ['Leadership Brief', 'The verdict first, then the counts, then the detail: movement, milestones, overdue with their written explanations, and lulls. Copy As Text for the update leadership sends upward. Add a Claude key for a written executive summary.'],
   ['Staff', 'The Sales Enablement org chart — cards branching from the top down, with trigrams, who is out of office, and everyone’s informal status post (react to those!). Leaders add staff and issue activation keys here. SMEs and outside contributors do NOT go here.'],
   ['Tailored Access', 'Scoped keys for SMEs and other outside contributors — a key opens exactly the areas it names and nothing else.'],
   ['Maintenance', 'The machine room: the REC Room maintenance switch, the service keys the apps run on, and the Setup button.'],

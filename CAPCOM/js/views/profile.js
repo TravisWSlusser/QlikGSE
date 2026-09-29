@@ -230,7 +230,7 @@ function projectsCard(m, d) {
     const st = d.statusById[p.status_id];
     return h('div', { class: 'prof-row' + (p.active ? '' : ' prj-retired') },
       h('div', { class: 'prj-glance-row' },
-        h('button', { class: 'prj-glance-title lnk', onClick: () => { location.hash = '#projects'; } }, p.title),
+        h('a', { class: 'prj-glance-title lnk', href: '#project/' + p.id }, p.title),
         st ? h('span', { class: 'prj-status-chip', style: { '--psc': `var(--ps-${st.color})` } }, st.label) : null,
         p.active ? null : chip('retired', 'muted')),
       // the others on it — faces, because this is a chip context

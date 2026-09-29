@@ -2132,3 +2132,71 @@ means a new `question_answers` table (question, table, territory, correct,
 when) and an INSERT on **every answer in the game** — a write on the hot
 path that currently does one cheap UPDATE. That is a real cost and a real
 design decision, so it is Travis's call, not a thing to slip in.
+
+## GSE Central, project pages, Leadership Access (29 Sep 2026, no schema)
+
+**Mindtickle Calendar** — the learner-facing one, named plainly now that a
+Team calendar exists beside it on Home. **GSE Central** (was Insights &
+Calendar) leads the Projects group: the section's front door, with the
+Board one step in. Landing on the summary and stepping into the editor
+reads better than the reverse.
+
+### The Team Member Catalog is gone
+
+Travis: the enablement org has no named internal sub-teams, who reports to
+whom is the Staff page's job, and everyone ends up on everything. A
+catalog grouped by team — and the "By team" donut beside it — charted a
+structure nobody actually works by. Both are deleted.
+
+What replaced them is the split that DOES drive the work: **Who is on
+what**, person level, ordered by load, every face a door to that person
+and every project chip a door to the project. Plus a **Projects index** —
+the page had four visualisations OF the board without ever showing the
+board.
+
+### A project is a page now
+
+`#project/<id>`, `nav:false`, reached by clicking a project's name
+anywhere (Home, Profile, GSE Central) or Open on a board row. Status,
+milestones and the full diary on one screen. Before this the material was
+behind two modal doors — a Diary button inside a board row — and there was
+no link you could send anyone.
+
+Class prefix is **`prp-`, not `pp-`**: pop.js owns `.pp-*` for the player
+stat card. That is the third namespace collision in two days (`.av-row`,
+`.pp-*`) — grep the stylesheet before naming a class in a file this long.
+
+### Leadership Access
+
+A sidebar group gated on `master || manager`, holding the Leadership Brief
+and Maintenance. Both were already manager-gated and both were filed
+somewhere misleading: the Brief sat under Projects next to pages the whole
+team opens, and Maintenance sat in "System" keeping company with Help &
+FAQ, which everyone can open. System now holds only Help — the last group
+is the one thing everyone can reach.
+
+**Tailored Access deliberately stays under Projects.** Staff granted
+`access` hold a read-only view of it, and a manager-only group would hide
+it from exactly the people the `access` scope was invented for.
+
+The Brief opens with a **verdict in words** — "1 promise already broken",
+"nothing overdue but 2 recorded no activity" — then tiles, then a
+moved/quiet/overdue split, then the written sections unchanged. It used to
+open with one grey sentence of six numbers run together, which is a report
+you have to parse before you can read it.
+
+### The donut has never drawn its ring
+
+Found while checking the new layout. `donut()` built an inline SVG with a
+viewBox and no width/height; `.donut-face` is `flex:none` with no
+dimensions of its own, so the element measured **0x0** and the arcs never
+rendered. The centre label and the legend drew on top of nothing, which
+read as "a donut with no donut" rather than as a broken chart — which is
+presumably why it survived this long.
+
+Fixed at the source (`width`/`height` from the `size` parameter, plus
+`display:block`). `.donut-face` also took `line-height:0` so the SVG sits
+flush, which meant `.donut-center` had to put its own leading back or the
+two centre lines printed on top of each other. Same family as the REC
+map's fx canvas: **a replaced element with no intrinsic size collapses,
+and nothing errors.**

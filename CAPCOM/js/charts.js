@@ -127,7 +127,15 @@ export function donut(slices, { size = 148, thickness = 18, centerLabel = '', ce
   const total = slices.reduce((s, x) => s + x.value, 0);
   const NS = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(NS, 'svg');
+  /* width/height are EXPLICIT. An inline SVG carrying only a viewBox has
+     no intrinsic size, and .donut-face is `flex:none` with no dimensions
+     of its own - so the element measured 0x0 and the ring never drew at
+     all. The centre label and the legend rendered on top of nothing,
+     which is why it read as "a donut with no donut" rather than as a
+     broken chart. Same class of trap as the REC map's fx canvas. */
   svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+  svg.setAttribute('width', size);
+  svg.setAttribute('height', size);
   svg.setAttribute('class', 'donut');
   const r = (size - thickness) / 2, cx = size / 2, cy = size / 2;
   const C = 2 * Math.PI * r;

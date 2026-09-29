@@ -183,6 +183,9 @@ function projectRow(p, d, teamById, statusById, canEdit, me, rerender) {
       fmt.day(p.phase_due),
       p.overdue ? h('div', { style: { marginTop: '4px' } }, h('span', { class: 'overdue-badge' }, '⚠ OVERDUE')) : null),
     h('td', null, h('div', { class: 'prj-actions' },
+      // the Diary dialog stays for a quick read without leaving the board;
+      // Open is the page, which is what you send someone a link to
+      h('a', { class: 'btn xs', href: '#project/' + p.id }, 'Open'),
       h('button', { class: 'btn xs', onClick: () => diaryDialog(p, d, canEdit || (mine && p.active), rerender) }, 'Diary'),
       ...((canEdit || mine) && p.active ? [
         h('button', { class: 'btn xs' + (p.overdue ? ' danger' : ''), onClick: () => statusDialog(p, d, rerender) }, 'Status'),

@@ -9,9 +9,10 @@
    inside the redraw (the calByDate lesson). */
 import { h, clear, fmt, esc, isPast } from '../util.js';
 import { api } from '../api.js';
+import { avatar } from '../avatar.js';
+import { shapeProjects } from './projects.js';
 import { sectionTitle, spinner, errorState, emptyState } from '../ui.js';
-import { donut, gantt } from '../charts.js';
-import { historyDialog } from './projects.js';
+import { donut, gantt, statTile } from '../charts.js';
 
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'];
@@ -41,17 +42,10 @@ async function load(root, rerender) {
   catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender))); return; }
   clear(root);
 
-  const teamById = {}, statusById = {};
-  for (const t of d.teams) teamById[t.id] = t;
-  for (const s of d.statuses) statusById[s.id] = s;
-  // the person card (historyDialog) reads these off d
-  d.memberById = {};
-  for (const m of d.members || []) d.memberById[m.id] = m;
-  d.tagsByMember = {};
-  for (const t of d.tags || []) (d.tagsByMember[t.member_id] = d.tagsByMember[t.member_id] || []).push(t.project_id);
+  shapeProjects(d, null);
+  const teamById = d.teamById, statusById = d.statusById;
   const active = d.projects.filter(p => p.active);
   const activeStatuses = d.statuses.filter(s => s.active);
-  const activeTeams = d.teams.filter(t => t.active);
 
   /* ── range picker: one state, two consumers (Gantt + review) ── */
   let range = quarterRange(0);
@@ -71,51 +65,53 @@ async function load(root, rerender) {
   fromIn.addEventListener('change', applyInputs);
   toIn.addEventListener('change', applyInputs);
 
-  root.appendChild(h('div', { class: 'card' },
-    sectionTitle('Projects — Insights & Calendar',
+  /* ── the strip: the four numbers, the range picker, nothing else ──
+     This page was six full-width cards deep before anything told you how
+     the board was actually doing. The counts come first now, and the
+     range picker rides with them instead of owning a card of its own. */
+  const overdue = active.filter(p => p.overdue);
+  const unowned = active.filter(p => !(d.tagsByProject[p.id] || []).length);
+  root.appendChild(h('div', { class: 'card gse-head' },
+    sectionTitle('GSE Central',
       h('span', { class: 'range-row' },
         preset('This quarter', quarterRange(0)),
         preset('Last quarter', quarterRange(-1)),
-        fromIn, h('span', { class: 'sub' }, '→'), toIn))));
+        fromIn, h('span', { class: 'sub' }, '→'), toIn)),
+    h('div', { class: 'tiles tiles-4' },
+      statTile('Active', fmt.int(active.length)),
+      statTile('Overdue', fmt.int(overdue.length),
+        overdue.length ? 'past their promise' : 'all promises holding'),
+      statTile('Milestones ahead', fmt.int((d.milestones || []).filter(m => String(m.date) >= d.today).length)),
+      statTile('Nobody tagged', fmt.int(unowned.length),
+        unowned.length ? 'no one is on these' : 'every project has people'))));
 
-  /* ── donuts: composition of the active board ── */
-  const donutGrid = h('div', { class: 'grid2' });
+  /* ── composition + the calendar, side by side ──
+     "By team" is GONE. The enablement org has no named sub-teams - who
+     reports to whom is the Staff page's job, and everyone ends up on
+     everything. Charting a structure that does not drive the work made
+     the page look analytical while saying nothing. What replaced it is
+     the split that does drive the work: who is carrying how much. */
   const byStatus = activeStatuses
     .map(s => ({ s, n: active.filter(p => p.status_id === s.id).length }))
     .filter(x => x.n > 0);
-  const teamColor = {}; // teams cycle the same validated palette, in sort order — stable by assignment
-  const PALETTE = ['violet', 'teal', 'amber', 'rose', 'blue', 'orange', 'sky'];
-  activeTeams.forEach((t, i) => { teamColor[t.id] = PALETTE[i % PALETTE.length]; });
-  const byTeam = activeTeams
-    .map(t => ({ t, n: active.filter(p => p.team_id === t.id).length }))
-    .filter(x => x.n > 0);
-  donutGrid.append(
+  const topRow = h('div', { class: 'grid2' });
+  topRow.append(
     h('div', { class: 'card' }, sectionTitle('By status'),
       byStatus.length ? donut(byStatus.map(x => ({
         label: x.s.label, value: x.n, colorVar: `--ps-${x.s.color}`,
         tipHtml: `<b>${esc(x.s.label)}</b><br>${x.n} project${x.n > 1 ? 's' : ''}`,
       })), { centerLabel: String(active.length), centerSub: 'active' })
         : emptyState('Nothing active to chart.')),
-    h('div', { class: 'card' }, sectionTitle('By team'),
-      byTeam.length ? donut(byTeam.map(x => ({
-        label: x.t.name, value: x.n, colorVar: `--ps-${teamColor[x.t.id]}`,
-        tipHtml: `<b>${esc(x.t.name)}</b><br>${x.n} project${x.n > 1 ? 's' : ''}`,
-      })), { centerLabel: String(byTeam.length), centerSub: 'teams' })
-        : emptyState('Nothing active to chart.')));
-  root.appendChild(donutGrid);
+    loadCalendarCard(d, teamById, statusById));
+  root.appendChild(topRow);
+
+  /* ── who is on what ── person level, not team level ── */
+  root.appendChild(buildLoad(d, active));
+
+  /* ── every project, one line each, each one a door ── */
+  root.appendChild(buildIndex(d, active, statusById));
 
   root.appendChild(ganttCard);
-
-  /* ── the Projects calendar: phase deadlines + milestones, nothing else ── */
-  const calCard = h('div', { class: 'card' });
-  buildCalendar(calCard, d, teamById, statusById);
-  root.appendChild(calCard);
-
-  /* ── Team Member Catalog: everyone, by team, leaders on top ── */
-  const catCard = h('div', { class: 'card' });
-  buildCatalog(catCard, d, teamById);
-  root.appendChild(catCard);
-
   root.appendChild(reviewCard);
 
   /* ── the range-driven redraw ── */
@@ -202,6 +198,12 @@ function buildGantt(card, d, rv, range, statusById) {
 }
 const dateLte = (a, b) => a <= b;
 
+function loadCalendarCard(d, teamById, statusById) {
+  const card = h('div', { class: 'card' });
+  buildCalendar(card, d, teamById, statusById);
+  return card;
+}
+
 function buildCalendar(card, d, teamById, statusById) {
   const byDate = {};
   for (const p of d.projects) {
@@ -276,48 +278,84 @@ function buildCalendar(card, d, teamById, statusById) {
     head, gridEl, listEl);
 }
 
-/* the Team Member Catalog: active members grouped by team in sort order,
-   the team's leader (project_teams.leader_id) starred on top, everyone
-   clickable through to their person card. Unassigned members close it. */
-function buildCatalog(card, d, teamById) {
-  const members = (d.members || []).filter(m => m.active);
-  card.appendChild(sectionTitle('Team Member Catalog',
-    h('span', { class: 'sec-sub' }, `${members.length} member${members.length === 1 ? '' : 's'} — click anyone for their project history`)));
-  if (!members.length) {
-    card.appendChild(emptyState('Nobody in the registry yet.',
-      'People get added from the Project Board’s Members button.'));
-    return;
+/* ── Who is carrying what ──
+ *
+ * The Team Member Catalog used to sit here, grouping people under team
+ * names. Travis: the enablement org has no separate internal teams, the
+ * reporting line is the Staff page's job, and everyone ends up working on
+ * everything — so a catalog by team was a structure nobody works by.
+ *
+ * This is the question that survives it: who is on how much, and is
+ * anyone carrying more than they should. Person level, ordered by load,
+ * every face a door to that person and every project a door to itself.
+ */
+function buildLoad(d, active) {
+  const card = h('div', { class: 'card' });
+  const rows = (d.members || [])
+    .filter(m => m.active)
+    .map(m => ({
+      m,
+      projects: (d.tagsByMember[m.id] || [])
+        .map(id => d.projectById[id])
+        .filter(p => p && p.active),
+    }))
+    .filter(x => x.projects.length)
+    .sort((a, b) => b.projects.length - a.projects.length || a.m.name.localeCompare(b.m.name));
+
+  const idle = (d.members || []).filter(m => m.active
+    && !(d.tagsByMember[m.id] || []).some(id => (d.projectById[id] || {}).active));
+
+  card.appendChild(sectionTitle('Who is on what',
+    h('span', { class: 'sec-sub' }, `${rows.length} of ${rows.length + idle.length} people carrying ${active.length} projects`)));
+
+  if (!rows.length) {
+    card.appendChild(emptyState('Nobody is tagged on an active project.',
+      'Tag people from a project on the board and they show up here.'));
+    return card;
   }
-  const memberRow = (m, isLead) => {
-    const projCount = (d.tagsByMember[m.id] || []).length;
-    return h('button', { class: 'cat-member' + (isLead ? ' cat-lead' : ''), onClick: () => historyDialog(m, d) },
-      isLead ? h('span', { class: 'cat-star', 'aria-label': 'Team leader' }, '★') : h('span', { class: 'cat-star' }, ''),
-      h('span', { class: 'cat-name' }, m.name),
-      m.trigram ? h('span', { class: 'mem-row-tri' }, m.trigram) : null,
-      h('span', { class: 'cat-detail' }, [isLead ? 'Team leader' : null, m.title || null].filter(Boolean).join(' · ')),
-      h('span', { class: 'cat-count' }, projCount ? `${projCount} project${projCount > 1 ? 's' : ''}` : ''));
-  };
-  const grid = h('div', { class: 'cat-grid' });
-  const placed = new Set();
-  for (const t of d.teams.filter(t => t.active)) {
-    const lead = t.leader_id ? d.memberById[t.leader_id] : null;
-    const crew = members.filter(m => m.team_id === t.id && (!lead || m.id !== lead.id));
-    if (!lead && !crew.length) continue;
-    const col = h('div', { class: 'cat-team' }, h('div', { class: 'cat-team-name' }, t.name));
-    if (lead && lead.active) { col.appendChild(memberRow(lead, true)); placed.add(lead.id); }
-    for (const m of crew) { col.appendChild(memberRow(m, false)); placed.add(m.id); }
-    grid.appendChild(col);
+
+  const most = rows[0].projects.length;
+  card.appendChild(h('div', { class: 'load-list' }, rows.map(({ m, projects }) =>
+    h('div', { class: 'load-row' },
+      avatar(m, { size: 'sm' }),
+      h('span', { class: 'load-name' }, m.name),
+      h('span', { class: 'load-bar' },
+        h('i', { style: { width: Math.max(6, 100 * projects.length / most) + '%' } })),
+      h('span', { class: 'load-n' }, String(projects.length)),
+      h('span', { class: 'load-projects' }, projects.map(p =>
+        h('a', { class: 'load-chip', href: '#project/' + p.id, title: p.title }, p.title)))))));
+
+  if (idle.length) {
+    card.appendChild(h('p', { class: 'explain' },
+      `Not on an active project: ${idle.map(m => m.name).join(', ')}.`));
   }
-  const loose = members.filter(m => !placed.has(m.id));
-  if (loose.length) {
-    const col = h('div', { class: 'cat-team' }, h('div', { class: 'cat-team-name' }, 'Unassigned'));
-    for (const m of loose) col.appendChild(memberRow(m, false));
-    grid.appendChild(col);
-  }
-  card.appendChild(grid);
+  return card;
 }
 
-/* the quarter's diary, grouped per project — deliberately print-shaped */
+/* ── the index: every active project, one line, each a door ──
+   The page had no list of the projects it was charting. You read four
+   visualisations OF the board without ever seeing the board. */
+function buildIndex(d, active, statusById) {
+  const card = h('div', { class: 'card' });
+  const rows = active.slice().sort((a, b) =>
+    (b.overdue - a.overdue) || String(a.phase_due || '').localeCompare(String(b.phase_due || '')));
+  card.appendChild(sectionTitle('Projects',
+    h('a', { class: 'btn xs', href: '#projects' }, 'Open the board \u2192')));
+  if (!rows.length) { card.appendChild(emptyState('Nothing active.')); return card; }
+  card.appendChild(h('div', { class: 'idx-list' }, rows.map(p => {
+    const st = statusById[p.status_id];
+    const people = (d.tagsByProject[p.id] || []).map(id => d.memberById[id]).filter(Boolean);
+    return h('a', { class: 'idx-row', href: '#project/' + p.id },
+      h('span', { class: 'idx-title' }, p.title),
+      st ? h('span', { class: 'prj-status-chip', style: { '--psc': `var(--ps-${st.color})` } }, st.label) : null,
+      h('span', { class: 'av-stack idx-people' }, people.slice(0, 5).map(m => avatar(m, { size: 'xs', link: false }))),
+      p.overdue
+        ? h('span', { class: 'overdue-badge' }, 'OVERDUE')
+        : h('span', { class: 'idx-due' }, p.phase_due ? `due ${fmt.day(p.phase_due)}` : ''));
+  })));
+  return card;
+}
+
 function buildReview(card, rv, d, teamById, statusById, range) {
   clear(card);
   card.appendChild(sectionTitle('Diary review',

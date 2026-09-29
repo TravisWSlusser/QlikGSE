@@ -1219,10 +1219,15 @@ tr.prj-retired{opacity:.5}
 
 /* donut */
 .donut-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap}
-.donut-face{position:relative;flex:none}
+.donut-face{position:relative;flex:none;line-height:0}
+.donut{display:block}
 .donut-center{
   position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
   justify-content:center;pointer-events:none;
+  /* the face is line-height:0 so the svg sits flush; the label inside it
+     has to put its own leading back or the two lines print on top of
+     each other */
+  line-height:1.15;
 }
 .donut-big{font-size:1.5rem;font-weight:800;color:var(--heading)}
 .donut-sub{font-size:.66rem;color:var(--muted)}
@@ -2144,3 +2149,106 @@ body.previewing{padding-top:38px}
   .q-miss{width:100%;order:3;margin-top:6px}
   .q-miss-n{margin-left:auto}
 }
+
+/* ======================================================================
+   A project's own page.
+   ====================================================================== */
+.prp-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.prp-title{font-size:1.5rem;line-height:1.2;margin:0 0 8px;color:var(--heading)}
+.prp-facts{
+  display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;
+  font-size:.8rem;color:var(--muted);
+}
+.prp-people{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.prp-lbl{
+  font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin:16px 0 8px;display:block;
+}
+.prp-people .prp-lbl{margin:0}
+
+.prp-stand{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:640px){.prp-stand{grid-template-columns:repeat(2,1fr)}}
+.prp-stand-cell{
+  display:flex;flex-direction:column;gap:3px;padding:12px;
+  border-radius:9px;background:var(--card-2);
+}
+.prp-stand-cell span{font-size:.66rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.prp-stand-cell b{font-size:1.05rem;color:var(--ink)}
+
+.prp-miles{display:flex;flex-direction:column;gap:7px}
+.prp-mile{
+  display:grid;grid-template-columns:82px minmax(0,1fr) auto;gap:10px;
+  align-items:center;padding:8px 11px;border-radius:8px;background:var(--card-2);
+  border-left:3px solid var(--link);
+}
+.prp-mile.done{border-left-color:var(--accent);opacity:.75}
+.prp-mile-d{font-size:.74rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.prp-mile-t{font-size:.86rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prp-mile-s{
+  font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+  color:var(--link);
+}
+.prp-mile.done .prp-mile-s{color:var(--accent)}
+
+.prp-add{display:flex;gap:8px;margin-bottom:14px}
+.prp-add input{flex:1 1 auto}
+.diary-by{display:flex;align-items:center;gap:6px}
+
+/* ======================================================================
+   GSE Central.
+   ====================================================================== */
+.gse-head .tiles{margin-top:16px}
+
+/* -- who is on what: person level, ordered by load -- */
+.load-list{display:flex;flex-direction:column;gap:8px}
+.load-row{
+  display:grid;grid-template-columns:28px minmax(90px,150px) minmax(60px,1fr) 28px minmax(0,2fr);
+  gap:10px;align-items:center;padding:8px 10px;border-radius:9px;background:var(--card-2);
+}
+.load-name{font-weight:600;font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.load-bar{display:block;height:7px;border-radius:4px;background:var(--grid);overflow:hidden}
+.load-bar i{display:block;height:100%;background:var(--viz-seq);border-radius:4px}
+.load-n{font-weight:700;font-size:.84rem;text-align:right;font-variant-numeric:tabular-nums}
+.load-projects{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+.load-chip{
+  font-size:.68rem;padding:2px 8px;border-radius:5px;
+  background:var(--card);border:1px solid var(--line);color:var(--ink-2);
+  max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.load-chip:hover{border-color:var(--link);color:var(--link)}
+@media (max-width:900px){
+  .load-row{grid-template-columns:28px minmax(0,1fr) 28px;row-gap:6px}
+  .load-bar{display:none}
+  .load-projects{grid-column:1/4}
+}
+
+/* -- the index: every project, one line, each a door -- */
+.idx-list{display:flex;flex-direction:column;gap:6px}
+.idx-row{
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto 110px;
+  gap:12px;align-items:center;padding:9px 12px;border-radius:9px;
+  background:var(--card-2);color:inherit;
+}
+.idx-row:hover{outline:1px solid var(--link)}
+.idx-title{font-weight:600;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.idx-due{font-size:.74rem;color:var(--muted);text-align:right}
+.idx-people{justify-self:end}
+@media (max-width:760px){
+  .idx-row{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}
+  .idx-people,.idx-due{grid-column:1/3;justify-self:start;text-align:left}
+}
+
+/* ======================================================================
+   Leadership Brief - the verdict leads.
+   The word carries the meaning; the colour only agrees with it.
+   ====================================================================== */
+.brief-verdict{
+  padding:12px 16px;border-radius:10px;margin:4px 0 16px;
+  font-size:.92rem;font-weight:600;border-left:3px solid var(--muted);
+  background:var(--card-2);color:var(--ink);
+}
+.brief-verdict.ok{border-left-color:var(--accent)}
+.brief-verdict.warn{border-left-color:var(--warn)}
+.brief-verdict.bad{border-left-color:var(--overdue)}
+.brief-tiles{margin-bottom:18px}
+.brief-split{margin-bottom:20px}

@@ -20,7 +20,7 @@ const KEY = 'capcom.tour'; // JSON {off, done:{route:true}} — legacy strings m
 export const TOURS = {
   home: [
     { hook: 'nav', title: 'The Sidebar', blurb: 'Every area you can open lives here — Mission Control, Projects, the REC Room. What you see depends on your access.' },
-    { hook: 'calendar', title: 'Calendar', blurb: 'What is on this week across enablement — the same feed the Mission Control pages read.' },
+    { hook: 'calendar', title: 'Two Calendars', blurb: 'Mission Control is the learner-facing feed. Team is phase deadlines, milestones and who is out. Same grid, two sources — switch with the tabs.' },
     { hook: 'projects-glance', title: 'Projects At A Glance', blurb: 'The Project Board, compressed: what is moving, what is overdue, and the next deadline coming at you.' },
     { hook: 'changes', title: 'Change Feed', blurb: 'Everything anyone changes, signed and timestamped. Nothing here happens quietly.' },
     { hook: 'clock', title: 'Operations Clock', blurb: 'Local time plus the four hub clocks — New York, São Paulo, London, Bangalore.' },
@@ -36,13 +36,13 @@ export const TOURS = {
     { sel: '.view table', title: 'A Project Row', blurb: 'Diary reads the project’s history; Status moves it and always asks for a date. An OVERDUE row demands a written what-happened before it moves again.' },
   ],
   'projects/insights': [
-    { card: 'Projects — Insights & Calendar', title: 'The Donuts', blurb: 'The board summarized — how work is distributed right now.' },
+    { card: 'GSE Central', title: 'GSE Central', blurb: 'The front door to projects: what is active, what is overdue, who is carrying what, and every project one click away.' },
     { card: 'Phase timeline', title: 'Phase Timeline', blurb: 'Every active project as a bar to its promised date — the Gantt view of the quarter.' },
     { card: 'Projects calendar', title: 'Projects Calendar', blurb: 'Phase deadlines and milestones on their own calendar — deliberately separate from Mission Control’s.' },
     { card: 'Diary review', title: 'Diary Review', blurb: 'The append-only project diary, filterable by quarter — what management reads to see how the quarter actually went.' },
   ],
   'projects/brief': [
-    { card: 'Leadership Brief', title: 'The Leadership Brief', blurb: 'Week, month or quarter — movement, milestones, overdue items with their written explanations, and lulls. Copy As Text and it is ready for the update you send upward.' },
+    { card: 'Leadership Brief', title: 'The Leadership Brief', blurb: 'The verdict first, then the numbers, then the detail. Week, month or quarter. Copy As Text and it is ready for the update you send upward.' },
   ],
   'projects/staff': [
     { card: 'Staff', title: 'The Org Chart', blurb: 'Global Sales Enablement, top to bottom — cards branching from Nick down, with out-of-office notes and everyone’s informal status. Tap a card for the profile; tap + on a status to react.' },

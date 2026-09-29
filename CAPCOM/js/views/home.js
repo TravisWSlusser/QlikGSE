@@ -1455,7 +1455,7 @@ async function loadMine(prjCard, recCard, scopes, who) {
   } else {
     prjCard.appendChild(h('div', { class: 'prj-glance' }, rows.map(p => {
       const st = d.statusById[p.status_id];
-      return h('a', { class: 'prj-glance-row', href: '#projects' },
+      return h('a', { class: 'prj-glance-row', href: '#project/' + p.id },
         h('span', { class: 'prj-glance-title' }, p.title),
         h('span', { class: 'prj-glance-team' }, (d.teamById[p.team_id] || {}).name || ''),
         st ? h('span', { class: 'prj-status-chip', style: { '--psc': `var(--ps-${st.color})` } }, st.label) : null,

@@ -28,6 +28,7 @@ import * as projects from './views/projects.js';
 import * as projectsInsights from './views/projectsInsights.js';
 import * as staff from './views/staff.js';
 import * as profile from './views/profile.js';
+import * as projectPage from './views/projectPage.js';
 import * as help from './views/help.js';
 import { maybeAutoStart, killTour } from './tour.js';
 import { ICONS } from './icons.js';
@@ -39,25 +40,32 @@ const NAV = [
     { route: 'home', label: 'Home', scope: null, mod: home, icon: 'home' },
   ]},
   { group: 'Mission Control', items: [
-    { route: 'calendar', label: 'Calendar', scope: 'calendar', mod: calendar, icon: 'calendar' },
+    // "Mindtickle Calendar" - the learner-facing one. The TEAM calendar is
+    // a tab on Home and a card on GSE Central; naming this one plainly is
+    // what stops the two being confused.
+    { route: 'calendar', label: 'Mindtickle Calendar', scope: 'calendar', mod: calendar, icon: 'calendar' },
     { route: 'banners/highlights', label: 'Focused Headlines', scope: 'banners', mod: banners, icon: 'banners' },
     // label only - the ROUTE stays banners/stellar so saved links survive
     { route: 'banners/stellar', label: 'AI Highlights', scope: 'banners', mod: banners, icon: 'stellar' },
   ]},
   { group: 'Projects', items: [
+    /* GSE Central leads the group: it is the section's front door now -
+       what is in flight, what is due, who is on what - and the Board is
+       where you go to change something. Landing on the summary and
+       stepping into the editor reads better than the reverse. */
+    { route: 'projects/insights', label: 'GSE Central', scope: null, mod: projectsInsights, icon: 'insights' },
     // scope null on purpose: every key holder can SEE the board (visibility
     // is the product); edit controls gate on the 'projects' scope inside
     { route: 'projects', label: 'Project Board', scope: null, mod: projects, icon: 'projects' },
-    { route: 'projects/insights', label: 'Insights & Calendar', scope: null, mod: projectsInsights, icon: 'insights' },
-    // core leadership team only — the manager tier, plus masters
-    { route: 'projects/brief', label: 'Leadership Brief', scope: 'projects', mod: brief, icon: 'insights',
-      gate: w => w.master || w.manager },
     { route: 'projects/staff', label: 'Staff', scope: null, mod: staff, icon: 'staff' },
-    /* A person's page. NOT in the sidebar on purpose - you arrive by
-       clicking a face, which is the point of putting faces everywhere.
-       nav:false keeps it routable without giving it a nav row. */
+    /* Two pages you arrive at by CLICKING something, never from the
+       sidebar - a person's face, or a project's name. nav:false keeps
+       them routable without giving either a nav row. */
     { route: 'profile', label: 'Profile', scope: null, mod: profile, icon: 'staff', nav: false },
-    // key generation for SMEs and outside contributors — NOT staff
+    { route: 'project', label: 'Project', scope: null, mod: projectPage, icon: 'projects', nav: false },
+    // key generation for SMEs and outside contributors — NOT staff.
+    // Stays HERE rather than under Leadership: staff granted 'access' hold
+    // a read-only view of it, and a manager-only group would hide it.
     { route: 'projects/access', label: 'Tailored Access', scope: ['system', 'access'], mod: tailoredAccess, icon: 'system' },
   ]},
   { group: 'REC Room', items: [
@@ -70,8 +78,18 @@ const NAV = [
     { route: 'players', label: 'MT Roster', scope: 'analytics', mod: players, icon: 'players' },
     { route: 'questions', label: 'Questions', scope: 'content', mod: questions, icon: 'questions' },
   ]},
-  { group: 'System', items: [
+  /* Leadership Access — appears only for the manager tier (and masters).
+     Everything in it was already manager-gated and scattered: the Brief
+     sat under Projects next to pages the whole team opens, and Maintenance
+     sat in "System" keeping company with Help & FAQ, which everyone can
+     open. Grouping them says what the sidebar could not: this is the tier,
+     not a page. The Brief is the section's home. */
+  { group: 'Leadership Access', items: [
+    { route: 'projects/brief', label: 'Leadership Brief', scope: 'projects', mod: brief, icon: 'insights',
+      gate: w => w.master || w.manager },
     { route: 'maintenance', label: 'Maintenance', scope: 'system', mod: maintenance, icon: 'maintenance' },
+  ]},
+  { group: 'System', items: [
     { route: 'help', label: 'Help & FAQ', scope: null, mod: help, icon: 'help' },
   ]},
 ];

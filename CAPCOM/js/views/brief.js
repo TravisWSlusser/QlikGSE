@@ -4,7 +4,8 @@
    summary is garnish on a report that is already true. */
 import { h, clear, fmt } from '../util.js';
 import { api } from '../api.js';
-import { toast, sectionTitle, spinner, errorState, emptyState } from '../ui.js';
+import { toast, sectionTitle, spinner, errorState, emptyState, chip } from '../ui.js';
+import { statTile, hbars } from '../charts.js';
 
 const WINDOWS = [['week', 'Week'], ['month', 'Month'], ['quarter', 'Quarter']];
 
@@ -31,11 +32,47 @@ async function load(card, windowName) {
     tabs,
     h('button', { class: 'btn sm', onClick: () => copyBrief(d, windowName, card) }, 'Copy As Text')));
 
-  // headline counts, flat
-  card.appendChild(h('p', { class: 'brief-counts' },
-    `${d.counts.active} active projects · ${d.counts.moved} status moves · ` +
-    `${d.milestonesHit.length} milestones hit · ${d.counts.overdue} overdue · ` +
-    `${d.counts.new} new · ${d.counts.lulls} without activity`));
+  /* ── the diagnosis ──
+     This page opened with one grey sentence of six numbers run together,
+     which is a report you have to PARSE before you can read it. It is the
+     landing page for the leadership tier now, so it leads with the shape
+     of the window and the one line that says whether anything needs a
+     decision. The written sections below are unchanged - they were always
+     the substance, they just were not the first thing. */
+  const active = d.counts.active || 0;
+  const overdue = d.counts.overdue || 0;
+  const lulls = d.counts.lulls || 0;
+  const moving = Math.max(0, active - lulls);
+
+  // The verdict is stated in WORDS, then coloured - never colour alone,
+  // and never a number the reader has to interpret unaided.
+  const verdict = overdue > 0
+    ? { cls: 'bad', text: `${overdue} promise${overdue > 1 ? 's' : ''} already broken — these need a date or a reason.` }
+    : lulls > 0
+      ? { cls: 'warn', text: `Nothing overdue, but ${lulls} project${lulls > 1 ? 's' : ''} recorded no activity at all this window.` }
+      : active === 0
+        ? { cls: 'ok', text: 'Nothing active on the board.' }
+        : { cls: 'ok', text: 'Every promise is holding and every active project moved.' };
+  card.appendChild(h('div', { class: 'brief-verdict ' + verdict.cls }, verdict.text));
+
+  card.appendChild(h('div', { class: 'tiles tiles-5 brief-tiles' },
+    statTile('Active', fmt.int(active)),
+    statTile('Overdue', fmt.int(overdue), overdue ? 'past their promise' : 'all holding'),
+    statTile('Status moves', fmt.int(d.counts.moved || 0), 'in this window'),
+    statTile('Milestones hit', fmt.int(d.milestonesHit.length)),
+    statTile('New', fmt.int(d.counts.new || 0), 'posted in this window')));
+
+  // movement vs stillness, the one comparison the counts were hiding
+  if (active > 0) {
+    card.appendChild(h('div', { class: 'brief-split' }, hbars([
+      { label: 'Moved', value: moving, display: String(moving),
+        tipHtml: `<b>${moving}</b> active project${moving === 1 ? '' : 's'} recorded activity` },
+      { label: 'Went quiet', value: lulls, display: String(lulls),
+        tipHtml: `<b>${lulls}</b> recorded nothing in ${d.days} days` },
+      { label: 'Overdue', value: overdue, display: String(overdue),
+        tipHtml: `<b>${overdue}</b> past the promised date` },
+    ], { max: active })));
+  }
 
   // the executive summary — appears when a key is set
   const aiBox = h('div', { class: 'brief-ai' });
