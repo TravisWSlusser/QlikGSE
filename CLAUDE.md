@@ -2031,6 +2031,18 @@ filtered append; use it any time children are appended outside `h()`.
 the sheet silently squashed it. The prose avatar+name row is `.av-line`.
 Grep the stylesheet before naming a class in a file this long.
 
+**A member session did not carry `avatar_url`.** Home's top-right corner
+renders the signed-in person off `who.member` (from whoami), NOT off the
+projects bundle every other face comes from — and that object was
+`{id, name, trigram}`. So the one avatar the owner looks at most could
+never show a picture, however many times they uploaded one. It looked
+fine in-session because `pickAvatar` mutates the member object and
+repaints; a refresh put the blank icon back. `auth.js` now selects
+`avatar_url` in all three member tiers (`'' AS avatar_url` in the pre-v3
+one, since the column arrives in v6). Worth remembering that whoami's
+member object and the projects bundle's member rows are two different
+shapes, and a field added to one does not reach the other.
+
 **A route change never fires `mouseleave`.** The card that raised the hover
 panel is simply gone, and the panel floats over the next page forever —
 exactly the bug `hidePop()` already existed to fix. `draw()` now closes all
