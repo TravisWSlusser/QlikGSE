@@ -11,16 +11,29 @@
 import { h, clear, fmt, isPast, esc } from '../util.js';
 import { api } from '../api.js';
 import { spinner, errorState, sectionTitle, chip, emptyState, toast, modal, confirmBox, field, textInput } from '../ui.js';
+import { giphyGrid } from '../giphy.js';
+import { avatar, avatarEditor, avatarName } from '../avatar.js';
+import { shapeProjects } from './projects.js';
 import { ICONS } from '../icons.js';
 import { wirePop } from '../pop.js';
 
 const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-let ME = null; // the signed-in member's name — signatures come from the credential
+let ME = null;
+let PEOPLE = null;   // Promise<shaped projects bundle> | null // the signed-in member's name — signatures come from the credential
 
 export function render(params, rerender, who) {
   const scopes = (who && who.scopes) || [];
   ME = (who && who.member && who.member.name) || null;
+  /* ONE projects call for the whole page. Home's personal cards need the
+     bundle, and so does the corkboard - a sticky stores a TYPED NAME, not
+     a member id, so turning a signature into a face means looking the name
+     up in the registry. Two calls for one payload would also mean the
+     board could render before the registry landed and sign itself in
+     plain text, then never correct itself. */
+  PEOPLE = api.projects({ op: 'list', all: true })
+    .then(d => shapeProjects(d, who))
+    .catch(() => null);
   const root = h('div', { class: 'view' });
 
   // ── the hotlinks bar — shared quick nav, any key can add to it ──
@@ -50,19 +63,20 @@ export function render(params, rerender, who) {
   loadCalendar(calCard, scopes, acts);
   const prjCard = h('div', { class: 'card', dataset: { tour: 'projects-glance' } }, spinner());
   leftCol.appendChild(prjCard);
-  loadProjectsCard(prjCard, scopes);
-  // the Leadership Brief teaser — managers and masters only
-  if (who && (who.master || who.manager)) {
-    const briefCard = h('div', { class: 'card' }, spinner());
-    leftCol.appendChild(briefCard);
-    loadBriefCard(briefCard);
-  }
-  const logCard = h('div', { class: 'card', dataset: { tour: 'changes' } }, spinner());
-  leftCol.appendChild(logCard);
-  loadLog(logCard);
+  // Your projects when CAPCOM knows who you are, the board's latest when it
+  // does not (a scoped key is not a person). Same card either way.
+  const recCard = h('div', { class: 'card', dataset: { tour: 'your-rec' } }, spinner());
+  leftCol.appendChild(recCard);
+  loadMine(prjCard, recCard, scopes, who);
 
-  // Right column: clock, the corkboard, then the Enablement News Feed.
-  rightCol.appendChild(clockCard());
+  /* The Leadership Brief teaser is GONE from here. It is a full page in the
+     sidebar for exactly the people who can open it, and a teaser for a page
+     one click away was spending the best slot on the shortest trip.
+     Latest Changes moved to Maintenance - a change feed is an audit trail,
+     and the machine room is where you go looking for one. */
+
+  // Right column: clock (with your face), the corkboard, the News Feed.
+  rightCol.appendChild(clockCard(who));
   const board = h('div', { class: 'card board-card', dataset: { tour: 'board' } }, spinner());
   rightCol.appendChild(board);
   loadBoard(board, rerender);
@@ -109,7 +123,13 @@ function tzOffsetMin(tz) {
   return Math.round((loc - utc) / 60000);
 }
 
-function clockCard() {
+/* clockCard(who) - the Operations clock, and to its right the signed-in
+   person's avatar in the oval. Hovering it raises "Update Avatar"; there
+   is no other affordance because there does not need to be one, and this
+   is the only place on Home that is about YOU rather than the team.
+   A scoped key (no member) gets the clock alone - there is no one to
+   photograph. */
+function clockCard(who) {
   const greeting = h('div', { class: 'lk-greet' });
   const localTime = h('div', { class: 'lk-time' });
   const localDate = h('div', { class: 'lk-date' });
@@ -124,8 +144,16 @@ function clockCard() {
     el._tz = z.tz;
     return el;
   });
+  const me = (who && who.member) || null;
+  const face = me
+    ? h('div', { class: 'clock-me' },
+      avatarEditor(me, 'lg', () => { /* the element repaints itself */ }),
+      h('button', { class: 'clock-me-nm lnk', onClick: () => { location.hash = '#profile'; } },
+        me.name),
+      h('span', { class: 'clock-me-sub' }, 'Your profile \u2192'))
+    : null;
   const card = h('div', { class: 'card clock-card', dataset: { tour: 'clock' } },
-    sectionTitle('Operations clock'),
+    sectionTitle('Operations clock', face),
     greeting, localTime, localDate,
     h('div', { class: 'clk-grid' }, zoneEls));
 
@@ -222,6 +250,28 @@ function notePop() {
   return notePopEl;
 }
 function hideNotePop() { if (notePopEl) notePopEl.style.display = 'none'; }
+
+/* Who pinned this. A sticky is a CHIP context, so the face stands alone
+   and the name lives on hover - the paper is small and a name across it
+   competes with the thing the note actually says.
+   A poster we cannot match to a staff member (an SME on a scoped key,
+   or someone who typed their name differently) keeps the written
+   signature. Never a blank face for a person we simply do not know. */
+let BOARD_PEOPLE = {};
+/* The same person, in PROSE - face and name together, for the hover
+   panel where there is room and the sentence needs a subject. */
+function poster(n) {
+  const raw = (n.poster_name || n.author || '').trim();
+  const m = raw && BOARD_PEOPLE[raw.toLowerCase()];
+  return m ? avatarName(m) : h('b', null, raw || '?');
+}
+
+function signature(n) {
+  const raw = (n.poster_name || n.author || '').trim();
+  const m = raw && BOARD_PEOPLE[raw.toLowerCase()];
+  if (!m) return h('span', { class: 'note-by' }, '\u2014 ' + (raw || '?'));
+  return h('span', { class: 'note-by note-by-av' }, avatar(m, { size: 'xs' }));
+}
 function placePop(e, anchor) {
   e.style.display = 'block';
   const r = anchor.getBoundingClientRect ? anchor.getBoundingClientRect() : { left: 100, bottom: 100, top: 80 };
@@ -233,6 +283,8 @@ function placePop(e, anchor) {
 }
 
 async function loadBoard(card, rerender) {
+  // registry first, so the very first paint can already sign with faces
+  try { const ppl = await PEOPLE; if (ppl) BOARD_PEOPLE = ppl.memberByName || {}; } catch {}
   hideXfPad(false); // a re-render orphans the pad's anchor; drop any preview
   hideYarnPad();
   setTie(null);
@@ -733,7 +785,7 @@ function stickerItem(n, cork, reload, bd) {
   el.addEventListener('mouseenter', () => {
     if (el.classList.contains('lifted')) return;
     const e = notePop();
-    clear(e).append(h('div', { class: 'np-who' }, `${n.poster_name || '?'} · ${fmt.when(n.created_at)}`), h('div', { class: 'np-hint' }, 'hold to move · right-click to scale or rotate'));
+    clear(e).append(h('div', { class: 'np-who' }, poster(n), h('span', { class: 'sub' }, fmt.when(n.created_at))), h('div', { class: 'np-hint' }, 'hold to move · right-click to scale or rotate'));
     e.className = 'np-mini';
     placePop(e, el);
   });
@@ -747,7 +799,7 @@ function noteItem(n, reacts, cork, reload, bd) {
   const el = h('div', { class: 'note note-' + (n.color || 'yellow') },
     h('i', { class: 'note-pin' }),
     h('span', { class: 'note-msg' }, n.message),
-    h('span', { class: 'note-by' }, '— ' + (n.poster_name || n.author || '?')),
+    signature(n),
     reacts.length ? (() => {
       const cluster = h('span', { class: 'rx-cluster', title: 'Click to manage reactions' },
         reacts.slice(0, 4).map(r => r.sticker_url
@@ -787,7 +839,7 @@ function noteItem(n, reacts, cork, reload, bd) {
         h('span', { class: 'np-rx-row' }, r.sticker_url
           ? h('img', { class: 'rx-img', src: r.sticker_url, alt: '' })
           : h('b', null, r.emoji), ` ${r.name}`))) : null,
-      h('div', { class: 'np-foot' }, `${n.poster_name || n.author || '?'} · ${fmt.when(n.created_at)}`),
+      h('div', { class: 'np-foot' }, poster(n), h('span', { class: 'sub' }, fmt.when(n.created_at))),
       h('div', { class: 'np-hint' }, 'hold to move · right-click to rotate, react, take down'),
     ].filter(Boolean));
     e.className = 'np-' + (n.color || 'yellow');
@@ -847,7 +899,7 @@ function bookmarkItem(n, reacts, cork, reload, bd) {
         h('span', { class: 'np-rx-row' }, r.sticker_url
           ? h('img', { class: 'rx-img', src: r.sticker_url, alt: '' })
           : h('b', null, r.emoji), ` ${r.name}`))) : null,
-      h('div', { class: 'np-foot' }, `${n.poster_name || n.author || '?'} · ${fmt.when(n.created_at)}`),
+      h('div', { class: 'np-foot' }, poster(n), h('span', { class: 'sub' }, fmt.when(n.created_at))),
       h('div', { class: 'np-hint' }, 'click to open · hold to move · right-click to react or tie yarn'),
     ].filter(Boolean));
     e.className = 'np-yellow';
@@ -915,45 +967,6 @@ function noteDialog(reload) {
         } catch (err) { toast(err.message, 'err'); }
       } },
     ]);
-}
-
-/* GIPHY picker used by both the sticker dialog and sticker reactions.
-   onPick(url) fires when a cell is chosen. */
-function giphyGrid(onPick) {
-  const q = textInput({ placeholder: 'Search — “high five”, “deal closed”, “facepalm”…' });
-  let type = 'stickers';
-  const grid = h('div', { class: 'gif-grid' },
-    h('p', { class: 'sub' }, 'Search to fill the drawer.'));
-  const tabs = h('div', { class: 'gif-tabs' },
-    ['stickers', 'gifs'].map(t => h('button', {
-      class: 'btn xs' + (t === type ? ' accent' : ''),
-      onClick: e => {
-        type = t;
-        [...tabs.children].forEach(x => x.classList.remove('accent'));
-        e.target.classList.add('accent');
-        if (q.value.trim()) run();
-      },
-    }, t === 'stickers' ? 'Stickers' : 'Memes')));
-  async function run() {
-    clear(grid).appendChild(h('p', { class: 'sub' }, 'Searching…'));
-    try {
-      const d = await api.giphySearch(q.value.trim(), type);
-      clear(grid);
-      if (!(d.results || []).length) { grid.appendChild(h('p', { class: 'sub' }, 'Nothing for that — try other words.')); return; }
-      for (const g of d.results) {
-        const cell = h('button', { class: 'gif-cell', title: g.title, onClick: () => {
-          [...grid.children].forEach(x => x.classList && x.classList.remove('on'));
-          cell.classList.add('on');
-          onPick(g.url);
-        } }, h('img', { src: g.preview, alt: g.title, loading: 'lazy' }));
-        grid.appendChild(cell);
-      }
-    } catch (err) { clear(grid).appendChild(h('p', { class: 'sub' }, err.message)); }
-  }
-  q.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
-  return h('div', { class: 'form' },
-    h('div', { class: 'gif-search' }, q, h('button', { class: 'btn', onClick: run }, 'Search'), tabs),
-    grid);
 }
 
 function stickerDialog(reload) {
@@ -1217,73 +1230,80 @@ async function loadInspoCard(card) {
 
 /* ── projects at a glance: the compact Home cut — no calendar, no charts,
    just the promises. Server-ordered: overdue first, then soonest due. ── */
-/* the Leadership Brief teaser — this week's counts and a door in */
-async function loadBriefCard(card) {
-  let r;
-  try { r = await api.brief({ op: 'digest', window: 'week' }); }
-  catch { card.remove(); return; } // pre-Setup or no access: no teaser
-  const c = r.digest.counts;
-  clear(card);
-  card.appendChild(sectionTitle('Leadership Brief',
-    h('a', { class: 'btn sm', href: '#projects/brief' }, 'Open The Brief')));
-  card.appendChild(h('p', { class: 'brief-home-counts' },
-    `This week: ${c.moved} status move${c.moved === 1 ? '' : 's'} · ` +
-    `${r.digest.milestonesHit.length} milestone${r.digest.milestonesHit.length === 1 ? '' : 's'} hit · ` +
-    `${c.overdue} overdue · ${c.lulls} project${c.lulls === 1 ? '' : 's'} without activity`));
-  card.appendChild(h('p', { class: 'sub' },
-    'Week, month and quarter — compiled from the board, copy-ready for the update you send upward.'));
-}
+/* Home's two personal cards, off ONE projects call.
+ *
+ * "Their info just populates the widgets when they log in" - the page is
+ * the same page for everyone, and there is no per-person URL. The only
+ * thing that varies is which rows these two cards find.
+ *
+ * A scoped key is not a person: it falls back to the board's latest
+ * projects and a pointer at the scoreboard, so the layout never collapses
+ * into holes for the SMEs and contractors who hold one.
+ */
+async function loadMine(prjCard, recCard, scopes, who) {
+  const d = await PEOPLE;
+  if (!d) {
+    clear(prjCard).appendChild(errorState(new Error('The project board did not answer'),
+      () => { PEOPLE = api.projects({ op: 'list', all: true }).then(x => shapeProjects(x, who)).catch(() => null);
+        loadMine(prjCard, recCard, scopes, who); }));
+    clear(recCard);
+    return;
+  }
+  const me = d.meId ? d.memberById[d.meId] : null;
 
-async function loadProjectsCard(card, scopes) {
-  let d;
-  try { d = await api.projects({ op: 'list' }); }
-  catch (err) { clear(card).appendChild(errorState(err, () => loadProjectsCard(card, scopes))); return; }
-  clear(card);
-  const teamById = {}, statusById = {};
-  for (const t of d.teams) teamById[t.id] = t;
-  for (const s of d.statuses) statusById[s.id] = s;
-  card.appendChild(sectionTitle('Projects',
+  // ---- projects ----
+  clear(prjCard);
+  const mine = me
+    ? (d.tagsByMember[me.id] || []).map(id => d.projectById[id]).filter(Boolean)
+      .filter(p => p.active)
+      .sort((a, z) => new Date(z.updated_at || z.created_at || 0) - new Date(a.updated_at || a.created_at || 0))
+    : null;
+  const rows = (mine && mine.length ? mine : (d.projects || []).filter(p => p.active)).slice(0, 6);
+  prjCard.appendChild(sectionTitle(mine && mine.length ? 'Your projects' : 'Projects',
     h('a', { class: 'btn xs', href: '#projects' }, 'Open the board'),
     ...(scopes.includes('projects') ? [h('a', { class: 'btn xs accent', href: '#projects/new' }, '+ New')] : [])));
-  const rows = (d.projects || []).slice(0, 6);
   if (!rows.length) {
-    card.appendChild(emptyState('No projects posted yet.',
-      scopes.includes('projects') ? 'Post the first one from the board.' : null));
+    prjCard.appendChild(emptyState(
+      me ? 'You are not tagged on anything yet.' : 'No projects posted yet.',
+      me ? 'Tag yourself from a project on the board and it shows up here.'
+        : (scopes.includes('projects') ? 'Post the first one from the board.' : null)));
+  } else {
+    prjCard.appendChild(h('div', { class: 'prj-glance' }, rows.map(p => {
+      const st = d.statusById[p.status_id];
+      return h('a', { class: 'prj-glance-row', href: '#projects' },
+        h('span', { class: 'prj-glance-title' }, p.title),
+        h('span', { class: 'prj-glance-team' }, (d.teamById[p.team_id] || {}).name || ''),
+        st ? h('span', { class: 'prj-status-chip', style: { '--psc': `var(--ps-${st.color})` } }, st.label) : null,
+        p.overdue
+          ? h('span', { class: 'overdue-badge' }, 'OVERDUE')
+          : h('span', { class: 'prj-glance-team' }, `due ${fmt.day(p.phase_due)}`));
+    })));
+  }
+
+  // ---- your REC Room record ----
+  clear(recCard);
+  const rec = me && me.trigram ? d.recByTri[me.trigram.toUpperCase()] : null;
+  recCard.appendChild(sectionTitle(rec ? 'Your REC Room' : 'REC Room',
+    h('a', { class: 'btn xs', href: '#dashboard' }, 'The whole board')));
+  if (!rec) {
+    recCard.appendChild(emptyState(
+      me ? (me.trigram ? 'No runs recorded yet.' : 'No trigram on your profile.')
+        : 'Sign in as staff to see your own record.',
+      me && me.trigram ? 'Play once and your record lands here.' : null));
     return;
   }
-  card.appendChild(h('div', { class: 'prj-glance' }, rows.map(p => {
-    const st = statusById[p.status_id];
-    return h('a', { class: 'prj-glance-row', href: '#projects' },
-      h('span', { class: 'prj-glance-title' }, p.title),
-      h('span', { class: 'prj-glance-team' }, (teamById[p.team_id] || {}).name || ''),
-      st ? h('span', { class: 'prj-status-chip', style: { '--psc': `var(--ps-${st.color})` } }, st.label) : null,
-      p.overdue
-        ? h('span', { class: 'overdue-badge' }, 'OVERDUE')
-        : h('span', { class: 'prj-glance-team' }, `due ${fmt.day(p.phase_due)}`));
-  })));
+  const acc = Number(rec.attempted) > 0
+    ? Math.round((Number(rec.correct) / Number(rec.attempted)) * 100) : null;
+  recCard.appendChild(h('div', { class: 'prof-rec-grid' },
+    h('div', { class: 'prof-rec-stat' }, h('b', null, fmt.int(Number(rec.total_score))), h('span', null, 'Lifetime points')),
+    h('div', { class: 'prof-rec-stat' }, h('b', null, fmt.int(Number(rec.games_played))), h('span', null, 'Runs')),
+    h('div', { class: 'prof-rec-stat' },
+      h('b', null, Number(rec.blitz_personal_high) > 0 ? fmt.int(Number(rec.blitz_personal_high)) : '\u2014'),
+      h('span', null, 'Best run')),
+    h('div', { class: 'prof-rec-stat' }, h('b', null, acc != null ? acc + '%' : '\u2014'), h('span', null, 'Accuracy'))));
 }
 
-async function loadLog(card) {
-  let d;
-  try { d = await api.listLog(); }
-  catch (err) { clear(card).appendChild(errorState(err, () => loadLog(card))); return; }
-  clear(card);
-  card.appendChild(sectionTitle('Latest changes'));
-  const rows = d.log || [];
-  if (!rows.length) {
-    card.appendChild(emptyState('No changes recorded yet.',
-      d.pending ? 'Run Setup under Access & Setup to switch the change feed on.' : 'Edits made from here will show up in this feed.'));
-    return;
-  }
-  // Three rows visible, the rest a scroll away inside the frame. Times are
-  // the VIEWER's local clock, AM/PM — fmt.when formats the raw timestamp.
-  card.appendChild(h('div', { class: 'feed feed-scroll' }, rows.map(r =>
-    h('div', { class: 'feed-row' },
-      h('span', { class: 'feed-at' }, fmt.when(r.created_at)),
-      h('div', { class: 'feed-main' },
-        h('span', { class: 'feed-summary' }, r.summary),
-        h('span', { class: 'feed-actor' }, r.actor, ' · ', r.action))))));
-}
+
 
 /* ── the Stellar-Seller widget ── */
 async function loadStellar(card, scopes) {

@@ -13,6 +13,7 @@
 import { h, clear, $ } from './util.js';
 import { api, keyStore } from './api.js';
 import { preview, effectiveWho } from './preview.js';
+import { hideTip } from './avatar.js';
 import { toast, modal, field, textInput } from './ui.js';
 import * as dashboard from './views/dashboard.js';
 import * as players from './views/players.js';
@@ -26,6 +27,7 @@ import * as home from './views/home.js';
 import * as projects from './views/projects.js';
 import * as projectsInsights from './views/projectsInsights.js';
 import * as staff from './views/staff.js';
+import * as profile from './views/profile.js';
 import * as help from './views/help.js';
 import { maybeAutoStart, killTour } from './tour.js';
 import { ICONS } from './icons.js';
@@ -50,6 +52,10 @@ const NAV = [
     { route: 'projects/brief', label: 'Leadership Brief', scope: 'projects', mod: brief, icon: 'insights',
       gate: w => w.master || w.manager },
     { route: 'projects/staff', label: 'Staff', scope: null, mod: staff, icon: 'staff' },
+    /* A person's page. NOT in the sidebar on purpose - you arrive by
+       clicking a face, which is the point of putting faces everywhere.
+       nav:false keeps it routable without giving it a nav row. */
+    { route: 'profile', label: 'Profile', scope: null, mod: profile, icon: 'staff', nav: false },
     // key generation for SMEs and outside contributors — NOT staff
     { route: 'projects/access', label: 'Tailored Access', scope: ['system', 'access'], mod: tailoredAccess, icon: 'system' },
   ]},
@@ -110,6 +116,8 @@ function draw() {
   // A route change never fires mouseleave on whatever was hovered, so an
   // open stat card would float over the next view forever. Seen live.
   hidePop();
+  hideTip();               // same reason, for the avatar tooltip
+  staff.hideStaffPop();    // and the Staff hover peek
 
   // phone: picking a destination closes the drawer
   document.body.classList.remove('nav-open');
@@ -127,11 +135,13 @@ function draw() {
   maybeAutoStart(item.route);
 }
 
+/* nav:false routes are reachable by hash but never listed - see the
+   Profile entry above. */
 function buildNav() {
   const nav = $('nav-list');
   clear(nav);
   for (const g of NAV) {
-    const items = g.items.filter(allowed);
+    const items = g.items.filter(it => it.nav !== false && allowed(it));
     if (!items.length) continue;
     if (g.group) nav.appendChild(h('div', { class: 'nav-group' }, g.group));
     items.forEach(it => nav.appendChild(

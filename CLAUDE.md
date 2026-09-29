@@ -1924,3 +1924,111 @@ upload boxes for one table is how a stale one gets used.
 
 Tour copy for both pages was rewritten — it described the old layout, and a
 walkthrough that narrates a page that no longer exists is worse than none.
+
+## Profiles and avatars (29 Sep 2026, schema v13)
+
+Travis: "one of the biggest things I think we are missing is a personalized
+Profile page. Think MySpace." Plus: upload a picture, put it beside the
+Operations clock, and show it wherever a name appears.
+
+**Most of this already existed and was misfiled.** `historyDialog()` in
+projects.js was already a profile card — avatar, title, manager, OOO,
+status, REC Room record, project list — under a name that says history,
+reachable only by clicking a staff card. Status posts and emoji reactions
+shipped in v8. Members could already set their own status and OOO. What was
+missing was a ROUTE, a way to upload a picture, and faces anywhere else.
+
+### Storage: the question answered with arithmetic
+
+A 256×256 WebP avatar is 15–25KB. The whole SE team is a quarter of a
+megabyte; all 891 roster people would be ~22MB. Blob on Pro includes 100GB
+and the banner art already shares the store. Storage was never the
+constraint — **Vercel's ~4.5MB request cap was**, and downscaling in the
+browser removes it.
+
+`avatar.js` `shrink()` centre-crops to a square and re-encodes at 256px
+before anything leaves the page. Verified against the real pipeline: a
+1.39MB PNG came out 2.5KB, `image/webp`, chunk `VP8X`, and
+`uploadImage.js`'s magic-byte check and `imageDims()` both read it
+correctly at 256×256. The square crop is not cosmetic — every one of these
+renders as a circle, and scaling a 16:9 photo into one squashes the face.
+
+### Who may upload
+
+`uploadImage` took `requireScope('banners')`, so only the three people who
+edit hero art could have a face. It now branches on `kind`: `'avatar'`
+takes ANY valid key with a 400KB/1024px cap and an `avatars/` prefix;
+`'banner'` is unchanged. 400KB is ~20× a correct upload — it exists only to
+catch something that skipped the resize.
+
+`members` op `'avatar'` joins OOO and status in `SELF_OPS`. Two rules worth
+keeping: the URL must match the Blob host (a picture is uploaded here, not
+linked from anywhere on the internet), and a manager may CLEAR someone's
+picture but not choose one for them — moderation, not puppetry.
+
+### The rule for names vs faces
+
+Decided once, in `avatar.js`, so it cannot drift:
+
+- a **chip** (board signature, reaction, project owner, direct report)
+  shows the avatar ALONE, name on hover;
+- **prose** (a change-log sentence) shows avatar AND name.
+
+"🧑 retired a question" cannot be scanned for a person, and scanning is the
+change feed's entire job. The default is a **person icon, not an initial** —
+an initial reads as a broken image.
+
+A sticky note and a change-log row store a TYPED NAME, not a member id, so
+the face comes from matching that string against the registry
+(`d.memberByName`). **A poster we cannot match keeps their written
+signature** — never a blank face for someone we simply do not know.
+
+### Home
+
+- **Leadership Brief teaser removed.** It is a full page in the sidebar for
+  exactly the people who can open it; a teaser was spending the best slot
+  on the shortest trip.
+- **Latest Changes moved to Maintenance.** A change feed is an audit trail,
+  and the machine room is where you go looking for one.
+- **Your face beside the Operations clock**, hover for Update Avatar.
+- **Projects and REC Room now find YOUR rows.** Travis was explicit that
+  this is *not* a page per person: "its the same home page for everyone…
+  Their info just populates the widgets when they log in." There is no
+  per-person Home URL. The linkable page is `#profile/:id`.
+- A scoped key is not a person, so both cards fall back to the board's
+  latest and a pointer at the scoreboard. SMEs and contractors hold those
+  keys and the layout must not collapse into holes for them.
+
+### Pieces that had to be shared
+
+`shapeProjects(d, who)` came out of the Board's loader — Board, Staff,
+Profile and Home all read the same bundle and all need the same lookups. A
+second copy of "find a member by id" is how two pages start disagreeing
+about who reports to whom. `giphyGrid()` came out of home.js for the same
+reason: a sticker reaction on a profile and a sticker on the cork are now
+the same picker.
+
+`#profile` is routed with `nav: false` — reachable by hash, never listed.
+You arrive by clicking a face, which is the point of putting faces
+everywhere; a nav row would make it a destination instead.
+
+### Two bugs this found, both worth remembering
+
+**`Element.append()` renders a null child as the literal word "null".**
+`h()` skips nulls, so every conditional child in this codebase is written
+assuming that. The hover peek built its panel with `e.append(...)` and
+printed "null" where an absent OOO note went. `put()` in avatar.js is the
+filtered append; use it any time children are appended outside `h()`.
+
+**A route change never fires `mouseleave`.** The card that raised the hover
+panel is simply gone, and the panel floats over the next page forever —
+exactly the bug `hidePop()` already existed to fix. `draw()` now closes all
+three: the player card, the avatar tooltip and the Staff peek.
+
+### v13 needs Setup
+
+`staff_status_reactions` gains `sticker_url` so a status takes a sticker or
+GIF, not only an emoji — the same two-column shape `sticky_reactions` has
+used since v4. `members.statusReact` falls back to an emoji-only insert on
+a pre-v13 database and asks for Setup rather than silently posting a blank
+reaction. The staffReacts select walks back one tier, per the house rule.

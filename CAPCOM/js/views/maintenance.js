@@ -3,20 +3,62 @@
    Setup button. System scope throughout. Key GENERATION for outside
    people lives on Tailored Access under Projects — this page is the
    backend, that one is the front desk. */
-import { h, clear } from '../util.js';
+import { h, clear, fmt } from '../util.js';
+import { avatarName } from '../avatar.js';
+import { shapeProjects } from './projects.js';
 import { api } from '../api.js';
-import { toast, modal, confirmBox, field, textInput, spinner, errorState, sectionTitle, chip } from '../ui.js';
+import { toast, modal, confirmBox, field, textInput, spinner, errorState, sectionTitle, chip, emptyState } from '../ui.js';
 
 export function render(params, rerender) {
   const root = h('div', { class: 'view' });
   const card = h('div', { class: 'card' }, spinner());
   const secrets = h('div', { class: 'card' }, spinner());
   const roster = h('div', { class: 'card' }, spinner());
-  root.append(card, secrets, roster, setupCard(rerender));
+  const log = h('div', { class: 'card', dataset: { tour: 'changes' } }, spinner());
+  root.append(card, secrets, roster, log, setupCard(rerender));
   load(card, rerender);
   loadSecrets(secrets, rerender);
   loadRoster(roster, rerender);
+  loadLog(log);
   return root;
+}
+
+/* ── Latest changes ──
+   Moved off Home, where it sat in the best slot on the page telling most
+   people about edits they did not make. A change feed is an audit trail;
+   the machine room is where you come looking for one.
+
+   The actor is a TYPED STRING (a key label or a member name), not an id,
+   so the face comes from matching the name against the staff registry -
+   and a line whose actor is a scoped key keeps its plain label. This is
+   PROSE, so it shows the face AND the name: "(o) retired a question"
+   cannot be scanned for a person, and scanning is the whole job here. */
+async function loadLog(card) {
+  let d, people = {};
+  try { d = await api.listLog(); }
+  catch (err) { clear(card).appendChild(errorState(err, () => loadLog(card))); return; }
+  try {
+    const bundle = shapeProjects(await api.projects({ op: 'list', all: true }), null);
+    people = bundle.memberByName || {};
+  } catch { /* no registry - names stay plain */ }
+  clear(card);
+  card.appendChild(sectionTitle('Latest changes',
+    h('span', { class: 'sec-sub' }, 'every write CAPCOM records, newest first')));
+  const rows = d.log || [];
+  if (!rows.length) {
+    card.appendChild(emptyState('No changes recorded yet.',
+      d.pending ? 'Run Setup below to switch the change feed on.' : 'Edits made from here will show up in this feed.'));
+    return;
+  }
+  card.appendChild(h('div', { class: 'feed feed-scroll' }, rows.map(r => {
+    const m = people[String(r.actor || '').trim().toLowerCase()];
+    return h('div', { class: 'feed-row' },
+      h('span', { class: 'feed-at' }, fmt.when(r.created_at)),
+      h('div', { class: 'feed-main' },
+        h('span', { class: 'feed-summary' }, r.summary),
+        h('span', { class: 'feed-actor' },
+          m ? avatarName(m) : h('span', null, r.actor), ' \u00b7 ', r.action)));
+  })));
 }
 
 /* ── the REC roster: a pointer, not a second copy ──

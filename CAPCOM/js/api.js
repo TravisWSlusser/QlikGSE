@@ -43,6 +43,7 @@ export const api = {
   saveBanner: b => call('saveBanner', { method: 'POST', body: b }),
   deleteBanner: id => call('deleteBanner', { method: 'POST', body: { id } }),
   uploadImage: f => call('uploadImage', { method: 'POST', body: f }),
+  uploadAvatar: f => call('uploadImage', { method: 'POST', body: { ...f, kind: 'avatar' } }),
 
   listQuestions: table => call('listQuestions', { query: `?table=${encodeURIComponent(table)}` }),
   saveQuestion: q => call('saveQuestion', { method: 'POST', body: q }),

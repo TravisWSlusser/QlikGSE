@@ -10,6 +10,7 @@
    write control renders only when the key carries the 'projects' scope. */
 import { h, clear, fmt, esc } from '../util.js';
 import { api } from '../api.js';
+import { avatar } from '../avatar.js';
 import {
   toast, modal, confirmBox, field, textInput, textArea, select,
   emptyState, chip, sectionTitle, spinner, errorState,
@@ -21,6 +22,44 @@ const KIND_LABEL = {
   created: 'Posted', status_change: 'Status', overdue_note: 'Overdue log',
   due_change: 'Date moved', update: 'Update', milestone: 'Milestone',
 };
+
+/* shapeProjects(d, who) — index the one /api/admin/projects bundle.
+ *
+ * The Board, Staff and Profile all read the same payload and all need the
+ * same lookups. This lived inline in the Board's loader, so Profile would
+ * have had to copy it — and a second copy of "how do I find a member by
+ * id" is how two pages start disagreeing about who reports to whom.
+ *
+ * Mutates and returns d. Safe to call twice.
+ */
+export function shapeProjects(d, who) {
+  d.canManage = !!(who && (who.master || who.manager));
+  d.meId = (who && who.member && who.member.id) || 0;
+  d.teamById = {};
+  for (const t of d.teams || []) d.teamById[t.id] = t;
+  d.statusById = {};
+  for (const s of d.statuses || []) d.statusById[s.id] = s;
+  d.projectById = {};
+  for (const p of d.projects || []) d.projectById[p.id] = p;
+  d.memberById = {};
+  for (const m of d.members || []) d.memberById[m.id] = m;
+  // real identity for a name typed on a sticky or written into the change
+  // feed — those store a STRING, not a member id, so the only join is the
+  // name itself. Lowercased, because people type their own name casually.
+  d.memberByName = {};
+  for (const m of d.members || []) {
+    if (m.name) d.memberByName[m.name.trim().toLowerCase()] = m;
+  }
+  d.recByTri = {};
+  for (const r of d.recs || []) d.recByTri[(r.trigram || '').toUpperCase()] = r;
+  d.tagsByProject = {};
+  d.tagsByMember = {};
+  for (const t of d.tags || []) {
+    (d.tagsByProject[t.project_id] = d.tagsByProject[t.project_id] || []).push(t.member_id);
+    (d.tagsByMember[t.member_id] = d.tagsByMember[t.member_id] || []).push(t.project_id);
+  }
+  return d;
+}
 
 export function render(params, rerender, who) {
   const canEdit = !!(who && who.scopes && who.scopes.includes('projects'));
@@ -39,25 +78,11 @@ async function load(root, rerender, canEdit, openNew, me, canManage, canInvite) 
   let d;
   try { d = await api.projects({ op: 'list', all: true }); }
   catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit, false, me, canManage))); return; }
-  d.canManage = !!canManage; // rides the bundle into the shared dialogs
+  shapeProjects(d, { master: canManage, manager: canManage, member: me });
   d.canInvite = !!canInvite; // people leaders (+ masters): activation keys
-  d.meId = me ? me.id : 0;   // the signed-in member, for self-service OOO
-  d.recByTri = {};
-  for (const r of d.recs || []) d.recByTri[(r.trigram || '').toUpperCase()] = r;
   clear(root);
 
-  const teamById = {}, statusById = {};
-  for (const t of d.teams) teamById[t.id] = t;
-  for (const s of d.statuses) statusById[s.id] = s;
-  // the member registry rides on d so every row and dialog can reach it
-  d.memberById = {};
-  for (const m of d.members || []) d.memberById[m.id] = m;
-  d.tagsByProject = {};
-  d.tagsByMember = {};
-  for (const t of d.tags || []) {
-    (d.tagsByProject[t.project_id] = d.tagsByProject[t.project_id] || []).push(t.member_id);
-    (d.tagsByMember[t.member_id] = d.tagsByMember[t.member_id] || []).push(t.project_id);
-  }
+  const teamById = d.teamById, statusById = d.statusById;
   const activeTeams = d.teams.filter(t => t.active);
   const activeStatuses = d.statuses.filter(s => s.active);
   const activeProjects = d.projects.filter(p => p.active);
@@ -142,8 +167,10 @@ function projectRow(p, d, teamById, statusById, canEdit, me, rerender) {
     h('td', null,
       (() => {
         const memberIds = d.tagsByProject[p.id] || [];
+        // faces, not names: this is a CHIP context and a row of full names
+        // pushed the project's own title off the line
         const chips = memberIds.map(id => d.memberById[id]).filter(Boolean).map(m =>
-          h('button', { class: 'mem-chip', title: 'See what ' + m.name + ' has helped with', onClick: () => historyDialog(m, d) }, m.name));
+          avatar(m, { size: 'sm' }));
         return h('div', null,
           chips.length ? h('div', { class: 'mem-chips' }, chips) : null,
           p.people ? h('span', { class: 'prj-people' }, p.people) : null,
@@ -600,11 +627,13 @@ export function historyDialog(m, d) {
         } },
       ]);
   };
+  /* The quick look. The FULL profile is a page now (#profile/<id>) - this
+     stays because opening a modal from a project row is cheaper than
+     leaving the board, and the footer link is the way through. */
   modal(m.name,
     h('div', null,
       h('div', { class: 'prof-head' },
-        m.avatar_url ? h('img', { class: 'prof-avatar', src: m.avatar_url, alt: '' })
-          : h('span', { class: 'prof-avatar prof-avatar-blank' }, (m.name || '?').slice(0, 1)),
+        avatar(m, { size: 'lg', link: false }),
         h('div', null,
           h('p', { class: 'sub', style: { marginBottom: '4px' } },
             [m.is_leader ? 'People leader' : null, m.title,
@@ -659,7 +688,8 @@ export function historyDialog(m, d) {
         : emptyState('Not tagged on any projects yet.'),
       h('p', { class: 'sub', style: { marginTop: '10px' } },
         `${projs.length} project${projs.length === 1 ? '' : 's'} · open each project's Diary for the full story`)),
-    [{ label: 'Close', kind: 'accent', onClick: c => c() }]);
+    [{ label: 'Close', onClick: c => c() },
+      { label: 'Full profile →', kind: 'accent', onClick: c => { c(); location.hash = '#profile/' + m.id; } }]);
 }
 
 function statusesDialog(d, rerender) {

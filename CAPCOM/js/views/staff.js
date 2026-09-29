@@ -6,11 +6,23 @@
    different projects. Every card is one tap from the person's profile;
    leaders keep Invite and the ⋯ menu on the card. Reads are open to
    every key — the org chart is for everyone. */
-import { h, clear } from '../util.js';
+import { h, clear, fmt } from '../util.js';
 import { api } from '../api.js';
 import { toast, confirmBox, sectionTitle, spinner, errorState, emptyState, modal } from '../ui.js';
-import { pctx, editMemberDialog, historyDialog, inviteDialog } from './projects.js';
+import { pctx, editMemberDialog, inviteDialog, shapeProjects } from './projects.js';
 import { preview } from '../preview.js';
+import { avatar, put } from '../avatar.js';
+import { giphyGrid } from '../giphy.js';
+
+/* One hover panel for the whole page - the same single-node pattern
+   pop.js and avatar.js use. A panel per card would be sixty detached
+   subtrees on a team this size. */
+let staffPopEl = null;
+/* Exported because a ROUTE CHANGE never fires mouseleave on the card that
+   raised this - the card is simply gone, and the panel floats over the
+   next page forever. app.js closes it on every draw, the same way it
+   closes the player stat card and the avatar tooltip. */
+export function hideStaffPop() { if (staffPopEl) staffPopEl.style.display = 'none'; }
 
 /* Areas a non-manager can be granted (v12). Must match GRANTABLE in
    lib/admin/auth.js — the server re-filters on write AND on read, so a
@@ -71,17 +83,9 @@ async function load(root, rerender, canEdit, meId, canInvite) {
   let d;
   try { d = await api.projects({ op: 'list', all: true }); }
   catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, canEdit, meId, canInvite))); return; }
-  d.canManage = canEdit; // registry writes: managers + masters
+  shapeProjects(d, { master: canEdit, manager: canEdit, member: meId ? { id: meId } : null });
   d.canInvite = canInvite;
-  d.meId = meId || 0;    // the signed-in member, for self-service OOO
-  d.recByTri = {};
-  for (const r of d.recs || []) d.recByTri[(r.trigram || '').toUpperCase()] = r;
   clear(root);
-
-  d.memberById = {};
-  for (const m of d.members || []) d.memberById[m.id] = m;
-  d.tagsByMember = {};
-  for (const t of d.tags || []) (d.tagsByMember[t.member_id] = d.tagsByMember[t.member_id] || []).push(t.project_id);
 
   const members = (d.members || []).filter(m => m.active);
   const retired = (d.members || []).filter(m => !m.active);
@@ -134,26 +138,95 @@ async function load(root, rerender, canEdit, meId, canInvite) {
     (reactsBy[r.member_id] = reactsBy[r.member_id] || []).push(r);
   }
   const REACT_SET = ['👍', '🎉', '🔥', '😂', '💚', '👏'];
-  const react = async (m, emoji) => {
-    try { await api.members({ op: 'statusReact', id: m.id, emoji }); rerender(); }
+  const react = async (m, body) => {
+    try { await api.members({ op: 'statusReact', id: m.id, ...body }); rerender(); }
     catch (err) { toast(err.message, 'err'); }
+  };
+  /* A sticker or a meme, not just an emoji - the same GIPHY drawer the
+     corkboard uses, so "react to it" means the same thing in both places. */
+  const stickerReact = m => {
+    let picked = '';
+    modal(`React to ${m.name}`, giphyGrid(url => { picked = url; }), [
+      { label: 'Cancel', onClick: c => c() },
+      { label: 'Stick it on', kind: 'accent', onClick: async c => {
+        if (!picked) { toast('Pick one first', 'err'); return; }
+        c(); react(m, { sticker_url: picked });
+      } },
+    ]);
   };
   const statusLine = m => {
     if (!m.status_text || !m.active) return null;
+    const mine = reactsBy[m.id] || [];
     const groups = {};
-    for (const r of reactsBy[m.id] || []) groups[r.emoji] = (groups[r.emoji] || 0) + 1;
+    for (const r of mine) if (r.emoji) (groups[r.emoji] = groups[r.emoji] || []).push(r.name);
     return h('div', { class: 'oc-status' },
       h('span', { class: 'cat-status-q' }, `“${m.status_text}”`),
-      ...Object.entries(groups).map(([e, n]) =>
-        h('span', { class: 'cat-react', title: (reactsBy[m.id] || []).filter(r => r.emoji === e).map(r => r.name).join(', ') },
-          `${e}${n > 1 ? ' ' + n : ''}`)),
+      ...Object.entries(groups).map(([e, names]) =>
+        h('span', { class: 'cat-react', title: names.join(', ') },
+          `${e}${names.length > 1 ? ' ' + names.length : ''}`)),
+      ...mine.filter(r => r.sticker_url).map(r =>
+        h('img', { class: 'cat-react-img', src: r.sticker_url, alt: '', title: r.name, loading: 'lazy' })),
       h('span', {
         class: 'cat-react cat-react-add', role: 'button', title: 'React',
         onClick: ev => {
           ev.stopPropagation();
-          pctx(ev.clientX, ev.clientY, REACT_SET.map(e => [e, () => react(m, e), false]));
+          pctx(ev.clientX, ev.clientY, [
+            ...REACT_SET.map(e => [e, () => react(m, { emoji: e }), false]),
+            ['Sticker / meme…', () => stickerReact(m), false],
+          ]);
         },
       }, '+'));
+  };
+
+  /* ── the hover peek ──
+     Travis asked to hover a person and see their status, their projects
+     and their REC Room stats. That is the profile page, so this shows the
+     same things in the same order and says where the rest lives.
+
+     READ-ONLY on purpose. The reaction buttons stay on the card itself,
+     because a control inside a hover panel is a control you have to chase
+     with the mouse - the panel closes the moment you leave the card. */
+  const staffPop = () => {
+    if (!staffPopEl) { staffPopEl = h('div', { id: 'staff-pop' }); document.body.appendChild(staffPopEl); }
+    return staffPopEl;
+  };
+  const showStaffPop = (anchor, m, dd) => {
+    const e = clear(staffPop());
+    const projs = (dd.tagsByMember[m.id] || []).map(id => dd.projectById[id]).filter(Boolean);
+    const active = projs.filter(p => p.active);
+    const rec = m.trigram ? dd.recByTri[(m.trigram || '').toUpperCase()] : null;
+    const acc = rec && Number(rec.attempted) > 0
+      ? Math.round((Number(rec.correct) / Number(rec.attempted)) * 100) : null;
+    put(e,
+      h('div', { class: 'sp-head' },
+        avatar(m, { size: 'md', link: false }),
+        h('div', null,
+          h('b', null, m.name),
+          h('span', { class: 'sub' }, m.title || (m.is_leader ? 'People leader' : 'Team member')))),
+      m.ooo_note ? h('p', { class: 'sp-ooo' }, `Out of office — ${m.ooo_note}`) : null,
+      m.status_text ? h('blockquote', { class: 'sp-quote' }, m.status_text) : null,
+      h('div', { class: 'sp-sec' },
+        h('span', { class: 'sp-lbl' }, active.length ? `Projects · ${active.length} active` : 'Projects'),
+        active.length
+          ? h('ul', { class: 'sp-list' }, active.slice(0, 5).map(p => h('li', null, p.title)))
+          : h('p', { class: 'sub' }, 'Not tagged on anything yet.')),
+      h('div', { class: 'sp-sec' },
+        h('span', { class: 'sp-lbl' }, 'REC Room'),
+        rec
+          ? h('div', { class: 'sp-rec' },
+            h('span', null, h('b', null, fmt.int(Number(rec.total_score))), ' pts'),
+            h('span', null, h('b', null, fmt.int(Number(rec.games_played))), ' runs'),
+            acc != null ? h('span', null, h('b', null, acc + '%'), ' accuracy') : null)
+          : h('p', { class: 'sub' }, m.trigram ? 'No runs yet.' : 'No trigram.')),
+      h('p', { class: 'sp-go' }, 'Click for the full profile →'));
+    e.style.display = 'block';
+    const r = anchor.getBoundingClientRect();
+    const w = e.offsetWidth, hh = e.offsetHeight;
+    // prefer the right of the card, flip left at the edge, clamp vertically
+    let left = r.right + 10;
+    if (left + w > window.innerWidth - 8) left = r.left - w - 10;
+    e.style.left = Math.max(8, left) + 'px';
+    e.style.top = Math.max(8, Math.min(window.innerHeight - hh - 8, r.top)) + 'px';
   };
 
   /* ── one card per person ── */
@@ -162,11 +235,13 @@ async function load(root, rerender, canEdit, meId, canInvite) {
     const el = h('div', {
       class: 'org-card' + (m.active ? '' : ' prj-retired'),
       role: 'button', tabindex: '0',
-      onClick: () => historyDialog(m, d),
+      // the card is a door to the profile PAGE now; hover is the peek
+      onClick: () => { hideStaffPop(); location.hash = '#profile/' + m.id; },
     },
       h('div', { class: 'oc-head' },
-        m.avatar_url ? h('img', { class: 'oc-avatar', src: m.avatar_url, alt: '' })
-          : h('span', { class: 'oc-avatar oc-avatar-blank' }, (m.name || '?').slice(0, 1)),
+        // one avatar component everywhere - the default is a person icon,
+        // not an initial, which reads as a broken image
+        avatar(m, { size: 'md' }),
         h('div', { class: 'oc-id' },
           h('div', { class: 'oc-name' }, m.name),
           h('div', { class: 'oc-title' }, m.title || (m.is_leader ? 'People leader' : 'Team member'))),
@@ -187,7 +262,12 @@ async function load(root, rerender, canEdit, meId, canInvite) {
           ev.stopPropagation();
           pctx(ev.clientX, ev.clientY, menuFor(m));
         } }, '⋯') : null));
-    el.addEventListener('keydown', ev => { if (ev.key === 'Enter') historyDialog(m, d); });
+    el.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter') { hideStaffPop(); location.hash = '#profile/' + m.id; }
+    });
+    // the peek: everything the profile page has, read-only, without leaving
+    el.addEventListener('mouseenter', () => showStaffPop(el, m, d));
+    el.addEventListener('mouseleave', hideStaffPop);
     if (canEdit) el.addEventListener('contextmenu', ev => { ev.preventDefault(); pctx(ev.clientX, ev.clientY, menuFor(m)); });
     return el;
   };
