@@ -1,19 +1,23 @@
 /* banners.js — the hero rotators: Mission Control HIGHLIGHTS and the
-   Stellar-Seller widget. Edits are live on the pages within about a minute.
+   AI HIGHLIGHTS widget. Edits are live on the pages within about a minute.
 
    The two boards render differently and the editor says so:
    - highlights shows kicker/title/date/body, up to 4 CTA links, and an
      optional image (a small circle, hidden on mobile — decoration only).
    - stellar shows kicker/title/body and nothing else.
+
+   The 'stellar' key is the ROUTE and the database board name. Only the
+   LABEL changed (29 Sep 2026); renaming the key would orphan every saved
+   link and every row already on that board.
    Titles accept <span class="ac">word</span> for the green accent — the
    server strips every other tag on save. */
 import { h, clear, esc } from '../util.js';
 import { api } from '../api.js';
 import { toast, modal, confirmBox, field, textInput, textArea, spinner, errorState, sectionTitle, chip, emptyState } from '../ui.js';
 
-/* One board per screen — the nav lists Hero Banners and Stellar-Seller as
-   separate Mission Control entries, both landing here with the board as a
-   route param. */
+/* One board per screen — the nav lists Focused Headlines and AI Highlights
+   as separate Mission Control entries, both landing here with the board as
+   a route param. */
 const BOARDS = {
   highlights: ['Focused Headlines', 'The rotating headlines on the Mission Control homepage — kicker, title, body, links, optional image.'],
   stellar: ['AI Highlights', 'The rotating posts in the AI Highlights hero widget. Text only — kicker, title, body.'],
@@ -273,7 +277,7 @@ function editBanner(b, board, rerender) {
       isStellar ? null : field('Image (optional)',
         h('div', { class: 'img-field' }, f.image_url, h('div', { class: 'img-up' }, fileIn, upBtn)),
         'Shows as a small circle beside the text on desktop, hidden on mobile — never let it carry the message.'),
-      isStellar ? h('p', { class: 'field-hint' }, 'The Stellar widget renders kicker, title and body only.') : null),
+      isStellar ? h('p', { class: 'field-hint' }, 'The AI Highlights widget renders kicker, title and body only.') : null),
     [
       { label: 'Cancel', onClick: c => c() },
       {

@@ -109,12 +109,22 @@ const allowed = it => { const w = VIEW(); return !!w
         : w.scopes.includes(it.scope)))
   && (!it.gate || it.gate(w)); };
 
-/* Route → nav item. An exact match wins (banners/stellar); otherwise the
-   first item whose head segment matches (questions/glossary_terms →
-   questions). */
+/* Route → nav item, most specific first:
+     1. an exact match          (projects/insights)
+     2. a route that IS the head (projects/new → the Project Board)
+     3. the first item whose head segment matches
+        (banners/stellar/new → banners/highlights, which reads the board
+         off params[0]; questions/glossary_terms → questions)
+
+   Step 2 is not cosmetic. There was no rule between "exact" and "any
+   sibling" until GSE Central moved to the top of the Projects group, at
+   which point '#projects/new' — Home's New project action — prefix-matched
+   projects/insights and quietly opened GSE Central instead of the board.
+   Groups get reordered; matching must not depend on the order. */
 function findItem(raw, head) {
   const open = allItems().filter(allowed);
   return open.find(it => it.route === raw)
+    || open.find(it => it.route === head)
     || open.find(it => it.route.split('/')[0] === head);
 }
 

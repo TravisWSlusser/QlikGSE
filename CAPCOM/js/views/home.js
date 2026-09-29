@@ -1,13 +1,13 @@
 /* home.js — CAPCOM's landing screen.
 
-   Layout: quick actions (Mission Control content only — the rare/dangerous
-   actions were deliberately removed so nothing tempts), then the calendar
-   widget rebuild beside the operations clocks, the change feed, and one
-   STELLAR-SELLER widget that folds together everything Side-Qlik: the
-   recent-scores ticker, the leaders (hover a trigram for a live stat card),
-   the most-missed questions, and the Stellar edit hotlinks.
+   Layout: the hotlinks line with your face on the right, then two columns.
+   LEFT: both calendars behind tabs, your projects, your REC Room record
+   with the leaders under it. RIGHT: the operations clocks, Learning
+   Insights, the Community Board, the score ticker.
 
-   Every card degrades by scope; a card a key can't open doesn't render. */
+   Every card degrades by scope; a card a key can't open doesn't render,
+   and a scoped key (no member behind it) gets the shared fallbacks rather
+   than holes where the personal cards would be. */
 import { h, clear, fmt, isPast, esc } from '../util.js';
 import { api } from '../api.js';
 import { spinner, errorState, sectionTitle, chip, emptyState, toast, modal, confirmBox, field, textInput } from '../ui.js';
@@ -1521,7 +1521,4 @@ async function loadMine(prjCard, recCard, scopes, who) {
   })));
 }
 
-
-
-/* ── the Stellar-Seller widget ── */
 

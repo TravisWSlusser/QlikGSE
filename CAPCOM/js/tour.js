@@ -21,8 +21,8 @@ export const TOURS = {
   home: [
     { hook: 'nav', title: 'The Sidebar', blurb: 'Every area you can open lives here — Mission Control, Projects, the REC Room. What you see depends on your access.' },
     { hook: 'calendar', title: 'Two Calendars', blurb: 'Mission Control is the learner-facing feed. Team is phase deadlines, milestones and who is out. Same grid, two sources — switch with the tabs.' },
-    { hook: 'projects-glance', title: 'Projects At A Glance', blurb: 'The Project Board, compressed: what is moving, what is overdue, and the next deadline coming at you.' },
-    { hook: 'changes', title: 'Change Feed', blurb: 'Everything anyone changes, signed and timestamped. Nothing here happens quietly.' },
+    { hook: 'projects-glance', title: 'Your Projects', blurb: 'What YOU are tagged on, newest activity first. Click one to open its page.' },
+    { hook: 'your-rec', title: 'Your REC Room', blurb: 'Your own arcade record, and the leaders above it. Hover a name for their full card.' },
     { hook: 'clock', title: 'Operations Clock', blurb: 'Local time plus the four hub clocks — New York, São Paulo, London, Bangalore.' },
     { hook: 'board', title: 'Community Board', blurb: 'The corkboard. Pin notes, bookmarks and pictures, tie them together with yarn, react to things. Signed with real names.' },
     { hook: 'news', title: 'Learning Insights', blurb: 'One quiet line of sales-enablement and AI reading, rotating on its own. Open the caret for the full list.' },
@@ -81,6 +81,7 @@ export const TOURS = {
   maintenance: [
     { card: 'REC Room maintenance', title: 'The Room Switch', blurb: 'BE RIGHT BACK for the whole arcade — closes play and rejects scores until reopened. It fails open on any error.' },
     { card: 'Keys & Services', title: 'Keys & Services', blurb: 'The service keys the apps run on. Values set here apply within a minute, no deploy.' },
+    { card: 'Latest changes', title: 'Change Feed', blurb: 'Everything anyone changes, signed and timestamped. It moved here from Home — an audit trail belongs in the machine room.' },
     { card: 'Setup', title: 'Setup', blurb: 'Creates and upgrades every table, and seeds what is missing. Safe to run any number of times.' },
   ],
 };

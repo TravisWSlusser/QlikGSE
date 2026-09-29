@@ -594,6 +594,13 @@ export function editMemberDialog(m, d, rerender) {
 
 /* ── the person card: everything this member has helped with.
    Exported: the Insights catalog opens it too. ── */
+/* UNREACHABLE as of 29 Sep 2026 — left in deliberately, not forgotten.
+   Every caller moved: Staff cards and owner chips now open #profile/<id>,
+   the Staff hover peek replaced the quick look, and the Team Member
+   Catalog that used it is gone. Kept because it is the only rendering of
+   a person that fits in a modal, and the next feature that needs one
+   should start here rather than writing a third. Delete it if nothing
+   claims it. */
 export function historyDialog(m, d) {
   const statusById = {};
   for (const s of d.statuses) statusById[s.id] = s;

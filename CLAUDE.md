@@ -2200,3 +2200,39 @@ flush, which meant `.donut-center` had to put its own leading back or the
 two centre lines printed on top of each other. Same family as the REC
 map's fx canvas: **a replaced element with no intrinsic size collapses,
 and nothing errors.**
+
+## Route matching must not depend on nav order (29 Sep 2026)
+
+Moving GSE Central to the top of the Projects group silently broke
+`#projects/new` — Home's "New project" action. `findItem` had two rules,
+exact match then "first item whose head segment matches", and with
+`projects/insights` now listed before `projects`, the prefix rule caught
+it first and opened GSE Central instead of the board.
+
+A third rule sits between them now: **a route that IS the head wins over
+a sibling that merely shares it.**
+
+```
+1. exact            projects/insights
+2. route === head   projects/new      → projects        (the Board)
+3. head prefix      banners/stellar/new → banners/highlights
+```
+
+Rule 3 is still needed and still correct: there is no route called
+`banners`, and banners.js reads the board off `params[0]`, so both boards
+deliberately land on one item. Same for `questions/<table>`.
+
+Verified by asserting 15 deep links land on the page they name, and by
+walking 25 routes (including junk and missing ids) with an error trap
+attached — zero thrown.
+
+**The lesson is the shape, not the fix:** any matcher whose result
+depends on declaration order will break the first time someone reorders
+the list for cosmetic reasons, and it breaks silently, because landing on
+the wrong page is not an error.
+
+Two pieces of copy also went stale in the same move and were corrected:
+the Home tour still pointed a step at the change feed after it moved to
+Maintenance (findStep filters missing targets out silently, so the step
+just vanished), and the banner editor still told people it was writing to
+"the Stellar widget".

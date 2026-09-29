@@ -4,7 +4,7 @@
    summary is garnish on a report that is already true. */
 import { h, clear, fmt } from '../util.js';
 import { api } from '../api.js';
-import { toast, sectionTitle, spinner, errorState, emptyState, chip } from '../ui.js';
+import { toast, sectionTitle, spinner, errorState, emptyState } from '../ui.js';
 import { statTile, hbars } from '../charts.js';
 
 const WINDOWS = [['week', 'Week'], ['month', 'Month'], ['quarter', 'Quarter']];
