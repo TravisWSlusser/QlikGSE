@@ -2347,4 +2347,27 @@ body.previewing{padding-top:38px}
 }
 .tl-rot .tl-sticker{max-height:74px}
 .tl-rot .tl-link{padding:6px 10px}
-@media (prefers-reduced-motion:reduce){.tl-rot-in{animation:none}}
+/* source tag — a wall post, a status and a board note read differently
+   and the widget says which is which rather than flattening all three */
+.tl-src{
+  font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+  padding:2px 7px;border-radius:5px;flex:0 0 auto;
+}
+.src-post{color:var(--link);background:color-mix(in srgb,var(--link) 14%,transparent)}
+.src-status{color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.src-board{color:var(--warn);background:var(--warn-soft)}
+.tl-quote{font-style:italic;color:var(--ink-2)}
+
+/* the rotation's position, so it reads as a carousel and not a card that
+   changes by itself */
+.tl-dots{display:flex;gap:5px;justify-content:center;margin-top:10px}
+.tl-dot{width:5px;height:5px;border-radius:50%;background:var(--line);transition:background .25s ease}
+.tl-dot.on{background:var(--link)}
+
+/* the empty state is a card, never a removal - see feedCard() */
+.tl-rot-empty p{margin:0;line-height:1.55}
+
+@media (prefers-reduced-motion:reduce){
+  .tl-rot-in{animation:none}
+  .tl-dot{transition:none}
+}

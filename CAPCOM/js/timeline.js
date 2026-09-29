@@ -147,44 +147,85 @@ export function wall(posts, reactions, opts) {
   }));
 }
 
-/* feedCard(card) — Home's rotating widget: the newest post from each
-   person who has one, one at a time, cross-fading.
-   Deliberately NOT a scrolling list: it sits in the same one-band slot
-   Learning Insights uses, and a wall of posts there would push the
-   corkboard off the page. */
+/* The three places a person says something, and what to call each one
+   when it comes round in the rotation. */
+const SOURCE_TAG = {
+  timeline: ['posted', 'src-post'],
+  status:   ['status', 'src-status'],
+  board:    ['on the board', 'src-board'],
+};
+
+/* feedCard(card) — Home's rotating widget: the latest thing each person
+   said, wherever they said it, one at a time, fading through.
+ *
+ * Deliberately NOT a scrolling list: it shares a one-band slot with
+ * Learning Insights, and a wall of posts there would push the corkboard
+ * off the page.
+ *
+ * It NEVER removes itself. The first version did when the feed came back
+ * empty, which is exactly the state a brand-new feature is in on the day
+ * it ships - so the widget shipped, found nothing, deleted itself, and
+ * read as a feature that had never been built. An empty state that hides
+ * is indistinguishable from a bug.
+ */
 export async function feedCard(card, sectionTitle) {
-  let d;
-  try { d = await api.timeline({ op: 'feed' }); }
-  catch { card.remove(); return; }          // a wall is a bonus, never an error card
-  const posts = (d.posts || []);
-  if (!posts.length) { card.remove(); return; }
+  let posts = [];
+  let failed = false;
+  try {
+    const d = await api.timeline({ op: 'feed' });
+    posts = d.posts || [];
+  } catch { failed = true; }
 
   clear(card);
+  const people = new Set(posts.map(p => p.name)).size;
   card.appendChild(sectionTitle('Team timeline',
-    h('span', { class: 'sec-sub' }, `${posts.length} ${posts.length === 1 ? 'person' : 'people'}`)));
+    h('span', { class: 'sec-sub' }, posts.length
+      ? `${people} ${people === 1 ? 'person' : 'people'} · posts, statuses and the board`
+      : '')));
+
+  if (!posts.length) {
+    card.appendChild(h('div', { class: 'tl-rot tl-rot-empty' },
+      failed
+        ? h('p', { class: 'sub' }, 'The feed is not answering right now.')
+        : h('p', { class: 'sub' },
+          'Nothing from the team yet. Post something on ',
+          h('a', { class: 'lnk', href: '#profile' }, 'your timeline'),
+          ' — a thought, a link, a sticker — or pin a note to the board, and it shows up here.')));
+    return;
+  }
 
   const slot = h('div', { class: 'tl-rot' });
   card.appendChild(slot);
+
+  // dots, so it reads as a rotation rather than a card that changes on its own
+  const dots = h('div', { class: 'tl-dots' },
+    posts.map((_, n) => h('i', { class: 'tl-dot' + (n === 0 ? ' on' : '') })));
+  if (posts.length > 1) card.appendChild(dots);
 
   let i = 0;
   const paint = () => {
     const p = posts[i];
     const who = { id: p.member_id, name: p.name, title: p.title, trigram: p.trigram, avatar_url: p.avatar_url };
+    const [label, cls] = SOURCE_TAG[p.source] || SOURCE_TAG.timeline;
     clear(slot).appendChild(h('div', { class: 'tl-rot-in' },
-      avatar(who, { size: 'sm' }),
+      // a board poster with no staff row has no id; avatar() falls back
+      avatar(who, { size: 'sm', link: !!p.member_id }),
       h('div', { class: 'tl-rot-body' },
         h('div', { class: 'tl-rot-head' },
           h('b', null, p.name),
+          h('span', { class: 'tl-src ' + cls }, label),
           h('span', { class: 'sub' }, fmt.when(p.created_at))),
-        postBody(p))));
+        p.source === 'status'
+          ? h('p', { class: 'tl-text tl-quote' }, `“${p.message}”`)
+          : postBody(p))));
+    [...dots.children].forEach((d, n) => d.classList.toggle('on', n === i));
   };
   paint();
 
   if (posts.length > 1) {
     const tick = setInterval(() => {
       if (!slot.isConnected) { clearInterval(tick); return; }
-      // pause while someone is reading it
-      if (slot.matches(':hover')) return;
+      if (slot.matches(':hover')) return;   // pause while someone is reading it
       i = (i + 1) % posts.length;
       paint();
     }, 7000);

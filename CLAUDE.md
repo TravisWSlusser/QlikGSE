@@ -2297,3 +2297,47 @@ Home's widget shows `DISTINCT ON (member_id)` — the newest post per
 person, not the newest posts overall, so one busy week cannot fill the
 rotation. It pauses on hover, and clamps text to two lines so no single
 post makes the card taller than Learning Insights beside it.
+
+## An empty state that hides is indistinguishable from a bug (29 Sep 2026)
+
+The team-timeline widget shipped, found an empty feed on its first day —
+because nobody had posted yet — and **removed itself**. Travis's read was
+the only available one: "you've missed the widget."
+
+`feedCard()` now always renders. Empty, it says what to do and links to
+the profile. It removes itself under no circumstance; a failed fetch says
+the feed is not answering.
+
+The rule generalises to every optional card in CAPCOM. `card.remove()` on
+empty is fine for something that has ALWAYS been there and is
+occasionally quiet (Learning Insights, the score ticker). It is wrong for
+something brand new, because day one IS the empty case and the person who
+asked for it is looking for it.
+
+## The feed is all three places people speak (29 Sep 2026)
+
+Travis: "the latest team comments, posts, and **social media stuff**."
+The first version read `timeline_posts` alone. A wall post, a status and
+a note on the corkboard are the same gesture from the reader's side, and
+a rotation fed by one of the three sits empty while the other two fill.
+
+`op:'feed'` now unions:
+
+| source     | from                          | tag           |
+|------------|-------------------------------|---------------|
+| `timeline` | `timeline_posts`              | posted        |
+| `status`   | `team_members.status_text`    | status        |
+| `board`    | `stickies` (notes + bookmarks)| on the board  |
+
+Each sub-wrapped — one missing table degrades the feed, never 500s it.
+`DISTINCT ON (member_id)` **per source**, so one person's busy week cannot
+crowd out everyone else.
+
+Board stickers are excluded: they expire after 24h and are decoration
+rather than something said. The corkboard join is on `lower(poster_name)
+= lower(name)` because a sticky stores a TYPED STRING; an SME on a scoped
+key keeps their typed name and simply has no avatar and no profile link.
+
+The widget tags each item with where it came from rather than flattening
+all three, and shows position dots so it reads as a rotation instead of a
+card that changes by itself.
