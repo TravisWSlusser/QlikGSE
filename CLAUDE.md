@@ -1839,3 +1839,88 @@ Insights & Calendar / Staff / Dashboard / Help & FAQ; Huw
 (`access, analytics, content`) additionally gets Tailored Access, MT Roster and
 Questions. Neither sees Calendar, Focused Headlines, Action Banner, Leadership
 Brief or Maintenance.
+
+## REC Room split: scoreboard vs health (29 Sep 2026, client + one scope)
+
+Travis: "MT Roster should be something different than scores... more of a
+maintenance-related category to check on status, activity. The REC Room
+Dashboard should be more of a live score board where the Enablement team can
+go in and see ALL the scoring data easily and see who the leaders are and
+what their name is."
+
+The two pages had drifted into each other. The Dashboard was half systems
+board and half analytics report; MT Roster was the scores table under a name
+that says roster. They swapped the halves that were in the wrong room.
+
+**Dashboard** (`scope: null`, everyone) is now the scoreboard: the territory
+map, a named leaderboard, per-territory podiums, the live run feed, the full
+sortable table, then the charts. **MT Roster** (`analytics`) is the health
+page: the systems board, roster coverage, activity bands, and the import.
+
+**Names were already on the wire.** `analytics.js` has joined `rec_roster`
+onto every `top` and `recent` row since the roster import; the board just
+printed the trigram and hid the person in a hover card. Ranking "SKJ" is
+fine for the arcade screen and useless in a meeting. Nothing server-side had
+to change for the single thing Travis actually asked for.
+
+### The map ports because it was never a map
+
+`CAPCOM/js/recmap.js`. Four PNG silhouettes used as CSS `mask-image`, each
+filled with its territory color — no projection, no geo data, no library.
+The asset path is ABSOLUTE (`/QlikRecRoom/assets/...`) because CAPCOM answers
+on both `/CAPCOM/` and `/ControlRoom/`, and a relative path would resolve
+differently depending on which door you came in.
+
+Two deliberate differences from the room's copy:
+
+- **All four territories stay lit.** The room lights only the scored top 3,
+  which is good drama and bad information: "LATAM is dark" should mean
+  "LATAM has no points", not "LATAM is fourth". Standing is carried by the
+  leader's halo and a rank badge on the pin instead.
+- **The panel keeps its navy ground in BOTH themes.** These are neon colors
+  picked against #10172A; on the light theme's white card they read as
+  highlighter. It also keeps this map and the wall map the same object.
+
+`point()` maps each centroid through the same contain/center fit the masks
+use, so a pin lands on the right landmass at any panel size — and `paint()`
+is called LAST, after the panel is in the document, because a detached panel
+has no width and every pin piles into the corner. That is the same trap the
+room's fx canvas fell into at its intrinsic 300x150.
+
+### Live refresh: visible only
+
+60s poll, stopped dead when `document.visibilityState !== 'visible'`. An
+admin page polling from a forgotten tab is how a Neon compute gets held
+awake all night for nobody. Two more guards earned by trying it:
+
+- The poll SKIPS while focus is in an input. A rebuild drops focus, and the
+  filter box is the one thing on this page people type into.
+- Table sort and filter live on the view's state object, not in the render
+  closure. A table that silently re-sorted itself every 60 seconds would
+  make the live refresh worse than no refresh.
+
+New runs are diffed against the last poll by `trigram|points|at` (score_events
+has an id, but analytics does not serve it) and each one pops a score bubble
+over its territory.
+
+### MT Roster health needs no new endpoint
+
+Everything is computed from the analytics payload the page already fetches.
+`top` rows carry `name` only when `rec_roster` matched, so **unmatched
+trigrams are a filter, not a query** — and that list is the LKG case from
+28 Sep, which until now could only be found by noticing a blank name on the
+public board. Coverage is `roster count - matched`; the activity bands are
+`last_seen` arithmetic.
+
+**The one server change:** `roster.js` `op:'stats'` now takes
+`requireScope(req, res, null)`. It returns a count and a timestamp, nothing
+about any person, and the health page is `analytics` while `GRANTABLE` has
+no `projects` — so demanding `projects` meant every staff member got a 403
+where the headline number goes. Everything touching a ROW still wants
+`projects`, and import is still manager-only.
+
+The import itself moved off Maintenance, which now carries a pointer. Two
+upload boxes for one table is how a stale one gets used.
+
+Tour copy for both pages was rewritten — it described the old layout, and a
+walkthrough that narrates a page that no longer exists is worse than none.

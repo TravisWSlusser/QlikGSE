@@ -62,13 +62,16 @@ export const TOURS = {
     { sel: '.view .card', title: 'Action Banner', blurb: 'The Stellar-Seller action banner set — same mechanics as Focused Headlines, different stage.' },
   ],
   dashboard: [
-    { card: 'Systems', title: 'Systems Watch', blurb: 'Live health of everything the apps stand on — database, feeds, partners, the room. Green means verified just now.' },
-    { card: 'Game Masters', title: 'Game Masters', blurb: 'The worldwide top three. Hover a trigram for the full read.' },
-    { card: 'Runs per day — last 30 days', title: 'Runs Per Day', blurb: 'Play volume over the last month — launches and pushes show up here first.' },
-    { card: 'Recent runs', title: 'Recent Runs', blurb: 'The latest scores as they land, newest first.' },
+    { card: 'Territory standings', title: 'The Board', blurb: 'The same map the REC Room shows, live. Every territory stays lit; the leader takes the halo, and a score bubble pops where points just landed. Refreshes itself every minute.' },
+    { card: 'Leaderboard', title: 'Who Is Winning', blurb: 'Worldwide top ten by name, not trigram. Hover any row for the full read — streams, best run, time played.' },
+    { card: 'Latest runs', title: 'As They Land', blurb: 'The newest scores, with the person behind each one.' },
+    { card: 'Every player', title: 'All Of It', blurb: 'Every scoring trigram, every column, sortable. The filter matches names, titles and countries. Staff tagging lives here for whoever holds the system scope.' },
   ],
   players: [
-    { sel: '.view .card', title: 'MT Roster', blurb: 'Everyone the arcade has seen — names, runs, accuracy, territory. The filter matches names too, and the Staff column keeps the SE team off every leaderboard.' },
+    { card: 'Systems', title: 'Systems Watch', blurb: 'Live health of everything the apps stand on — database, feeds, partners, the room. Green means verified just now.' },
+    { card: 'Roster health', title: 'Is The Roster Current', blurb: 'How much of the Mindtickle export has actually played, and — the one to watch — trigrams scoring with no roster row. Those show as a blank name on the public board.' },
+    { card: 'Activity', title: 'Who Is Still Playing', blurb: 'Active, gone quiet, dormant. The bars are distinct players per day, not runs.' },
+    { card: 'Import the Mindtickle roster', title: 'Refresh It', blurb: 'Drop in a fresh rec-roster.json. It upserts on trigram — nothing is deleted and no score is touched.' },
   ],
   questions: [
     { sel: '.view .tabs', title: 'Three Banks', blurb: 'Knowledge, methodology and glossary — the pools every game draws from.' },

@@ -54,9 +54,12 @@ const NAV = [
     { route: 'projects/access', label: 'Tailored Access', scope: ['system', 'access'], mod: tailoredAccess, icon: 'system' },
   ]},
   { group: 'REC Room', items: [
-    // scope null: everyone sees the scores. MT Roster below keeps 'analytics'
-    // because it is the page that can flag someone staff (setStaff, 'system').
+    // scope null: everyone sees the scoreboard - names, map, standings, the
+    // full table. The one privileged control on it (tag as staff, setStaff)
+    // gates on 'system' inside the table, not on the page.
     { route: 'dashboard', label: 'Dashboard', scope: null, mod: dashboard, icon: 'dashboard' },
+    // MT Roster is the HEALTH page: systems board, roster coverage, activity
+    // and the roster import. 'analytics' because it reads the same payload.
     { route: 'players', label: 'MT Roster', scope: 'analytics', mod: players, icon: 'players' },
     { route: 'questions', label: 'Questions', scope: 'content', mod: questions, icon: 'questions' },
   ]},
