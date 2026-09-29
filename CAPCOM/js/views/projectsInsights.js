@@ -325,9 +325,18 @@ function buildLoad(d, active) {
       h('span', { class: 'load-projects' }, projects.map(p =>
         h('a', { class: 'load-chip', href: '#project/' + p.id, title: p.title }, p.title)))))));
 
+  /* The unassigned, as FACES rather than a sentence.
+     On the rig this was one name and a comma list read fine. In
+     production it is 14 of 16 people - the team runs two active projects -
+     and a paragraph of names is both a wall of text and faintly
+     accusatory. A stack of faces states the same fact without reading
+     like a list of who is idle, and each one still names itself on hover
+     and opens that person. */
   if (idle.length) {
-    card.appendChild(h('p', { class: 'explain' },
-      `Not on an active project: ${idle.map(m => m.name).join(', ')}.`));
+    card.appendChild(h('div', { class: 'load-idle' },
+      h('span', { class: 'load-idle-lbl' },
+        `Not on an active project · ${idle.length}`),
+      h('span', { class: 'av-stack' }, idle.map(m => avatar(m, { size: 'xs' })))));
   }
   return card;
 }
