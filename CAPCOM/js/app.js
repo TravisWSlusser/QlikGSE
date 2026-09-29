@@ -53,7 +53,9 @@ const NAV = [
     { route: 'projects/access', label: 'Tailored Access', scope: ['system', 'access'], mod: tailoredAccess, icon: 'system' },
   ]},
   { group: 'REC Room', items: [
-    { route: 'dashboard', label: 'Dashboard', scope: 'analytics', mod: dashboard, icon: 'dashboard' },
+    // scope null: everyone sees the scores. MT Roster below keeps 'analytics'
+    // because it is the page that can flag someone staff (setStaff, 'system').
+    { route: 'dashboard', label: 'Dashboard', scope: null, mod: dashboard, icon: 'dashboard' },
     { route: 'players', label: 'MT Roster', scope: 'analytics', mod: players, icon: 'players' },
     { route: 'questions', label: 'Questions', scope: 'content', mod: questions, icon: 'questions' },
   ]},

@@ -1781,3 +1781,23 @@ and the gate died on `WHO.scopes.includes` — which looks exactly like a bug in
 the new nav code and is not. A stub must honour the ROUTING contract, not just
 the response shape. (`vundefined` on the sidebar chip is the same class of
 thing: `code_version` comes from whoami and the stub omitted it.)
+
+**Same day, follow-up: the Dashboard is open to everyone.** Travis wanted the
+whole team to see scores and REC Room data. `analytics.js` now takes
+`requireScope(req, res, null)` - any valid key, member sessions included - and
+the Dashboard nav entry is `scope: null`.
+
+The justification is that the numbers were never secret:
+`/api/recroom/getRecentScores` is KEYLESS and public and already returns
+trigram, name, title, country and score to anyone with the link. Gating the
+same figures behind a scope protected nothing while keeping the team from
+seeing how their own game was going.
+
+**MT Roster keeps `analytics`**, because it is the page that can flag someone
+as staff. That write (`setStaff`) demands `system` and is untouched. Be honest
+about what the nav gate is doing though: both views call the SAME
+`api.analytics()`, so the payload MT Roster renders is reachable by any member
+who calls the endpoint directly. The gate is presentational. It is acceptable
+only because the payload carries nothing the keyless public endpoint does not
+already hand out - if analytics ever starts returning something genuinely
+private, that gate has to move into the endpoint, not the nav.
