@@ -10,11 +10,14 @@ import { h, clear } from '../util.js';
 import { api } from '../api.js';
 import { toast, confirmBox, sectionTitle, spinner, errorState, emptyState, modal } from '../ui.js';
 import { pctx, editMemberDialog, historyDialog, inviteDialog } from './projects.js';
+import { preview } from '../preview.js';
 
 /* Areas a non-manager can be granted (v12). Must match GRANTABLE in
    lib/admin/auth.js — the server re-filters on write AND on read, so a
    mismatch here is a cosmetic bug, never a privilege one. Maintenance and
    key minting are deliberately absent: those ride the Manager checkbox. */
+/* a manager previews as holding everything, which is what auth.js gives them */
+const SCOPES_ALL = ['calendar', 'banners', 'content', 'analytics', 'projects', 'access', 'system'];
 const AREAS = [
   ['calendar',  'Calendar',      'Mission Control events'],
   ['banners',   'Hero Banners',  'the homepage rotators'],
@@ -106,6 +109,12 @@ async function load(root, rerender, canEdit, meId, canInvite) {
   const menuFor = m => [
     ['Edit…', () => editMemberDialog(m, d, rerender), false],
     ...(canEdit ? [['Access…', () => accessDialog(m, rerender), false]] : []),
+    // managers only: nothing about this changes anyone's access, but a
+    // preview rearranges YOUR sidebar and that would alarm a staff member
+    ...(canEdit ? [['Preview their view', () => preview.set({
+      name: m.name,
+      scopes: m.is_manager ? SCOPES_ALL : (m.scopes || []),
+    }), false]] : []),
     ...(canInvite ? [['Activation key…', () => inviteDialog(m), false]] : []),
     ...(canInvite && m.claimed ? [['Reset access code', () => confirmBox('Reset this access code?',
       `${m.name}'s member sign-in stops working until they claim a new code at the gate.`, async () => {

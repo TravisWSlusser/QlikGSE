@@ -12,6 +12,7 @@
    an SME with only `content` sees Questions and nothing else. */
 import { h, clear, $ } from './util.js';
 import { api, keyStore } from './api.js';
+import { preview, effectiveWho } from './preview.js';
 import { toast, modal, field, textInput } from './ui.js';
 import * as dashboard from './views/dashboard.js';
 import * as players from './views/players.js';
@@ -70,11 +71,15 @@ let WHO = null; // {label, scopes, master}
 const allItems = () => NAV.flatMap(g => g.items);
 /* it.scope may be a string, an array (ANY of them admits - same rule
    requireScope uses on the server), or null for "every key holder". */
-const allowed = it => !!WHO
+/* Everything the shell shows is decided against VIEW, not WHO — that one
+   indirection is the whole preview feature. VIEW is WHO unless a preview is
+   running, in which case it is the previewed staff member. */
+const VIEW = () => effectiveWho(WHO);
+const allowed = it => { const w = VIEW(); return !!w
   && (!it.scope || (Array.isArray(it.scope)
-        ? it.scope.some(sc => WHO.scopes.includes(sc))
-        : WHO.scopes.includes(it.scope)))
-  && (!it.gate || it.gate(WHO));
+        ? it.scope.some(sc => w.scopes.includes(sc))
+        : w.scopes.includes(it.scope)))
+  && (!it.gate || it.gate(w)); };
 
 /* Route → nav item. An exact match wins (banners/stellar); otherwise the
    first item whose head segment matches (questions/glossary_terms →
@@ -134,6 +139,31 @@ function buildNav() {
   }
 }
 
+/* A running preview puts a bar across the top that cannot be missed and
+   cannot be mistaken for a real session. It states what the preview does and
+   does not prove, because someone WILL open a page during one and read the
+   data as evidence that the permission works. */
+function previewBar() {
+  let bar = $('preview-bar');
+  if (!bar) {
+    bar = h('div', { id: 'preview-bar' });
+    document.body.insertBefore(bar, document.body.firstChild);
+  }
+  const p = preview.get();
+  if (!p) { bar.style.display = 'none'; document.body.classList.remove('previewing'); return; }
+  bar.style.display = 'flex';
+  document.body.classList.add('previewing');
+  clear(bar).append(
+    h('span', { class: 'pv-eye' }, 'Previewing as'),
+    h('b', null, p.name),
+    h('span', { class: 'pv-note' },
+      p.scopes.length ? p.scopes.join(' · ') : 'no extra areas'),
+    h('span', { class: 'pv-warn' }, 'sidebar only — pages still load with YOUR access'),
+    h('button', { class: 'btn sm', onClick: () => preview.clear() }, 'Exit preview'));
+}
+
+preview.onChange(() => { previewBar(); buildNav(); draw(); });
+
 function showApp() {
   $('gate').style.display = 'none';
   $('shell').style.display = '';
@@ -150,8 +180,9 @@ function showApp() {
    schema version is ahead of what Setup last stamped. One click runs
    the same idempotent Setup as the System view. */
 function maybeUpdateBar() {
-  const can = WHO && (WHO.scopes.includes('system') || WHO.leader);
-  $('update-bar').style.display = (can && WHO.setup_pending) ? 'flex' : 'none';
+  const w = VIEW();
+  const can = w && (w.scopes.includes('system') || w.leader);
+  $('update-bar').style.display = (can && w.setup_pending) ? 'flex' : 'none';
   // the banner's dropdown: what the PENDING versions add
   const pending = (WHO && WHO.deploy_notes || [])
     .filter(e => WHO.schema_stamp == null || e.v > WHO.schema_stamp);

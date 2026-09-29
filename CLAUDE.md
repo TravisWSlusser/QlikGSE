@@ -1801,3 +1801,41 @@ who calls the endpoint directly. The gate is presentational. It is acceptable
 only because the payload carries nothing the keyless public endpoint does not
 already hand out - if analytics ever starts returning something genuinely
 private, that gate has to move into the endpoint, not the nav.
+
+## "See what they see" — preview mode (29 Sep 2026, client only)
+
+Travis asked to test the new staff permissions from the other side before the
+demo. Logging out, minting a throwaway key or borrowing someone's password all
+work and all cost more than the thing being checked, which is simply: *does
+their sidebar look right?*
+
+`CAPCOM/js/preview.js` holds a session-only identity. `app.js` gained one
+indirection - `const VIEW = () => effectiveWho(WHO)` - and `allowed()`, the
+Setup banner and the version chip now read `VIEW()` instead of `WHO`. That is
+the entire feature. It works because the sidebar was already driven by exactly
+one thing: `WHO.scopes`. Nothing else in the shell knew about permissions, so
+nothing else had to change.
+
+`effectiveWho` also clears `master/manager/people_leader/leader`. Scopes alone
+would leave Leadership Brief and the Setup banner showing, because those are
+gated on `it.gate(w)` reading the leader flags, not on a scope.
+
+**The banner is loud on purpose and says what the preview does NOT prove.**
+Every API call still carries the real key, so a page opened during a preview
+loads data that person could not actually fetch. It answers "what is in their
+sidebar", never "what can they do". The real boundary is `requireScope` on the
+server and the only honest test of it is signing in as them.
+
+**Session-only, no localStorage, deliberately.** A preview that survives a
+refresh becomes a permissions bug that nobody can reproduce.
+
+`preview.onChange` re-runs `previewBar() + buildNav() + draw()`, so the switch
+is instant and Exit puts everything back without a reload. The row menu entry
+is gated on `canEdit` - previewing rearranges YOUR sidebar, which would alarm a
+staff member who saw it happen on their own screen.
+
+Verified on the stub: Juan (no scopes) collapses to Home / Project Board /
+Insights & Calendar / Staff / Dashboard / Help & FAQ; Huw
+(`access, analytics, content`) additionally gets Tailored Access, MT Roster and
+Questions. Neither sees Calendar, Focused Headlines, Action Banner, Leadership
+Brief or Maintenance.

@@ -1692,3 +1692,23 @@ a.gantt-label:hover{color:var(--link)}
 @media (pointer:coarse){.mc-add{opacity:.55}}
 .cp-frame .mc-day.mc-free{cursor:pointer}
 .cp-frame .mc-day.mc-free:hover{background:var(--card-2);color:var(--ink)}
+
+/* Preview bar — "see what they see". Deliberately loud: a preview that looks
+   like a normal session is how someone ends up debugging their own sidebar. */
+#preview-bar{
+  position:fixed;top:0;left:0;right:0;z-index:200;display:none;
+  align-items:center;gap:12px;padding:8px 16px;
+  background:var(--warn);color:#241a00;font-size:.82rem;font-weight:600;
+  box-shadow:0 2px 14px rgba(0,0,0,.35);
+}
+#preview-bar .pv-eye{text-transform:uppercase;letter-spacing:.09em;font-size:.7rem;opacity:.75}
+#preview-bar .pv-note{opacity:.8;font-weight:500}
+#preview-bar .pv-warn{margin-left:auto;font-weight:500;opacity:.85}
+#preview-bar .btn{background:rgba(0,0,0,.18);border-color:rgba(0,0,0,.28);color:#241a00}
+#preview-bar .btn:hover{border-color:#241a00}
+body.previewing{padding-top:38px}
+@media (max-width:700px){
+  #preview-bar{flex-wrap:wrap;gap:6px}
+  #preview-bar .pv-warn{margin-left:0;flex-basis:100%}
+  body.previewing{padding-top:62px}
+}
