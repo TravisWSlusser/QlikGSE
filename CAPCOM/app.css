@@ -465,12 +465,20 @@ html[data-theme="dark"] .status-dot.open{color:#5AD68E}
 .feed-summary{display:block;font-size:.85rem;line-height:1.45}
 .feed-actor{display:block;font-size:.72rem;color:var(--muted)}
 .miss-list{display:flex;flex-direction:column;gap:10px}
-.miss-row{display:grid;grid-template-columns:minmax(0,1fr) 90px 42px;gap:10px;align-items:center}
+/* The label column is CAPPED. This list used to live in a narrow column
+   inside the Stellar-Seller strip, where 1fr was the whole width; on the
+   full-width Questions card 1fr grew to 1400px and stranded every bar
+   against the right edge, a screen away from the question it measures. */
+.miss-row{display:grid;grid-template-columns:minmax(0,54ch) minmax(120px,1fr) 46px;gap:14px;align-items:center}
 .miss-main{min-width:0}
 .miss-label{display:block;font-size:.84rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .miss-meta{display:block;font-size:.72rem;color:var(--muted)}
 .miss-track{height:10px;background:var(--card-2);border-radius:0 4px 4px 0;overflow:hidden}
-.miss-fill{height:100%;background:var(--viz-seq);border-radius:0 4px 4px 0;min-width:2px}
+.miss-fill{height:100%;background:var(--qm,var(--viz-seq));border-radius:0 4px 4px 0;min-width:2px}
+.miss-row.warm{--qm:var(--warn)}
+.miss-row.hot{--qm:var(--overdue)}
+.miss-row.warm .miss-pct{color:var(--warn)}
+.miss-row.hot .miss-pct{color:var(--overdue)}
 .miss-pct{font-size:.82rem;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
 
 /* ── banner live preview — always the page's navy, whatever CAPCOM's theme ── */
@@ -2054,3 +2062,85 @@ body.previewing{padding-top:38px}
 /* the change feed's actor is prose: face AND name */
 .feed-actor{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap}
 .feed-actor .av-nm{font-size:.74rem}
+
+/* ======================================================================
+   Home, after the REC Room merge.
+   ====================================================================== */
+
+/* -- the calendar's two tabs -- */
+.cal-tabs{display:inline-flex;gap:2px;padding:2px;border-radius:9px;background:var(--card-2)}
+.cal-tab{
+  border:0;background:none;cursor:pointer;
+  padding:5px 12px;border-radius:7px;
+  font:inherit;font-size:.74rem;font-weight:600;color:var(--muted);
+  transition:background .15s ease,color .15s ease;
+}
+.cal-tab:hover{color:var(--ink)}
+.cal-tab.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.cal-tab:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+
+.mc-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0 2px}
+.mc-leg{display:inline-flex;align-items:center;gap:5px;font-size:.66rem;color:var(--muted)}
+.mc-leg i{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.mc-foot{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.mc-foot .qa-row{margin:0;flex-basis:100%}
+
+/* out-of-office has no date, so it lists under the grid rather than
+   inventing a day to sit on */
+.mc-ooo{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.mc-ooo-lbl{
+  display:block;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:6px;
+}
+.mc-ooo-row{display:flex;align-items:center;gap:7px;font-size:.76rem;margin-bottom:5px}
+.mc-ooo-row b{color:var(--ink);flex:0 0 auto}
+.mc-ooo-row span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* -- the score ticker, now its own card -- */
+.tk-card .tk-wrap{margin-top:10px}
+
+/* -- the merged REC Room card -- */
+.rec-you-lbl{
+  font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin:14px 0 8px;
+}
+.rec-you-lbl:first-of-type{margin-top:4px}
+.rec-you-none{margin:4px 0 0}
+.rec-lead .ld-list{margin-top:0}
+/* the leader row leads with a NAME now, not a trigram */
+.ld-who{
+  font-weight:600;font-size:.84rem;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.ld-who i{
+  font-style:normal;font-size:.6rem;font-weight:700;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--accent);margin-left:7px;
+}
+.ld-row.ld-you{background:var(--card-2);outline:1px solid var(--accent)}
+
+/* ======================================================================
+   Questions: where people need help.
+   Colour is never the only signal - the percentage sits beside the bar
+   and the tooltip spells out the counts.
+   ====================================================================== */
+.q-miss{
+  display:flex;align-items:center;gap:8px;flex:0 0 auto;
+  width:150px;--qm:var(--viz-seq);
+}
+.q-miss.warm{--qm:var(--warn)}
+.q-miss.hot{--qm:var(--overdue)}
+.q-miss.thin{--qm:var(--muted);opacity:.55}
+.q-miss-track{
+  flex:1 1 auto;height:6px;border-radius:4px;overflow:hidden;
+  background:var(--grid);min-width:40px;
+}
+.q-miss-fill{height:100%;border-radius:4px;background:var(--qm)}
+.q-miss-pct{
+  font-size:.74rem;font-weight:700;font-variant-numeric:tabular-nums;
+  color:var(--qm);min-width:34px;text-align:right;
+}
+.q-miss-n{font-size:.62rem;color:var(--muted);min-width:44px}
+@media (max-width:900px){
+  .q-miss{width:100%;order:3;margin-top:6px}
+  .q-miss-n{margin-left:auto}
+}

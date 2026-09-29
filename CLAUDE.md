@@ -2055,3 +2055,80 @@ GIF, not only an emoji — the same two-column shape `sticky_reactions` has
 used since v4. `members.statusReact` falls back to an emoji-only insert on
 a pre-v13 database and asks for Setup rather than silently posting a blank
 reaction. The staffReacts select walks back one tier, per the house rule.
+
+## Home reflow + Most Missed moves (29 Sep 2026, schema v14)
+
+Travis's list, and what each one turned into.
+
+**Both calendars, one widget.** Enablement runs two that share nothing:
+Mission Control (learner-facing, `/api/command/events`, coloured by event
+category) and Team (internal — phase deadlines, milestones, who is out,
+coloured by project status). They are now tabs on the same card: same
+grid, same month nav, only the source, the legend and the footer links
+change. Tabs rather than two cards because they answer the same question
+for two audiences, and two month grids stacked would push everything
+below them off the page.
+
+**Out-of-office has no date.** `ooo_note` is free text ("Back Thursday"),
+so it cannot sit on a day cell. It lists under the grid instead.
+Inventing a date to pin it to would be worse than not showing it.
+
+**Names, renames and moves:** Action Banner → **AI Highlights** (label
+only — the route stays `banners/stellar` so saved links survive). News →
+**Learning Insights**, and it moved ABOVE the corkboard: it is one line
+tall and the board is the tallest thing on the page, so below it the news
+sat past the fold and nobody read it.
+
+**The Stellar-Seller strip is gone.** It paired the hero banner set with
+the arcade back when those were two brands; it is all just the REC Room
+now. Its three parts went where each one belongs:
+
+- the **score ticker** → its own card in the slot Learning Insights
+  vacated, same column, same width;
+- the **leaderboard** → merged into the REC Room card on the left, so
+  "how am I doing" and "who is winning" are one glance instead of two
+  trips down the page. Your own row is outlined and badged;
+- **Most Missed** → onto the Questions page, next to the questions it is
+  talking about.
+
+### Most Missed, and the bug it uncovered
+
+Every question row now carries a miss bar, and each bank gets a "Where
+people need help" card on top. Colour is never the only signal: the
+percentage sits beside the bar and the tooltip spells out the counts.
+Rows under `minAttempts` still draw a bar but muted, labelled, and
+excluded from the ranking — an SME should not rewrite a question because
+one person fat-fingered it.
+
+`.miss-row`'s label column is now CAPPED at 54ch. That list was born in a
+narrow column inside the Stellar strip where `1fr` was the whole width; on
+the full-width Questions card `1fr` grew to 1400px and stranded every bar
+against the right edge, a screen away from the question it measures.
+
+**The Methodology bank has never recorded a single answer stat.**
+`methodology_questions.correct` is the ANSWER KEY — text `'a'|'b'|'c'|'d'`,
+predating the Control Room — so migrate's
+`ADD COLUMN IF NOT EXISTS correct integer` has always been a silent
+no-op. `checkCoinAnswer` then ran
+`SET attempted = attempted + 1, correct = correct + 1`, which Postgres
+rejects (no `text + integer` operator), and its own `catch (e) {}` ate the
+error. **Both** counters were lost, not just one, which is why that bank
+never appeared in Most Missed at all — `questionStats` filters on
+`attempted > 0`.
+
+v14 adds `correct_count`, a name that cannot collide. Counting starts at
+deploy; there is nothing to backfill, and the Questions page says so on
+that tab rather than showing an empty chart. Lesson worth keeping: a
+non-fatal `catch` around a stats write will hide a schema mistake
+indefinitely — nothing was broken from the outside, the number was just
+always zero.
+
+### Not built: the per-region breakdown
+
+"NAM is missing xyz and LATAM is missing abc" needs data that does not
+exist. The counters live ON the question row as two integers; there is no
+per-answer record, so there is nothing to group by territory. Doing it
+means a new `question_answers` table (question, table, territory, correct,
+when) and an INSERT on **every answer in the game** — a write on the hot
+path that currently does one cheap UPDATE. That is a real cost and a real
+design decision, so it is Travis's call, not a thing to slip in.

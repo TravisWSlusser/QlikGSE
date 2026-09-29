@@ -64,10 +64,10 @@ export function render(params, rerender, who) {
   const rightCol = h('div', { class: 'home-col' });
   grid.append(leftCol, rightCol);
 
-  // Left column: calendar (with actions), projects at a glance, change feed.
+  // Left column: the two calendars, your projects, your REC Room.
   const calCard = h('div', { class: 'card', dataset: { tour: 'calendar' } }, spinner());
   leftCol.appendChild(calCard);
-  loadCalendar(calCard, scopes, acts);
+  loadCalendar(calCard, scopes, acts, who);
   const prjCard = h('div', { class: 'card', dataset: { tour: 'projects-glance' } }, spinner());
   leftCol.appendChild(prjCard);
   // Your projects when CAPCOM knows who you are, the board's latest when it
@@ -82,20 +82,30 @@ export function render(params, rerender, who) {
      Latest Changes moved to Maintenance - a change feed is an audit trail,
      and the machine room is where you go looking for one. */
 
-  // Right column: the clock, the corkboard, the News Feed.
+  /* Right column: the clock, Learning Insights, the corkboard, the scores.
+
+     Learning Insights moved ABOVE the board: it is one line tall and the
+     board is the tallest thing on the page, so below it the news sat past
+     the fold on most screens and nobody read it.
+
+     The score ticker takes the slot Insights left. It used to head the
+     Stellar-Seller widget, which is gone - that section paired the hero
+     banner set with the arcade back when they were two brands, and the
+     arcade is just the REC Room now. Its three parts went where each one
+     belongs: the ticker here, the leaderboard into the REC Room card on
+     the left, and Most Missed onto the Questions page next to the
+     questions it is talking about. */
   rightCol.appendChild(clockCard());
-  const board = h('div', { class: 'card board-card', dataset: { tour: 'board' } }, spinner());
-  rightCol.appendChild(board);
-  loadBoard(board, rerender);
   const inspo = h('div', { class: 'card', dataset: { tour: 'news' } }, spinner());
   rightCol.appendChild(inspo);
   loadInspoCard(inspo);
-
-  // ── the Stellar-Seller widget — full width under the grid ──
-  if (scopes.some(s => ['analytics', 'content', 'banners'].includes(s))) {
-    const ss = h('div', { class: 'card ss-widget' }, spinner());
-    root.appendChild(ss);
-    loadStellar(ss, scopes);
+  const board = h('div', { class: 'card board-card', dataset: { tour: 'board' } }, spinner());
+  rightCol.appendChild(board);
+  loadBoard(board, rerender);
+  if (scopes.includes('analytics')) {
+    const ticker = h('div', { class: 'card tk-card', dataset: { tour: 'scores' } }, spinner());
+    rightCol.appendChild(ticker);
+    loadTicker(ticker);
   }
 
   return root;
@@ -184,6 +194,48 @@ function clockCard() {
   }, 1000);
   tick();
   return card;
+}
+
+/* ── latest scores, as a ticker ──
+ *
+ * This was the banner across the top of the Stellar-Seller widget. That
+ * section is gone, and the ticker is the part of it people actually
+ * watched, so it gets a card of its own in the slot Learning Insights
+ * left behind - same column, same width, one band tall.
+ *
+ * Hovering a trigram raises the full player card, the same one the
+ * Dashboard and MT Roster use. The run is duplicated so the marquee loops
+ * without a visible seam; the copy is aria-hidden so a screen reader
+ * reads the scores once.
+ */
+async function loadTicker(card) {
+  let a;
+  try { a = await api.analytics(); }
+  catch { card.remove(); return; }   // scores are a bonus, never an error card
+  const excluded = a.excluded || [];
+  const recent = a.recent || [];
+  if (!recent.length) { card.remove(); return; }
+
+  const statsByTrig = {};
+  for (const p of a.top || []) statsByTrig[p.trigram] = p;
+
+  const who = r => r.name || r.trigram;
+  const one = (r, ghost) => {
+    const it = h('span', { class: 'tk-item', 'aria-hidden': ghost ? 'true' : null },
+      h('b', null, who(r)), ` +${fmt.int(r.points)} `, h('i', null, r.territory));
+    if (!ghost) wirePop(it, statsByTrig[r.trigram], excluded);
+    return it;
+  };
+
+  clear(card);
+  card.appendChild(sectionTitle('Latest scores',
+    h('a', { class: 'btn xs', href: '#dashboard' }, 'The whole board →')));
+  card.appendChild(h('div', { class: 'tk-wrap' },
+    h('span', { class: 'tk-label' }, 'RECENT'),
+    h('div', { class: 'tk-window' },
+      h('div', { class: 'tk-run' },
+        recent.map(r => one(r, false)),
+        recent.map(r => one(r, true))))));
 }
 
 /* meCorner(who) — the signed-in person, top right.
@@ -1100,28 +1152,90 @@ function feedSpanDays(e) {
   }
   return out;
 }
-async function loadCalendar(card, scopes, acts) {
-  let d;
-  try { d = await api.publicEvents(); }
-  catch (err) { clear(card).appendChild(errorState(err, () => loadCalendar(card, scopes, acts))); return; }
-  clear(card);
+/* ── the calendar widget: BOTH calendars, one frame ──
+ *
+ * Enablement runs two that have nothing to do with each other:
+ *
+ *   MISSION CONTROL — the learner-facing feed, the same events the
+ *     Mindtickle homepage renders. Colours come from event categories.
+ *     Edited under Calendar; needs the 'calendar' scope to touch.
+ *   TEAM — internal. Project phase deadlines, milestones and who is out
+ *     of office. Colours come from project statuses. Edited from the
+ *     Project Board; lives in full under Insights & Calendar.
+ *
+ * Same grid, same month nav, same upcoming list — only the source, the
+ * legend and the footer links change. Tabs rather than two cards because
+ * they answer the same question ("what is coming up?") for two different
+ * audiences, and stacking two month grids would push everything below
+ * them off the page.
+ *
+ * Out-of-office has NO DATE - ooo_note is free text ("Back Thursday") -
+ * so it cannot sit on a day cell and is listed under the grid instead.
+ * Inventing a date to pin it to would be worse than not showing it.
+ */
+async function loadCalendar(card, scopes, acts, who) {
+  const canCal = scopes.includes('calendar');
+  let pub = null, err = null;
+  try { pub = await api.publicEvents(); }
+  catch (e) { err = e; }
+  if (err) { clear(card).appendChild(errorState(err, () => loadCalendar(card, scopes, acts, who))); return; }
 
-  const events = d.events || [];
-  const cats = d.categories || {};
-  const byDate = {};
-  for (const e of events) for (const iso of feedSpanDays(e)) (byDate[iso] = byDate[iso] || []).push(e);
+  // the team side rides the bundle the rest of Home already fetched
+  const team = await PEOPLE;
 
-  let view = new Date(); view.setDate(1);
+  let tab = 'mc';
   const head = h('div', { class: 'mc-head' });
   const gridEl = h('div', { class: 'mc-grid' });
   const listEl = h('div', { class: 'mc-list' });
+  const legendEl = h('div', { class: 'mc-legend' });
+  const footEl = h('div', { class: 'mc-foot' });
+  let view = new Date(); view.setDate(1);
+
+  /* Each tab returns the same shape: a map of ISO date -> entries, each
+     with a colour, a label and an optional badge. Everything below draws
+     from that and never asks which tab it is on. */
+  const mcDays = () => {
+    const cats = (pub && pub.categories) || {};
+    const by = {};
+    for (const e of (pub && pub.events) || []) {
+      for (const iso of feedSpanDays(e)) {
+        (by[iso] = by[iso] || []).push({
+          title: e.title,
+          color: (cats[e.category] || {}).color || 'var(--muted)',
+          badge: null,
+        });
+      }
+    }
+    return by;
+  };
+  const teamDays = () => {
+    const by = {};
+    if (!team) return by;
+    for (const pr of team.projects || []) {
+      if (!pr.active || !pr.phase_due) continue;
+      (by[pr.phase_due] = by[pr.phase_due] || []).push({
+        title: pr.title,
+        color: `var(--ps-${(team.statusById[pr.status_id] || {}).color || 'blue'})`,
+        badge: pr.overdue ? 'OVERDUE' : 'DUE',
+      });
+    }
+    for (const m of team.milestones || []) {
+      if (!m.date) continue;
+      (by[m.date] = by[m.date] || []).push({
+        title: m.title, color: 'var(--link)', badge: 'MILE',
+      });
+    }
+    return by;
+  };
 
   const draw = () => {
+    const byDate = tab === 'mc' ? mcDays() : teamDays();
     const y = view.getFullYear(), m = view.getMonth();
     clear(head).append(
       h('button', { class: 'btn xs', 'aria-label': 'Previous month', onClick: () => { view = new Date(y, m - 1, 1); draw(); } }, '‹'),
       h('span', { class: 'mc-month' }, `${MONTHS_LONG[m]} ${y}`),
       h('button', { class: 'btn xs', 'aria-label': 'Next month', onClick: () => { view = new Date(y, m + 1, 1); draw(); } }, '›'));
+
     clear(gridEl);
     for (const wd of ['S', 'M', 'T', 'W', 'T', 'F', 'S']) gridEl.appendChild(h('span', { class: 'mc-wd' }, wd));
     const first = new Date(y, m, 1).getDay();
@@ -1137,37 +1251,99 @@ async function loadCalendar(card, scopes, acts) {
         title: evs.map(e => e.title).join(' · ') || null,
       }, String(day),
         evs.length ? h('span', { class: 'mc-dots' }, evs.slice(0, 3).map(e =>
-          h('i', { style: { background: (cats[e.category] || {}).color || 'var(--muted)' } }))) : null);
-      // With the calendar scope, every day is a door: occupied days open
-      // the Calendar view, empty days deep-link straight into "new event
-      // on this date" (the #calendar/new/<iso> route).
-      if (scopes.includes('calendar')) {
+          h('i', { style: { background: e.color } }))) : null);
+
+      if (tab === 'mc' && canCal) {
+        // With the calendar scope every day is a door: an occupied day
+        // opens the Calendar view, an empty one deep-links into "new
+        // event on this date".
         cell.style.cursor = 'pointer';
         if (!evs.length) cell.title = `Create an event on ${fmt.day(iso)}`;
         cell.addEventListener('click', () => {
           location.hash = evs.length ? '#calendar' : `#calendar/new/${iso}`;
         });
+      } else if (tab === 'team' && evs.length) {
+        // the team side is read-only here; deadlines are moved on the board
+        cell.style.cursor = 'pointer';
+        cell.addEventListener('click', () => { location.hash = '#projects/insights'; });
       }
       gridEl.appendChild(cell);
     }
+
+    // ---- upcoming, and the tab's own furniture ----
+    clear(listEl); clear(legendEl); clear(footEl);
+    if (tab === 'mc') {
+      const cats = (pub && pub.categories) || {};
+      const upcoming = ((pub && pub.events) || []).filter(e => !isPast(e.date, e.end)).slice(0, 3);
+      listEl.append(...(upcoming.length
+        ? upcoming.map(e => h('a', {
+          class: 'mc-up', href: canCal ? '#calendar' : null,
+          style: { '--evc': (cats[e.category] || {}).color || 'var(--muted)' },
+        },
+          h('span', { class: 'mc-up-date' },
+            `${e.month} ${e.day}` + (e.end ? (e.end_month === e.month ? `–${e.end_day}` : ` – ${e.end_month} ${e.end_day}`) : '')),
+          h('span', { class: 'mc-up-title' }, e.title)))
+        : [h('p', { class: 'sub' }, 'Nothing upcoming on the calendar.')]));
+      const seen = new Set(((pub && pub.events) || []).map(e => e.category).filter(Boolean));
+      legendEl.append(...[...seen].slice(0, 5).map(k => h('span', { class: 'mc-leg' },
+        h('i', { style: { background: (cats[k] || {}).color || 'var(--muted)' } }),
+        (cats[k] || {}).label || k)));
+      footEl.appendChild(h('a', { class: 'btn xs', href: '#calendar' },
+        canCal ? 'Open the calendar →' : 'See the full calendar →'));
+    } else {
+      if (!team) {
+        listEl.appendChild(h('p', { class: 'sub' }, 'The project board did not answer.'));
+      } else {
+        const byDate2 = teamDays();
+        const upcoming = Object.keys(byDate2).sort().filter(iso => !isPast(iso))
+          .flatMap(iso => byDate2[iso].map(e => ({ iso, ...e }))).slice(0, 3);
+        listEl.append(...(upcoming.length
+          ? upcoming.map(e => h('div', { class: 'mc-up', style: { '--evc': e.color } },
+            h('span', { class: 'mc-up-date' }, fmt.day(e.iso)),
+            h('span', { class: 'mc-up-title' }, e.title,
+              e.badge === 'OVERDUE' ? h('span', { class: 'overdue-badge', style: { marginLeft: '8px' } }, 'OVERDUE') : null)))
+          : [h('p', { class: 'sub' }, 'Nothing due on the projects calendar.')]));
+
+        // who is out — no date to pin it to, so it lists under the grid
+        const out = (team.members || []).filter(m => m.active && m.ooo_note);
+        if (out.length) {
+          listEl.appendChild(h('div', { class: 'mc-ooo' },
+            h('span', { class: 'mc-ooo-lbl' }, 'Out of office'),
+            ...out.map(m => h('span', { class: 'mc-ooo-row' },
+              avatar(m, { size: 'xs' }),
+              h('b', null, m.name), h('span', null, m.ooo_note)))));
+        }
+        legendEl.append(
+          h('span', { class: 'mc-leg' }, h('i', { style: { background: 'var(--ps-teal)' } }), 'Phase due'),
+          h('span', { class: 'mc-leg' }, h('i', { style: { background: 'var(--link)' } }), 'Milestone'));
+      }
+      footEl.appendChild(h('a', { class: 'btn xs', href: '#projects/insights' }, 'Insights & Calendar →'));
+      footEl.appendChild(h('a', { class: 'btn xs', href: '#projects' }, 'Project Board →'));
+    }
+    // quick actions belong to the learner calendar, not the team one
+    if (tab === 'mc' && acts && acts.length) {
+      footEl.appendChild(h('div', { class: 'qa-row qa-under' }, acts));
+    }
   };
-  draw();
 
-  const upcoming = events.filter(e => !isPast(e.date, e.end)).slice(0, 3);
-  if (upcoming.length) {
-    listEl.append(...upcoming.map(e => h('a', {
-      class: 'mc-up', href: scopes.includes('calendar') ? '#calendar' : null,
-      style: { '--evc': (cats[e.category] || {}).color || 'var(--muted)' },
+  const tabBtn = (key, label) => h('button', {
+    class: 'cal-tab' + (tab === key ? ' on' : ''),
+    onClick: () => {
+      if (tab === key) return;
+      tab = key;
+      [...tabs.children].forEach(b => b.classList.toggle('on', b.dataset.k === key));
+      draw();
     },
-      h('span', { class: 'mc-up-date' },
-        `${e.month} ${e.day}` + (e.end ? (e.end_month === e.month ? `–${e.end_day}` : ` – ${e.end_month} ${e.end_day}`) : '')),
-      h('span', { class: 'mc-up-title' }, e.title))));
-  } else {
-    listEl.appendChild(h('p', { class: 'sub' }, 'Nothing upcoming on the calendar.'));
-  }
+    dataset: { k: key },
+  }, label);
+  const tabs = h('div', { class: 'cal-tabs' },
+    tabBtn('mc', 'Mission Control'),
+    tabBtn('team', 'Team'));
 
-  card.append(sectionTitle('Calendar', h('span', { class: 'sec-sub' }, 'as Mission Control shows it')), head, gridEl, listEl);
-  if (acts && acts.length) card.appendChild(h('div', { class: 'qa-row qa-under' }, acts));
+  clear(card).append(
+    sectionTitle('Calendar', tabs),
+    head, gridEl, legendEl, listEl, footEl);
+  draw();
 }
 
 /* ── change feed ── */
@@ -1211,13 +1387,13 @@ async function loadInspoCard(card) {
         tagsFor(it),
         h('span', { class: 'inspo-title' }, it.title),
         h('span', { class: 'inspo-meta' }, metaFor(it))))));
-  const caret = h('button', { class: 'inspo-caret', 'aria-label': 'More enablement news', onClick: () => {
+  const caret = h('button', { class: 'inspo-caret', 'aria-label': 'More learning insights', onClick: () => {
     card.classList.toggle('open');
     caret.textContent = card.classList.contains('open') ? '▴' : '▾';
   } }, '▾');
 
   card.append(h('div', { class: 'inspo-bar' },
-    h('span', { class: 'inspo-label' }, 'News'), line, caret), drawer);
+    h('span', { class: 'inspo-label' }, 'Learning Insights'), line, caret), drawer);
 
   // rotate gently; a hover means someone is reading, an open drawer means
   // they're browsing — both hold the line still
@@ -1289,122 +1465,63 @@ async function loadMine(prjCard, recCard, scopes, who) {
     })));
   }
 
-  // ---- your REC Room record ----
+  // ---- your REC Room record, and who is ahead of you ----
+  /* One card, because "how am I doing" and "who is winning" are the same
+     glance. They were two widgets in two places - Your REC Room here and
+     Leaders inside the Stellar-Seller strip - which meant reading your own
+     score and the leaderboard took two trips down the page. */
   clear(recCard);
   const rec = me && me.trigram ? d.recByTri[me.trigram.toUpperCase()] : null;
-  recCard.appendChild(sectionTitle(rec ? 'Your REC Room' : 'REC Room',
-    h('a', { class: 'btn xs', href: '#dashboard' }, 'The whole board')));
-  if (!rec) {
-    recCard.appendChild(emptyState(
-      me ? (me.trigram ? 'No runs recorded yet.' : 'No trigram on your profile.')
-        : 'Sign in as staff to see your own record.',
-      me && me.trigram ? 'Play once and your record lands here.' : null));
-    return;
+  recCard.appendChild(sectionTitle('REC Room',
+    h('a', { class: 'btn xs', href: '#dashboard' }, 'The whole board \u2192')));
+
+  if (rec) {
+    const acc = Number(rec.attempted) > 0
+      ? Math.round((Number(rec.correct) / Number(rec.attempted)) * 100) : null;
+    recCard.appendChild(h('p', { class: 'rec-you-lbl' }, 'Your record'));
+    recCard.appendChild(h('div', { class: 'prof-rec-grid' },
+      h('div', { class: 'prof-rec-stat' }, h('b', null, fmt.int(Number(rec.total_score))), h('span', null, 'Lifetime points')),
+      h('div', { class: 'prof-rec-stat' }, h('b', null, fmt.int(Number(rec.games_played))), h('span', null, 'Runs')),
+      h('div', { class: 'prof-rec-stat' },
+        h('b', null, Number(rec.blitz_personal_high) > 0 ? fmt.int(Number(rec.blitz_personal_high)) : '\u2014'),
+        h('span', null, 'Best run')),
+      h('div', { class: 'prof-rec-stat' }, h('b', null, acc != null ? acc + '%' : '\u2014'), h('span', null, 'Accuracy'))));
+  } else {
+    recCard.appendChild(h('p', { class: 'sub rec-you-none' },
+      me ? (me.trigram ? 'No runs recorded for you yet \u2014 play once and your record lands here.'
+        : 'No trigram on your profile, so nothing links you to the arcade.')
+        : 'Sign in as staff to see your own record.'));
   }
-  const acc = Number(rec.attempted) > 0
-    ? Math.round((Number(rec.correct) / Number(rec.attempted)) * 100) : null;
-  recCard.appendChild(h('div', { class: 'prof-rec-grid' },
-    h('div', { class: 'prof-rec-stat' }, h('b', null, fmt.int(Number(rec.total_score))), h('span', null, 'Lifetime points')),
-    h('div', { class: 'prof-rec-stat' }, h('b', null, fmt.int(Number(rec.games_played))), h('span', null, 'Runs')),
-    h('div', { class: 'prof-rec-stat' },
-      h('b', null, Number(rec.blitz_personal_high) > 0 ? fmt.int(Number(rec.blitz_personal_high)) : '\u2014'),
-      h('span', null, 'Best run')),
-    h('div', { class: 'prof-rec-stat' }, h('b', null, acc != null ? acc + '%' : '\u2014'), h('span', null, 'Accuracy'))));
+
+  // the leaderboard, off the analytics read - a separate call, so a slow
+  // or missing arcade never holds up your own numbers above
+  if (!scopes.includes('analytics')) return;
+  const board = h('div', { class: 'rec-lead' }, h('p', { class: 'sub' }, 'Loading the board\u2026'));
+  recCard.append(h('p', { class: 'rec-you-lbl' }, 'Leaders'), board);
+  let a;
+  try { a = await api.analytics(); } catch { board.remove(); return; }
+  const excluded = a.excluded || [];
+  // Staff never rank here either - a leaderboard is a leaderboard. They
+  // stay visible and badged in the Dashboard table, where they're managed.
+  const top = (a.top || [])
+    .filter(x => !excluded.includes(x.trigram) && Number(x.total_score) > 0)
+    .slice(0, 6);
+  clear(board);
+  if (!top.length) { board.appendChild(h('p', { class: 'sub' }, 'No players yet.')); return; }
+  board.appendChild(h('div', { class: 'ld-list' }, top.map((x, i) => {
+    const mine = me && me.trigram && x.trigram === me.trigram.toUpperCase();
+    const row = h('div', { class: 'ld-row' + (mine ? ' ld-you' : ''), dataset: { trigram: x.trigram } },
+      h('span', { class: 'ld-rank' }, String(i + 1)),
+      h('span', { class: 'ld-who' }, x.name || x.trigram, mine ? h('i', null, 'you') : null),
+      h('span', { class: 'ld-terr' }, x.territory),
+      h('span', { class: 'ld-pts num' }, fmt.int(x.total_score)),
+      h('span', { class: 'ld-acc num' }, fmt.pct(x.correct, x.attempted)));
+    wirePop(row, x, excluded);
+    return row;
+  })));
 }
 
 
 
 /* ── the Stellar-Seller widget ── */
-async function loadStellar(card, scopes) {
-  const canStats = scopes.includes('analytics');
-  const canContent = scopes.includes('content');
-  const canBanners = scopes.includes('banners');
-
-  let a = null, q = null;
-  try {
-    [a, q] = await Promise.all([
-      canStats ? api.analytics() : Promise.resolve(null),
-      (canStats || canContent) ? api.questionStats() : Promise.resolve(null),
-    ]);
-  } catch (err) { clear(card).appendChild(errorState(err, () => loadStellar(card, scopes))); return; }
-  clear(card);
-
-  const links = [];
-  if (canBanners) links.push(h('a', { class: 'btn sm', href: '#banners/stellar/new' }, '+ Action banner'));
-  if (canContent) links.push(h('a', { class: 'btn sm', href: '#questions/questions/new' }, '+ Question'));
-  if (canStats) links.push(h('a', { class: 'btn sm accent', href: '#dashboard' }, 'Full stats'));
-  card.appendChild(sectionTitle('Stellar-Seller & the Side-Qlik', ...links));
-
-  const excluded = (a && a.excluded) || [];
-  const statsByTrig = {};
-  for (const p of (a && a.top) || []) statsByTrig[p.trigram] = p;
-
-  // ── recent scores as a ticker banner ──
-  if (canStats) {
-    const recent = (a.recent || []);
-    if (recent.length) {
-      const items = recent.map(r => {
-        const it = h('span', { class: 'tk-item', dataset: { trigram: r.trigram } },
-          h('b', { class: 'mono' }, r.trigram), ` +${fmt.int(r.points)} `,
-          h('i', null, r.territory));
-        wirePop(it, statsByTrig[r.trigram], excluded);
-        return it;
-      });
-      // duplicated run so the loop is seamless
-      const items2 = recent.map(r => h('span', { class: 'tk-item', 'aria-hidden': 'true' },
-        h('b', { class: 'mono' }, r.trigram), ` +${fmt.int(r.points)} `, h('i', null, r.territory)));
-      card.appendChild(h('div', { class: 'tk-wrap' },
-        h('span', { class: 'tk-label' }, 'RECENT'),
-        h('div', { class: 'tk-window' }, h('div', { class: 'tk-run' }, items, items2))));
-    }
-  }
-
-  const cols = h('div', { class: 'ss-cols' });
-  card.appendChild(cols);
-
-  // ── leaders ──
-  // Staff never rank, in CAPCOM either — a leaderboard is a leaderboard.
-  // They remain visible (badged) in the Players table, where they're managed.
-  if (canStats) {
-    const top = ((a && a.top) || []).filter(p => !excluded.includes(p.trigram) && Number(p.total_score) > 0).slice(0, 6);
-    const col = h('div', { class: 'ss-col' }, h('h3', { class: 'ss-h' }, 'Leaders'));
-    if (!top.length) col.appendChild(emptyState('No players yet.'));
-    else col.appendChild(h('div', { class: 'ld-list' }, top.map((p, i) => {
-      const row = h('div', { class: 'ld-row', dataset: { trigram: p.trigram } },
-        h('span', { class: 'ld-rank' }, String(i + 1)),
-        h('span', { class: 'ld-trig mono' }, p.trigram,
-          excluded.includes(p.trigram) ? chip('staff', 'muted') : null),
-        h('span', { class: 'ld-terr' }, p.territory),
-        h('span', { class: 'ld-pts num' }, fmt.int(p.total_score)),
-        h('span', { class: 'ld-acc num' }, fmt.pct(p.correct, p.attempted)));
-      wirePop(row, p, excluded);
-      return row;
-    })));
-    cols.appendChild(col);
-  }
-
-  // ── most-missed questions ──
-  if (q) {
-    const min = q.minAttempts || 5;
-    const scored = (q.rows || []).map(r => ({
-      ...r, missPct: r.attempted > 0 ? Math.round(100 * (r.attempted - r.correct) / r.attempted) : 0,
-    }));
-    const solid = scored.filter(r => r.attempted >= min && r.missPct > 0)
-      .sort((x, y) => y.missPct - x.missPct || y.attempted - x.attempted).slice(0, 6);
-    const col = h('div', { class: 'ss-col' }, h('h3', { class: 'ss-h' }, 'Most missed'));
-    if (!solid.length) {
-      col.appendChild(emptyState('Not enough answer data yet.',
-        `Fills in once questions have ${min}+ answers — counting started 28 Aug.`));
-    } else {
-      col.appendChild(h('div', { class: 'miss-list' }, solid.map(r =>
-        h('div', { class: 'miss-row', title: r.label },
-          h('div', { class: 'miss-main' },
-            h('span', { class: 'miss-label' }, r.label),
-            h('span', { class: 'miss-meta' }, `${r.game} · ${r.attempted - r.correct} of ${r.attempted} missed`)),
-          h('div', { class: 'miss-track' }, h('div', { class: 'miss-fill', style: { width: r.missPct + '%' } })),
-          h('span', { class: 'miss-pct' }, r.missPct + '%')))));
-    }
-    cols.appendChild(col);
-  }
-}
 

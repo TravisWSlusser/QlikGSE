@@ -41,7 +41,8 @@ const NAV = [
   { group: 'Mission Control', items: [
     { route: 'calendar', label: 'Calendar', scope: 'calendar', mod: calendar, icon: 'calendar' },
     { route: 'banners/highlights', label: 'Focused Headlines', scope: 'banners', mod: banners, icon: 'banners' },
-    { route: 'banners/stellar', label: 'Action Banner', scope: 'banners', mod: banners, icon: 'stellar' },
+    // label only - the ROUTE stays banners/stellar so saved links survive
+    { route: 'banners/stellar', label: 'AI Highlights', scope: 'banners', mod: banners, icon: 'stellar' },
   ]},
   { group: 'Projects', items: [
     // scope null on purpose: every key holder can SEE the board (visibility

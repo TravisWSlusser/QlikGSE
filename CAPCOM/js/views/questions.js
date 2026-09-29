@@ -43,11 +43,40 @@ async function load(body, table, rerender, wantNew) {
   let d;
   try { d = await api.listQuestions(table); }
   catch (err) { clear(body).appendChild(errorState(err, () => load(body, table, rerender))); return; }
+  /* Answer performance rides alongside the bank. Sub-wrapped: this is the
+     editing page, and a stats endpoint that is unavailable (no analytics
+     scope, pre-Setup) must never stop someone fixing a typo. */
+  let stats = null;
+  try { stats = await api.questionStats(); } catch { /* no stats, no problem */ }
   clear(body);
 
   const tabMeta = TABS.find(t => t[0] === table);
   const rows = d.rows || [];
   const activeN = rows.filter(r => r.active).length;
+
+  /* Per-row answer performance, keyed by id, for THIS bank only.
+     minAttempts is the server's own floor - under it a miss rate is noise,
+     and a bar that swings to 100% on a single wrong answer would send an
+     SME rewriting a question nobody has actually struggled with. */
+  const minAtt = (stats && stats.minAttempts) || 5;
+  const perf = {};
+  for (const r of (stats && stats.rows) || []) {
+    if (r.table === table) perf[r.id] = r;
+  }
+  const missOf = id => {
+    const r = perf[id];
+    if (!r || !(r.attempted > 0)) return null;
+    const missed = Math.max(0, r.attempted - r.correct);
+    const thin = r.attempted < minAtt;
+    return {
+      attempted: r.attempted, missed,
+      pct: Math.round(100 * missed / r.attempted),
+      thin,
+      title: `${missed} of ${r.attempted} answers missed`
+        + (thin ? ` — still noise below ${minAtt} answers` : ''),
+    };
+  };
+  body.appendChild(missedCard(table, tabMeta, rows, perf, minAtt, missOf));
 
   const filterBox = h('input', {
     type: 'search', placeholder: 'Filter…', class: 'filter', onInput: () => draw(),
@@ -70,7 +99,7 @@ async function load(body, table, rerender, wantNew) {
     clear(listWrap);
     if (!shown.length) { listWrap.appendChild(emptyState('Nothing matches.')); return; }
     listWrap.appendChild(h('div', { class: 'q-list' },
-      shown.map(r => qRow(r, table, rerender, d.retire_hours))));
+      shown.map(r => qRow(r, table, rerender, d.retire_hours, missOf(r.id)))));
   }
   draw();
 
@@ -85,6 +114,66 @@ async function load(body, table, rerender, wantNew) {
   }
 
   if (wantNew) edit(null, table, rerender);
+}
+
+
+/* ── Most missed, for this bank ──
+ *
+ * This lived in the Stellar-Seller strip on Home, three scrolls away from
+ * the questions it was talking about. Here it sits on top of the bank it
+ * describes, and every row below carries its own miss bar, so "which ones
+ * need work" and "here is the one to fix" are the same screen.
+ *
+ * The floor matters: under minAttempts a miss rate is noise. Those rows
+ * still show their bar (muted) but never make this list — an SME should
+ * not rewrite a question because one person fat-fingered it.
+ */
+function missedCard(table, tabMeta, rows, perf, minAtt, missOf) {
+  const card = h('div', { class: 'card' });
+  const titleOf = r => table === 'questions' ? r.prompt
+    : table === 'methodology_questions' ? (r.question || r.prompt)
+    : r.term;
+
+  const scored = rows
+    .filter(r => r.active)
+    .map(r => ({ r, m: missOf(r.id) }))
+    .filter(x => x.m && !x.m.thin && x.m.pct > 0)
+    .sort((a, b) => b.m.pct - a.m.pct || b.m.attempted - a.m.attempted)
+    .slice(0, 5);
+
+  const answered = rows.filter(r => perf[r.id]).length;
+  card.appendChild(sectionTitle('Where people need help',
+    h('span', { class: 'sec-sub' }, answered
+      ? `${answered} of ${rows.length} have answers`
+      : 'no answers recorded yet')));
+
+  if (!answered) {
+    card.appendChild(h('p', { class: 'explain' },
+      table === 'methodology_questions'
+        ? 'This bank has never recorded answer stats — the counter collided with the answer-key column, so every write failed silently. Fixed in this update; counting starts from the next Coin round.'
+        : `Fills in once questions have been answered. A miss rate only counts as a signal above ${minAtt} answers.`));
+    return card;
+  }
+
+  if (!scored.length) {
+    card.appendChild(h('p', { class: 'explain' },
+      `Nothing is being missed often enough to flag. A question needs ${minAtt}+ answers before its miss rate means anything.`));
+    return card;
+  }
+
+  // same severity scale as the per-row bars below, so the two readings of
+  // the same number never disagree on screen
+  const band = pct => pct >= 60 ? ' hot' : pct >= 30 ? ' warm' : '';
+  card.appendChild(h('div', { class: 'miss-list' }, scored.map(({ r, m }) =>
+    h('div', { class: 'miss-row' + band(m.pct), title: titleOf(r) },
+      h('div', { class: 'miss-main' },
+        h('span', { class: 'miss-label' }, `#${r.id} — ${titleOf(r)}`),
+        h('span', { class: 'miss-meta' }, `${m.missed} of ${m.attempted} missed`)),
+      h('div', { class: 'miss-track' }, h('div', { class: 'miss-fill', style: { width: m.pct + '%' } })),
+      h('span', { class: 'miss-pct' }, m.pct + '%')))));
+  card.appendChild(h('p', { class: 'explain' },
+    `Ranked by miss rate, ${minAtt}+ answers only. Every row in the bank below carries the same bar.`));
+  return card;
 }
 
 /* ---- retirement countdown ----------------------------------------------
@@ -108,7 +197,7 @@ function retireLeft(retiredAt, hours) {
   return { pct, label };
 }
 
-function qRow(r, table, rerender, retireHours) {
+function qRow(r, table, rerender, retireHours, miss) {
   let title, sub, tags = [];
   if (table === 'questions') {
     title = r.prompt;
@@ -135,11 +224,27 @@ function qRow(r, table, rerender, retireHours) {
           title: `Deleted for good in ${countdown.label}. Open it and hit Restore to keep it.` }))
     : editBtn;
 
+  /* The miss bar. Colour carries the same information as the number, so
+     it is never colour ALONE: the percentage sits beside it and the title
+     spells the counts out. A thin sample is drawn muted and labelled
+     rather than hidden - "3 answers" is useful, it just is not a verdict. */
+  const missCell = miss
+    ? h('div', {
+      class: 'q-miss' + (miss.thin ? ' thin' : miss.pct >= 60 ? ' hot' : miss.pct >= 30 ? ' warm' : ''),
+      title: miss.title,
+    },
+      h('div', { class: 'q-miss-track' },
+        h('div', { class: 'q-miss-fill', style: { width: Math.max(2, miss.pct) + '%' } })),
+      h('span', { class: 'q-miss-pct' }, miss.pct + '%'),
+      h('span', { class: 'q-miss-n' }, `${miss.attempted} ans`))
+    : null;
+
   return h('div', { class: 'q-row' + (r.active ? '' : ' retired') },
     h('div', { class: 'q-main' },
       h('div', { class: 'q-title' }, `#${r.id} — ${title}`, ...tags,
         r.active ? null : chip(countdown ? `retired · ${countdown.label}` : 'retired', 'muted')),
       h('div', { class: 'q-sub' }, sub)),
+    missCell,
     editCell,
     r.active
       ? h('button', {

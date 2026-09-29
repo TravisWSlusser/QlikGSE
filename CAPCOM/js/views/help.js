@@ -7,10 +7,10 @@ import { toast, field, textInput, textArea, sectionTitle, spinner, confirmBox } 
 import { startTour, resetTours } from '../tour.js';
 
 const AREAS = [
-  ['Home', 'The glance page: calendar, projects at a glance, the change feed, clocks, the Community Board and the news line.'],
+  ['Home', 'The glance page: both calendars, your projects, your REC Room and the leaders, clocks, Learning Insights, the Community Board and the score ticker.'],
   ['Calendar', 'The enablement calendar behind the Mission Control pages — events and categories, editable with the calendar scope.'],
   ['Focused Headlines', 'The rotating hero banners on Mission Control. What sellers see first.'],
-  ['Action Banner', 'The Stellar-Seller action banner set — same mechanics, different stage.'],
+  ['AI Highlights', 'The rotating AI Highlights set — same mechanics as Focused Headlines, different stage.'],
   ['Project Board', 'Every project, its team, its status, and the date that status promised. Overdue rows demand a written what-happened before they move.'],
   ['Insights & Calendar', 'The board as charts: Gantt, status donuts, the projects calendar and the quarter review.'],
   ['Leadership Brief', 'Week, month or quarter compiled from the board — movement, milestones, overdue, lulls — copy-ready for the update leadership sends upward. Core leadership team only. Add a Claude key for a written executive summary.'],
@@ -21,7 +21,7 @@ const AREAS = [
   ['MT Roster', 'Every player the arcade has seen — all of them, with names, runs and territory. Staff-tagged people play but never appear on a leaderboard.'],
   ['Questions', 'The three question banks the games draw from — knowledge, methodology, glossary.'],
   ['Community Board', 'The corkboard on Home. Notes, bookmarks, pictures, yarn. Signed with real names.'],
-  ['Enablement News', 'A one-line rotating feed of sales-enablement and AI reading, cached server-side.'],
+  ['Learning Insights', 'A one-line rotating feed of sales-enablement and AI reading, cached server-side.'],
 ];
 
 const FAQ = [

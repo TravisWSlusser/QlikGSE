@@ -25,7 +25,8 @@ export const TOURS = {
     { hook: 'changes', title: 'Change Feed', blurb: 'Everything anyone changes, signed and timestamped. Nothing here happens quietly.' },
     { hook: 'clock', title: 'Operations Clock', blurb: 'Local time plus the four hub clocks — New York, São Paulo, London, Bangalore.' },
     { hook: 'board', title: 'Community Board', blurb: 'The corkboard. Pin notes, bookmarks and pictures, tie them together with yarn, react to things. Signed with real names.' },
-    { hook: 'news', title: 'Enablement News', blurb: 'One quiet line of sales-enablement and AI reading, rotating on its own. Open the caret for the full list.' },
+    { hook: 'news', title: 'Learning Insights', blurb: 'One quiet line of sales-enablement and AI reading, rotating on its own. Open the caret for the full list.' },
+    { hook: 'scores', title: 'Latest Scores', blurb: 'REC Room runs as they land. Hover a name for their full record.' },
     { hook: 'theme', title: 'Light And Dark', blurb: 'CAPCOM in the theme you prefer — it remembers per browser.' },
     { hook: 'help', title: 'Help & FAQ', blurb: 'Short blurbs on every area, the FAQ, bug reports — and every walkthrough, any time you want one again.' },
   ],
@@ -59,7 +60,7 @@ export const TOURS = {
     { sel: '.view .card', title: 'Focused Headlines', blurb: 'The rotating hero banners sellers see first on Mission Control. Order, copy, art and CTAs are all editable here.' },
   ],
   'banners/stellar': [
-    { sel: '.view .card', title: 'Action Banner', blurb: 'The Stellar-Seller action banner set — same mechanics as Focused Headlines, different stage.' },
+    { sel: '.view .card', title: 'AI Highlights', blurb: 'The rotating AI Highlights set — same mechanics as Focused Headlines, different stage.' },
   ],
   dashboard: [
     { card: 'Territory standings', title: 'The Board', blurb: 'The same map the REC Room shows, live. Every territory stays lit; the leader takes the halo, and a score bubble pops where points just landed. Refreshes itself every minute.' },

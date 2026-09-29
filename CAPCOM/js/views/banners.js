@@ -16,7 +16,7 @@ import { toast, modal, confirmBox, field, textInput, textArea, spinner, errorSta
    route param. */
 const BOARDS = {
   highlights: ['Focused Headlines', 'The rotating headlines on the Mission Control homepage — kicker, title, body, links, optional image.'],
-  stellar: ['Action Banner', 'The rotating posts in the Stellar-Seller hero widget. Text only — kicker, title, body.'],
+  stellar: ['AI Highlights', 'The rotating posts in the AI Highlights hero widget. Text only — kicker, title, body.'],
 };
 
 export function render(params, rerender) {
@@ -41,7 +41,7 @@ function previewPanel(active, board) {
   const wrap = h('div', { class: 'pv card' },
     h('div', { class: 'pv-head' },
       h('span', { class: 'pv-h-title' }, 'Live Preview'),
-      h('span', { class: 'pv-h-sub' }, board === 'stellar' ? 'The Action Banner, as the widget renders it' : 'Focused Headlines, as the homepage renders them')),
+      h('span', { class: 'pv-h-sub' }, board === 'stellar' ? 'AI Highlights, as the widget renders it' : 'Focused Headlines, as the homepage renders them')),
     h('div', { class: 'pv-frame pv-' + board }, stage, dots));
   if (!active.length) {
     stage.appendChild(h('p', { class: 'sub' }, 'No live posts — the page is showing its built-in fallback copy.'));
