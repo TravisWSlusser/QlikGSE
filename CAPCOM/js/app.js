@@ -50,7 +50,7 @@ const NAV = [
       gate: w => w.master || w.manager },
     { route: 'projects/staff', label: 'Staff', scope: null, mod: staff, icon: 'staff' },
     // key generation for SMEs and outside contributors — NOT staff
-    { route: 'projects/access', label: 'Tailored Access', scope: 'system', mod: tailoredAccess, icon: 'system' },
+    { route: 'projects/access', label: 'Tailored Access', scope: ['system', 'access'], mod: tailoredAccess, icon: 'system' },
   ]},
   { group: 'REC Room', items: [
     { route: 'dashboard', label: 'Dashboard', scope: 'analytics', mod: dashboard, icon: 'dashboard' },
@@ -66,7 +66,12 @@ const NAV = [
 let WHO = null; // {label, scopes, master}
 
 const allItems = () => NAV.flatMap(g => g.items);
-const allowed = it => !!WHO && (!it.scope || WHO.scopes.includes(it.scope))
+/* it.scope may be a string, an array (ANY of them admits - same rule
+   requireScope uses on the server), or null for "every key holder". */
+const allowed = it => !!WHO
+  && (!it.scope || (Array.isArray(it.scope)
+        ? it.scope.some(sc => WHO.scopes.includes(sc))
+        : WHO.scopes.includes(it.scope)))
   && (!it.gate || it.gate(WHO));
 
 /* Route → nav item. An exact match wins (banners/stellar); otherwise the

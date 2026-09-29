@@ -20,6 +20,7 @@ const AREAS = [
   ['banners',   'Hero Banners',  'the homepage rotators'],
   ['content',   'Questions',     'all three REC Room banks'],
   ['analytics', 'Analytics',     'player and game data, read-only'],
+  ['access',    'Tailored Access', 'see who holds which key — read-only, cannot mint or revoke'],
 ];
 
 function accessDialog(m, rerender) {

@@ -1744,3 +1744,40 @@ nothing is worse than a refusal.
 
 `whoami` already returned `who.scopes`, so the nav filters itself with no
 client change; the Access dialog is the only new UI.
+
+## Read-only Tailored Access: the 'access' scope (29 Sep 2026, NO schema change)
+
+Travis listed what staff should see ahead of showing the platform to the wider
+team. Four of the eight items — Project Board, Insights & Calendar, Staff,
+Help & FAQ — are `scope: null` and were **already visible to every member**;
+reads there were left open on purpose because visibility is the product.
+Dashboard and MT Roster are both `analytics` and cannot be separated. Questions
+is `content`. All grantable already.
+
+The odd one out was **Tailored Access, which is `system`** — and it is not a
+viewing page, it MINTS keys. A minted key can carry any scope including
+`system`, which also opens Maintenance and the switch that closes the REC Room.
+Granting it so staff could see who holds which key would have traded the site
+for a list.
+
+New scope **`access`**: SEE the key console, cannot mint or revoke. `keys.js`
+now admits `['system','access']` at the door and re-checks `system` inside
+`create`, `revoke` and `restore`; the view hides `+ New key` (a `read-only`
+chip in its place) and replaces Revoke/Restore with plain `active`/`revoked`
+text. The client hiding is a courtesy — **the server is the gate**, and the
+deep link `#projects/access/new` cannot open the mint dialog without `system`.
+
+**No DDL, no SCHEMA_VERSION bump, no Setup.** `team_members.scopes` is already
+`text[]`, so a new scope is only a new string in `SCOPES`/`GRANTABLE`. That is
+worth remembering: adding a scope is a deploy, not a migration.
+
+`allowed()` in app.js now takes a string OR an array for `it.scope` (ANY
+admits), matching the rule `requireScope` already used server-side.
+
+**Rig note.** The stub served `/api/admin?action=x` only, but the real client
+calls `/api/admin/:action` — production rewrites the path form to the query
+form in `vercel.json`. The stub's fallback returned an object with no `scopes`,
+and the gate died on `WHO.scopes.includes` — which looks exactly like a bug in
+the new nav code and is not. A stub must honour the ROUTING contract, not just
+the response shape. (`vundefined` on the sidebar chip is the same class of
+thing: `code_version` comes from whoami and the stub omitted it.)

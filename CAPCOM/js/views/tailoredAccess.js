@@ -16,35 +16,40 @@ const SCOPE_DESC = {
   system: 'Maintenance, keys, setup — full control',
 };
 
-export function render(params, rerender) {
+export function render(params, rerender, who) {
+  // 'access' sees the list; only 'system' may mint or revoke.
+  const canWrite = !!(who && who.scopes && who.scopes.includes('system'));
   const root = h('div', { class: 'view' });
   const keys = h('div', { class: 'card' }, spinner());
   root.appendChild(keys);
-  loadKeys(keys, rerender, false);
+  loadKeys(keys, rerender, false, canWrite);
   return root;
 }
 
-async function loadKeys(card, rerender, wantNew) {
+async function loadKeys(card, rerender, wantNew, canWrite) {
   let d;
   try { d = await api.keys({ op: 'list' }); }
   catch (err) {
     clear(card);
     card.appendChild(sectionTitle('Tailored Access'));
     card.appendChild(err.status === 403
-      ? h('p', { class: 'sub' }, 'Your key does not include the system scope.')
-      : errorState(err, () => loadKeys(card, rerender)));
+      ? h('p', { class: 'sub' }, 'Your access does not include the key console.')
+      : errorState(err, () => loadKeys(card, rerender, false, canWrite)));
     return;
   }
   clear(card);
 
   card.appendChild(sectionTitle('Tailored Access',
-    h('button', { class: 'btn accent', onClick: () => createKey(d.scopes || [], rerender) }, '+ New key')));
+    canWrite
+      ? h('button', { class: 'btn accent', onClick: () => createKey(d.scopes || [], rerender) }, '+ New key')
+      : chip('read-only', 'muted')));
   card.appendChild(h('p', { class: 'explain' },
     'Scoped keys for SMEs and other outside contributors — people who are NOT Sales Enablement staff. '
     + 'An SME key with only “content” opens the question banks and nothing else. Staff get member access '
-    + 'from the Staff tab instead; the master key lives in the Vercel env and is not listed here.'));
+    + 'from the Staff tab instead; the master key lives in the Vercel env and is not listed here.'
+    + (canWrite ? '' : ' You are viewing this read-only — minting and revoking need the system scope.')));
 
-  if (wantNew) createKey(d.scopes || [], rerender);
+  if (wantNew && canWrite) createKey(d.scopes || [], rerender);
 
   const rows = d.keys || [];
   if (!rows.length) { card.appendChild(emptyState('No scoped keys yet.')); return; }
@@ -56,7 +61,9 @@ async function loadKeys(card, rerender, wantNew) {
       h('td', null, (k.scopes || []).map(s => chip(s, s === 'system' ? 'pin' : 'muted'))),
       h('td', { class: 'sub' }, k.created_at),
       h('td', { class: 'sub' }, k.last_used || 'never'),
-      h('td', null, k.active
+      h('td', null, !canWrite
+        ? h('span', { class: 'sub' }, k.active ? 'active' : 'revoked')
+        : k.active
         ? h('button', {
             class: 'btn sm danger', onClick: () =>
               confirmBox('Revoke this key?', `“${k.label}” stops working immediately. It can be restored later.`,
