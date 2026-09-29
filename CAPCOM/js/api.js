@@ -62,6 +62,7 @@ export const api = {
   setStaff: (trigram, staff) => call('setStaff', { method: 'POST', body: { trigram, staff } }),
   hotlinks: body => call('hotlinks', { method: 'POST', body }),
   stickies: body => call('stickies', { method: 'POST', body }),
+  timeline: body => call('timeline', { method: 'POST', body }),
   projects: body => call('projects', { method: 'POST', body }),
   projectsAdmin: body => call('projectsAdmin', { method: 'POST', body }),
   members: body => call('members', { method: 'POST', body }),

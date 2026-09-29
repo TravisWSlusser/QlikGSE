@@ -27,6 +27,7 @@ import {
 } from '../ui.js';
 import { avatar, avatarEditor, clearAvatar } from '../avatar.js';
 import { giphyGrid } from '../giphy.js';
+import { composer, wall } from '../timeline.js';
 import { shapeProjects, pctx } from './projects.js';
 
 const REACT_SET = ['👍', '🎉', '🔥', '😂', '💚', '👏'];
@@ -64,10 +65,40 @@ async function load(root, params, rerender, who) {
   root.appendChild(headerCard(m, d, { self, canManage, redraw }));
   root.appendChild(statusCard(m, d, { self, canManage, redraw }));
 
+  const tl = h('div', { class: 'card' }, spinner());
+  root.appendChild(tl);
+  loadWall(tl, m, { self, canManage, redraw });
+
   const grid = h('div', { class: 'grid2' });
   root.appendChild(grid);
   grid.appendChild(projectsCard(m, d));
   grid.appendChild(recCard(m, d));
+}
+
+/* ── the wall ──
+   The status line says one thing and loses its reactions the moment it
+   changes. A timeline keeps what was said. Separate call, sub-wrapped:
+   a wall that will not load must not take the profile down with it. */
+async function loadWall(card, m, ctx) {
+  let d;
+  try { d = await api.timeline({ op: 'list', member_id: m.id }); }
+  catch { card.remove(); return; }
+  clear(card);
+  card.appendChild(sectionTitle(ctx.self ? 'Your timeline' : `${m.name.split(' ')[0]}\u2019s timeline`,
+    h('span', { class: 'sec-sub' }, (d.posts || []).length
+      ? `${d.posts.length} post${d.posts.length === 1 ? '' : 's'}` : '')));
+  if (ctx.self) card.appendChild(composer(() => ctx.redraw()));
+  if (!(d.posts || []).length) {
+    card.appendChild(emptyState(
+      ctx.self ? 'Nothing posted yet.' : 'Nothing here yet.',
+      ctx.self ? 'Text, a link or a sticker \u2014 it lands here and joins the rotation on Home.' : null));
+    return;
+  }
+  card.appendChild(wall(d.posts, d.reactions, {
+    canRemove: ctx.self || ctx.canManage,
+    pctx,
+    reload: () => loadWall(card, m, ctx),
+  }));
 }
 
 /* ── the header: face, name, where they sit ── */

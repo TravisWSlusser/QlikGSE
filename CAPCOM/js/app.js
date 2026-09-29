@@ -63,10 +63,6 @@ const NAV = [
        them routable without giving either a nav row. */
     { route: 'profile', label: 'Profile', scope: null, mod: profile, icon: 'staff', nav: false },
     { route: 'project', label: 'Project', scope: null, mod: projectPage, icon: 'projects', nav: false },
-    // key generation for SMEs and outside contributors — NOT staff.
-    // Stays HERE rather than under Leadership: staff granted 'access' hold
-    // a read-only view of it, and a manager-only group would hide it.
-    { route: 'projects/access', label: 'Tailored Access', scope: ['system', 'access'], mod: tailoredAccess, icon: 'system' },
   ]},
   { group: 'REC Room', items: [
     // scope null: everyone sees the scoreboard - names, map, standings, the
@@ -78,15 +74,19 @@ const NAV = [
     { route: 'players', label: 'MT Roster', scope: 'analytics', mod: players, icon: 'players' },
     { route: 'questions', label: 'Questions', scope: 'content', mod: questions, icon: 'questions' },
   ]},
-  /* Leadership Access — appears only for the manager tier (and masters).
-     Everything in it was already manager-gated and scattered: the Brief
-     sat under Projects next to pages the whole team opens, and Maintenance
-     sat in "System" keeping company with Help & FAQ, which everyone can
-     open. Grouping them says what the sidebar could not: this is the tier,
-     not a page. The Brief is the section's home. */
-  { group: 'Leadership Access', items: [
+  /* Authority & Control — the privileged tier, in one place.
+     Everything here was manager- or scope-gated and scattered: the Brief
+     sat under Projects next to pages the whole team opens, Maintenance
+     kept company with Help & FAQ, and Tailored Access sat under Projects
+     because hiding it would have hidden it from the staff granted
+     'access'. Locked items are shown rather than hidden now (see
+     buildNav), so that last reason is gone and the grouping can say what
+     the sidebar could not: this is the tier, not a page. */
+  { group: 'Authority & Control', items: [
     { route: 'projects/brief', label: 'Leadership Brief', scope: 'projects', mod: brief, icon: 'insights',
       gate: w => w.master || w.manager },
+    // 'access' is the read-only tier here; 'system' mints and revokes
+    { route: 'projects/access', label: 'Tailored Access', scope: ['system', 'access'], mod: tailoredAccess, icon: 'system' },
     { route: 'maintenance', label: 'Maintenance', scope: 'system', mod: maintenance, icon: 'maintenance' },
   ]},
   { group: 'System', items: [
@@ -147,6 +147,7 @@ function draw() {
   hidePop();
   hideTip();               // same reason, for the avatar tooltip
   staff.hideStaffPop();    // and the Staff hover peek
+  hideNavTip();            // and the locked-row explainer
 
   // phone: picking a destination closes the drawer
   document.body.classList.remove('nav-open');
@@ -165,21 +166,107 @@ function draw() {
 }
 
 /* nav:false routes are reachable by hash but never listed - see the
-   Profile entry above. */
+   Profile entry above.
+
+   EVERY other item is listed, whether or not this person can open it.
+   Hiding them meant a staff member had no way to tell the difference
+   between "CAPCOM has no calendar" and "the calendar is not mine to
+   edit", and the second one looked like a bug. A locked row is greyed,
+   carries a padlock, and explains itself on hover.
+
+   A locked row is NOT an anchor - no href, no route in the hash - so
+   clicking it cannot navigate anywhere. The gate is still findItem()
+   and, underneath all of it, requireScope on the server. This is
+   signposting, never permission. */
 function buildNav() {
   const nav = $('nav-list');
   clear(nav);
   for (const g of NAV) {
-    const items = g.items.filter(it => it.nav !== false && allowed(it));
+    const items = g.items.filter(it => it.nav !== false);
     if (!items.length) continue;
     if (g.group) nav.appendChild(h('div', { class: 'nav-group' }, g.group));
-    items.forEach(it => nav.appendChild(
-      h('a', { href: '#' + it.route,
-        dataset: it.route === 'help' ? { route: it.route, tour: 'help' } : { route: it.route } },
-        h('span', { class: 'nav-ic', html: ICONS[it.icon] || '' }),
-        it.label)));
+    items.forEach(it => {
+      const open = allowed(it);
+      const icon = h('span', { class: 'nav-ic', html: ICONS[it.icon] || '' });
+      if (open) {
+        nav.appendChild(h('a', {
+          href: '#' + it.route,
+          dataset: it.route === 'help' ? { route: it.route, tour: 'help' } : { route: it.route },
+        }, icon, it.label));
+        return;
+      }
+      const row = h('span', {
+        class: 'nav-locked', role: 'link', 'aria-disabled': 'true', tabindex: '0',
+        dataset: { route: it.route },
+      }, icon, h('span', { class: 'nav-lk-label' }, it.label),
+        h('span', { class: 'nav-lk-ic', html: LOCK }));
+      /* The panel is ONE fixed-position node for the whole sidebar, not a
+         child of the row. As a child it sat inside .nav (overflow-y:auto),
+         which gave the sidebar a horizontal scrollbar and clipped the
+         panel at its edge. Same pattern as the avatar tooltip. */
+      row.addEventListener('mouseenter', () => showNavTip(row, it));
+      row.addEventListener('focus', () => showNavTip(row, it));
+      row.addEventListener('mouseleave', hideNavTip);
+      row.addEventListener('blur', hideNavTip);
+      nav.appendChild(row);
+    });
   }
 }
+
+let navTipEl = null;
+function showNavTip(anchor, it) {
+  if (!navTipEl) {
+    navTipEl = h('div', { id: 'nav-tip', role: 'tooltip' });
+    document.body.appendChild(navTipEl);
+  }
+  clear(navTipEl).append(
+    h('b', null, 'Additional access required'),
+    h('span', null, lockedWhy(it)));
+  navTipEl.style.display = 'flex';
+  const r = anchor.getBoundingClientRect();
+  const w = navTipEl.offsetWidth, hh = navTipEl.offsetHeight;
+  // beside the row, flipped under it when the drawer is full-width
+  const beside = r.right + 10;
+  if (beside + w < window.innerWidth - 8) {
+    navTipEl.style.left = beside + 'px';
+    navTipEl.style.top = Math.max(8, Math.min(window.innerHeight - hh - 8, r.top + r.height / 2 - hh / 2)) + 'px';
+  } else {
+    navTipEl.style.left = Math.max(8, r.left) + 'px';
+    navTipEl.style.top = Math.min(window.innerHeight - hh - 8, r.bottom + 6) + 'px';
+  }
+}
+function hideNavTip() { if (navTipEl) navTipEl.style.display = 'none'; }
+
+/* What to ask for, in the words the Staff page uses. A person who reads
+   this should be able to repeat it to their leader verbatim. */
+const SCOPE_WORDS = {
+  calendar: 'Calendar', banners: 'Hero Banners', content: 'Questions',
+  analytics: 'Analytics', access: 'Tailored Access', system: 'system',
+  projects: 'projects',
+};
+function lockedWhy(it) {
+  /* A gated item names no scope. 'projects' and 'system' are not on the
+     Staff profile's checklist (GRANTABLE excludes them), so telling
+     someone to ask for one sends them to a leader who cannot grant it.
+     The honest sentence is that this tier is not granted, it is held. */
+  if (it.gate) return 'Held by the leadership circle — managers and masters only.';
+  const names = (Array.isArray(it.scope) ? it.scope : [it.scope])
+    .filter(Boolean).map(sc => SCOPE_WORDS[sc] || sc);
+  const askable = (Array.isArray(it.scope) ? it.scope : [it.scope])
+    .filter(sc => GRANTABLE_WORDS.includes(sc));
+  if (!names.length) return 'Ask Travis for access to this area.';
+  if (!askable.length) return `Needs the ${names.join(' or ')} scope, which only a manager holds.`;
+  return `Ask a leader to tick ${askable.map(sc => SCOPE_WORDS[sc]).join(' or ')} on your staff profile.`;
+}
+
+/* Mirrors GRANTABLE in lib/admin/auth.js — the only scopes that actually
+   appear as checkboxes on a Staff row. Anything else is manager-held and
+   must not be described as something to ask for. */
+const GRANTABLE_WORDS = ['calendar', 'banners', 'content', 'analytics', 'access'];
+
+const LOCK = '<svg viewBox="0 0 24 24" aria-hidden="true">'
+  + '<rect x="5" y="10.5" width="14" height="9.5" rx="2"/>'
+  + '<path d="M8.4 10.5V7.8a3.6 3.6 0 0 1 7.2 0v2.7"/></svg>';
 
 /* A running preview puts a bar across the top that cannot be missed and
    cannot be mistaken for a real session. It states what the preview does and

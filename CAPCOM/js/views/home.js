@@ -13,6 +13,7 @@ import { api } from '../api.js';
 import { spinner, errorState, sectionTitle, chip, emptyState, toast, modal, confirmBox, field, textInput } from '../ui.js';
 import { giphyGrid } from '../giphy.js';
 import { avatar, avatarEditor, avatarName } from '../avatar.js';
+import { feedCard } from '../timeline.js';
 import { shapeProjects } from './projects.js';
 import { ICONS } from '../icons.js';
 import { wirePop } from '../pop.js';
@@ -96,6 +97,12 @@ export function render(params, rerender, who) {
      the left, and Most Missed onto the Questions page next to the
      questions it is talking about. */
   rightCol.appendChild(clockCard());
+  /* The team timeline rides directly above Learning Insights: both are
+     one band tall, and putting what people SAID above what the internet
+     said is the right order for a page whose first job is the team. */
+  const feed = h('div', { class: 'card tl-card', dataset: { tour: 'timeline' } }, spinner());
+  rightCol.appendChild(feed);
+  feedCard(feed, sectionTitle);
   const inspo = h('div', { class: 'card', dataset: { tour: 'news' } }, spinner());
   rightCol.appendChild(inspo);
   loadInspoCard(inspo);

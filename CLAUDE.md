@@ -2236,3 +2236,64 @@ the Home tour still pointed a step at the change feed after it moved to
 Maintenance (findStep filters missing targets out silently, so the step
 just vanished), and the banner editor still told people it was writing to
 "the Stellar widget".
+
+## Locked nav rows, Authority & Control, timelines (29 Sep 2026, schema v15)
+
+### Show the door, lock the door
+
+Every nav item is listed now, whether or not the person can open it. A
+locked row is greyed, carries a padlock, and explains itself on hover.
+
+Travis's reason is the whole justification: hiding an area meant a staff
+member could not tell *"CAPCOM has no calendar"* from *"the calendar is
+not mine to edit"*, and the second one looks like a bug. Nobody files a
+ticket about a padlock.
+
+A locked row is **not an anchor** — no `href`, no route in the hash — so
+clicking it cannot navigate. `findItem` still filters on `allowed`, and
+`requireScope` still guards every endpoint. **This is signposting, never
+permission.**
+
+`lockedWhy()` says what to ask for in the words the Staff page uses, and
+deliberately does NOT name a scope the reader cannot be granted:
+`projects` and `system` are absent from `GRANTABLE`, so "ask a leader to
+tick projects" would send someone to a leader who has no such checkbox.
+Gated items say "held by the leadership circle" instead.
+
+The hover panel is **one fixed node for the whole sidebar**. As a child of
+the row it lived inside `.nav` (`overflow-y:auto`), which clipped it at
+the sidebar edge AND gave the sidebar a horizontal scrollbar. Third time
+this pattern has come up (`#av-tip`, `#staff-pop`, now `#nav-tip`): a
+floating panel inside a scrolling container is always wrong.
+
+### Authority & Control
+
+Renamed from Leadership Access, and **Tailored Access moved into it**.
+The earlier reason for keeping it under Projects — staff granted `access`
+would lose sight of it — evaporated the moment locked rows became
+visible, because now they see it either way.
+
+The group itself no longer gates; its items do. Everyone sees the tier
+exists, which is the point of naming it.
+
+### Timelines
+
+`timeline_posts` + `timeline_reactions`. Three kinds, deliberately the
+corkboard's three (text / link / sticker) because people already know how
+those behave there.
+
+**`op:'post'` takes no member_id and that is the authorization model.**
+You cannot post as someone else because the endpoint never reads who you
+claim to be — it writes to `who.member.id` or refuses. Reads are open to
+any valid key (walls are as public as the Staff page); writes need a
+member session, since a scoped key is not a person and has no wall.
+
+Takedown is a soft delete, so reactions keep their anchor and a mistake
+is reversible in SQL. Stickers must match the GIPHY host on both posts
+and reactions — otherwise a "sticker" is an arbitrary remote image embed
+on a page everyone loads.
+
+Home's widget shows `DISTINCT ON (member_id)` — the newest post per
+person, not the newest posts overall, so one busy week cannot fill the
+rotation. It pauses on hover, and clamps text to two lines so no single
+post makes the card taller than Learning Insights beside it.
