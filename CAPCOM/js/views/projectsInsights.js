@@ -52,7 +52,6 @@ async function load(root, rerender) {
   const fromIn = h('input', { type: 'date', value: range.from });
   const toIn = h('input', { type: 'date', value: range.to });
   const ganttCard = h('div', { class: 'card' }, spinner());
-  const reviewCard = h('div', { class: 'card' }, spinner());
 
   const preset = (label, r) => h('button', { class: 'btn xs', onClick: () => {
     range = r; fromIn.value = r.from; toIn.value = r.to; redraw();
@@ -65,68 +64,73 @@ async function load(root, rerender) {
   fromIn.addEventListener('change', applyInputs);
   toIn.addEventListener('change', applyInputs);
 
-  /* ── the strip: the four numbers, the range picker, nothing else ──
-     This page was six full-width cards deep before anything told you how
-     the board was actually doing. The counts come first now, and the
-     range picker rides with them instead of owning a card of its own. */
+  /* ── ROW 1: the calendar, and everything that describes the board ──
+     Travis: "Put the Calendar on the left, this new widget on the right."
+     The counts, the status split and who-is-carrying-what were three
+     full-width cards stacked down the page; they answer one question
+     between them, so they are now one frame called Projects Overview.
+     The sidebar says GSE Central; a card that repeated the page's own
+     name told the reader nothing. */
   const overdue = active.filter(p => p.overdue);
   const unowned = active.filter(p => !(d.tagsByProject[p.id] || []).length);
-  root.appendChild(h('div', { class: 'card gse-head' },
-    sectionTitle('GSE Central',
+
+  const byStatus = activeStatuses
+    .map(x => ({ s: x, n: active.filter(p => p.status_id === x.id).length }))
+    .filter(x => x.n > 0);
+
+  const overview = h('div', { class: 'card ov-card' },
+    sectionTitle('Projects Overview',
       h('span', { class: 'range-row' },
         preset('This quarter', quarterRange(0)),
         preset('Last quarter', quarterRange(-1)),
         fromIn, h('span', { class: 'sub' }, '→'), toIn)),
-    h('div', { class: 'tiles tiles-4' },
-      statTile('Active', fmt.int(active.length)),
-      statTile('Overdue', fmt.int(overdue.length),
-        overdue.length ? 'past their promise' : 'all promises holding'),
-      statTile('Milestones ahead', fmt.int((d.milestones || []).filter(m => String(m.date) >= d.today).length)),
-      statTile('Nobody tagged', fmt.int(unowned.length),
-        unowned.length ? 'no one is on these' : 'every project has people'))));
-
-  /* ── composition + the calendar, side by side ──
-     "By team" is GONE. The enablement org has no named sub-teams - who
-     reports to whom is the Staff page's job, and everyone ends up on
-     everything. Charting a structure that does not drive the work made
-     the page look analytical while saying nothing. What replaced it is
-     the split that does drive the work: who is carrying how much. */
-  const byStatus = activeStatuses
-    .map(s => ({ s, n: active.filter(p => p.status_id === s.id).length }))
-    .filter(x => x.n > 0);
-  const topRow = h('div', { class: 'grid2' });
-  topRow.append(
-    h('div', { class: 'card' }, sectionTitle('By status'),
-      byStatus.length ? donut(byStatus.map(x => ({
-        label: x.s.label, value: x.n, colorVar: `--ps-${x.s.color}`,
-        tipHtml: `<b>${esc(x.s.label)}</b><br>${x.n} project${x.n > 1 ? 's' : ''}`,
-      })), { centerLabel: String(active.length), centerSub: 'active' })
+    // the numbers, inline and compact, directly above the split
+    h('div', { class: 'ov-nums' },
+      ovNum('Active', active.length),
+      ovNum('Overdue', overdue.length, overdue.length ? 'bad' : 'ok'),
+      ovNum('Milestones ahead', (d.milestones || []).filter(m => String(m.date) >= d.today).length),
+      ovNum('Nobody tagged', unowned.length, unowned.length ? 'warn' : 'ok')),
+    h('div', { class: 'ov-split' },
+      byStatus.length
+        ? donut(byStatus.map(x => ({
+          label: x.s.label, value: x.n, colorVar: `--ps-${x.s.color}`,
+          tipHtml: `<b>${esc(x.s.label)}</b><br>${x.n} project${x.n > 1 ? 's' : ''}`,
+        })), { size: 124, centerLabel: String(active.length), centerSub: 'active' })
         : emptyState('Nothing active to chart.')),
-    loadCalendarCard(d, teamById, statusById));
-  root.appendChild(topRow);
+    buildLoad(d, active, true));
 
-  /* ── who is on what ── person level, not team level ── */
-  root.appendChild(buildLoad(d, active));
+  const row1 = h('div', { class: 'gse-row' });
+  row1.append(loadCalendarCard(d, teamById, statusById), overview);
+  root.appendChild(row1);
 
-  /* ── every project, one line each, each one a door ── */
-  root.appendChild(buildIndex(d, active, statusById));
-
-  root.appendChild(ganttCard);
-  root.appendChild(reviewCard);
+  /* ── ROW 2: the list and the timeline, side by side and LINKED ──
+     Hovering a project lights its bar in the timeline and raises its
+     three most recent updates. The full history is on the project page —
+     Diary Review used to reprint every entry for every project here,
+     which made this page long and the project page redundant. */
+  const row2 = h('div', { class: 'gse-row gse-row-2' });
+  const idxCard = buildIndex(d, active, statusById);
+  row2.append(idxCard, ganttCard);
+  root.appendChild(row2);
 
   /* ── the range-driven redraw ── */
   const redraw = async () => {
     clear(ganttCard).appendChild(spinner());
-    clear(reviewCard).appendChild(spinner());
     let rv;
     try { rv = await api.projects({ op: 'review', from: range.from, to: range.to }); }
     catch (err) {
       clear(ganttCard).appendChild(errorState(err, redraw));
-      clear(reviewCard);
       return;
     }
     buildGantt(ganttCard, d, rv, range, statusById);
-    buildReview(reviewCard, rv, d, teamById, statusById, range);
+    // every entry, keyed by project, for the hover card on the index
+    RECENT_BY_PROJECT = {};
+    for (const e of rv.entries || []) {
+      (RECENT_BY_PROJECT[e.project_id] = RECENT_BY_PROJECT[e.project_id] || []).push(e);
+    }
+    for (const k of Object.keys(RECENT_BY_PROJECT)) {
+      RECENT_BY_PROJECT[k].sort((a, z) => new Date(z.created_at) - new Date(a.created_at));
+    }
   };
   redraw();
 }
@@ -134,6 +138,39 @@ async function load(root, rerender) {
 /* Gantt rows: walk each project's created/status_change entries in order;
    segment i runs from entry i to entry i+1 (last runs to today), colored
    by the segment's status. Clamped to the range here — gantt() only maps. */
+/* Light one project's bar. The gantt rows carry data-pid so this is a
+   lookup rather than a rebuild - the timeline must not redraw sixty times
+   while a cursor runs down the list. */
+function highlight(pid, on) {
+  document.querySelectorAll(`[data-pid="${pid}"]`).forEach(el => el.classList.toggle('pid-on', on));
+  const anyOn = on;
+  document.querySelectorAll('.gantt-wrap').forEach(g => g.classList.toggle('gantt-focus', anyOn));
+}
+
+/* The last three updates, beside the row. One shared node, fixed
+   position - the same rule as every other floating panel in CAPCOM. */
+let updEl = null;
+function hideUpdates() { if (updEl) updEl.style.display = 'none'; }
+function showUpdates(anchor, p) {
+  if (!updEl) { updEl = h('div', { id: 'upd-pop' }); document.body.appendChild(updEl); }
+  const entries = (RECENT_BY_PROJECT[p.id] || []).slice(0, 3);
+  clear(updEl).append(
+    h('div', { class: 'upd-head' }, h('b', null, p.title),
+      h('span', { class: 'sub' }, entries.length ? 'latest updates' : 'no updates in this range')),
+    ...entries.map(e => h('div', { class: 'upd-row' },
+      h('span', { class: 'diary-kind' }, KIND_LABEL[e.kind] || e.kind),
+      e.note ? h('p', null, e.note) : null,
+      h('span', { class: 'sub' }, `${e.actor} \u00b7 ${fmt.when(e.created_at)}`))),
+    h('div', { class: 'upd-foot' }, 'Open the project for the full history \u2192'));
+  updEl.style.display = 'block';
+  const r = anchor.getBoundingClientRect();
+  const w = updEl.offsetWidth, hh = updEl.offsetHeight;
+  let left = r.right + 12;
+  if (left + w > window.innerWidth - 8) left = r.left - w - 12;
+  updEl.style.left = Math.max(8, left) + 'px';
+  updEl.style.top = Math.max(8, Math.min(window.innerHeight - hh - 8, r.top)) + 'px';
+}
+
 function buildGantt(card, d, rv, range, statusById) {
   clear(card);
   const entriesByProject = {};
@@ -182,7 +219,8 @@ function buildGantt(card, d, rv, range, statusById) {
     }
     if (!segs.length) continue;
     rows.push({
-      label: p.title, href: '#projects',
+      // pid pairs this bar with its row in the index beside it
+      label: p.title, href: '#project/' + p.id, pid: p.id,
       segments: segs,
       due: {
         iso: p.phase_due, overdue: p.overdue,
@@ -278,6 +316,13 @@ function buildCalendar(card, d, teamById, statusById) {
     head, gridEl, listEl);
 }
 
+const ovNum = (label, n, tone) => h('div', { class: 'ov-num' + (tone ? ' ov-' + tone : '') },
+  h('b', null, fmt.int(n)), h('span', null, label));
+
+/* Latest diary entries per project, filled by the range redraw and read
+   by the index's hover card. */
+let RECENT_BY_PROJECT = {};
+
 /* ── Who is carrying what ──
  *
  * The Team Member Catalog used to sit here, grouping people under team
@@ -289,8 +334,8 @@ function buildCalendar(card, d, teamById, statusById) {
  * anyone carrying more than they should. Person level, ordered by load,
  * every face a door to that person and every project a door to itself.
  */
-function buildLoad(d, active) {
-  const card = h('div', { class: 'card' });
+function buildLoad(d, active, inline) {
+  const card = h('div', inline ? { class: 'ov-load' } : { class: 'card' });
   const rows = (d.members || [])
     .filter(m => m.active)
     .map(m => ({
@@ -354,17 +399,31 @@ function buildIndex(d, active, statusById) {
   card.appendChild(h('div', { class: 'idx-list' }, rows.map(p => {
     const st = statusById[p.status_id];
     const people = (d.tagsByProject[p.id] || []).map(id => d.memberById[id]).filter(Boolean);
-    return h('a', { class: 'idx-row', href: '#project/' + p.id },
+    const row = h('a', { class: 'idx-row', href: '#project/' + p.id, dataset: { pid: String(p.id) } },
       h('span', { class: 'idx-title' }, p.title),
       st ? h('span', { class: 'prj-status-chip', style: { '--psc': `var(--ps-${st.color})` } }, st.label) : null,
       h('span', { class: 'av-stack idx-people' }, people.slice(0, 5).map(m => avatar(m, { size: 'xs', link: false }))),
       p.overdue
         ? h('span', { class: 'overdue-badge' }, 'OVERDUE')
         : h('span', { class: 'idx-due' }, p.phase_due ? `due ${fmt.day(p.phase_due)}` : ''));
+    /* Hover links the two halves of row 2: the timeline bar for this
+       project lights up, and its three most recent diary entries appear
+       beside the cursor. Travis asked for the timeline to react to the
+       list; showing the updates here is what let Diary Review go. */
+    row.addEventListener('mouseenter', () => { highlight(p.id, true); showUpdates(row, p); });
+    row.addEventListener('mouseleave', () => { highlight(p.id, false); hideUpdates(); });
+    row.addEventListener('focus', () => { highlight(p.id, true); showUpdates(row, p); });
+    row.addEventListener('blur', () => { highlight(p.id, false); hideUpdates(); });
+    return row;
   })));
   return card;
 }
 
+/* UNREACHABLE as of 29 Sep 2026. Diary Review reprinted every entry for
+   every project on this page, which made GSE Central long and the project
+   page redundant. The index's hover card shows the latest three and the
+   project page holds the rest. Kept because it is the only grouped
+   rendering of the review payload; delete it if nothing claims it. */
 function buildReview(card, rv, d, teamById, statusById, range) {
   clear(card);
   card.appendChild(sectionTitle('Diary review',

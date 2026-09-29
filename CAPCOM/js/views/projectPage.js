@@ -22,7 +22,9 @@ import { h, clear, fmt } from '../util.js';
 import { api } from '../api.js';
 import {
   spinner, errorState, sectionTitle, chip, emptyState, toast, textInput,
+  textArea, modal, field, confirmBox,
 } from '../ui.js';
+import { shrinkTo } from '../avatar.js';
 import { avatar } from '../avatar.js';
 import { shapeProjects } from './projects.js';
 
@@ -106,10 +108,147 @@ async function load(root, params, who) {
   }
   root.appendChild(outcome);
 
+  // ── the trophy case ──
+  const tro = h('div', { class: 'card' }, spinner());
+  root.appendChild(tro);
+  loadTrophies(tro, p, mine || !!(who && (who.master || who.manager)), () => load(root, params, who));
+
   // ── history ──
   const hist = h('div', { class: 'card' }, spinner());
   root.appendChild(hist);
   loadDiary(hist, p, d, canWrite, () => load(root, params, who));
+}
+
+/* ── the Trophy Case ──
+ *
+ * Travis wanted somewhere for the people on a project to put what they
+ * are PROUD of — a screenshot, something a colleague said, a link to the
+ * thing that shipped — so that "what is this team doing" can be answered
+ * with evidence rather than a status column.
+ *
+ * Deliberately not the diary. The diary is the record and it is mostly
+ * written by the system; this is written only by people, and burying the
+ * wins in an audit trail is how they stop being read.
+ *
+ * Posting is limited to people TAGGED on the project (plus managers) —
+ * enforced server-side. A case anyone can fill is a noticeboard; the
+ * point is that it belongs to whoever did the work.
+ */
+const TROPHY_META = {
+  win:    ['\ud83c\udfc6', 'Win'],
+  praise: ['\ud83d\udcac', 'Praise'],
+  shot:   ['\ud83d\uddbc\ufe0f', 'Screenshot'],
+  link:   ['\ud83d\udd17', 'Link'],
+};
+
+async function loadTrophies(card, p, canPost, reload) {
+  let d;
+  try { d = await api.trophies({ op: 'list', project_id: p.id }); }
+  catch { card.remove(); return; }
+  const rows = d.trophies || [];
+  clear(card);
+  card.appendChild(sectionTitle('Trophy Case',
+    h('span', { class: 'sec-sub' }, rows.length
+      ? `${rows.length} highlight${rows.length === 1 ? '' : 's'}`
+      : 'what this project is proud of')));
+
+  if (canPost) {
+    card.appendChild(h('div', { class: 'tro-add' },
+      h('button', { class: 'btn accent', onClick: () => trophyDialog(p, 'win', reload) }, '\ud83c\udfc6 A win'),
+      h('button', { class: 'btn', onClick: () => trophyDialog(p, 'praise', reload) }, '\ud83d\udcac Something someone said'),
+      h('button', { class: 'btn', onClick: () => trophyDialog(p, 'shot', reload) }, '\ud83d\uddbc\ufe0f Screenshot'),
+      h('button', { class: 'btn', onClick: () => trophyDialog(p, 'link', reload) }, '\ud83d\udd17 Link')));
+  }
+
+  if (!rows.length) {
+    card.appendChild(emptyState('Nothing in the case yet.',
+      canPost
+        ? 'Put the first thing in \u2014 a screenshot, a win, something a colleague said.'
+        : 'The people on this project fill this one.'));
+    return;
+  }
+
+  card.appendChild(h('div', { class: 'tro-grid' }, rows.map(t => {
+    const [icon, label] = TROPHY_META[t.kind] || TROPHY_META.win;
+    const by = { id: t.member_id, name: t.name || t.author_name, title: t.title, avatar_url: t.avatar_url };
+    return h('div', { class: 'tro-card tro-' + t.kind },
+      h('div', { class: 'tro-top' },
+        h('span', { class: 'tro-kind' }, icon, ' ', label),
+        h('span', { class: 'tro-when sub' }, fmt.when(t.created_at)),
+        canPost ? h('button', {
+          class: 'tl-x', title: 'Take this down',
+          onClick: () => confirmBox('Take this out of the case?',
+            'It stops being shown. Only you or a manager can do this.',
+            async () => {
+              try { await api.trophies({ op: 'remove', id: t.id }); toast('Removed'); reload(); }
+              catch (err) { toast(err.message, 'err'); }
+            }, 'Take it down'),
+        }, '\u00d7') : null),
+      t.kind === 'shot' && t.image_url
+        ? h('a', { class: 'tro-shot', href: t.image_url, target: '_blank', rel: 'noopener' },
+          h('img', { src: t.image_url, alt: t.message || 'Screenshot', loading: 'lazy' }))
+        : null,
+      t.message
+        ? h('p', { class: t.kind === 'praise' ? 'tro-quote' : 'tro-msg' },
+          t.kind === 'praise' ? `\u201c${t.message}\u201d` : t.message)
+        : null,
+      t.kind === 'link' && t.link_url
+        ? h('a', { class: 'tl-link', href: t.link_url, target: '_blank', rel: 'noopener' },
+          h('span', { class: 'tl-link-u' }, hostOf(t.link_url)))
+        : null,
+      h('div', { class: 'tro-by' }, avatar(by, { size: 'xs' }),
+        h('span', null, t.name || t.author_name)));
+  })));
+}
+
+function hostOf(url) {
+  try { return new URL(url).host.replace(/^www\./, ''); } catch { return url; }
+}
+
+function trophyDialog(p, kind, reload) {
+  const [, label] = TROPHY_META[kind] || TROPHY_META.win;
+  const msg = textArea({ rows: 3, maxLength: 600, placeholder:
+    kind === 'praise' ? 'What did they say? Paste it as they wrote it.'
+      : kind === 'shot' ? 'Caption (optional)'
+      : kind === 'link' ? 'What is it?'
+      : 'What landed?' });
+  const link = textInput({ maxLength: 500, placeholder: 'https://\u2026' });
+  const file = h('input', { type: 'file', accept: 'image/png,image/jpeg,image/webp,image/gif' });
+  let shotUrl = '';
+  const preview = h('img', { class: 'tro-prev', hidden: true, alt: '' });
+
+  file.addEventListener('change', async () => {
+    const f = file.files && file.files[0];
+    if (!f) return;
+    toast('Resizing\u2026');
+    // a screenshot is read at card width; 1280 is generous and keeps the
+    // request far under Vercel's cap
+    const small = await shrinkTo(f, 1280);
+    if (!small) { toast('That file is not an image CAPCOM can read', 'err'); return; }
+    try {
+      const up = await api.uploadTrophy({ name: 'trophy', type: small.type, data: small.data });
+      shotUrl = up.url; preview.src = up.url; preview.hidden = false;
+      toast('Ready \u2014 now hit Put it in');
+    } catch (err) { toast(err.message, 'err'); }
+  });
+
+  modal(`Trophy Case \u2014 ${label}`,
+    h('div', { class: 'form' },
+      kind === 'shot' ? field('Screenshot', h('div', null, file, preview),
+        'Resized here before it uploads. It lands on this project only.') : null,
+      kind === 'link' ? field('Link', link, 'http:// or https:// \u2014 a deck, a doc, a recording.') : null,
+      field(kind === 'praise' ? 'What they said' : kind === 'shot' ? 'Caption' : 'What it is', msg,
+        kind === 'praise' ? 'Say who, in the caption, if it helps.' : null)),
+    [{ label: 'Cancel', onClick: c => c() },
+      { label: 'Put it in', kind: 'accent', onClick: async c => {
+        try {
+          await api.trophies({
+            op: 'add', project_id: p.id, kind,
+            message: msg.value, image_url: shotUrl, link_url: link.value.trim(),
+          });
+          c(); toast('In the case'); reload();
+        } catch (err) { toast(err.message, 'err'); }
+      } }]);
 }
 
 const stand = (label, value) => h('div', { class: 'prp-stand-cell' },
@@ -147,7 +286,10 @@ async function loadDiary(card, p, d, canWrite, reload) {
     return;
   }
 
-  card.appendChild(h('div', { class: 'diary-rows' }, [...entries].reverse().map(e => {
+  /* Every entry, in a frame of its own with a scrollbar. The hover card on
+     GSE Central shows the latest three; this is where the rest lives, and
+     a project with 40 entries should not push the page to a kilometre. */
+  card.appendChild(h('div', { class: 'diary-rows diary-scroll' }, [...entries].reverse().map(e => {
     const from = e.from_status_id && d.statusById[e.from_status_id];
     const to = e.to_status_id && d.statusById[e.to_status_id];
     // the actor is a typed string; match it to a face where we can

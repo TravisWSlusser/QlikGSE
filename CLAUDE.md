@@ -2341,3 +2341,73 @@ key keeps their typed name and simply has no avatar and no profile link.
 The widget tags each item with where it came from rather than flattening
 all three, and shows position dots so it reads as a rotation instead of a
 card that changes by itself.
+
+## Threads, Trophy Cases, GSE Central rebuilt (29 Sep 2026, schema v16)
+
+Travis framed the whole thing: *"I just want folks to be able to see the
+data we have access to… in a friendly team-building way, not an overlord
+way. But the end result (for Nick's end) needs to be similar… so if he
+has to go to bat for our org on the next round of layoffs, I want to give
+him as many legs to stand on."*
+
+That is the design constraint, not decoration. Everything below records
+what people CHOSE to put forward, never what was measured about them.
+
+### Threads: click anything anyone said
+
+`op:'thread'` returns one post or status with its reactions and comments.
+`target_kind` is `'post'` (a `timeline_posts.id`) or `'status'` (the
+member id — a person has exactly one status). One polymorphic key rather
+than two tables: a comment is a comment, and the thread UI should not
+care which wall it hangs under.
+
+**No reacting to your own.** The client hides the buttons and shows
+"Reactions to your post" instead; `op:'react'` refuses it server-side,
+which is what actually holds. **Commenting on your own is allowed** —
+adding an update under your own thread is how a wall normally works, and
+only self-applause is silly.
+
+This needed `member_id` on both reaction tables. They recorded a NAME
+only, so "is this mine" was unanswerable. 0 = a scoped key with no person
+behind it, which owns nothing and is therefore unaffected.
+
+### The Trophy Case
+
+`project_trophies`, on every project page. Four kinds — win, praise
+(what somebody else said), shot (a screenshot through our own uploader),
+link.
+
+**Deliberately not the diary.** The diary is the record, mostly written
+by the system; this is the highlight reel, written only by people.
+Mixing them buries the wins in an audit trail, and an audit trail is not
+what anyone wants to read when asked what the team has done.
+
+Posting is limited to people TAGGED on that project, plus managers, and
+that is enforced server-side. A case anyone can fill is a noticeboard;
+the point is that it belongs to whoever did the work. Screenshots must
+come from our Blob — accepting any URL would put an arbitrary remote
+image on a page the whole org loads.
+
+### GSE Central, to Travis's layout
+
+```
+row 1   Projects Calendar   |  Projects Overview
+row 2   Projects (index)    |  Phase Timeline
+```
+
+**Projects Overview** folds the counts, the status donut and who-is-on-
+what into one frame. It is NOT called GSE Central: a card repeating the
+page's own name told the reader nothing.
+
+**Row 2 is linked by hover.** Hovering a project lights its bar in the
+timeline (`data-pid` on both sides — a lookup, never a redraw, because
+the timeline must not rebuild sixty times while a cursor runs down the
+list) and raises its three most recent updates beside the cursor.
+
+**Diary Review is gone.** It reprinted every entry for every project
+here, which made this page long and the project page redundant. The
+hover card shows the latest three; the project page holds the rest, in
+its own scrolling frame.
+
+`buildReview()` is left in place and marked unreachable rather than
+deleted — same treatment as `historyDialog`.

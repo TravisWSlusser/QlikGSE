@@ -193,7 +193,11 @@ export function gantt(rows, { from, to } = {}) {
 
   const labels = h('div', { class: 'gantt-labels' },
     h('div', { class: 'gantt-axis-spacer' }),
-    rows.map(r => h(r.href ? 'a' : 'div', { class: 'gantt-label', href: r.href || null }, r.label)));
+    // pid lets another widget light this row without redrawing the chart
+    rows.map(r => h(r.href ? 'a' : 'div', {
+      class: 'gantt-label', href: r.href || null,
+      dataset: r.pid ? { pid: String(r.pid) } : null,
+    }, r.label)));
 
   const scroll = h('div', { class: 'gantt-scroll' });
   const svg = document.createElementNS(NS, 'svg');

@@ -13,6 +13,7 @@ import { pctx, editMemberDialog, inviteDialog, shapeProjects } from './projects.
 import { preview } from '../preview.js';
 import { avatar, put } from '../avatar.js';
 import { giphyGrid } from '../giphy.js';
+import { openThread } from '../timeline.js';
 
 /* One hover panel for the whole page - the same single-node pattern
    pop.js and avatar.js use. A panel per card would be sixty detached
@@ -139,7 +140,7 @@ async function load(root, rerender, canEdit, meId, canInvite) {
   }
   const REACT_SET = ['👍', '🎉', '🔥', '😂', '💚', '👏'];
   const react = async (m, body) => {
-    try { await api.members({ op: 'statusReact', id: m.id, ...body }); rerender(); }
+    try { await api.timeline({ op: 'react', kind: 'status', id: m.id, ...body }); rerender(); }
     catch (err) { toast(err.message, 'err'); }
   };
   /* A sticker or a meme, not just an emoji - the same GIPHY drawer the
@@ -160,13 +161,18 @@ async function load(root, rerender, canEdit, meId, canInvite) {
     const groups = {};
     for (const r of mine) if (r.emoji) (groups[r.emoji] = groups[r.emoji] || []).push(r.name);
     return h('div', { class: 'oc-status' },
-      h('span', { class: 'cat-status-q' }, `“${m.status_text}”`),
+      h('span', {
+        class: 'cat-status-q tl-click', role: 'button', tabindex: '0',
+        title: 'Open this status',
+        onClick: ev => { ev.stopPropagation(); openThread({ kind: 'status', id: m.id }, rerender); },
+      }, `“${m.status_text}”`),
       ...Object.entries(groups).map(([e, names]) =>
         h('span', { class: 'cat-react', title: names.join(', ') },
           `${e}${names.length > 1 ? ' ' + names.length : ''}`)),
       ...mine.filter(r => r.sticker_url).map(r =>
         h('img', { class: 'cat-react-img', src: r.sticker_url, alt: '', title: r.name, loading: 'lazy' })),
-      h('span', {
+      // your own status shows its reactions but offers no react button
+      m.id === meId ? null : h('span', {
         class: 'cat-react cat-react-add', role: 'button', title: 'React',
         onClick: ev => {
           ev.stopPropagation();

@@ -2371,3 +2371,120 @@ body.previewing{padding-top:38px}
   .tl-rot-in{animation:none}
   .tl-dot{transition:none}
 }
+
+/* ======================================================================
+   The thread — one post or status, its reactions and its comments.
+   ====================================================================== */
+.th-wrap{display:flex;flex-direction:column;gap:14px;min-width:0}
+.th-head{display:flex;gap:11px;align-items:center}
+.th-head b{display:block;font-size:.95rem}
+.th-head .sub{font-size:.72rem}
+.th-body{padding:12px 14px;border-radius:10px;background:var(--card-2)}
+.th-reacts{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.th-pick{cursor:pointer;border:0;font-size:.95rem;line-height:1}
+.th-pick:hover{transform:translateY(-1px)}
+/* your own: you see the reactions, you are not offered the buttons */
+.th-own{font-size:.74rem;color:var(--muted);font-style:italic}
+
+.th-c-lbl{
+  font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  padding-top:12px;border-top:1px solid var(--line);
+}
+.th-comments{display:flex;flex-direction:column;gap:10px;max-height:320px;overflow-y:auto}
+.th-comment{display:flex;gap:9px;align-items:flex-start}
+.th-c-body{flex:1;min-width:0}
+.th-c-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.th-c-head b{font-size:.82rem}
+.th-c-head .sub{font-size:.66rem}
+.th-c-body p{margin:2px 0 0;font-size:.86rem;line-height:1.5;word-break:break-word}
+.th-c-x{opacity:0;transition:opacity .15s ease}
+.th-comment:hover .th-c-x{opacity:1}
+.th-add{display:flex;gap:8px}
+.th-add input{flex:1}
+
+/* a post you can open says so on hover, and only on hover */
+.tl-click{cursor:pointer}
+.tl-click:hover{outline:1px solid var(--line);outline-offset:2px;border-radius:8px}
+.tl-click:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.tl-open{
+  margin-left:auto;font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);opacity:0;transition:opacity .15s ease;
+}
+.tl-post:hover .tl-open{opacity:1;color:var(--link)}
+
+/* ======================================================================
+   The Trophy Case.
+   Warm on purpose — this is the one surface in CAPCOM that is not a
+   status, a count or an audit trail.
+   ====================================================================== */
+.tro-add{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.tro-card{
+  display:flex;flex-direction:column;gap:8px;padding:13px;border-radius:11px;
+  background:var(--card-2);border-top:3px solid var(--warn);
+}
+.tro-win{border-top-color:var(--accent)}
+.tro-praise{border-top-color:var(--warn)}
+.tro-shot{border-top-color:var(--link)}
+.tro-link{border-top-color:var(--ps-violet)}
+.tro-top{display:flex;align-items:center;gap:8px}
+.tro-kind{font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:var(--ink-2)}
+.tro-when{margin-left:auto;font-size:.66rem}
+.tro-card .tl-x{margin-left:0}
+a.tro-shot{display:block;border-radius:8px;overflow:hidden;border-top:0}
+a.tro-shot img{width:100%;height:auto;display:block}
+.tro-msg{margin:0;font-size:.86rem;line-height:1.5;word-break:break-word}
+.tro-quote{
+  margin:0;padding:8px 12px;border-left:2px solid var(--warn);border-radius:0 8px 8px 0;
+  background:var(--warn-soft);font-style:italic;font-size:.86rem;line-height:1.5;
+}
+.tro-by{display:flex;align-items:center;gap:6px;font-size:.7rem;color:var(--muted);margin-top:auto}
+.tro-prev{max-width:100%;border-radius:8px;margin-top:8px;display:block}
+
+/* the full history, in its own frame */
+.diary-scroll{max-height:420px;overflow-y:auto;padding-right:6px}
+
+/* ======================================================================
+   GSE Central — two rows, and the hover that links them.
+   ====================================================================== */
+.gse-row{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.gse-row > .card{margin:0}
+@media (max-width:1100px){.gse-row{grid-template-columns:1fr}}
+
+.ov-nums{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0 16px}
+@media (max-width:560px){.ov-nums{grid-template-columns:repeat(2,1fr)}}
+.ov-num{display:flex;flex-direction:column;gap:1px;padding:9px 11px;border-radius:9px;background:var(--card-2)}
+.ov-num b{font-size:1.25rem;font-variant-numeric:tabular-nums;color:var(--heading)}
+.ov-num span{font-size:.64rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.ov-bad b{color:var(--overdue)}
+.ov-warn b{color:var(--warn)}
+.ov-split{margin-bottom:6px}
+.ov-load{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+/* inside the overview frame the load list is tighter and drops the chips */
+.ov-load .load-row{grid-template-columns:24px minmax(0,1fr) minmax(40px,1fr) 24px;padding:6px 8px}
+.ov-load .load-projects{display:none}
+.ov-load .sec-title{margin-bottom:8px}
+
+/* the hovered project, in the list AND in the timeline */
+.pid-on{background:var(--card-2);outline:1px solid var(--link)}
+.gantt-label.pid-on{color:var(--link);font-weight:700}
+/* everything else steps back while one row is lit */
+.gantt-focus .gantt-label:not(.pid-on){opacity:.45;transition:opacity .15s ease}
+
+#upd-pop{
+  position:fixed;z-index:390;display:none;width:300px;
+  padding:13px 15px;border-radius:12px;pointer-events:none;
+  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);
+}
+.upd-head{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}
+.upd-head b{font-size:.88rem}
+.upd-head .sub{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase}
+.upd-row{padding:7px 0;border-top:1px solid var(--line)}
+.upd-row p{margin:4px 0;font-size:.8rem;line-height:1.45;color:var(--ink-2)}
+.upd-row .sub{font-size:.66rem}
+.upd-foot{margin-top:9px;padding-top:8px;border-top:1px solid var(--line);font-size:.68rem;color:var(--link)}
+
+@media (prefers-reduced-motion:reduce){
+  .th-pick:hover{transform:none}
+  .tl-open,.th-c-x,.gantt-focus .gantt-label:not(.pid-on){transition:none}
+}

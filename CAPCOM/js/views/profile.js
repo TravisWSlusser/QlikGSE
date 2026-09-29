@@ -27,7 +27,7 @@ import {
 } from '../ui.js';
 import { avatar, avatarEditor, clearAvatar } from '../avatar.js';
 import { giphyGrid } from '../giphy.js';
-import { composer, wall } from '../timeline.js';
+import { composer, wall, openThread } from '../timeline.js';
 import { shapeProjects, pctx } from './projects.js';
 
 const REACT_SET = ['👍', '🎉', '🔥', '😂', '💚', '👏'];
@@ -96,6 +96,8 @@ async function loadWall(card, m, ctx) {
   }
   card.appendChild(wall(d.posts, d.reactions, {
     canRemove: ctx.self || ctx.canManage,
+    // your own wall shows every reaction and offers none of its own
+    canReact: !ctx.self,
     pctx,
     reload: () => loadWall(card, m, ctx),
   }));
@@ -172,7 +174,7 @@ function statusCard(m, d, ctx) {
   const reacts = (d.staffReacts || []).filter(r => r.member_id === m.id);
 
   const post = async (body) => {
-    try { await api.members({ op: 'statusReact', id: m.id, ...body }); ctx.redraw(); }
+    try { await api.timeline({ op: 'react', kind: 'status', id: m.id, ...body }); ctx.redraw(); }
     catch (err) { toast(err.message, 'err'); }
   };
 
@@ -203,12 +205,15 @@ function statusCard(m, d, ctx) {
       h('span', { class: 'cat-react', title: names.join(', ') },
         `${e}${names.length > 1 ? ' ' + names.length : ''}`)),
     ...stickers.map(r => h('img', { class: 'prof-sticker', src: r.sticker_url, alt: '', title: r.name, loading: 'lazy' })),
-    h('button', {
+    // no applauding yourself — the server refuses it either way
+    ctx.self ? null : h('button', {
       class: 'cat-react cat-react-add',
       title: 'React with an emoji',
       onClick: ev => pctx(ev.clientX, ev.clientY, REACT_SET.map(e => [e, () => post({ emoji: e }), false])),
     }, '+'),
-    h('button', { class: 'btn xs', onClick: () => stickerReact(m, post) }, 'Sticker / meme'),
+    ctx.self ? null : h('button', { class: 'btn xs', onClick: () => stickerReact(m, post) }, 'Sticker / meme'),
+    h('button', { class: 'btn xs', onClick: () => openThread({ kind: 'status', id: m.id }, ctx.redraw) },
+      'Comments'),
     canPost ? h('button', { class: 'btn xs', onClick: () => editStatus(m, ctx) }, 'Change') : null));
   if (canPost) {
     card.appendChild(h('p', { class: 'explain prof-warn' },

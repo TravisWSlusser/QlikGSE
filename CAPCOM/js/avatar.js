@@ -104,6 +104,30 @@ export function avatarName(m, opts = {}) {
 
 /* Resize to a centre-cropped square and re-encode. Returns {type, data}
    base64, or null when the file is not a readable image. */
+/* shrinkTo(file, edge) — the same resizer, without the square crop, for
+   anything that is not a face. A trophy screenshot keeps its shape; only
+   the long edge is capped. */
+export function shrinkTo(file, edge = 1280) {
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, edge / Math.max(img.width, img.height));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * scale);
+      cv.height = Math.round(img.height * scale);
+      const ctx = cv.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, cv.width, cv.height);
+      const out = cv.toDataURL('image/webp', QUALITY);
+      resolve({ type: out.slice(5, out.indexOf(';')), data: out.slice(out.indexOf(',') + 1) });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+
 function shrink(file) {
   return new Promise(resolve => {
     const url = URL.createObjectURL(file);
