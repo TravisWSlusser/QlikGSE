@@ -2411,3 +2411,43 @@ its own scrolling frame.
 
 `buildReview()` is left in place and marked unreachable rather than
 deleted — same treatment as `historyDialog`.
+
+## A hidden control is a broken control (29 Sep 2026)
+
+Travis: "The right click to react to status updates and posts arent
+working." Nothing was broken. Production held exactly **one** piece of
+social content — his own status — and zero timeline posts. The self-react
+rule correctly hides the button on your own, so the only status on the
+page had no affordance and nothing explaining why.
+
+The rule stays; the silence goes.
+
+- Your own status/post now shows a dashed **"yours"** chip where the
+  react button would be, and says so on hover.
+- Every status gets a **💬** that opens its thread, yours included —
+  before this there was no visible way in at all, only an unhinted click
+  target on the quote itself.
+- Home's rotation, when the only item is yours, says so in a line rather
+  than looking like a widget that will not advance.
+
+Generalise it: **whenever a control is hidden by a rule, render the rule.**
+A missing button and a dead button are the same pixel.
+
+## `open(path,"w")` truncates before it can fail (29 Sep 2026)
+
+A patch script hit `UnicodeEncodeError` mid-`write()` and left
+`CAPCOM/js/views/staff.js` at **zero bytes** — the file had already been
+truncated by the open, and the exception killed the write. Recovered with
+`git checkout --`, which is the argument for committing before a batch of
+scripted edits, not after.
+
+Every patch helper in this repo now encodes FIRST and writes bytes:
+
+```python
+data = s.encode("utf-8")   # raises here, before anything is destroyed
+io.open(path, "wb").write(data)
+```
+
+The trigger was a surrogate pair written as `\ud83d\udcac` in a Python
+source string. Python keeps lone surrogates in `str` and only rejects
+them at encode time. Emoji above U+FFFF go in as a single `\U0001f4ac`.

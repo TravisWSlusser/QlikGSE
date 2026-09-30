@@ -171,17 +171,27 @@ async function load(root, rerender, canEdit, meId, canInvite) {
           `${e}${names.length > 1 ? ' ' + names.length : ''}`)),
       ...mine.filter(r => r.sticker_url).map(r =>
         h('img', { class: 'cat-react-img', src: r.sticker_url, alt: '', title: r.name, loading: 'lazy' })),
-      // your own status shows its reactions but offers no react button
-      m.id === meId ? null : h('span', {
-        class: 'cat-react cat-react-add', role: 'button', title: 'React',
-        onClick: ev => {
-          ev.stopPropagation();
-          pctx(ev.clientX, ev.clientY, [
-            ...REACT_SET.map(e => [e, () => react(m, { emoji: e }), false]),
-            ['Sticker / meme…', () => stickerReact(m), false],
-          ]);
-        },
-      }, '+'));
+      /* Your own status shows its reactions but offers no button to add
+         one — and it has to SAY so. An affordance that is simply absent
+         is indistinguishable from one that is broken, and on a team where
+         one person has posted, the only status on the page is your own. */
+      m.id === meId
+        ? h('span', { class: 'cat-mine', title: 'Others can react to this — you cannot react to your own' }, 'yours')
+        : h('span', {
+          class: 'cat-react cat-react-add', role: 'button', title: 'React',
+          onClick: ev => {
+            ev.stopPropagation();
+            pctx(ev.clientX, ev.clientY, [
+              ...REACT_SET.map(e => [e, () => react(m, { emoji: e }), false]),
+              ['Sticker / meme…', () => stickerReact(m), false],
+            ]);
+          },
+        }, '+'),
+      // every status, yours included, gets a visible door into its thread
+      h('span', {
+        class: 'cat-react cat-open', role: 'button', title: 'Open — comments and reactions',
+        onClick: ev => { ev.stopPropagation(); openThread({ kind: 'status', id: m.id }, rerender); },
+      }, '💬'));
   };
 
   /* ── the hover peek ──

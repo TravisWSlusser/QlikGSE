@@ -205,7 +205,9 @@ function statusCard(m, d, ctx) {
       h('span', { class: 'cat-react', title: names.join(', ') },
         `${e}${names.length > 1 ? ' ' + names.length : ''}`)),
     ...stickers.map(r => h('img', { class: 'prof-sticker', src: r.sticker_url, alt: '', title: r.name, loading: 'lazy' })),
-    // no applauding yourself — the server refuses it either way
+    /* No applauding yourself - the server refuses it either way. SAY so,
+       rather than leaving a gap where the buttons would be. */
+    ctx.self ? h('span', { class: 'cat-mine' }, 'Yours — others can react') : null,
     ctx.self ? null : h('button', {
       class: 'cat-react cat-react-add',
       title: 'React with an emoji',

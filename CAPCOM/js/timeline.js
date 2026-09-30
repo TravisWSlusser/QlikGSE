@@ -16,6 +16,12 @@ import { giphyGrid } from './giphy.js';
 
 export const REACT_SET = ['👍', '🎉', '🔥', '😂', '💚', '👏'];
 
+/* Who is looking. Set once by the shell so the feed can tell "nobody has
+   posted" from "only YOU have posted" - two very different states that
+   look identical without it, because the self rule hides every button. */
+let ME_ID = 0;
+export function setViewer(id) { ME_ID = id || 0; }
+
 /* postBody(p) — just the content, no chrome. The widget wraps it in a
    rotating card, the profile wraps it in a row with a date and controls. */
 export function postBody(p) {
@@ -275,6 +281,9 @@ export function wall(posts, reactions, opts) {
         ...mine.filter(r => r.sticker_url).map(r =>
           h('img', { class: 'cat-react-img', src: r.sticker_url, alt: '', title: r.name, loading: 'lazy' })),
         // the whole post is the door now; this stays as the fast path
+        opts.canReact === false
+          ? h('span', { class: 'cat-mine', title: 'Others can react to this' }, 'yours')
+          : null,
         opts.canReact === false ? null : h('button', {
           class: 'cat-react cat-react-add', title: 'React',
           onClick: ev => opts.pctx(ev.clientX, ev.clientY, [
@@ -332,6 +341,14 @@ export async function feedCard(card, sectionTitle) {
           h('a', { class: 'lnk', href: '#profile' }, 'your timeline'),
           ' — a thought, a link, a sticker — or pin a note to the board, and it shows up here.')));
     return;
+  }
+
+  /* One item, and it is yours: the rotation has nothing to rotate and the
+     self rule hides every reaction button on the page. Say that outright
+     or it reads as a broken widget. */
+  if (posts.length === 1 && posts[0].member_id === ME_ID) {
+    card.appendChild(h('p', { class: 'sub tl-solo' },
+      'This is the only thing anyone has posted so far — and it is yours, so there is nothing here to react to yet.'));
   }
 
   const slot = h('div', { class: 'tl-rot' });

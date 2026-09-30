@@ -13,7 +13,7 @@ import { api } from '../api.js';
 import { spinner, errorState, sectionTitle, chip, emptyState, toast, modal, confirmBox, field, textInput } from '../ui.js';
 import { giphyGrid } from '../giphy.js';
 import { avatar, avatarEditor, avatarName } from '../avatar.js';
-import { feedCard } from '../timeline.js';
+import { feedCard, setViewer } from '../timeline.js';
 import { shapeProjects } from './projects.js';
 import { ICONS } from '../icons.js';
 import { wirePop } from '../pop.js';
@@ -26,6 +26,7 @@ let PEOPLE = null;   // Promise<shaped projects bundle> | null // the signed-in 
 export function render(params, rerender, who) {
   const scopes = (who && who.scopes) || [];
   ME = (who && who.member && who.member.name) || null;
+  setViewer(who && who.member && who.member.id);
   /* ONE projects call for the whole page. Home's personal cards need the
      bundle, and so does the corkboard - a sticky stores a TYPED NAME, not
      a member id, so turning a signature into a face means looking the name

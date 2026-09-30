@@ -2386,6 +2386,17 @@ body.previewing{padding-top:38px}
 /* your own: you see the reactions, you are not offered the buttons */
 .th-own{font-size:.74rem;color:var(--muted);font-style:italic}
 
+/* "yours" - why there is no react button here. An absent affordance and a
+   broken one look identical, so the absent one has to speak. */
+.cat-mine{
+  font-size:.62rem;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);padding:2px 7px;border-radius:5px;
+  background:var(--card-2);border:1px dashed var(--line);
+}
+.cat-open{cursor:pointer;font-size:.78rem;line-height:1;border:0;background:none;padding:2px 4px}
+.cat-open:hover{filter:brightness(1.35)}
+.tl-solo{margin:10px 0 0;font-size:.74rem;line-height:1.5}
+
 .th-c-lbl{
   font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
   padding-top:12px;border-top:1px solid var(--line);
