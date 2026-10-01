@@ -92,13 +92,13 @@ async function load(root, rerender, canEdit, meId, canInvite) {
   const retired = (d.members || []).filter(m => !m.active);
 
   const card = h('div', { class: 'card' });
-  card.appendChild(sectionTitle('Staff',
+  card.appendChild(sectionTitle('Our Organization',
     h('span', { class: 'sec-sub' },
       `Global Sales Enablement · ${members.length} member${members.length === 1 ? '' : 's'} · tap a card for their profile`),
     ...(canEdit ? [h('button', { class: 'btn sm accent', onClick: () => editMemberDialog(null, d, rerender) }, '+ Add New')] : [])));
   if (canEdit) {
     card.appendChild(h('p', { class: 'sub org-how' },
-      h('b', null, 'This section is exclusively for adding Sales Enablement staff. '),
+      h('b', null, 'This page is the Sales Enablement org, and only that. '),
       'Do not add SMEs or other content providers here — they get scoped keys from Tailored Access instead. ',
       'For staff: Sales Enablement leaders click Invite on a person’s card to create their activation key, then send it to them to begin their CAPCOM onboarding. At the gate they choose Activate, enter trigram + key, and set their own password. Invite again any time to reset one.'));
   }

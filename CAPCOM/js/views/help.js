@@ -17,7 +17,7 @@ const AREAS = [
   ['Authority & Control', 'The privileged tier in one place: the Leadership Brief, Tailored Access and Maintenance. Rows you cannot open are greyed with a padlock rather than hidden — hover one to see what to ask for.'],
   ['Timelines', 'Every staff profile has a wall. Post text, a link or a sticker, and react to anyone else’s. The newest post from around the team rotates in a widget on Home.'],
   ['Leadership Brief', 'The verdict first, then the counts, then the detail: movement, milestones, overdue with their written explanations, and lulls. Copy As Text for the update leadership sends upward. Add a Claude key for a written executive summary.'],
-  ['Staff', 'The Sales Enablement org chart — cards branching from the top down, with trigrams, who is out of office, and everyone’s informal status post (react to those!). Leaders add staff and issue activation keys here. SMEs and outside contributors do NOT go here.'],
+  ['Our Organization', 'The Sales Enablement org chart — cards branching from the top down, with trigrams, who is out of office, and everyone’s informal status post (react to those!). Leaders add staff and issue activation keys here. SMEs and outside contributors do NOT go here.'],
   ['Tailored Access', 'Scoped keys for SMEs and other outside contributors — a key opens exactly the areas it names and nothing else.'],
   ['Maintenance', 'The machine room: the REC Room maintenance switch, the service keys the apps run on, and the Setup button.'],
   ['Dashboard', 'REC Room health: who is playing, scores, and how the systems behind it are doing.'],

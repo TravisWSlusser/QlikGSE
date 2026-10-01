@@ -48,7 +48,10 @@ const NAV = [
     // label only - the ROUTE stays banners/stellar so saved links survive
     { route: 'banners/stellar', label: 'AI Highlights', scope: 'banners', mod: banners, icon: 'stellar' },
   ]},
-  { group: 'Projects', items: [
+  /* Labels only. Every ROUTE under here still starts with projects/ —
+     renaming those would break saved links and the deep-links the app
+     uses itself. */
+  { group: 'GSE Community', items: [
     /* GSE Central leads the group: it is the section's front door now -
        what is in flight, what is due, who is on what - and the Board is
        where you go to change something. Landing on the summary and
@@ -57,7 +60,7 @@ const NAV = [
     // scope null on purpose: every key holder can SEE the board (visibility
     // is the product); edit controls gate on the 'projects' scope inside
     { route: 'projects', label: 'Project Board', scope: null, mod: projects, icon: 'projects' },
-    { route: 'projects/staff', label: 'Staff', scope: null, mod: staff, icon: 'staff' },
+    { route: 'projects/staff', label: 'Our Organization', scope: null, mod: staff, icon: 'staff' },
     /* Two pages you arrive at by CLICKING something, never from the
        sidebar - a person's face, or a project's name. nav:false keeps
        them routable without giving either a nav row. */
@@ -237,8 +240,9 @@ function showNavTip(anchor, it) {
 }
 function hideNavTip() { if (navTipEl) navTipEl.style.display = 'none'; }
 
-/* What to ask for, in the words the Staff page uses. A person who reads
-   this should be able to repeat it to their leader verbatim. */
+/* What to ask for, in the words the checkboxes use on Our Organization.
+   A person reading this should be able to repeat it to their leader
+   verbatim. */
 const SCOPE_WORDS = {
   calendar: 'Calendar', banners: 'Hero Banners', content: 'Questions',
   analytics: 'Analytics', access: 'Tailored Access', system: 'system',
@@ -256,7 +260,7 @@ function lockedWhy(it) {
     .filter(sc => GRANTABLE_WORDS.includes(sc));
   if (!names.length) return 'Ask Travis for access to this area.';
   if (!askable.length) return `Needs the ${names.join(' or ')} scope, which only a manager holds.`;
-  return `Ask a leader to tick ${askable.map(sc => SCOPE_WORDS[sc]).join(' or ')} on your staff profile.`;
+  return `Ask a leader to tick ${askable.map(sc => SCOPE_WORDS[sc]).join(' or ')} on your profile under Our Organization.`;
 }
 
 /* Mirrors GRANTABLE in lib/admin/auth.js — the only scopes that actually

@@ -156,7 +156,7 @@ function ooOLine(m, d, ctx) {
       onClick: () => {
         const note = textInput({ maxLength: 140, value: m.ooo_note || '', placeholder: 'e.g. Out until Sep 15 — ping Barb for anything urgent' });
         modal(`Out of office — ${m.name}`,
-          h('div', { class: 'form' }, field('Note', note, 'Shows here and on the Staff page. Leave empty to clear it.')),
+          h('div', { class: 'form' }, field('Note', note, 'Shows here and on Our Organization. Leave empty to clear it.')),
           [{ label: 'Cancel', onClick: c => c() },
             { label: 'Save', kind: 'accent', onClick: async c => {
               try {

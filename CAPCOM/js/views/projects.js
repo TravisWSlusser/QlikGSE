@@ -109,7 +109,7 @@ async function load(root, rerender, canEdit, openNew, me, canManage, canInvite) 
       teamSel, statusSel,
       h('label', { class: 'prj-filters', style: { fontSize: '.78rem', color: 'var(--muted)' } }, retiredCb, 'retired')),
     ...(canEdit ? [
-      h('a', { class: 'btn sm', href: '#projects/staff' }, 'Staff'),
+      h('a', { class: 'btn sm', href: '#projects/staff' }, 'Our Organization'),
       h('button', { class: 'btn sm', onClick: () => teamsDialog(d, rerender) }, 'Teams'),
       h('button', { class: 'btn sm', onClick: () => statusesDialog(d, rerender) }, 'Statuses'),
       h('button', { class: 'btn sm accent', onClick: () => editProject(null, d, rerender) }, '+ New project'),
@@ -119,7 +119,7 @@ async function load(root, rerender, canEdit, openNew, me, canManage, canInvite) 
   if (canEdit && !(d.members || []).length) {
     card.appendChild(h('p', { class: 'sub prj-hint' },
       'No team members yet — the ',
-      h('a', { href: '#projects/staff' }, 'Staff tab'),
+      h('a', { href: '#projects/staff' }, 'Our Organization'),
       ' is where people get added (name + REC Room trigram). They must be in there before you can tag them on projects or they can claim member access at the gate.'));
   }
 
@@ -574,9 +574,9 @@ export function editMemberDialog(m, d, rerender) {
       field('Role', title),
       field('Email', email),
       field('Team', team),
-      field('Avatar', avatarRow, 'The brand cartoon for their profile and the Staff page.'),
+      field('Avatar', avatarRow, 'The brand cartoon for their profile and Our Organization.'),
       field('People leader', isLeader, 'Declared leaders can have staff report to them — enablement has several.'),
-      field('Reports to', mgr, 'Their people leader. Staff sit below their leader on the Staff tab.'),
+      field('Reports to', mgr, 'Their people leader. People sit below their leader on Our Organization.'),
       field('Manager', isManager, 'Managers hold every scope when signed in, and they alone sign the team up, reset codes, and grant this.')),
     [
       { label: 'Cancel', onClick: c => c() },
@@ -623,7 +623,7 @@ export function historyDialog(m, d) {
   const setOoo = () => {
     const note = textInput({ maxLength: 140, value: m.ooo_note || '', placeholder: 'e.g. Out until Sep 15 — ping Barb for anything urgent' });
     modal(`Out of office — ${m.name}`,
-      h('div', { class: 'form' }, field('Note', note, 'Shows on the profile and the Staff page. Leave empty to clear it.')),
+      h('div', { class: 'form' }, field('Note', note, 'Shows on the profile and on Our Organization. Leave empty to clear it.')),
       [
         { label: 'Cancel', onClick: c => c() },
         { label: 'Save', kind: 'accent', onClick: async c => {
@@ -660,7 +660,7 @@ export function historyDialog(m, d) {
               const st = textInput({ maxLength: 180, value: m.status_text || '', placeholder: 'A quote, a joke, what you’re into this week…' });
               modal(`Status — ${m.name}`,
                 h('div', { class: 'form' }, field('Status', st,
-                  'Informal, on the Staff board. Changing or clearing it deletes the old post AND its reactions — forever.')),
+                  'Informal, on Our Organization. Changing or clearing it deletes the old post AND its reactions — forever.')),
                 [
                   { label: 'Cancel', onClick: c => c() },
                   { label: 'Post it', kind: 'accent', onClick: async c => {

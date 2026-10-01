@@ -1,6 +1,6 @@
 /* tailoredAccess.js — scoped access keys for people who are NOT Sales
    Enablement staff: SMEs, content providers, short-term outside help.
-   Staff belong on the Staff tab with member access; this page mints
+   Staff belong on Our Organization with member access; this page mints
    keys that open exactly the areas a key names and nothing else.
    Lives under Projects, below Staff. System scope (managers + masters). */
 import { h, clear } from '../util.js';
@@ -46,7 +46,7 @@ async function loadKeys(card, rerender, wantNew, canWrite) {
   card.appendChild(h('p', { class: 'explain' },
     'Scoped keys for SMEs and other outside contributors — people who are NOT Sales Enablement staff. '
     + 'An SME key with only “content” opens the question banks and nothing else. Staff get member access '
-    + 'from the Staff tab instead; the master key lives in the Vercel env and is not listed here.'
+    + 'from Our Organization instead; the master key lives in the Vercel env and is not listed here.'
     + (canWrite ? '' : ' You are viewing this read-only — minting and revoking need the system scope.')));
 
   if (wantNew && canWrite) createKey(d.scopes || [], rerender);

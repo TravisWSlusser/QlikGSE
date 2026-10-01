@@ -46,7 +46,7 @@ export const TOURS = {
     { card: 'Leadership Brief', title: 'The Leadership Brief', blurb: 'The verdict first, then the numbers, then the detail. Week, month or quarter. Copy As Text and it is ready for the update you send upward.' },
   ],
   'projects/staff': [
-    { card: 'Staff', title: 'The Org Chart', blurb: 'Global Sales Enablement, top to bottom — cards branching from Nick down, with out-of-office notes and everyone’s informal status. Tap a card for the profile; tap + on a status to react.' },
+    { card: 'Our Organization', title: 'The Org Chart', blurb: 'Global Sales Enablement, top to bottom — cards branching from Nick down, with out-of-office notes and everyone’s informal status. Tap a card for the profile; tap + on a status to react.' },
     { sel: '.cat-invite', title: 'Invite', blurb: 'Creates that person’s one-time activation key — copy it and send it to them to begin their CAPCOM onboarding. It also works as a password reset.' },
     { sel: '.staff-access-bar', title: 'Not Staff?', blurb: 'SMEs and outside contributors get a scoped key from Tailored Access, not a staff entry.' },
   ],
