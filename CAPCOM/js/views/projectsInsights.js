@@ -11,6 +11,8 @@ import { h, clear, fmt, esc, isPast } from '../util.js';
 import { api } from '../api.js';
 import { avatar } from '../avatar.js';
 import { shapeProjects } from './projects.js';
+import { feedList } from '../timeline.js';
+import { loadBoard, boardViewer } from '../board.js';
 import { sectionTitle, spinner, errorState, emptyState } from '../ui.js';
 import { donut, gantt, statTile } from '../charts.js';
 
@@ -32,17 +34,22 @@ function quarterRange(offset) {
 
 export function render(params, rerender, who) {
   const root = h('div', { class: 'view' }, spinner());
-  load(root, rerender);
+  load(root, rerender, who);
   return root;
 }
 
-async function load(root, rerender) {
+async function load(root, rerender, who) {
   let d;
   try { d = await api.projects({ op: 'list', all: true }); }
-  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender))); return; }
+  catch (err) { clear(root).appendChild(errorState(err, () => load(root, rerender, who))); return; }
   clear(root);
 
   shapeProjects(d, null);
+  /* The corkboard signs with a real name and matches posters to faces.
+     It takes a PROMISE of the bundle, which this page already has in
+     hand - so it is handed a resolved one rather than made to fetch
+     the same payload a second time. */
+  boardViewer({ me: (who && who.member && who.member.name) || null, people: Promise.resolve(d) });
   const teamById = d.teamById, statusById = d.statusById;
   const active = d.projects.filter(p => p.active);
   const activeStatuses = d.statuses.filter(s => s.active);
@@ -112,6 +119,19 @@ async function load(root, rerender) {
   const idxCard = buildIndex(d, active, statusById);
   row2.append(idxCard, ganttCard);
   root.appendChild(row2);
+
+  /* ── ROW 3: the community half of GSE Central ──
+     Both are MIRRORS, not copies: the feed is timeline.js's list shape of
+     the same payload Home rotates, and the board is board.js mounted a
+     second time. Change board 3 here and Home is on board 3 too, because
+     it is the same board. */
+  const row3 = h('div', { class: 'gse-row gse-row-3' });
+  const feed = h('div', { class: 'card fd-card' }, spinner());
+  const board = h('div', { class: 'card board-card' }, spinner());
+  row3.append(feed, board);
+  root.appendChild(row3);
+  feedList(feed, sectionTitle);
+  loadBoard(board, () => load(root, rerender, who));
 
   /* ── the range-driven redraw ── */
   const redraw = async () => {

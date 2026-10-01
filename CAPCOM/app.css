@@ -2397,6 +2397,42 @@ body.previewing{padding-top:38px}
 .cat-open:hover{filter:brightness(1.35)}
 .tl-solo{margin:10px 0 0;font-size:.74rem;line-height:1.5}
 
+/* ======================================================================
+   Community Feed, list shape — GSE Central.
+   Home rotates one item at a time because it shares a column with the
+   clock and the board. Here there is room to actually read it, so it is
+   a thread: newest first, scrolling inside its own frame.
+   ====================================================================== */
+.fd-card{display:flex;flex-direction:column;min-height:0}
+.fd-list{
+  display:flex;flex-direction:column;gap:2px;margin-top:10px;
+  max-height:520px;overflow-y:auto;padding-right:4px;
+}
+.fd-row{
+  display:grid;grid-template-columns:auto minmax(0,1fr);gap:11px;
+  padding:12px 10px;border-radius:10px;
+  border-bottom:1px solid var(--line);
+}
+.fd-row:last-child{border-bottom:0}
+.fd-row:hover{background:var(--card-2)}
+.fd-side{padding-top:2px}
+.fd-main{min-width:0}
+.fd-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:5px}
+.fd-head b{font-size:.86rem}
+.fd-head .sub{font-size:.66rem}
+.fd-title{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fd-foot{margin-top:7px}
+.fd-act{font-size:.66rem;color:var(--muted);letter-spacing:.03em}
+.fd-row:hover .fd-act{color:var(--link)}
+.fd-empty{margin:10px 0 0;font-size:.78rem;line-height:1.5}
+/* a feed row is its own click target; it must not also get the generic
+   tl-click outline, which would double up on the hover background */
+.fd-row.tl-click:hover{outline:0}
+
+/* row 3 gives the board the room it needs */
+.gse-row-3{align-items:start}
+.gse-row-3 .board-card{min-height:420px}
+
 .th-c-lbl{
   font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
   padding-top:12px;border-top:1px solid var(--line);

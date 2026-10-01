@@ -2451,3 +2451,42 @@ io.open(path, "wb").write(data)
 The trigger was a surrogate pair written as `\ud83d\udcac` in a Python
 source string. Python keeps lone surrogates in `str` and only rejects
 them at encode time. Emoji above U+FFFF go in as a single `\U0001f4ac`.
+
+## The corkboard moved to board.js (1 Oct 2026)
+
+Travis asked for the Community Board and the Community Feed to be
+mirrored on GSE Central. "Mirrored" has exactly two implementations: one
+module mounted twice, or two copies that drift. So the corkboard — ~840
+lines with its own state for board number, z-order, yarn, transforms,
+context menus and the audio pops — came out of home.js into
+`CAPCOM/js/board.js`.
+
+**Module state is shared on purpose.** Switch to board 3 on Home and GSE
+Central is on board 3 too, because it IS the same board. That is what
+mirrored means.
+
+The board had two dependencies on its host, and only two: the signer's
+name (it signs every note with a real name) and the member registry (it
+turns a typed `poster_name` into a face). Both now arrive through
+`boardViewer({ me, people })` before the mount. `people` is a PROMISE, so
+GSE Central — which already has the bundle in hand — passes a resolved
+one rather than fetching the same payload twice.
+
+Ordering caught me once: home.js called `boardViewer` on the line ABOVE
+the one that assigns `PEOPLE`, handing it null. It now runs after.
+
+## Team Timeline is the Community Feed, in two shapes (1 Oct 2026)
+
+Renamed throughout. One payload, two renderings in one module, because
+the two pages have different amounts of room:
+
+- `feedCard()` — **Home.** One band, one item at a time, fading. It
+  shares a column with the clock and the corkboard and has no height.
+- `feedList()` — **GSE Central.** A thread: newest first, scrolling
+  inside its own frame, each row showing who/when/where-from and
+  clicking through to the same reaction-and-comment dialog. Travis asked
+  for "a reddit thread feel or a feedback news feed".
+
+A **board note has no thread** — it lives on the corkboard — so its row
+links to the board instead of opening a dialog that would have nothing
+in it.

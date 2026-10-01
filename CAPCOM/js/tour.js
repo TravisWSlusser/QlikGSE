@@ -25,7 +25,7 @@ export const TOURS = {
     { hook: 'your-rec', title: 'Your REC Room', blurb: 'Your own arcade record, and the leaders above it. Hover a name for their full card.' },
     { hook: 'clock', title: 'Operations Clock', blurb: 'Local time plus the four hub clocks — New York, São Paulo, London, Bangalore.' },
     { hook: 'board', title: 'Community Board', blurb: 'The corkboard. Pin notes, bookmarks and pictures, tie them together with yarn, react to things. Signed with real names.' },
-    { hook: 'timeline', title: 'Team Timeline', blurb: 'The newest post from around the team, rotating on its own. Post to yours from your profile — text, a link or a sticker.' },
+    { hook: 'timeline', title: 'Community Feed', blurb: 'The newest thing each person said — a post, a status, a note on the board — rotating on its own. Click one to react or comment. GSE Central shows the same feed as a list.' },
     { hook: 'news', title: 'Learning Insights', blurb: 'One quiet line of sales-enablement and AI reading, rotating on its own. Open the caret for the full list.' },
     { hook: 'scores', title: 'Latest Scores', blurb: 'REC Room runs as they land. Hover a name for their full record.' },
     { hook: 'theme', title: 'Light And Dark', blurb: 'CAPCOM in the theme you prefer — it remembers per browser.' },

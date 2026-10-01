@@ -304,6 +304,72 @@ const SOURCE_TAG = {
   board:    ['on the board', 'src-board'],
 };
 
+
+/* feedList(card, sectionTitle) — the same feed, read as a LIST.
+ *
+ * Home gets the rotation: one band, one item at a time, because it shares
+ * a column with the clock and the corkboard and has no height to spare.
+ * GSE Central gets this — a scrolling thread, the way you would actually
+ * read a feed when you came to read one. Travis: "more like a reddit
+ * thread feel or a feedback news feed within the widget's window."
+ *
+ * Same data, same click-through to the same thread. Only the shape
+ * differs, which is the point of keeping both in one module.
+ */
+export async function feedList(card, sectionTitle) {
+  let posts = [], failed = false;
+  try {
+    const d = await api.timeline({ op: 'feed' });
+    posts = d.posts || [];
+  } catch { failed = true; }
+
+  clear(card);
+  const people = new Set(posts.map(p => p.name)).size;
+  card.appendChild(sectionTitle('Community Feed',
+    h('span', { class: 'sec-sub' }, posts.length
+      ? `${people} ${people === 1 ? 'person' : 'people'} \u00b7 newest first`
+      : ''),
+    h('a', { class: 'btn xs', href: '#profile' }, 'Post something')));
+
+  if (!posts.length) {
+    card.appendChild(h('p', { class: 'sub fd-empty' },
+      failed
+        ? 'The feed is not answering right now.'
+        : 'Nothing from the team yet. Post on your timeline, or pin a note to the board, and it lands here.'));
+    return;
+  }
+
+  const list = h('div', { class: 'fd-list' });
+  card.appendChild(list);
+
+  posts.forEach(p => {
+    const who = {
+      id: p.member_id, name: p.name, title: p.title,
+      trigram: p.trigram, avatar_url: p.avatar_url,
+    };
+    const [label, cls] = SOURCE_TAG[p.source] || SOURCE_TAG.timeline;
+    const row = h('article', { class: 'fd-row' },
+      h('div', { class: 'fd-side' }, avatar(who, { size: 'sm' })),
+      h('div', { class: 'fd-main' },
+        h('div', { class: 'fd-head' },
+          h('b', null, p.name),
+          p.title ? h('span', { class: 'fd-title sub' }, p.title) : null,
+          h('span', { class: 'tl-src ' + cls }, label),
+          h('span', { class: 'sub' }, fmt.when(p.created_at))),
+        p.source === 'status'
+          ? h('p', { class: 'tl-text tl-quote' }, `\u201c${p.message}\u201d`)
+          : postBody(p),
+        // a board note has no thread to open; say where it lives instead
+        h('div', { class: 'fd-foot' },
+          p.source === 'board'
+            ? h('a', { class: 'fd-act', href: '#home' }, 'On the Community Board \u2192')
+            : h('span', { class: 'fd-act' }, 'Open \u00b7 react \u00b7 comment'))));
+    if (p.source === 'timeline') clickable(row, { kind: 'post', id: p.id }, () => feedList(card, sectionTitle));
+    else if (p.source === 'status') clickable(row, { kind: 'status', id: p.member_id }, () => feedList(card, sectionTitle));
+    list.appendChild(row);
+  });
+}
+
 /* feedCard(card) — Home's rotating widget: the latest thing each person
    said, wherever they said it, one at a time, fading through.
  *
@@ -327,7 +393,7 @@ export async function feedCard(card, sectionTitle) {
 
   clear(card);
   const people = new Set(posts.map(p => p.name)).size;
-  card.appendChild(sectionTitle('Team timeline',
+  card.appendChild(sectionTitle('Community Feed',
     h('span', { class: 'sec-sub' }, posts.length
       ? `${people} ${people === 1 ? 'person' : 'people'} · posts, statuses and the board`
       : '')));
