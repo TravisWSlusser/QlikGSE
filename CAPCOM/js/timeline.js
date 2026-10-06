@@ -13,6 +13,7 @@ import { api } from './api.js';
 import { toast, modal, field, textInput, textArea, confirmBox, spinner, emptyState } from './ui.js';
 import { avatar } from './avatar.js';
 import { giphyGrid } from './giphy.js';
+import { preview } from './preview.js';
 
 export const REACT_SET = ['👍', '🎉', '🔥', '😂', '💚', '👏'];
 
@@ -46,6 +47,12 @@ function hostOf(url) {
 
 /* The composer. onDone fires after a successful post. */
 export function composer(onDone) {
+  /* Nothing to compose with while previewing. api.js would refuse the
+     post anyway; showing the buttons would just be an invitation to be
+     told no. */
+  if (preview.active()) {
+    return h('p', { class: 'sub tl-ro' }, 'Look-only while you are previewing someone else’s view.');
+  }
   const open = kind => {
     if (kind === 'sticker') return stickerPost(onDone);
     if (kind === 'link') return linkPost(onDone);
@@ -164,7 +171,10 @@ export function openThread(target, onChange) {
       ...stickers.map(r => h('img', {
         class: 'cat-react-img', src: r.sticker_url, alt: '', title: r.name, loading: 'lazy' })));
 
-    if (d.mine) {
+    if (preview.active()) {
+      // read the thread, change nothing — see api.js
+      rrow.appendChild(h('span', { class: 'th-own' }, 'Look-only while previewing'));
+    } else if (d.mine) {
       // yours: you see everything, you just cannot applaud it
       rrow.appendChild(h('span', { class: 'th-own' },
         (d.reactions || []).length ? 'Reactions to your post' : 'No reactions yet'));
@@ -207,6 +217,7 @@ export function openThread(target, onChange) {
           }, '×')))));
     }
 
+    if (preview.active()) return;   // no comment box in a preview
     const box = textInput({ placeholder: 'Write a comment…', maxLength: 1000 });
     const post = async () => {
       if (!box.value.trim()) return;
@@ -284,7 +295,7 @@ export function wall(posts, reactions, opts) {
         opts.canReact === false
           ? h('span', { class: 'cat-mine', title: 'Others can react to this' }, 'yours')
           : null,
-        opts.canReact === false ? null : h('button', {
+        (opts.canReact === false || preview.active()) ? null : h('button', {
           class: 'cat-react cat-react-add', title: 'React',
           onClick: ev => opts.pctx(ev.clientX, ev.clientY, [
             ...REACT_SET.map(e => [e, () => react(p.id, { emoji: e }), false]),

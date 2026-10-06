@@ -15,6 +15,12 @@
  * sidebar", never "what can they do". The real boundary is requireScope on
  * the server, and the only honest test of it is signing in as them.
  *
+ * IT IS ALSO READ-ONLY. Because the key is still yours, a write made
+ * during a preview would be recorded as YOU while the screen says you are
+ * someone else - confusing at the time and misleading in the log. api.js
+ * refuses every non-read request while preview.active(), which is
+ * enforcement at one chokepoint rather than across dozens of buttons.
+ *
  * Session-only on purpose: no localStorage. A preview must never survive a
  * refresh, or someone will eventually debug a permissions problem that is
  * really just a preview nobody remembered leaving on.

@@ -2490,3 +2490,40 @@ the two pages have different amounts of room:
 A **board note has no thread** — it lives on the corkboard — so its row
 links to the board instead of opening a dialog that would have nothing
 in it.
+
+## Preview mode is read-only, enforced at the chokepoint (6 Oct 2026)
+
+Travis: "ensure that the 'preview their view' ... is limited to
+leader-level and also that we cant just post or like or comment as that
+person in that mode. We can only read whats on the screen."
+
+**The gate** was already `master || manager` (`canEdit` on the Staff row).
+It now says so in the menu label — "Preview their view (look-only)" — and
+the comment above it states the rule rather than leaving it to a variable
+name shared with other controls.
+
+**Read-only is enforced in `api.js`, not by hiding buttons.** Every
+request in CAPCOM goes through `call()` (the BRUCE rule: nothing else
+touches fetch), so one guard there covers every write that exists and
+every write anyone adds later. Hiding controls would have meant finding
+all of them, and a missed one fails open.
+
+The guard holds an allowlist of **READS**; anything not on it is refused
+while `preview.active()`. That direction is deliberate:
+
+- a read left off the list shows an error inside a preview — annoying
+- a write left off the list **executes** — the exact thing being prevented
+
+Why it matters at all: the request still carries YOUR key. A write during
+a preview would be recorded as **you** while the screen says you are
+someone else — confusing live, and misleading in the change feed
+afterwards.
+
+Verified by driving the live modules: ten writes (post, react, comment,
+trophy, sticky, status, setStaff, saveQuestion, **migrate**, avatar
+upload) all refused; ten reads all allowed; both restored on exit.
+
+The composers are suppressed too — the timeline composer, the thread's
+reaction buttons and comment box, the Trophy Case's add row, and the
+status react button. That is UX, not security: the chokepoint is what
+makes it true.

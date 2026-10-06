@@ -27,6 +27,7 @@ import {
 import { shrinkTo } from '../avatar.js';
 import { avatar } from '../avatar.js';
 import { shapeProjects } from './projects.js';
+import { preview } from '../preview.js';
 
 /* Class prefix is prp-, not pp-: pop.js owns .pp-* for the player
    stat card, and a second meaning for the same prefix is how two
@@ -111,7 +112,9 @@ async function load(root, params, who) {
   // ── the trophy case ──
   const tro = h('div', { class: 'card' }, spinner());
   root.appendChild(tro);
-  loadTrophies(tro, p, mine || !!(who && (who.master || who.manager)), () => load(root, params, who));
+  // a preview reads the case; it never adds to it
+  loadTrophies(tro, p, !preview.active() && (mine || !!(who && (who.master || who.manager))),
+    () => load(root, params, who));
 
   // ── history ──
   const hist = h('div', { class: 'card' }, spinner());

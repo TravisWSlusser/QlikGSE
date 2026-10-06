@@ -114,9 +114,13 @@ async function load(root, rerender, canEdit, meId, canInvite) {
   const menuFor = m => [
     ['Edit…', () => editMemberDialog(m, d, rerender), false],
     ...(canEdit ? [['Access…', () => accessDialog(m, rerender), false]] : []),
-    // managers only: nothing about this changes anyone's access, but a
-    // preview rearranges YOUR sidebar and that would alarm a staff member
-    ...(canEdit ? [['Preview their view', () => preview.set({
+    /* LEADER-LEVEL ONLY — canEdit is master || manager. Nothing about a
+       preview changes anyone's access, but it rearranges YOUR sidebar,
+       and watching that happen would alarm the person sitting beside you.
+       It is also read-only throughout: api.js refuses every write while a
+       preview runs, so one can never post or react as the person being
+       previewed. */
+    ...(canEdit ? [['Preview their view (look-only)', () => preview.set({
       name: m.name,
       scopes: m.is_manager ? SCOPES_ALL : (m.scopes || []),
     }), false]] : []),
@@ -175,7 +179,9 @@ async function load(root, rerender, canEdit, meId, canInvite) {
          one — and it has to SAY so. An affordance that is simply absent
          is indistinguishable from one that is broken, and on a team where
          one person has posted, the only status on the page is your own. */
-      m.id === meId
+      preview.active()
+        ? null                       // a preview reads statuses, never reacts
+        : m.id === meId
         ? h('span', { class: 'cat-mine', title: 'Others can react to this — you cannot react to your own' }, 'yours')
         : h('span', {
           class: 'cat-react cat-react-add', role: 'button', title: 'React',

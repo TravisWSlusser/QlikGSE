@@ -291,7 +291,7 @@ function previewBar() {
     h('b', null, p.name),
     h('span', { class: 'pv-note' },
       p.scopes.length ? p.scopes.join(' · ') : 'no extra areas'),
-    h('span', { class: 'pv-warn' }, 'sidebar only — pages still load with YOUR access'),
+    h('span', { class: 'pv-warn' }, 'look-only · sidebar only — pages still load with YOUR access'),
     h('button', { class: 'btn sm', onClick: () => preview.clear() }, 'Exit preview'));
 }
 

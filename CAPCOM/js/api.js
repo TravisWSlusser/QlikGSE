@@ -1,6 +1,8 @@
 /* api.js — the only file that calls fetch (the BRUCE rule). Every endpoint is
    one line. The admin key rides in the x-admin-key header, never a URL. */
 
+import { preview } from './preview.js';
+
 const KEY_STORE = 'capcom.key';
 
 export const keyStore = {
@@ -9,7 +11,55 @@ export const keyStore = {
   clear() { try { localStorage.removeItem(KEY_STORE); } catch {} },
 };
 
+/* ── preview mode is READ-ONLY, and this is where that is true ──
+ *
+ * A preview reshapes the sidebar to someone else's access. Every request
+ * still carries YOUR key, so a write made during one would be recorded as
+ * YOU — posting, reacting or commenting while "being" someone else is
+ * both confusing and, in a log, misleading. Travis asked for it to be
+ * look-only.
+ *
+ * Enforced here rather than by hiding buttons, because there are dozens
+ * of write controls and a missed one fails open. Every request in CAPCOM
+ * goes through call(); nothing else touches fetch (the BRUCE rule).
+ *
+ * The list below is of READS. Anything not on it is refused while a
+ * preview is running. That direction matters: a read left off the list
+ * shows an error in a preview, which is annoying; a write left off would
+ * execute, which is the thing we are preventing.
+ */
+const READ_ONLY = {
+  // action: true = always a read, or a Set of ops that are reads
+  whoami: true, listEvents: true, listBanners: true, listQuestions: true,
+  analytics: true, listLog: true, questionStats: true, systemStatus: true,
+  maintenance: true,            // GET form only; the POST form carries a body
+  giphySearch: true,
+  keys: new Set(['list']),
+  secrets: new Set(['list']),
+  hotlinks: new Set(['list']),
+  stickies: new Set(['list']),
+  timeline: new Set(['list', 'feed', 'thread']),
+  trophies: new Set(['list']),
+  projects: new Set(['list', 'review', 'log']),
+  members: new Set([]),         // every members op writes
+  brief: new Set(['digest']),   // 'narrate' spends a Claude call
+  roster: new Set(['stats']),
+};
+
+function readOnlyOK(action, body) {
+  const rule = READ_ONLY[action];
+  if (rule === true) return !body || !Object.keys(body).length || action === 'whoami';
+  if (rule instanceof Set) return rule.has((body && body.op) || '');
+  return false;
+}
+
 async function call(action, { method = 'GET', body = null, query = '' } = {}) {
+  if (preview.active() && !readOnlyOK(action, body)) {
+    const err = new Error('You are previewing someone else\u2019s view \u2014 it is look-only. Exit preview to make changes.');
+    err.status = 0;
+    err.preview = true;
+    throw err;
+  }
   const res = await fetch(`/api/admin/${action}${query}`, {
     method,
     headers: {

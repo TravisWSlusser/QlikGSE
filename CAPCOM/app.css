@@ -2425,6 +2425,8 @@ body.previewing{padding-top:38px}
 .fd-act{font-size:.66rem;color:var(--muted);letter-spacing:.03em}
 .fd-row:hover .fd-act{color:var(--link)}
 .fd-empty{margin:10px 0 0;font-size:.78rem;line-height:1.5}
+/* what a composer says instead of existing, during a preview */
+.tl-ro{margin:0 0 14px;font-style:italic}
 /* a feed row is its own click target; it must not also get the generic
    tl-click outline, which would double up on the hover background */
 .fd-row.tl-click:hover{outline:0}
