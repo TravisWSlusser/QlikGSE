@@ -25,7 +25,7 @@ export const TOURS = {
     { hook: 'your-rec', title: 'Your REC Room', blurb: 'Your own arcade record, and the leaders above it. Hover a name for their full card.' },
     { hook: 'clock', title: 'Operations Clock', blurb: 'Local time plus the four hub clocks — New York, São Paulo, London, Bangalore.' },
     { hook: 'board', title: 'Community Board', blurb: 'The corkboard. Pin notes, bookmarks and pictures, tie them together with yarn, react to things. Signed with real names.' },
-    { hook: 'timeline', title: 'Community Feed', blurb: 'The newest thing each person said — a post, a status, a note on the board — rotating on its own. Click one to react or comment. GSE Central shows the same feed as a list.' },
+    { hook: 'timeline', title: 'Community Feed', blurb: 'The newest thing each person said — a post, a status, a note on the board — rotating on its own. Click one to react or comment. GSE Social shows the same feed as a list.' },
     { hook: 'news', title: 'Learning Insights', blurb: 'One quiet line of sales-enablement and AI reading, rotating on its own. Open the caret for the full list.' },
     { hook: 'scores', title: 'Latest Scores', blurb: 'REC Room runs as they land. Hover a name for their full record.' },
     { hook: 'theme', title: 'Light And Dark', blurb: 'CAPCOM in the theme you prefer — it remembers per browser.' },
@@ -37,7 +37,7 @@ export const TOURS = {
     { sel: '.view table', title: 'A Project Row', blurb: 'Diary reads the project’s history; Status moves it and always asks for a date. An OVERDUE row demands a written what-happened before it moves again.' },
   ],
   'projects/insights': [
-    { card: 'GSE Central', title: 'GSE Central', blurb: 'The front door to projects: what is active, what is overdue, who is carrying what, and every project one click away.' },
+    { card: 'Projects Overview', title: 'GSE Social', blurb: 'The front door: what is active, what is overdue, who is carrying what, every project one click away — and underneath, the Community Feed and the board.' },
     { card: 'Phase timeline', title: 'Phase Timeline', blurb: 'Every active project as a bar to its promised date — the Gantt view of the quarter.' },
     { card: 'Projects calendar', title: 'Projects Calendar', blurb: 'Phase deadlines and milestones on their own calendar — deliberately separate from Mission Control’s.' },
     { card: 'Diary review', title: 'Diary Review', blurb: 'The append-only project diary, filterable by quarter — what management reads to see how the quarter actually went.' },

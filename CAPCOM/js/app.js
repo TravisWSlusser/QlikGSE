@@ -41,7 +41,7 @@ const NAV = [
   ]},
   { group: 'Mission Control', items: [
     // "Mindtickle Calendar" - the learner-facing one. The TEAM calendar is
-    // a tab on Home and a card on GSE Central; naming this one plainly is
+    // a tab on Home and a card on GSE Social; naming this one plainly is
     // what stops the two being confused.
     { route: 'calendar', label: 'Mindtickle Calendar', scope: 'calendar', mod: calendar, icon: 'calendar' },
     { route: 'banners/highlights', label: 'Focused Headlines', scope: 'banners', mod: banners, icon: 'banners' },
@@ -52,11 +52,12 @@ const NAV = [
      renaming those would break saved links and the deep-links the app
      uses itself. */
   { group: 'GSE Community', items: [
-    /* GSE Central leads the group: it is the section's front door now -
-       what is in flight, what is due, who is on what - and the Board is
-       where you go to change something. Landing on the summary and
-       stepping into the editor reads better than the reverse. */
-    { route: 'projects/insights', label: 'GSE Central', scope: null, mod: projectsInsights, icon: 'insights' },
+    /* GSE Social leads the group: it is the section's front door - what
+       is in flight, what is due, who is on what, and what the team is
+       saying - and the Board is where you go to change something.
+       Landing on the summary and stepping into the editor reads better
+       than the reverse. */
+    { route: 'projects/insights', label: 'GSE Social', scope: null, mod: projectsInsights, icon: 'social' },
     // scope null on purpose: every key holder can SEE the board (visibility
     // is the product); edit controls gate on the 'projects' scope inside
     { route: 'projects', label: 'Project Board', scope: null, mod: projects, icon: 'projects' },
@@ -120,9 +121,9 @@ const allowed = it => { const w = VIEW(); return !!w
          off params[0]; questions/glossary_terms → questions)
 
    Step 2 is not cosmetic. There was no rule between "exact" and "any
-   sibling" until GSE Central moved to the top of the Projects group, at
+   sibling" until GSE Social moved to the top of the group, at
    which point '#projects/new' — Home's New project action — prefix-matched
-   projects/insights and quietly opened GSE Central instead of the board.
+   projects/insights and quietly opened GSE Social instead of the board.
    Groups get reordered; matching must not depend on the order. */
 function findItem(raw, head) {
   const open = allItems().filter(allowed);

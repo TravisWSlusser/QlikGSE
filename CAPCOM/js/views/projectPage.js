@@ -290,7 +290,7 @@ async function loadDiary(card, p, d, canWrite, reload) {
   }
 
   /* Every entry, in a frame of its own with a scrollbar. The hover card on
-     GSE Central shows the latest three; this is where the rest lives, and
+     GSE Social shows the latest three; this is where the rest lives, and
      a project with 40 entries should not push the page to a kilometre. */
   card.appendChild(h('div', { class: 'diary-rows diary-scroll' }, [...entries].reverse().map(e => {
     const from = e.from_status_id && d.statusById[e.from_status_id];

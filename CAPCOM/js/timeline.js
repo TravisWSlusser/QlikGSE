@@ -320,7 +320,7 @@ const SOURCE_TAG = {
  *
  * Home gets the rotation: one band, one item at a time, because it shares
  * a column with the clock and the corkboard and has no height to spare.
- * GSE Central gets this — a scrolling thread, the way you would actually
+ * GSE Social gets this — a scrolling thread, the way you would actually
  * read a feed when you came to read one. Travis: "more like a reddit
  * thread feel or a feedback news feed within the widget's window."
  *

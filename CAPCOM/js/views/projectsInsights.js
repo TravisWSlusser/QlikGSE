@@ -76,7 +76,7 @@ async function load(root, rerender, who) {
      The counts, the status split and who-is-carrying-what were three
      full-width cards stacked down the page; they answer one question
      between them, so they are now one frame called Projects Overview.
-     The sidebar says GSE Central; a card that repeated the page's own
+     The sidebar says GSE Social; a card that repeated the page's own
      name told the reader nothing. */
   const overdue = active.filter(p => p.overdue);
   const unowned = active.filter(p => !(d.tagsByProject[p.id] || []).length);
@@ -120,7 +120,7 @@ async function load(root, rerender, who) {
   row2.append(idxCard, ganttCard);
   root.appendChild(row2);
 
-  /* ── ROW 3: the community half of GSE Central ──
+  /* ── ROW 3: the community half of GSE Social ──
      Both are MIRRORS, not copies: the feed is timeline.js's list shape of
      the same payload Home rotates, and the board is board.js mounted a
      second time. Change board 3 here and Home is on board 3 too, because
@@ -440,7 +440,7 @@ function buildIndex(d, active, statusById) {
 }
 
 /* UNREACHABLE as of 29 Sep 2026. Diary Review reprinted every entry for
-   every project on this page, which made GSE Central long and the project
+   every project on this page, which made GSE Social long and the project
    page redundant. The index's hover card shows the latest three and the
    project page holds the rest. Kept because it is the only grouped
    rendering of the review payload; delete it if nothing claims it. */

@@ -1,6 +1,6 @@
 /* board.js — the Community Board (the corkboard), lifted out of home.js.
  *
- * It lives here because GSE Central mirrors it. Travis asked for the board
+ * It lives here because GSE Social mirrors it. Travis asked for the board
  * to appear on both pages, and "appear on both pages" has exactly two
  * implementations: one module mounted twice, or two copies that drift.
  * Module state is deliberately shared — change board 3 on Home and GSE
