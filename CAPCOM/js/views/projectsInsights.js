@@ -120,6 +120,13 @@ async function load(root, rerender, who) {
   row2.append(idxCard, ganttCard);
   root.appendChild(row2);
 
+  /* ── GSE Standings ──
+     The REC Room, but only us. Separate call so a slow or empty arcade
+     never holds up the rest of the page. */
+  const standings = h('div', { class: 'card gse-stand' }, spinner());
+  root.appendChild(standings);
+  loadStandings(standings, d);
+
   /* ── ROW 3: the community half of GSE Social ──
      Both are MIRRORS, not copies: the feed is timeline.js's list shape of
      the same payload Home rotates, and the board is board.js mounted a
@@ -342,6 +349,88 @@ const ovNum = (label, n, tone) => h('div', { class: 'ov-num' + (tone ? ' ov-' + 
 /* Latest diary entries per project, filled by the range redraw and read
    by the index's hover card. */
 let RECENT_BY_PROJECT = {};
+
+
+/* ── GSE Standings ──
+ *
+ * Travis: "I want us to be able to compete within our GSE org in the REC
+ * Room. List top 3 GSE Staff and their scores."
+ *
+ * This is the ONLY place the SE team is ranked anywhere. Since v9 the
+ * whole team is staff-tagged, which hides them from every public board
+ * and in-game leaderboard on purpose — a team that builds the arcade
+ * should not be sitting on top of it in front of the sales org. That
+ * decision stands; this card is the private scoreboard it implied.
+ *
+ * Who counts as GSE: anyone in the staff registry with a trigram that the
+ * arcade has seen. No new endpoint and no new field — the registry is
+ * already on the page and analytics already returns every player flagged,
+ * so this is an intersection, not a query.
+ */
+async function loadStandings(card, d) {
+  let a;
+  try { a = await api.analytics(); }
+  catch {
+    /* It says so rather than vanishing. A card that deletes itself on a
+       bad day is indistinguishable from a feature that was never built -
+       learned the hard way with the Community Feed. */
+    clear(card);
+    card.appendChild(sectionTitle('GSE Standings'));
+    card.appendChild(h('p', { class: 'sub gs-note' }, 'The arcade is not answering right now.'));
+    return;
+  }
+
+  const byTri = {};
+  for (const m of d.members || []) {
+    if (m.active && m.trigram) byTri[m.trigram.toUpperCase()] = m;
+  }
+  const ours = (a.top || [])
+    .filter(p => byTri[p.trigram] && Number(p.total_score) > 0)
+    .map(p => ({ ...p, member: byTri[p.trigram] }))
+    .sort((x, y) => Number(y.total_score) - Number(x.total_score));
+
+  clear(card);
+  card.appendChild(sectionTitle('GSE Standings',
+    h('span', { class: 'sec-sub' }, 'the REC Room, just us'),
+    h('a', { class: 'btn xs', href: '#dashboard' }, 'The whole board \u2192')));
+
+  if (!ours.length) {
+    card.appendChild(emptyState('Nobody on the team has scored yet.',
+      'Play a round in the REC Room and you are on this board.'));
+    return;
+  }
+
+  const podium = ours.slice(0, 3);
+  card.appendChild(h('div', { class: 'gs-podium' }, podium.map((p, i) => {
+    const acc = Number(p.attempted) > 0
+      ? Math.round(100 * Number(p.correct) / Number(p.attempted)) : null;
+    return h('div', { class: 'gs-seat gs-' + (i + 1) },
+      h('span', { class: 'gs-rank' }, ['\ud83e\udd47', '\ud83e\udd48', '\ud83e\udd49'][i]),
+      avatar(p.member, { size: 'md' }),
+      h('div', { class: 'gs-who' },
+        h('b', null, p.member.name),
+        h('span', { class: 'sub' }, p.member.title || '')),
+      h('div', { class: 'gs-nums' },
+        h('b', null, fmt.int(Number(p.total_score))),
+        h('span', null, `${fmt.int(Number(p.games_played))} runs`
+          + (acc != null ? ` \u00b7 ${acc}% accuracy` : ''))));
+  })));
+
+  /* Where everyone else sits. The podium answers "who is winning"; this
+     line answers "where am I", which is the question that actually makes
+     someone play another round. */
+  if (ours.length > 3) {
+    card.appendChild(h('div', { class: 'gs-rest' }, ours.slice(3).map((p, i) =>
+      h('span', { class: 'gs-rest-one' },
+        h('i', null, `${i + 4}`),
+        avatar(p.member, { size: 'xs' }),
+        h('span', null, p.member.name.split(' ')[0]),
+        h('b', null, fmt.int(Number(p.total_score)))))));
+  }
+  card.appendChild(h('p', { class: 'explain gs-note' },
+    `${ours.length} of ${Object.keys(byTri).length} of us have played. `
+    + 'The team is staff-tagged, so these scores appear nowhere else \u2014 the public boards hide us by design.'));
+}
 
 /* ── Who is carrying what ──
  *

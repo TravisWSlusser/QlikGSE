@@ -2527,3 +2527,35 @@ The composers are suppressed too — the timeline composer, the thread's
 reaction buttons and comment box, the Trophy Case's add row, and the
 status react button. That is UX, not security: the chokepoint is what
 makes it true.
+
+## GSE Standings — the one board the team appears on (6 Oct 2026)
+
+Travis: "I want us to be able to compete within our GSE org in the REC
+Room. List top 3 GSE Staff and their scores."
+
+Worth stating because it is easy to forget: **since v9 the whole SE team
+is staff-tagged**, which hides them from every public leaderboard and
+from the in-game ones. That was deliberate — the team that builds the
+arcade should not be sitting on top of it in front of the sales org — and
+it still stands. This card is the private scoreboard that decision
+implied, and the footnote says so on screen rather than leaving someone
+to wonder why these names are nowhere else.
+
+**No new endpoint and no new column.** GSE Social already holds the staff
+registry, and `analytics` already returns every player with staff flagged
+rather than dropped (the exportData precedent). So "who is GSE" is an
+intersection of two things already in hand: a `team_members` row with a
+trigram, and a `players` row for that trigram. One extra `api.analytics()`
+call, sub-wrapped so a slow arcade never holds up the page.
+
+Top three get the podium; everyone else gets a compact chip with their
+position and total. The podium answers "who is winning"; the chips answer
+"where am I", which is the question that makes someone play another
+round.
+
+Medal AND border carry the rank — never colour alone, per the dataviz
+rule the rest of CAPCOM follows.
+
+On failure it says the arcade is not answering. It does **not** remove
+itself: see the Community Feed, which shipped doing exactly that and read
+as a feature nobody had built.

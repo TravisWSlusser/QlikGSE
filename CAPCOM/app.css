@@ -2431,6 +2431,44 @@ body.previewing{padding-top:38px}
    tl-click outline, which would double up on the hover background */
 .fd-row.tl-click:hover{outline:0}
 
+/* ======================================================================
+   GSE Standings — the REC Room, just us.
+
+   The whole SE team is staff-tagged and therefore hidden from every
+   public leaderboard, so this is the only board they appear on. Gold /
+   silver / bronze is carried by the medal AND the border, never colour
+   alone; the numbers sit beside the name rather than needing a legend.
+   ====================================================================== */
+.gse-stand{margin-bottom:18px}
+.gs-podium{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:4px}
+@media (max-width:860px){.gs-podium{grid-template-columns:1fr}}
+.gs-seat{
+  display:grid;grid-template-columns:28px auto minmax(0,1fr);gap:10px;
+  align-items:center;padding:12px;border-radius:11px;background:var(--card-2);
+  border-top:3px solid var(--line);
+}
+.gs-1{border-top-color:var(--warn)}
+.gs-2{border-top-color:var(--ink-2)}
+.gs-3{border-top-color:#c98500}
+.gs-rank{font-size:1.15rem;text-align:center}
+.gs-who{min-width:0;grid-column:3}
+.gs-who b{display:block;font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gs-who .sub{display:block;font-size:.68rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gs-nums{grid-column:1/4;display:flex;align-items:baseline;gap:9px;margin-top:4px}
+.gs-nums b{font-size:1.2rem;font-variant-numeric:tabular-nums;color:var(--heading)}
+.gs-nums span{font-size:.68rem;color:var(--muted)}
+
+/* everyone below the podium — compact, because "where am I" needs a
+   position and a number, not a row of its own */
+.gs-rest{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.gs-rest-one{
+  display:inline-flex;align-items:center;gap:7px;padding:5px 10px;
+  border-radius:8px;background:var(--card-2);font-size:.78rem;
+}
+.gs-rest-one i{font-style:normal;font-size:.68rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.gs-rest-one b{font-variant-numeric:tabular-nums}
+.gs-note{margin:14px 0 0;font-size:.72rem}
+
 /* row 3 gives the board the room it needs */
 .gse-row-3{align-items:start}
 .gse-row-3 .board-card{min-height:420px}
