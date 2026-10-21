@@ -69,8 +69,11 @@ export function render(params, rerender, who) {
   const me = (who && who.member) || null; // member session: acts on tagged projects only
   const wantNew = params && params[0] === 'new';
   if (wantNew) history.replaceState(null, '', '#projects');
+  // any GSE member may POST a project (and is tagged on it); the scope still
+  // owns retire/restore, teams and statuses. The server enforces both.
+  const canPost = canEdit || !!me;
   const root = h('div', { class: 'view' }, spinner());
-  load(root, rerender, canEdit, wantNew && canEdit, me, canManage, canInvite);
+  load(root, rerender, canEdit, wantNew && canPost, me, canManage, canInvite);
   return root;
 }
 
@@ -112,7 +115,9 @@ async function load(root, rerender, canEdit, openNew, me, canManage, canInvite) 
       h('a', { class: 'btn sm', href: '#projects/staff' }, 'Our Organization'),
       h('button', { class: 'btn sm', onClick: () => teamsDialog(d, rerender) }, 'Teams'),
       h('button', { class: 'btn sm', onClick: () => statusesDialog(d, rerender) }, 'Statuses'),
-      h('button', { class: 'btn sm accent', onClick: () => editProject(null, d, rerender) }, '+ New project'),
+    ] : []),
+    ...(canEdit || me ? [
+      h('button', { class: 'btn sm accent', onClick: () => editProject(null, d, rerender, !canEdit) }, '+ New project'),
     ] : [])));
 
   // an empty registry is invisible until you know where to look — say so
@@ -135,7 +140,7 @@ async function load(root, rerender, canEdit, openNew, me, canManage, canInvite) 
       (!flt.status || p.status_id === flt.status));
     if (!rows.length) {
       wrap.appendChild(emptyState('Nothing on the board.',
-        canEdit ? 'Post the first project — + New project above.' : 'Projects appear here as teams post them.'));
+        canEdit || me ? 'Post the first project — + New project above.' : 'Projects appear here as teams post them.'));
       return;
     }
     wrap.appendChild(h('table', null,
@@ -191,8 +196,10 @@ function projectRow(p, d, teamById, statusById, canEdit, me, rerender) {
         h('button', { class: 'btn xs' + (p.overdue ? ' danger' : ''), onClick: () => statusDialog(p, d, rerender) }, 'Status'),
         h('button', { class: 'btn xs', onClick: () => extendDialog(p, rerender) }, p.overdue ? 'What happened' : 'Extend'),
       ] : []),
+      ...((canEdit || mine) && p.active ? [
+        h('button', { class: 'btn xs', onClick: () => editProject(p, d, rerender, !canEdit) }, 'Edit'),
+      ] : []),
       ...(canEdit && p.active ? [
-        h('button', { class: 'btn xs', onClick: () => editProject(p, d, rerender) }, 'Edit'),
         h('button', { class: 'btn xs', onClick: () => confirmBox('Retire this project?',
           `“${p.title}” comes off the board. Its diary stays, and it can be restored.`, async () => {
             try { await api.projects({ op: 'retire', id: p.id }); toast('Project retired'); rerender(); }
@@ -208,7 +215,9 @@ function projectRow(p, d, teamById, statusById, canEdit, me, rerender) {
 }
 
 /* ── create / edit ── */
-function editProject(p, d, rerender) {
+// asMember: a member session (no projects scope). Same form; the server
+// tags them onto a new post, so the copy says so instead of "tag from Edit".
+function editProject(p, d, rerender, asMember) {
   const isNew = !p;
   const activeTeams = d.teams.filter(t => t.active);
   const activeStatuses = d.statuses.filter(s => s.active);
@@ -269,7 +278,9 @@ function editProject(p, d, rerender) {
       field('What is it?', f.description, 'The show-off line — what this is and why it matters.'),
       tagBlock,
       field(isNew ? 'Who is on it' : 'Guests / externals (free text)', f.people,
-        isNew ? 'Free text for now — after posting, tag registered members from Edit.' : null),
+        isNew ? (asMember
+          ? 'You are tagged on it automatically. After posting, tag teammates from Edit.'
+          : 'Free text for now — after posting, tag registered members from Edit.') : null),
       field('Team', f.team),
       field('Links', f.links, 'Demo, doc, repo — Label | URL, one per line, up to 6.'),
       ...(isNew ? [

@@ -2559,3 +2559,30 @@ rule the rest of CAPCOM follows.
 On failure it says the arcade is not answering. It does **not** remove
 itself: see the Community Feed, which shipped doing exactly that and read
 as a feature nobody had built.
+
+## Every GSE member can post a project (20 Oct 2026, no schema)
+
+Travis: Huw "doesnt have access to the add project feature...which should be
+an ability for all GSE team members." Creating a project was `projects`-scope
+only, and `projects` is deliberately absent from `GRANTABLE`, so there was no
+checkbox that could have fixed it for Huw — it needed a rule change.
+
+The new rule, enforced in `lib/admin/projects.js`:
+
+- **Any member session may create.** `save` joined `MEMBER_OPS`. The poster is
+  **tagged onto the new project automatically** — otherwise they could not move
+  the thing they just made, since every member write is gated on a tag.
+  Managers (who hold `projects`) are not auto-tagged when posting for someone.
+- **Editing still needs a tag**, same as status/extend/milestones.
+- A scoped key with no person behind it (SME, contractor) still needs
+  `projects` to post — nobody to tag, nobody to own it.
+- **Retire/restore, Teams and Statuses stay with the scope.**
+
+`lib/admin/members.js` `tag`/`untag` now admit a member **tagged on that
+project** — a project you posted but cannot put your colleagues on is half a
+feature. Everything else in members.js is unchanged.
+
+Client: the Board's `+ New project` and row `Edit` follow the same rule (the
+Teams/Statuses/Our Organization toolbar stays scope-only); Home's New project
+quick action and `+ New` show for any member. The editor's hint tells a member
+they are tagged automatically.

@@ -60,7 +60,8 @@ export function render(params, rerender, who) {
     h('span', { class: 'qa-ic', html: ICONS[icon] || '' }), label);
   if (scopes.includes('calendar')) acts.push(act('calendar', 'New event', '#calendar/new'));
   if (scopes.includes('banners')) acts.push(act('banners', 'New headline', '#banners/highlights/new'));
-  if (scopes.includes('projects')) acts.push(act('projects', 'New project', '#projects/new'));
+  // any team member may post a project now, not just the projects scope
+  if (scopes.includes('projects') || (who && who.member)) acts.push(act('projects', 'New project', '#projects/new'));
 
   // Two columns: calendar (with its actions) left; clock over changes right.
   const grid = h('div', { class: 'grid2 home-cols' });
@@ -613,11 +614,11 @@ async function loadMine(prjCard, recCard, scopes, who) {
   const rows = (mine && mine.length ? mine : (d.projects || []).filter(p => p.active)).slice(0, 6);
   prjCard.appendChild(sectionTitle(mine && mine.length ? 'Your projects' : 'Projects',
     h('a', { class: 'btn xs', href: '#projects' }, 'Open the board'),
-    ...(scopes.includes('projects') ? [h('a', { class: 'btn xs accent', href: '#projects/new' }, '+ New')] : [])));
+    ...(scopes.includes('projects') || me ? [h('a', { class: 'btn xs accent', href: '#projects/new' }, '+ New')] : [])));
   if (!rows.length) {
     prjCard.appendChild(emptyState(
       me ? 'You are not tagged on anything yet.' : 'No projects posted yet.',
-      me ? 'Tag yourself from a project on the board and it shows up here.'
+      me ? 'Post one with + New, or ask a teammate on a project to tag you.'
         : (scopes.includes('projects') ? 'Post the first one from the board.' : null)));
   } else {
     prjCard.appendChild(h('div', { class: 'prj-glance' }, rows.map(p => {
