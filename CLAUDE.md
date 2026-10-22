@@ -2586,3 +2586,40 @@ Client: the Board's `+ New project` and row `Edit` follow the same rule (the
 Teams/Statuses/Our Organization toolbar stays scope-only); Home's New project
 quick action and `+ New` show for any member. The editor's hint tells a member
 they are tagged automatically.
+
+## Q4 cert overview page: the AI Academy (22 Oct 2026, not yet pushed)
+
+`Certifications/2026/FY26_Q4/index.html` + `images/` — built from the Q3
+page's router, calendar and FAQ engines, restyled for the
+Academy (gold `--gold`/`--gold-2` tokens beside the Qlik set; the crest and
+Library Card art converted to webp from `D:\Certification Work\2026\Q4`).
+Sections: `hero | catalog | calendar` (+ canary). **Two Q3 carry-overs were
+built and then REMOVED the same day on first preview** — the walkthrough rail
+("How it works") and the slim notice banner (the Q3 Blue Sheet heads-up,
+rewritten as "Orientation isn't optional"). Travis: "Get rid of the How it
+works" and then "get rid of the before the library opens part completely."
+Orientation's not-optional message now lives only in the FAQ. Do not bring
+either section back for Q4. `catalog`
+is new: the 14 shelves rendered from `CATALOG`, AI Best Practices spanning
+two columns as the required track. (An "On every shelf" strip naming the
+library-piece anatomy was built and cut the same day — Travis: "it doesn't
+make sense" there; the anatomy stays in the FAQ answer.)
+A shelf with a `CONFIG.links[key]` renders as a link, otherwise a plain card.
+
+**The cert rule, from Travis:** every piece in AI Best Practices, then at
+least one piece from each of the other 13 categories = the all-access
+Library Card. Orientation (the Storyline "Flight AI 101" ruse) is where
+learners confirm they understand that, so the FAQ says it is not optional. Customer Success / Renewals / Professional Services is ONE
+category (he first said 15, it is 14).
+
+**Placeholders, flagged in CONFIG:** cohort dates (Oct 26–Nov 13 leaders,
+Nov 16–Dec 18 Global — copied from the Q3 cadence, NOT from a sheet), the
+per-station minutes, and every deeplink. Hero windows now render from
+`CONFIG.cohorts`, so the dates live in one place.
+
+Verified on a local iframe rig at the Mindtickle sizes (1180 wide desktop,
+400 wide mobile): hero 560/640, catalog 560/1040, calendar 470/900. Two things the rig caught: `.cal-col`/`.faq-col`
+in column mode need `width:100%` or `align-items:flex-start` sizes them to
+max-content and the Saturday column spills past the iframe; and an `<img>`
+with a `height` attribute but only a CSS width stretches (the crest needed
+`height:auto`).
