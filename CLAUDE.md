@@ -2618,7 +2618,8 @@ per-station minutes, and every deeplink. Hero windows now render from
 `CONFIG.cohorts`, so the dates live in one place.
 
 Verified on a local iframe rig at the Mindtickle sizes (1180 wide desktop,
-400 wide mobile): hero 560/640, catalog 560/1040, calendar 470/900. Two things the rig caught: `.cal-col`/`.faq-col`
+400 wide mobile): hero 560/640, catalog 480/760, calendar 470/900. Those
+are the iframe heights to declare in the Mindtickle Custom HTML widgets. Two things the rig caught: `.cal-col`/`.faq-col`
 in column mode need `width:100%` or `align-items:flex-start` sizes them to
 max-content and the Saturday column spills past the iframe; and an `<img>`
 with a `height` attribute but only a CSS width stretches (the crest needed
