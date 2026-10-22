@@ -2603,7 +2603,10 @@ either section back for Q4. `catalog`
 is new: the 14 shelves rendered from `CATALOG`, AI Best Practices spanning
 two columns as the required track. (An "On every shelf" strip naming the
 library-piece anatomy was built and cut the same day — Travis: "it doesn't
-make sense" there; the anatomy stays in the FAQ answer.)
+make sense" there.) **A library piece is ONE format, never both** — either a
+short video or a one-page PDF Prompt Guide (Desired Result, Who it's for,
+Tools, Prompt). The first FAQ draft said every topic had a video plus a PDF;
+Travis corrected it 22 Oct. Don't write copy that pairs them.
 A shelf with a `CONFIG.links[key]` renders as a link, otherwise a plain card.
 
 **The cert rule, from Travis:** every piece in AI Best Practices, then at
