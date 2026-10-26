@@ -63,6 +63,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
 
+<!-- SEASON GATE (see CLAUDE.md "Season gate"). The Board tab stays, loads
+     once, and sits behind fogged glass with the season notice; the badge's
+     rank line says the standings are sealed. Scores still bank. Set before
+     styles so nothing flashes readable. Flip in step with index.html and
+     the game. -->
+<script>
+var SEASON_CLOSED = true;
+if (SEASON_CLOSED) document.documentElement.setAttribute('data-season', 'closed');
+</script>
+
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
@@ -590,6 +600,82 @@ html[data-down="1"] .tabs{display:none}
 .tip b{color:var(--cyan);font-weight:normal}
 .foot{text-align:center;font-size:.52rem;letter-spacing:.16em;color:var(--dim);
       text-transform:uppercase;padding:10px 0 2px}
+
+/* ------------------------------ season gate ----------------------------- */
+/* The board still renders underneath (blurred, dimmed, inert); a frosted
+   pane with the season notice covers the view. Below the tab bar (45) so
+   Badge/Play stay reachable; the downtime screen (90) still wins. */
+#viewBoard{position:relative}
+.season-veil{display:none}
+html[data-season="closed"] #viewBoard .scroll{
+  filter:blur(8px) saturate(.5) brightness(.75);pointer-events:none;user-select:none
+}
+html[data-season="closed"] .season-veil{
+  position:absolute;inset:0;z-index:5;display:flex;overflow:hidden;
+  flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;
+  padding:calc(var(--safe-t) + 24px) 24px calc(var(--safe-b) + var(--tabh) + 24px);
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.028) 0 1px, transparent 1px 3px),
+    linear-gradient(160deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,.22) 100%),
+    rgba(8,14,28,.42);
+  -webkit-backdrop-filter:blur(6px) brightness(.9);backdrop-filter:blur(6px) brightness(.9);
+  box-shadow:inset 0 0 70px rgba(0,0,0,.45),inset 0 0 0 1px rgba(16,207,201,.22);
+}
+.sv-title{
+  position:relative;font-family:'VT323',monospace;text-transform:uppercase;
+  font-size:clamp(2rem, 9vw, 3rem);line-height:1;letter-spacing:.05em;color:#fff;
+  text-shadow:0 0 18px rgba(16,207,201,.45);animation:svJitter 3.1s steps(1) infinite;
+}
+.sv-title::before,.sv-title::after{
+  content:attr(data-text);position:absolute;left:0;top:0;width:100%;height:100%;
+  overflow:hidden;opacity:0;pointer-events:none;text-shadow:none;
+}
+.sv-title::before{color:var(--cyan);animation:svSliceA 3.1s steps(1) infinite}
+.sv-title::after{color:var(--latam);animation:svSliceB 3.1s steps(1) infinite}
+@keyframes svSliceA{
+  0%,100%{opacity:0}
+  62%{opacity:1;clip-path:inset(12% 0 64% 0);transform:translate(-5px,-2px)}
+  64%{clip-path:inset(48% 0 26% 0);transform:translate(4px,1px)}
+  66%{clip-path:inset(78% 0 4% 0);transform:translate(-3px,0)}
+  68%{clip-path:inset(30% 0 52% 0);transform:translate(6px,2px)}
+  70%{opacity:0}
+  88%{opacity:1;clip-path:inset(60% 0 20% 0);transform:translate(-6px,0)}
+  90%{opacity:0}
+}
+@keyframes svSliceB{
+  0%,100%{opacity:0}
+  61%{opacity:1;clip-path:inset(70% 0 8% 0);transform:translate(5px,1px)}
+  63%{clip-path:inset(18% 0 62% 0);transform:translate(-4px,-1px)}
+  65%{clip-path:inset(40% 0 38% 0);transform:translate(3px,2px)}
+  67%{clip-path:inset(84% 0 2% 0);transform:translate(-6px,0)}
+  69%{opacity:0}
+  89%{opacity:1;clip-path:inset(6% 0 76% 0);transform:translate(6px,-1px)}
+  91%{opacity:0}
+}
+@keyframes svJitter{
+  0%,100%{transform:none;opacity:1}
+  62%{transform:skewX(-6deg) translateX(2px)}
+  64%{transform:skewX(4deg) translateX(-3px)}
+  66%{transform:none}
+  68%{transform:translateX(2px);opacity:.82}
+  70%{transform:none;opacity:1}
+  88%{transform:skewX(8deg)}
+  90%{transform:none}
+}
+.sv-line{font-size:.62rem;letter-spacing:.26em;text-transform:uppercase;color:var(--ink)}
+.sv-line.soon{color:var(--cyan)}
+.sv-line.soon::after{content:'_';animation:svBlink 1s steps(1) infinite}
+@keyframes svBlink{50%{opacity:0}}
+.sv-bar{width:160px;height:2px;background:rgba(16,207,201,.22);position:relative;overflow:hidden}
+.sv-bar::after{content:'';position:absolute;inset:0;width:35%;background:var(--cyan);animation:downScan 2.2s ease-in-out infinite}
+.sv-tear{position:absolute;left:0;right:0;top:-4px;height:3px;pointer-events:none;
+  background:rgba(255,255,255,.14);mix-blend-mode:screen;animation:svTear 5.3s linear infinite}
+@keyframes svTear{0%{top:-4px;opacity:0}4%{opacity:1}38%{top:100%;opacity:.6}39%,100%{opacity:0}}
+@media (prefers-reduced-motion:reduce){
+  .sv-title,.sv-title::before,.sv-title::after,.sv-bar::after,.sv-tear,.sv-line.soon::after{animation:none}
+  .sv-title::before{opacity:.8;clip-path:inset(0 0 55% 0);transform:translate(-2px,0)}
+  .sv-title::after{opacity:.8;clip-path:inset(55% 0 0 0);transform:translate(2px,0)}
+}
 </style>
 </head>
 <body>
@@ -742,6 +828,14 @@ html[data-down="1"] .tabs{display:none}
 
       <button class="refresh" id="refresh">&#8635;&nbsp; Refresh board</button>
       <div class="foot" id="boardStamp"></div>
+    </div>
+    <!-- SEASON GATE: the fogged glass. Shown only under html[data-season="closed"]. -->
+    <div class="season-veil" role="status" aria-live="polite">
+      <div class="sv-tear"></div>
+      <div class="sv-title" data-text="THANK YOU FOR PLAYING">THANK YOU FOR PLAYING</div>
+      <div class="sv-line">SEASON 1 HAS CONCLUDED</div>
+      <div class="sv-bar"></div>
+      <div class="sv-line soon">SEASON 2 BEGINNING SOON</div>
     </div>
   </section>
 
@@ -1230,6 +1324,9 @@ var board = null;
 function paintRank() {
   var el = $('myRank');
   if (!me) return;
+  // Season closed: your lifetime total above is yours to see; where it sits
+  // against everyone else is sealed with the rest of the board.
+  if (SEASON_CLOSED) { el.innerHTML = 'Season 1 has concluded. <b>Standings are sealed until Season 2.</b>'; return; }
   if (!board) { el.textContent = 'Open the board to see where you sit.'; return; }
   var gm = (board.gameMasters || []).findIndex(function (p) { return p.trigram === me.trigram; });
   if (gm > -1) { el.innerHTML = 'You are a <b>GAME MASTER</b> — #' + (gm + 1) + ' worldwide.'; return; }

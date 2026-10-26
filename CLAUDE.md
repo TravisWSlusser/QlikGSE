@@ -716,6 +716,14 @@ that conversation, not in the repo.
 
 ## ⚠ Live temporary state — check this first
 
+- **SEASON 1 IS CLOSED (26 Oct 2026).** `SEASON_CLOSED = true` in three
+  files — `QlikRecRoom/index.html` (head), `QlikRecRoom/mobile.html` (head),
+  `QlikRecRoom/games/SideQlik_Blitz/index.html` (next to `API_BASE`). The
+  game plays and every run still banks; the map, both scoreboards and the
+  in-game HIGH SCORES table sit behind fogged glass reading THANK YOU FOR
+  PLAYING / SEASON 1 HAS CONCLUDED / SEASON 2 BEGINNING SOON, and the
+  desktop board loads once and never polls. Reopening is the same three
+  flips in one commit — see **Season gate** at the end of this file.
 - ~~**`OPEN_SCORING`**~~ **Gone 2026-08-26.** The dated bypass was replaced by
   `REQUIRE_KEY = false` — a permanent, undated off switch. See **Auth and score
   integrity** for what that means and the four edits that reverse it. There is
@@ -2627,3 +2635,53 @@ in column mode need `width:100%` or `align-items:flex-start` sizes them to
 max-content and the Saturday column spills past the iframe; and an `<img>`
 with a `height` attribute but only a CSS width stretches (the crest needed
 `height:auto`).
+
+## Season gate — Season 1 closed (26 Oct 2026, client only)
+
+Travis: "Season One of Side-Qlik Blitz has concluded. Over the map and over
+the scoreboards put a fogged glass darkening effect and put in glitching
+text… We still want the game open. We still want to keep track of the
+score. But we dont want the users to be able to see the stats anymore."
+
+**What it is:** `SEASON_CLOSED = true` — a constant, not a DB flag — in the
+three pages that show standings, each setting `data-season="closed"` on
+`<html>` before styles land so nothing flashes readable. Under it, the
+content is blurred/dimmed/inert (`filter` + `pointer-events:none`) and a
+`.season-veil` sits over it: frosted pane (scanline + sheen gradients over
+a translucent navy, `backdrop-filter`), a VT323 / Press Start 2P headline
+whose cyan and pink `::before`/`::after` copies slice through on `steps(1)`
+keyframes a couple of times per 3s cycle, a blinking cursor on the last
+line, and a tear line that sweeps down. Reduced-motion drops to a static
+chromatic offset.
+
+| Surface | Covered | Still works |
+|---|---|---|
+| `QlikRecRoom/index.html` `.scoreboard` (full page, `?section=scoreboard`, `?section=board-mobile`) | map, rankings, recent scores, trend | sign-in, the game, maintenance screen |
+| `QlikRecRoom/mobile.html` `#viewBoard` | standings, game masters, top-3s; `paintRank` says standings are sealed | Badge (own lifetime/high/runs), Play, tab bar |
+| the game's `#scores` card | tabs + rows | the HIGH SCORES header and × stay above the glass; game over card, PLAY AGAIN |
+
+**Why a constant and not `app_state`:** maintenance fails OPEN by design.
+A DB-driven season flag would fail open too — a hiccup would flash the
+standings to the whole org, which is the one thing this must not do. The
+flag lives in code so its default is the safe state, and Season 2 ships as
+a deploy anyway (new content, probably a reset — Travis's call).
+
+**Nothing server-side changed.** `logScore` writes, `getLeaderboard` /
+`getRecentScores` / `getScores` still answer (they are keyless and public
+and always were — see the Dashboard note under Read-only Tailored Access),
+CAPCOM's Dashboard and GSE Standings read the live numbers. "Hidden" here
+means hidden from the screen, not from the API.
+
+**Polling:** `index.html` still loads the board once (so the glass has a
+real board under it, and the map bursts keep rotating from that one pool)
+and skips `scheduleRefresh()` and the visibility re-poll while closed —
+nobody can read a refresh and it would only keep Neon awake. Mobile's
+board was on-demand already; the Refresh button is under the glass.
+
+**To open Season 2:** flip all three `SEASON_CLOSED` to `false` in one
+commit (half-flipped, the desktop board is readable while the phone still
+says sealed). Decide separately whether `players` / `score_events` get
+reset — if they do, do it under maintenance mode (the runbook above), then
+flip. Verified on the local stub rig (`season-rig/stub.cjs` in the session
+scratchpad: canned recroom/blitz JSON) at desktop and phone widths; inline
+scripts parse; mojibake 0; dash counts up-only.

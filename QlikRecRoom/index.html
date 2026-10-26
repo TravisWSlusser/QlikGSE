@@ -24,6 +24,15 @@
     (function(){var s=new URLSearchParams(location.search).get('section');
       if(s)document.documentElement.setAttribute('data-section',s);})();
   </script>
+  <!-- SEASON GATE (see CLAUDE.md "Season gate"). While closed, the scoreboard
+       and map stay live underneath but sit behind fogged glass with the
+       season notice on it, and the board stops polling Neon. Scores still
+       bank; CAPCOM still reads them. Set BEFORE styles so nothing flashes
+       readable. Flip to false (here, mobile.html and the game) to reopen. -->
+  <script>
+    var SEASON_CLOSED = true;
+    if (SEASON_CLOSED) document.documentElement.setAttribute('data-season', 'closed');
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -666,6 +675,91 @@
       50%  { text-shadow: -3px 1px #FF2D9B, 3px -1px #10CFC9, 0 0 20px rgba(255,45,155,.7); }
       100% { text-shadow: 2px 0 #FF2D9B, -2px 0 #10CFC9, 0 0 14px rgba(124,92,255,.6); }
     }
+
+    /* ---- SEASON GATE ----------------------------------------------------
+       Between seasons the board keeps rendering (one load, no polling) but
+       nobody can read it: the grid is blurred and dimmed, and a frosted pane
+       with the season notice sits over the whole .scoreboard block. Same
+       markup serves the full page, ?section=scoreboard and board-mobile.
+       Driven by data-season, set in the head script before styles apply. */
+    .scoreboard { position: relative; }
+    .season-veil { display: none; }
+    html[data-season="closed"] .scoreboard > .section-label,
+    html[data-season="closed"] .scoreboard > .sb-grid {
+      filter: blur(9px) saturate(.5) brightness(.75);
+      pointer-events: none; user-select: none;
+    }
+    html[data-season="closed"] .season-veil {
+      position: absolute; inset: 0; z-index: 30; display: flex; overflow: hidden;
+      flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; gap: 14px; padding: 28px 24px;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.028) 0 1px, transparent 1px 3px),
+        linear-gradient(160deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,.22) 100%),
+        rgba(8,14,28,.42);
+      -webkit-backdrop-filter: blur(6px) brightness(.9); backdrop-filter: blur(6px) brightness(.9);
+      box-shadow: inset 0 0 70px rgba(0,0,0,.45), inset 0 0 0 1px rgba(16,207,201,.22);
+    }
+    .sv-title {
+      position: relative; font-family: 'VT323', monospace; text-transform: uppercase;
+      font-size: clamp(2rem, 5.2vw, 3.8rem); line-height: 1; letter-spacing: .06em; color: #fff;
+      text-shadow: 0 0 18px rgba(16,207,201,.45);
+      animation: svJitter 3.1s steps(1) infinite;
+    }
+    .sv-title::before, .sv-title::after {
+      content: attr(data-text); position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+      overflow: hidden; opacity: 0; pointer-events: none; text-shadow: none;
+    }
+    .sv-title::before { color: var(--cyan);  animation: svSliceA 3.1s steps(1) infinite; }
+    .sv-title::after  { color: var(--latam); animation: svSliceB 3.1s steps(1) infinite; }
+    @keyframes svSliceA {
+      0%, 100% { opacity: 0; }
+      62% { opacity: 1; clip-path: inset(12% 0 64% 0); transform: translate(-6px, -2px); }
+      64% { clip-path: inset(48% 0 26% 0); transform: translate(5px, 1px); }
+      66% { clip-path: inset(78% 0 4% 0);  transform: translate(-4px, 0); }
+      68% { clip-path: inset(30% 0 52% 0); transform: translate(7px, 2px); }
+      70% { opacity: 0; }
+      88% { opacity: 1; clip-path: inset(60% 0 20% 0); transform: translate(-8px, 0); }
+      90% { opacity: 0; }
+    }
+    @keyframes svSliceB {
+      0%, 100% { opacity: 0; }
+      61% { opacity: 1; clip-path: inset(70% 0 8% 0); transform: translate(6px, 1px); }
+      63% { clip-path: inset(18% 0 62% 0); transform: translate(-5px, -1px); }
+      65% { clip-path: inset(40% 0 38% 0); transform: translate(4px, 2px); }
+      67% { clip-path: inset(84% 0 2% 0);  transform: translate(-7px, 0); }
+      69% { opacity: 0; }
+      89% { opacity: 1; clip-path: inset(6% 0 76% 0); transform: translate(8px, -1px); }
+      91% { opacity: 0; }
+    }
+    @keyframes svJitter {
+      0%, 100% { transform: none; opacity: 1; }
+      62% { transform: skewX(-6deg) translateX(2px); }
+      64% { transform: skewX(4deg) translateX(-3px); }
+      66% { transform: none; }
+      68% { transform: translateX(2px); opacity: .82; }
+      70% { transform: none; opacity: 1; }
+      88% { transform: skewX(8deg); }
+      90% { transform: none; }
+    }
+    .sv-line {
+      font-family: 'Share Tech Mono', monospace; text-transform: uppercase;
+      font-size: clamp(.68rem, 1.3vw, .95rem); letter-spacing: .28em; color: #dbe8f6;
+    }
+    .sv-line.soon { color: var(--cyan); }
+    .sv-line.soon::after { content: '_'; animation: svBlink 1s steps(1) infinite; }
+    @keyframes svBlink { 50% { opacity: 0; } }
+    .sv-bar { width: 180px; height: 2px; background: rgba(16,207,201,.22); position: relative; overflow: hidden; }
+    .sv-bar::after { content: ''; position: absolute; inset: 0; width: 35%; background: var(--cyan);
+      animation: downScan 2.2s ease-in-out infinite; }
+    .sv-tear { position: absolute; left: 0; right: 0; top: -4px; height: 3px; pointer-events: none;
+      background: rgba(255,255,255,.14); mix-blend-mode: screen; animation: svTear 5.3s linear infinite; }
+    @keyframes svTear { 0% { top: -4px; opacity: 0; } 4% { opacity: 1; } 38% { top: 100%; opacity: .6; } 39%, 100% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      .sv-title, .sv-title::before, .sv-title::after, .sv-bar::after, .sv-tear, .sv-line.soon::after { animation: none; }
+      .sv-title::before { opacity: .8; clip-path: inset(0 0 55% 0); transform: translate(-2px, 0); }
+      .sv-title::after  { opacity: .8; clip-path: inset(55% 0 0 0); transform: translate(2px, 0); }
+    }
 </style>
 </head>
 <body>
@@ -876,6 +970,15 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- SEASON GATE: the fogged glass. Shown only under html[data-season="closed"]. -->
+      <div class="season-veil" role="status" aria-live="polite">
+        <div class="sv-tear"></div>
+        <div class="sv-title" data-text="THANK YOU FOR PLAYING">THANK YOU FOR PLAYING</div>
+        <div class="sv-line">SEASON 1 HAS CONCLUDED</div>
+        <div class="sv-bar"></div>
+        <div class="sv-line soon">SEASON 2 BEGINNING SOON</div>
       </div>
     </div>
   </div>
@@ -1888,17 +1991,19 @@ function scheduleRefresh() {
   }, delay);
 }
 document.addEventListener('visibilitychange', () => {
-  if (SHOW_BOARD && document.visibilityState === 'visible') { refreshAll(); scheduleRefresh(); }
+  if (SHOW_BOARD && !SEASON_CLOSED && document.visibilityState === 'visible') { refreshAll(); scheduleRefresh(); }
 });
 
 /* ---- boot: board + chart only where the scoreboard renders.
    Each MT widget is its own document — ungated, every section would run
-   its own Neon polling loop. Gate hard. ---- */
+   its own Neon polling loop. Gate hard.
+   Season closed: load once so the glass has a real board under it, then
+   never poll — nobody can read a refresh, and it would only keep Neon awake. ---- */
 if (SHOW_BOARD){
   sizeCanvas();
   fxLoop();
   refreshAll();
-  scheduleRefresh();
+  if (!SEASON_CLOSED) scheduleRefresh();
 }
 
 </script>
