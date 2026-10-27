@@ -2611,17 +2611,24 @@ either section back for Q4. `catalog`
 is new: the 14 shelves rendered from `CATALOG`, AI Best Practices spanning
 two columns as the required track. (An "On every shelf" strip naming the
 library-piece anatomy was built and cut the same day — Travis: "it doesn't
-make sense" there.) **A library piece is ONE format, never both** — either a
-short video or a one-page PDF Prompt Guide (Desired Result, Who it's for,
-Tools, Prompt). The first FAQ draft said every topic had a video plus a PDF;
-Travis corrected it 22 Oct. Don't write copy that pairs them.
+make sense" there.) **A library piece is a one-page PDF Prompt Guide**
+(Desired Result, Who it's for, Tools, Prompt) — nothing else. The first FAQ
+draft said every topic had a video plus a PDF; Travis corrected it 22 Oct to
+"one or the other", then on 26 Oct to "there will be no videos with prompts
+in the library" — the FAQ now says PDF only. The hero chip "Short Form
+Videos" survived that pass at his request (the Academy still has Synthesia
+videos; they just aren't library pieces). Don't write copy that gives a
+shelf a video.
 A shelf with a `CONFIG.links[key]` renders as a link, otherwise a plain card.
 
 **The cert rule, from Travis:** every piece in AI Best Practices, then at
 least one piece from each of the other 13 categories = the all-access
 Library Card. Orientation (the Storyline "Flight AI 101" ruse) is where
-learners confirm they understand that, so the FAQ says it is not optional. Customer Success / Renewals / Professional Services is ONE
-category (he first said 15, it is 14).
+learners confirm they understand that, so the FAQ says it is not optional.
+**26 Oct:** the last step before the card is an **exit survey** (hero arc and
+the "How do I earn" FAQ both say so), and the Customer Success / Renewals /
+Professional Services shelf was renamed **"Slackbot = Superpower"** (key
+`slackbot`). Still 14 categories (he first said 15; CS/Renewals/PS was ONE).
 
 **Placeholders, flagged in CONFIG:** cohort dates (Oct 26–Nov 13 leaders,
 Nov 16–Dec 18 Global — copied from the Q3 cadence, NOT from a sheet), the
