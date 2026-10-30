@@ -2616,9 +2616,9 @@ make sense" there.) **A library piece is a one-page PDF Prompt Guide**
 draft said every topic had a video plus a PDF; Travis corrected it 22 Oct to
 "one or the other", then on 26 Oct to "there will be no videos with prompts
 in the library" — the FAQ now says PDF only. The hero chip "Short Form
-Videos" survived that pass at his request (the Academy still has Synthesia
-videos; they just aren't library pieces). Don't write copy that gives a
-shelf a video.
+Videos" survived that pass, then Travis cut it 30 Oct ("Get rid of it on the
+hero chip"); the hero now carries two chips, 14 Areas of Focus and PDF
+Prompt Guides. No video wording anywhere on the Q4 page — don't add any.
 A shelf with a `CONFIG.links[key]` renders as a link, otherwise a plain card.
 
 **The cert rule, from Travis:** every piece in AI Best Practices, then at
