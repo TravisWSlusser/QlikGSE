@@ -2628,12 +2628,20 @@ learners confirm they understand that, so the FAQ says it is not optional.
 **26 Oct:** the last step before the card is an **exit survey** (hero arc and
 the "How do I earn" FAQ both say so), and the Customer Success / Renewals /
 Professional Services shelf was renamed **"Slackbot = Superpower"** (key
-`slackbot`). Still 14 categories (he first said 15; CS/Renewals/PS was ONE).
+`slackbot`). **31 Oct:** that shelf was cut entirely — Barb is folding its
+pieces into the other sections — so the catalog is **13 shelves** (title
+"Thirteen Shelves", hero chip "13 Areas of Focus", FAQ "other 12
+categories"). Count history: 15 (miscount) → 14 → 13.
 
-**Placeholders, flagged in CONFIG:** cohort dates (Oct 26–Nov 13 leaders,
-Nov 16–Dec 18 Global — copied from the Q3 cadence, NOT from a sheet), the
-per-station minutes, and every deeplink. Hero windows now render from
-`CONFIG.cohorts`, so the dates live in one place.
+**Cohort window, confirmed 31 Oct 2026:** ONE window for everyone, Nov 16 –
+Dec 16 2026. People leaders launch with the global launch (no separate
+leaders window — the Q3 leaders-first pattern does NOT apply), and the
+students are ALL revenue teams, not just quota carriers. `CONFIG.cohorts`
+holds the single entry (`label` "All Revenue Teams" for the countdown row,
+`hero` "Global Launch" for the hero line); the calendar legend lost its
+People Leaders swatch. The `.m`/`win-m` CSS is still there but unused.
+Hero windows and the calendar both render from `CONFIG.cohorts`, so the
+dates live in one place. **Still placeholder:** every deeplink.
 
 Verified on a local iframe rig at the Mindtickle sizes (1180 wide desktop,
 400 wide mobile): hero 560/640, catalog 480/760, calendar 470/900. Those

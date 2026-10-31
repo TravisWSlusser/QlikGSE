@@ -10,7 +10,7 @@
   Voice: terse, direct, lightly humorous.
   Assets: images/academy/* (crest, library card), images/thumbnails/* (committed alongside)
   Edit rule: content + links live in CONFIG / CATALOG / FAQ at the bottom. Layout never needs editing.
-  PLACEHOLDERS TO VALIDATE BEFORE LAUNCH: cohort dates, station minutes, per-category deeplinks.
+  PLACEHOLDERS TO VALIDATE BEFORE LAUNCH: per-category deeplinks. (Cohort dates confirmed 31 Oct 2026.)
 -->
 <html lang="en">
 <head>
@@ -135,7 +135,7 @@
     background:linear-gradient(90deg,rgba(0,152,69,.18),rgba(16,207,201,.18))}
 
   /* =====================================================
-     SECTION: catalog  (?s=catalog) — the 14 shelves
+     SECTION: catalog  (?s=catalog) — the 13 shelves
      Budget: 480px desktop / 760px mobile (measured 22 Oct after the anatomy strip was cut)
      ===================================================== */
   #sec-cat{flex-direction:column;gap:clamp(10px,1.4vw,16px);
@@ -289,7 +289,7 @@
       at a time. Finish <b>AI Best Practices</b>, check out one piece from every other shelf,
       complete the exit survey, and the all-access <b>Library Card</b> is yours.</p>
     <div class="chips rise d4" role="list">
-      <span class="chip" role="listitem"><b>14</b> Areas of Focus</span>
+      <span class="chip" role="listitem"><b>13</b> Areas of Focus</span>
       <span class="chip" role="listitem">PDF Prompt <b>Guides</b></span>
     </div>
     <div class="cta-row rise d5">
@@ -302,12 +302,12 @@
   </div>
 </section>
 
-<!-- ============ SECTION: catalog (the 14 shelves) ============ -->
-<section class="sec" id="sec-cat" data-s="catalog" aria-label="The Academy catalog — 14 categories">
+<!-- ============ SECTION: catalog (the 13 shelves) ============ -->
+<section class="sec" id="sec-cat" data-s="catalog" aria-label="The Academy catalog — 13 categories">
   <div class="cat-head">
     <div class="loop-head">
       <p class="eyebrow">The catalog</p>
-      <h2 class="loop-title">Fourteen Shelves</h2>
+      <h2 class="loop-title">Thirteen Shelves</h2>
     </div>
     <div class="cat-rule" aria-hidden="true">
       <span class="pill req">Required · every piece</span>
@@ -334,8 +334,7 @@
       </div>
       <div class="cal-grid" id="calGrid"></div>
       <div class="cal-legend" aria-hidden="true">
-        <span class="m"><i></i>People Leaders</span>
-        <span class="l"><i></i>Global</span>
+        <span class="l"><i></i>Global Launch</span>
         <span class="due"><i></i>Due date</span>
       </div>
     </div>
@@ -366,16 +365,16 @@ const CONFIG = {
     /* orientation: "https://deeplinks.mindtickle.com/...", */
     /* ai_best_practices: "https://deeplinks.mindtickle.com/...", */
   },
-  /* Cohort windows — PLACEHOLDERS (22 Oct 2026). Pattern copied from Q3 (leaders first, Global ~4 weeks).
-     VALIDATE against the learning-paths sheet before launch.
+  /* One window for everyone (confirmed by Travis 31 Oct 2026): people leaders launch with the
+     global launch, and the students are ALL revenue teams, not just quota carriers.
+     `hero` is the short name the hero line uses; `label` is the countdown row name.
      Due dates count down to 11:59 PM local time on the date given. */
   cohorts: [
-    { label: "People Leaders", aud: "m", start: "2026-10-26", due: "2026-11-13" },
-    { label: "Sales & Renewal Quota Carriers", aud: "l", start: "2026-11-16", due: "2026-12-18" }
+    { label: "All Revenue Teams", hero: "Global Launch", aud: "l", start: "2026-11-16", due: "2026-12-16" }
   ]
 };
 
-/* The 14 shelves. req:true = every piece required; everything else = pick at least one.
+/* The 13 shelves. req:true = every piece required; everything else = pick at least one.
    key matches CONFIG.links for per-shelf deeplinks. */
 const CATALOG = [
   { key:"ai_best_practices", name:"AI Best Practices", req:true,
@@ -387,8 +386,6 @@ const CATALOG = [
   { key:"objections",  name:"Objection Handling",     blurb:"Turn “no” into “tell me more.”" },
   { key:"demos",       name:"Demos",                  blurb:"Show the outcome, not the feature list." },
   { key:"proposals",   name:"Proposals",              blurb:"Build the proposal they can say yes to." },
-  { key:"slackbot",    name:"Slackbot = Superpower",
-    blurb:"Put the bot in your sidebar to work." },
   { key:"methodology", name:"Sales Methodology",      blurb:"The method behind every motion." },
   { key:"pipeline",    name:"Pipeline Management",    blurb:"Know what's real, what's late, and what's next." },
   { key:"skills",      name:"General Sales Skill Building", blurb:"Sharpen the fundamentals." },
@@ -400,7 +397,7 @@ const CATALOG = [
    Pending Travis/Barb approval. Minimal HTML allowed in answers. */
 const FAQ = [
   { q: "How do I earn the Library Card?",
-    a: "Three things. Complete <b>every piece</b> in AI Best Practices, complete <b>at least one piece</b> in each of the other 13 categories, then fill in the short <b>exit survey</b>. That's the certification. Do more if you like — the library doesn't mind." },
+    a: "Three things. Complete <b>every piece</b> in AI Best Practices, complete <b>at least one piece</b> in each of the other 12 categories, then fill in the short <b>exit survey</b>. That's the certification. Do more if you like — the library doesn't mind." },
   { q: "Do I really have to do Orientation?",
     a: "Yes. Orientation is where the Academy explains exactly what's expected and where you confirm you've got it. Nothing else unlocks until you've landed." },
   { q: "What's a library piece?",
@@ -442,7 +439,7 @@ const FAQ = [
     CONFIG.cohorts.forEach(function (c) {
       const s = document.createElement("span");
       const b = document.createElement("b");
-      b.textContent = c.aud === "m" ? "People Leaders" : "Global";
+      b.textContent = c.hero || c.label;
       s.appendChild(b);
       s.appendChild(document.createTextNode(" · " + fmt(c.start) + " – " + fmt(c.due)));
       hw.appendChild(s);
@@ -458,7 +455,7 @@ const FAQ = [
     report();
   }
 
-  /* ===== catalog — 14 shelves from CATALOG ===== */
+  /* ===== catalog — 13 shelves from CATALOG ===== */
   const catGrid = document.getElementById("catGrid");
   if (catGrid && showing("sec-cat")) {
     CATALOG.forEach(function (c, i) {
