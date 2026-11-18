@@ -145,6 +145,21 @@ html[data-section="mobile"] #themeToggle{display:none}
     background:var(--line);transition:background .2s, transform .2s}
   .hl-dots button:hover{background:var(--muted)}
   .hl-dots button.on{background:var(--sky);transform:scale(1.25)}
+  /* ---- fit ladder: the Mindtickle iframe height is a fixed constant, so a
+     slide with long copy must shrink to the stage budget, never grow the
+     page. JS (fitSlides) applies the FIRST rung that fits; rungs are
+     exclusive, each fully self-describing. Wider body max-width trades the
+     unused right margin for fewer wrapped lines. ---- */
+  .hl-item.fit1 .hl-title{font-size:clamp(26px,3.6vw,42px)}
+  .hl-item.fit1 .hl-body{font-size:clamp(13px,1.25vw,14.5px);line-height:1.46;max-width:640px}
+  .hl-item.fit1 .hl-ctas{margin-top:11px}
+  .hl-item.fit2 .hl-title{font-size:clamp(23px,3vw,34px)}
+  .hl-item.fit2 .hl-body{font-size:clamp(12.5px,1.15vw,13.5px);line-height:1.42;max-width:700px}
+  .hl-item.fit2 .hl-ctas{margin-top:9px}
+  .hl-item.fit3 .hl-title{font-size:clamp(20px,2.5vw,28px);margin:.18em 0 .22em}
+  .hl-item.fit3 .hl-body{font-size:12px;line-height:1.38;max-width:720px}
+  .hl-item.fit3 .hl-ctas{margin-top:7px}
+  .hl-item.fit3 .hl-cta{font-size:12px}
 
 
   /* ---- site footer — rides under the glossary widget ------------------- */
@@ -1777,48 +1792,108 @@ if (SHOW_HL){
       return b;
     });
     if (hlRo) hlNodes.forEach(function(n){ hlRo.observe(n); });
-    sizeHlStage();
+    refitHl();
     hlGo(0);
-    requestAnimationFrame(sizeHlStage);
+    requestAnimationFrame(refitHl);
     if (hlNodes.length > 1){ hlDots.style.display=''; hlHold(); }
     else { hlDots.style.display='none'; }
   }
+  /* The Mindtickle iframe height is a hand-measured constant, so the stage
+     must never grow past this budget — long copy shrinks instead (Barb's Q4
+     banner, Nov 2026: legal 294-char body + an image, and the page grew past
+     the iframe). 210px ≈ the pre-Oct-2026 content era the iframe was
+     declared around, plus a little headroom. Applied only at iframe-ish
+     widths; the page viewed directly can grow freely. */
+  const HL_BUDGET = 210;
+  const HL_RUNGS = ['fit1','fit2','fit3'];
+  /* offsetTop/offsetHeight are layout values, so they ignore the translateY
+     on inactive slides — getBoundingClientRect() does not. scrollHeight
+     alone drops the CTA's bottom margin, hence the max(). */
+  function hlSlideH(el){
+    let h = el.scrollHeight;
+    const last = el.lastElementChild;
+    if (last) h = Math.max(h, last.offsetTop + last.offsetHeight);
+    return h;
+  }
+  /* A slide only renders at its true height under the media state IT brings
+     (the image column narrows the text and re-wraps it taller) — so every
+     measurement toggles has-media to that slide's own state first. That was
+     the November bug: slides measured image-less, then Barb's image slide
+     rotated in, re-wrapped taller, and grew the page mid-rotation. */
+  function hlMediaOn(i){
+    const h = HIGHLIGHTS[i];
+    return !!(h && h.image && !h._imgDead);
+  }
+  function fitSlides(){
+    const fixed = window.innerWidth >= 1024; /* the MT desktop iframe */
+    hlNodes.forEach(function(el, i){
+      el.classList.remove('fit1','fit2','fit3');
+      if (!fixed) return;
+      hlBox.classList.toggle('has-media', hlMediaOn(i));
+      for (const rung of HL_RUNGS){
+        if (hlSlideH(el) <= HL_BUDGET) break;
+        el.classList.remove('fit1','fit2','fit3');
+        el.classList.add(rung);
+      }
+    });
+  }
   /* Slides are absolutely stacked for the crossfade, so the stage has no
-     natural height. Measure the tallest slide and reserve that much, or a long
-     slide's CTA overflows the card and lands on the key-date chips. */
+     natural height. Measure the tallest slide (under its own media state)
+     and reserve that much, or a long slide's CTA overflows the card and
+     lands on the key-date chips. */
   function sizeHlStage(){
     let tall = 0;
-    hlNodes.forEach(function(el){
-      /* offsetTop/offsetHeight are layout values, so they ignore the
-         translateY on inactive slides — getBoundingClientRect() does not.
-         scrollHeight alone drops the CTA's bottom margin, hence the max(). */
-      let h = el.scrollHeight;
-      const last = el.lastElementChild;
-      if (last) h = Math.max(h, last.offsetTop + last.offsetHeight);
-      tall = Math.max(tall, h);
+    hlNodes.forEach(function(el, i){
+      hlBox.classList.toggle('has-media', hlMediaOn(i));
+      tall = Math.max(tall, hlSlideH(el));
     });
     if (tall > 0 && tall + 4 > parseFloat(hlStage.style.minHeight || 0))
       hlStage.style.minHeight = (tall + 4) + 'px';
   }
+  function refitHl(){
+    fitSlides();
+    sizeHlStage();
+    syncHlMedia(); /* measurement toggled has-media; restore the live slide's */
+  }
   const hlBox = document.getElementById('hl');
   const hlMedia = document.getElementById('hlMedia');
   let hlI = 0, hlTimer = null;
-  const hlRo = window.ResizeObserver ? new ResizeObserver(sizeHlStage) : null;
+  /* refitHl, not sizeHlStage: the measurement pass toggles has-media, and
+     only refitHl puts the live slide's state back when it is done. Settles:
+     a pass that changes no fit class causes no resize, so no re-fire. */
+  const hlRo = window.ResizeObserver ? new ResizeObserver(refitHl) : null;
+  /* The media panel follows the ACTIVE slide. A dead image URL (the classic:
+     a SharePoint link that needs a Qlik sign-in, so it rendered for the
+     editor and 401'd for everyone else) marks the slide image-less and
+     refits — a broken-image icon in a circle is worse than no panel. */
+  function syncHlMedia(){
+    const h = HIGHLIGHTS[hlI];
+    const img = h && h.image && !h._imgDead ? h.image : '';
+    hlBox.classList.toggle('has-media', !!img);
+    if (hlMedia.dataset.src === img) return;
+    hlMedia.dataset.src = img;
+    hlMedia.innerHTML = '';
+    if (img){
+      const im = document.createElement('img');
+      im.alt = '';
+      im.onerror = function(){ h._imgDead = true; refitHl(); };
+      im.src = img;
+      hlMedia.appendChild(im);
+    }
+  }
   function hlGo(n){
     hlI = (n + hlNodes.length) % hlNodes.length;
     hlNodes.forEach(function(el,i){ el.classList.toggle('on', i===hlI); });
     hlBtns.forEach(function(el,i){ el.classList.toggle('on', i===hlI); });
-    const img = HIGHLIGHTS[hlI] && HIGHLIGHTS[hlI].image;
-    hlBox.classList.toggle('has-media', !!img);
-    hlMedia.innerHTML = img ? '<img src="'+img+'" alt="">' : '';
+    syncHlMedia();
   }
-  /* Re-measure whenever anything actually reflows: fonts arriving late, the
+  /* Re-fit whenever anything actually reflows: fonts arriving late, the
      responsive breakpoints, or a slide's copy changing. The stage only ever
      grows within one content set, so this settles rather than oscillating;
      buildHl resets the floor when the content itself changes. */
-  window.addEventListener('resize', sizeHlStage);
-  window.addEventListener('load', sizeHlStage);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeHlStage);
+  window.addEventListener('resize', refitHl);
+  window.addEventListener('load', refitHl);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(refitHl);
   function hlHold(){ clearInterval(hlTimer); hlTimer = setInterval(function(){ hlGo(hlI+1); }, HL_MS); }
   buildHl();
 

@@ -2700,3 +2700,43 @@ reset — if they do, do it under maintenance mode (the runbook above), then
 flip. Verified on the local stub rig (`season-rig/stub.cjs` in the session
 scratchpad: canned recroom/blitz JSON) at desktop and phone widths; inline
 scripts parse; mojibake 0; dash counts up-only.
+
+## Hero rotator: fit ladder + image guards (18 Nov 2026)
+
+Barb's Q4 cert banner broke the Mission Control hero widget two ways at
+once, and both were design gaps, not her error:
+
+**The page grew past the fixed iframe.** The stage sizes itself to the
+tallest slide (`sizeHlStage`), so legal-but-long copy GREW the page —
+and the Oct 20 "Sharper Messaging" banner had already pushed the stage
+to ~297px vs the ~190px era the iframe was declared around; Barb's
+(271px) made it visible. Worse: slides were measured WITHOUT the media
+column, and `has-media` was toggled per-slide at ROTATION time — her
+image slide re-wrapped taller the moment it rotated in and grew the
+page mid-rotation. Now: `HL_BUDGET` (210px, width ≥1024 only — direct
+viewing still grows freely) + a 3-rung fit ladder (`.hl-item.fit1/2/3`,
+exclusive classes: smaller type, tighter leading, wider body
+max-width), and EVERY measurement (`fitSlides`/`sizeHlStage`) toggles
+`has-media` to the slide's own state first, restored after
+(`syncHlMedia`). Rig-measured at 1104px: stage 303→213, Oct slide
+297→197 (fit3), Barb's 271→190 (fit2, with its image column), short
+slides untouched at full type. `HL_BUDGET` is calibrated to the
+pre-Oct content era — tune it when the declared MT iframe height is
+read out of the widget admin.
+
+**The image showed in CAPCOM and died on the homepage.** Barb pasted a
+SharePoint share link: renders for the editor (her browser has the
+SharePoint session), 401s for every learner. Two guards: `saveBanner`
+now rejects sharepoint/office-host image URLs with a use-Upload-image
+message, and the client marks a dead image (`onerror`) image-less and
+refits, so a broken URL costs the panel, never the layout. Her stored
+row still carries the SharePoint URL — the image needs RE-UPLOADING via
+CAPCOM's Upload image (Blob); until then her slide renders text-only.
+
+Rig note: headless Chrome (--dump-dom + an injected measure script in
+scratchpad hero-rig/) gives truthful LAYOUT numbers but lies visually —
+the boot veil and entrance transitions freeze exactly like the hidden
+browser pane. Verify structurally, screenshot nothing you'll believe.
+Also spotted in passing, NOT fixed: two stored banners carry mojibake
+("HÃ©lÃ¨ne", "â€˜Deals & Contactsâ€™") — entered double-encoded via
+CAPCOM; worth a data cleanup and a look at the editor's encoding path.
