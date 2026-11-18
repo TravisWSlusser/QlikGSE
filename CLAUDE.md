@@ -2740,3 +2740,20 @@ browser pane. Verify structurally, screenshot nothing you'll believe.
 Also spotted in passing, NOT fixed: two stored banners carry mojibake
 ("HÃ©lÃ¨ne", "â€˜Deals & Contactsâ€™") — entered double-encoded via
 CAPCOM; worth a data cleanup and a look at the editor's encoding path.
+
+**Same day, second pass — the budget is now SELF-CALIBRATING.** Travis
+opened the MT widget admin: the declared iframe heights are 460px
+desktop, then 670/700/780 as the MT PAGE drops under 1100/800/500px
+(iframe ≈ page − 100). The fixed 210px budget became `hlBudget()`:
+declared height for the current width (`hlIframeH`, a mirror of the
+widget snippet — change one, change both) minus everything that isn't
+the stage, minus 10. Non-stage height is measured by scanning for the
+page's lowest visible pixel, NOT by naming the legend as "last" — there
+is 17–80px of margin furniture below the legend depending on width, and
+trusting the legend overshot the budget everywhere. The ladder now
+engages whenever the page is FRAMED (`window.self !== window.top`, the
+mobile.html trick) at every width — the Oct/Barb banners were also
+overflowing the 670/700/780 narrow layouts, unnoticed. Verified in a
+real iframe harness (rig /harness?w=): 440/460, 451/460, 655/670,
+695/700, 767/780 across 1452→380px. The MT widget snippet itself needed
+NO changes.

@@ -1798,13 +1798,38 @@ if (SHOW_HL){
     if (hlNodes.length > 1){ hlDots.style.display=''; hlHold(); }
     else { hlDots.style.display='none'; }
   }
-  /* The Mindtickle iframe height is a hand-measured constant, so the stage
-     must never grow past this budget — long copy shrinks instead (Barb's Q4
+  /* The Mindtickle iframe heights are hand-declared constants, so the stage
+     must never grow past its budget — long copy shrinks instead (Barb's Q4
      banner, Nov 2026: legal 294-char body + an image, and the page grew past
-     the iframe). 210px ≈ the pre-Oct-2026 content era the iframe was
-     declared around, plus a little headroom. Applied only at iframe-ish
-     widths; the page viewed directly can grow freely. */
-  const HL_BUDGET = 210;
+     the iframe; the Oct 20 banner had already overflowed the narrow
+     layouts). The budget is SELF-CALIBRATING: declared iframe height for
+     this width, minus everything around the rotator (header, chips,
+     legend), minus headroom. Applies only when FRAMED — the page viewed
+     directly can grow freely. */
+  const HL_FRAMED = window.self !== window.top;
+  /* Mirror of the MT widget snippet's @media heights, keyed by IFRAME width
+     (the widget's own rules use the MT PAGE width, which runs ~100px wider —
+     page 1100/800/500 ≈ iframe 1000/700/400). If the widget snippet's
+     heights change, change these. */
+  function hlIframeH(){
+    const w = window.innerWidth;
+    return w >= 1000 ? 460 : w >= 700 ? 670 : w >= 400 ? 700 : 780;
+  }
+  /* Everything that isn't the stage: the page's lowest visible pixel minus
+     the stage's current height. Measured by scanning, not by naming the
+     "last" element — the legend was assumed last and there is 17-80px of
+     margin/padding furniture below it depending on width. Subtracting the
+     stage keeps it independent of the fit classes, so no circularity. */
+  function hlBudget(){
+    if (!HL_FRAMED) return Infinity;
+    let bottom = 0;
+    document.body.querySelectorAll('*').forEach(function(el){
+      const r = el.getBoundingClientRect();
+      if (r.height > 0 && r.width > 0) bottom = Math.max(bottom, r.bottom + window.scrollY);
+    });
+    const nonStage = Math.max(0, bottom - hlStage.getBoundingClientRect().height);
+    return Math.max(140, hlIframeH() - nonStage - 10);
+  }
   const HL_RUNGS = ['fit1','fit2','fit3'];
   /* offsetTop/offsetHeight are layout values, so they ignore the translateY
      on inactive slides — getBoundingClientRect() does not. scrollHeight
@@ -1825,13 +1850,13 @@ if (SHOW_HL){
     return !!(h && h.image && !h._imgDead);
   }
   function fitSlides(){
-    const fixed = window.innerWidth >= 1024; /* the MT desktop iframe */
+    const budget = hlBudget();
     hlNodes.forEach(function(el, i){
       el.classList.remove('fit1','fit2','fit3');
-      if (!fixed) return;
+      if (budget === Infinity) return;
       hlBox.classList.toggle('has-media', hlMediaOn(i));
       for (const rung of HL_RUNGS){
-        if (hlSlideH(el) <= HL_BUDGET) break;
+        if (hlSlideH(el) <= budget) break;
         el.classList.remove('fit1','fit2','fit3');
         el.classList.add(rung);
       }
